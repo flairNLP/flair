@@ -66,8 +66,8 @@ class HunerEntityLinkingDictionary(KnowledgebaseLinkingDictionary):
         7157||TP53|tumor protein p53
     """
 
-    def __init__(self, path: Path, dataset_name: str):
-        self.dataset_file = path
+    def __init__(self, path: Union[str, Path], dataset_name: str):
+        self.dataset_file = Path(path)
         self._dataset_name = dataset_name
         super().__init__(self._load_candidates(), dataset_name=dataset_name)
 

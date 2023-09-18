@@ -1,3 +1,4 @@
+import inspect
 import logging
 import os
 import re
@@ -5,19 +6,19 @@ import stat
 import string
 import subprocess
 import tempfile
-import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
 import flair
-from flair.data import Concept, Label, Sentence, Span
+from flair.class_utils import get_state_subclass_by_name
+from flair.data import Label, Sentence, Span
 from flair.datasets import (
     CTD_CHEMICALS_DICTIONARY,
     CTD_DISEASES_DICTIONARY,
@@ -96,6 +97,22 @@ MODEL_NAME_TO_DICTIONARY = {
 DEFAULT_SPARSE_WEIGHT = 0.5
 
 
+def load_dictionary(
+    dictionary_name_or_path: Union[Path, str], dataset_name: Optional[str] = None
+) -> KnowledgebaseLinkingDictionary:
+    """Load dictionary: either pre-defined or from path."""
+    if isinstance(dictionary_name_or_path, str) and (
+        dictionary_name_or_path in ENTITY_TYPE_TO_DICTIONARY or dictionary_name_or_path in BIOMEDICAL_DICTIONARIES
+    ):
+        dictionary_name_or_path = ENTITY_TYPE_TO_DICTIONARY.get(dictionary_name_or_path, dictionary_name_or_path)
+
+        return BIOMEDICAL_DICTIONARIES[str(dictionary_name_or_path)]()
+
+    if dataset_name is None:
+        raise ValueError("When loading a custom dictionary, you need to specify a dataset_name!")
+    return HunerEntityLinkingDictionary(path=dictionary_name_or_path, dataset_name=dataset_name)
+
+
 class SimilarityMetric(Enum):
     """Similarity metrics."""
 
@@ -103,53 +120,10 @@ class SimilarityMetric(Enum):
     COSINE = auto()
 
 
-def timeit(func):
-    """This function shows the execution time of the function object passed."""
-
-    def wrap_func(*args, **kwargs):
-        start = time.time()
-        result = func(*args, **kwargs)
-        elapsed = round(time.time() - start, 4)
-        class_name, func_name = func.__qualname__.split(".")
-        logger.info("%s: %s took ~%s", class_name, func_name, elapsed)
-        return result
-
-    return wrap_func
-
-
 class EntityPreprocessor(ABC):
-    """A pre-processor used to transform / clean both entity mentions and entity names.
+    """A pre-processor used to transform / clean both entity mentions and entity names."""
 
-    This class provides the basic interface for such transformations
-    and must provide a `name` attribute to uniquely identify the type of preprocessing applied.
-    """
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """This is needed to correctly cache different multiple version of the dictionary."""
-
-    @abstractmethod
-    def process_mention(self, entity_mention: Label, sentence: Sentence) -> str:
-        """Processes the given entity mention and applies the transformation procedure to it.
-
-        :param entity_mention: entity mention under investigation
-        :param sentence: sentence in which the entity mentioned occurred
-        :result: Cleaned / transformed string representation of the given entity mention
-        """
-
-    @abstractmethod
-    def process_entity_name(self, entity_name: str) -> str:
-        """Processes the given entity name and applies the transformation procedure to it.
-
-        Args:
-            entity_name: entity mention given as DataPoint
-        Returns:
-            Cleaned / transformed string representation of the given entity mention
-        """
-
-    @abstractmethod
-    def initialize(self, sentences: List[Sentence]):
+    def initialize(self, sentences: List[Sentence]) -> None:
         """Initializes the pre-processor for a batch of sentences.
 
         This may be necessary for more sophisticated transformations.
@@ -157,6 +131,43 @@ class EntityPreprocessor(ABC):
         Args:
             sentences: List of sentences that will be processed.
         """
+
+    def process_mention(self, entity_mention: Label, sentence: Sentence) -> str:
+        """Processes the given entity mention and applies the transformation procedure to it.
+
+        Usually just forwards the entity_mention to :meth:`EntityPreprocessor.process_entity_name`, but can be implemented
+        to preprocess mentions on a sentence level instead.
+
+        Args:
+            entity_mention: entity mention under investigation
+            sentence: sentence in which the entity mentioned occurred
+
+        Returns:
+            Cleaned / transformed string representation of the given entity mention
+        """
+        return self.process_entity_name(entity_mention.data_point.text)
+
+    @abstractmethod
+    def process_entity_name(self, entity_name: str) -> str:
+        """Processes the given entity name and applies the transformation procedure to it.
+
+        Args:
+            entity_name: the text of the entity mention
+
+        Returns:
+            Cleaned / transformed string representation of the given entity mention
+        """
+
+    @classmethod
+    def _from_state(cls, state_dict: Dict[str, Any]) -> "EntityPreprocessor":
+        if inspect.isabstract(cls):
+            cls_name = state_dict.pop("__cls__", None)
+            return get_state_subclass_by_name(cls, cls_name)._from_state(state_dict)
+        else:
+            return cls(**state_dict)
+
+    def _get_state(self) -> Dict[str, Any]:
+        return {"__cls__": self.__class__.__name__}
 
 
 class BioSynEntityPreprocessor(EntityPreprocessor):
@@ -173,19 +184,13 @@ class BioSynEntityPreprocessor(EntityPreprocessor):
     def __init__(self, lowercase: bool = True, remove_punctuation: bool = True):
         """Initializes the mention preprocessor.
 
-        :param lowercase: Indicates whether to perform lowercasing or not (True by default)
-        :param remove_punctuation: Indicates whether to perform removal punctuations symbols (True by default)
+        Args:
+            lowercase: Indicates whether to perform lowercasing or not
+            remove_punctuation: Indicates whether to perform removal punctuations symbols
         """
         self.lowercase = lowercase
         self.remove_punctuation = remove_punctuation
         self.rmv_puncts_regex = re.compile(rf"[\s{re.escape(string.punctuation)}]+")
-
-    @property
-    def name(self):
-        return "biosyn"
-
-    def initialize(self, sentences):
-        pass
 
     def process_entity_name(self, entity_name: str) -> str:
         if self.lowercase:
@@ -197,8 +202,12 @@ class BioSynEntityPreprocessor(EntityPreprocessor):
 
         return entity_name.strip()
 
-    def process_mention(self, entity_mention: Label, sentence: Sentence) -> str:
-        return self.process_entity_name(entity_mention.data_point.text)
+    def _get_state(self) -> Dict[str, Any]:
+        return {
+            **super()._get_state(),
+            "lowercase": self.lowercase,
+            "remove_punctuation": self.remove_punctuation,
+        }
 
 
 class Ab3PEntityPreprocessor(EntityPreprocessor):
@@ -213,18 +222,15 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
     def __init__(self, ab3p_path: Path, word_data_dir: Path, preprocessor: Optional[EntityPreprocessor] = None) -> None:
         """Creates the mention pre-processor.
 
-        :param ab3p_path: Path to the folder containing the Ab3P implementation
-        :param word_data_dir: Path to the word data directory
-        :param preprocessor: Basic entity preprocessor
+        Args:
+            ab3p_path: Path to the folder containing the Ab3P implementation
+            word_data_dir: Path to the word data directory
+            preprocessor: Basic entity preprocessor
         """
         self.ab3p_path = ab3p_path
         self.word_data_dir = word_data_dir
         self.preprocessor = preprocessor
         self.abbreviation_dict: Dict[str, Dict[str, str]] = {}
-
-    @property
-    def name(self):
-        return f"ab3p_{self.preprocessor.name}"
 
     def initialize(self, sentences: List[Sentence]) -> None:
         self.abbreviation_dict = self._build_abbreviation_dict(sentences)
@@ -256,8 +262,8 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         return entity_name
 
     @classmethod
-    def load(cls, ab3p_path: Optional[Path] = None, preprocessor: Optional[EntityPreprocessor] = None):
-        data_dir = flair.cache_root / "ab3p"
+    def load_biosyn(cls, preprocessor: Optional[EntityPreprocessor] = None):
+        data_dir = flair.cache_root / "ab3p_biosyn"
         if not data_dir.exists():
             data_dir.mkdir(parents=True)
 
@@ -265,13 +271,12 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         if not word_data_dir.exists():
             word_data_dir.mkdir()
 
-        if ab3p_path is None:
-            ab3p_path = cls.download_ab3p(data_dir, word_data_dir)
+        ab3p_path = cls._download_biosyn_ab3p(data_dir, word_data_dir)
 
         return cls(ab3p_path, word_data_dir, preprocessor)
 
     @classmethod
-    def download_ab3p(cls, data_dir: Path, word_data_dir: Path) -> Path:
+    def _download_biosyn_ab3p(cls, data_dir: Path, word_data_dir: Path) -> Path:
         """Downloads the Ab3P tool and all necessary data files."""
         # Download word data for Ab3P if not already downloaded
         ab3p_url = "https://raw.githubusercontent.com/dmis-lab/BioSyn/master/Ab3P/WordData/"
@@ -317,8 +322,11 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
                 {"RSV": "Rous sarcoma virus"}
         }
 
-        :param sentences: list of sentences
-        :result abbreviation_dict: abbreviations and their resolution detected in each input sentence
+        Args:
+            sentences: list of sentences
+
+        Returns:
+            abbreviation_dict: abbreviations and their resolution detected in each input sentence
         """
         abbreviation_dict: Dict = defaultdict(dict)
 
@@ -379,62 +387,23 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
 
         return abbreviation_dict
 
-
-class BiomedicalEntityLinkingDictionary:
-    """Class to load named entity dictionaries.
-
-    Loading either pre-defined or from a path on disk.
-    For the latter, every line in the file must be formatted as follows:
-
-        concept_id||concept_name
-
-    If multiple concept ids are associated to a given name they must be separated by a `|`, e.g.
-
-        7157||TP53|tumor protein p53
-    """
-
-    def __init__(self, reader: KnowledgebaseLinkingDictionary):
-        self.reader = reader
+    def _get_state(self) -> Dict[str, Any]:
+        return {
+            **super()._get_state(),
+            "ab3p_path": str(self.ab3p_path),
+            "word_data_dir": str(self.word_data_dir),
+            "preprocessor": None if self.preprocessor is None else self.preprocessor._get_state(),
+        }
 
     @classmethod
-    def load(
-        cls, dictionary_name_or_path: Union[Path, str], dataset_name: Optional[str] = None
-    ) -> "KnowledgebaseLinkingDictionary":
-        """Load dictionary: either pre-defined or from path."""
-        if isinstance(dictionary_name_or_path, str):
-            dictionary_name_or_path = cast(str, dictionary_name_or_path)
-
-            if (
-                dictionary_name_or_path not in ENTITY_TYPE_TO_DICTIONARY
-                and dictionary_name_or_path not in BIOMEDICAL_DICTIONARIES
-            ):
-                raise ValueError(
-                    f"Unknown dictionary `{dictionary_name_or_path}`!"
-                    f" Available dictionaries are: {tuple(BIOMEDICAL_DICTIONARIES)}"
-                    " If you want to pass a local path please use the `Path` class, "
-                    "i.e. `model_name_or_path=Path(my_path)`"
-                )
-
-            dictionary_name_or_path = ENTITY_TYPE_TO_DICTIONARY.get(dictionary_name_or_path, dictionary_name_or_path)
-
-            reader = BIOMEDICAL_DICTIONARIES[str(dictionary_name_or_path)]()
-
-        else:
-            # use custom dictionary file
-            assert (
-                dataset_name is not None
-            ), "When providing a path to a custom dictionary you must specify the `dataset_name`!"
-            reader = HunerEntityLinkingDictionary(path=dictionary_name_or_path, dataset_name=dataset_name)
-
-        return reader
-
-    @property
-    def database_name(self) -> str:
-        """Database name of the dictionary."""
-        return self.reader.database_name
-
-    def __getitem__(self, item: str) -> Concept:
-        return self.reader[item]
+    def _from_state(cls, state_dict: Dict[str, Any]) -> "EntityPreprocessor":
+        return cls(
+            ab3p_path=Path(state_dict["ad3p_path"]),
+            word_data_dir=Path(state_dict["word_data_dir"]),
+            preprocessor=None
+            if state_dict["preprocessor"] is None
+            else EntityPreprocessor._from_state(state_dict["preprocessor"]),
+        )
 
 
 class CandidateSearchIndex(ABC):
@@ -466,11 +435,27 @@ class CandidateSearchIndex(ABC):
             List containing a list of entity linking candidates per entity mention from the input
         """
 
+    @classmethod
+    def _from_state(cls, state_dict: Dict[str, Any]) -> "CandidateSearchIndex":
+        if inspect.isabstract(cls):
+            cls_name = state_dict.pop("__cls__", None)
+            return get_state_subclass_by_name(cls, cls_name)._from_state(state_dict)
+        else:
+            return cls(**state_dict)
+
+    def _get_state(self) -> Dict[str, Any]:
+        return {"__cls__": self.__class__.__name__}
+
 
 class ExactMatchCandidateSearchIndex(CandidateSearchIndex):
     """Candidate generator using exact string matching as search criterion."""
 
     def __init__(self):
+        """Candidate generator using exact string matching as search criterion.
+
+        Args:
+            name_to_id_index: internal state, should only be set when loading an initialized index.
+        """
         self.name_to_id_index: Dict[str, str] = {}
 
     def index(
@@ -494,6 +479,18 @@ class ExactMatchCandidateSearchIndex(CandidateSearchIndex):
             results.append([(dict_entry, 1.0)])
 
         return results
+
+    @classmethod
+    def _from_state(cls, state_dict: Dict[str, Any]) -> "CandidateSearchIndex":
+        index = cls()
+        index.name_to_id_index = state_dict["name_to_id_index"]
+        return index
+
+    def _get_state(self) -> Dict[str, Any]:
+        return {
+            **super()._get_state(),
+            "name_to_id_index": self.name_to_id_index,
+        }
 
 
 class SemanticCandidateSearchIndex(CandidateSearchIndex):
@@ -670,6 +667,31 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
 
         return results
 
+    @classmethod
+    def _from_state(cls, state_dict: Dict[str, Any]) -> "CandidateSearchIndex":
+        index = cls(
+            embeddings=[DocumentEmbeddings.load_embedding(emb) for emb in state_dict["embeddings"]],
+            similarity_metric=SimilarityMetric(state_dict["similarity_metric"]),
+            weights=state_dict["weights"],
+            batch_size=state_dict["batch_size"],
+            show_progress=state_dict["show_progress"],
+        )
+        index.ids = state_dict["ids"]
+        index._precomputed_embeddings = state_dict["precomputed_embeddings"]
+        return index
+
+    def _get_state(self) -> Dict[str, Any]:
+        return {
+            **super()._get_state(),
+            "embeddings": [emb.save_embeddings() for emb in self.embeddings],
+            "similarity_metric": self.similarity_metric.value,
+            "weights": self.weights,
+            "batch_size": self.batch_size,
+            "show_progress": self.show_progress,
+            "ids": self.ids,
+            "precomputed_embeddings": self._precomputed_embeddings,
+        }
+
 
 class EntityMentionLinker:
     """Entity linking model for the biomedical domain."""
@@ -678,14 +700,13 @@ class EntityMentionLinker:
         self,
         candidate_generator: CandidateSearchIndex,
         preprocessor: EntityPreprocessor,
-        entity_type: str,
+        entity_label_type: str,
         label_type: str,
         dictionary: KnowledgebaseLinkingDictionary,
     ):
         self.preprocessor = preprocessor
         self.candidate_generator = candidate_generator
-        self.entity_type = entity_type
-        self.annotation_layers = [self.entity_type]
+        self.entity_label_type = entity_label_type
         self._label_type = label_type
         self._dictionary = dictionary
 
@@ -700,42 +721,32 @@ class EntityMentionLinker:
     def extract_mentions(
         self,
         sentences: List[Sentence],
-        annotation_layers: Optional[List[str]] = None,
-    ) -> Tuple[List[Span], List[str], List[str]]:
+    ) -> Tuple[List[Span], List[str]]:
         """Unpack all mentions in sentences for batch search."""
         data_points = []
         mentions = []
-        mention_annotation_layers = []
-
-        # use default annotation layers only if are not provided
-        annotation_layers = annotation_layers if annotation_layers is not None else self.annotation_layers
 
         for sentence in sentences:
-            for annotation_layer in annotation_layers:
-                for entity in sentence.get_labels(annotation_layer):
-                    data_points.append(entity.data_point)
-                    mentions.append(
-                        self.preprocessor.process_mention(entity, sentence)
-                        if self.preprocessor is not None
-                        else entity.data_point.text,
-                    )
-                    mention_annotation_layers.append(annotation_layer)
+            for entity in sentence.get_labels(self.entity_label_type):
+                data_points.append(entity.data_point)
+                mentions.append(
+                    self.preprocessor.process_mention(entity, sentence)
+                    if self.preprocessor is not None
+                    else entity.data_point.text,
+                )
 
-        # assert len(mentions) > 0, f"There are no entity mentions of type `{self.entity_type}`"
-
-        return data_points, mentions, mention_annotation_layers
+        return data_points, mentions
 
     def predict(
         self,
         sentences: Union[List[Sentence], Sentence],
-        annotation_layers: Optional[List[str]] = None,
         top_k: int = 1,
     ) -> None:
         """Predicts the best matching top-k entity / concept identifiers of all named entities annotated with tag input_entity_annotation_layer.
 
-        :param sentences: One or more sentences to run the prediction on
-        :param annotation_layers: List of annotation layers to extract entity mentions
-        :param top_k: Number of best-matching entity / concept identifiers
+        Args:
+            sentences: One or more sentences to run the prediction on
+            top_k: Number of best-matching entity / concept identifiers
         """
         # make sure sentences is a list of sentences
         if not isinstance(sentences, list):
@@ -744,9 +755,7 @@ class EntityMentionLinker:
         if self.preprocessor is not None:
             self.preprocessor.initialize(sentences)
 
-        data_points, mentions, mentions_annotation_layers = self.extract_mentions(
-            sentences=sentences, annotation_layers=annotation_layers
-        )
+        data_points, mentions = self.extract_mentions(sentences=sentences)
 
         # no mentions: nothing to do here
         if len(mentions) > 0:
@@ -754,14 +763,12 @@ class EntityMentionLinker:
             candidates = self.candidate_generator.search(entity_mentions=mentions, top_k=top_k)
 
             # Add a label annotation for each candidate
-            for data_point, mention_candidates, mentions_annotation_layer in zip(
-                data_points, candidates, mentions_annotation_layers
-            ):
+            for data_point, mention_candidates in zip(data_points, candidates):
                 for candidate_id, confidence in mention_candidates:
                     data_point.add_label(self.label_type, candidate_id, confidence)
 
     @classmethod
-    def load(
+    def build(
         cls,
         model_name_or_path: Union[str, Path],
         label_type: str,
@@ -789,7 +796,7 @@ class EntityMentionLinker:
                 dictionary_name_or_path = cls.__get_dictionary_path(
                     model_name_or_path=model_name_or_path, dictionary_name_or_path=dictionary_name_or_path
                 )
-            dictionary = BiomedicalEntityLinkingDictionary.load(dictionary_name_or_path, dataset_name=dataset_name)
+            dictionary = load_dictionary(dictionary_name_or_path, dataset_name=dataset_name)
 
         if isinstance(model_name_or_path, str):
             model_name_or_path, entity_type = cls.__get_model_path_and_entity_type(
@@ -824,7 +831,7 @@ class EntityMentionLinker:
         return cls(
             candidate_generator=candidate_generator,
             preprocessor=preprocessor,
-            entity_type=entity_type,
+            entity_label_type=entity_type,
             label_type=label_type,
             dictionary=dictionary,
         )

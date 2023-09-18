@@ -18,16 +18,16 @@ sentence = Sentence(
 ner_tagger = Classifier.load("hunflair")
 ner_tagger.predict(sentence)
 
-nen_tagger = EntityMentionLinker.load("disease")
+nen_tagger = EntityMentionLinker.build("disease")
 nen_tagger.predict(sentence)
 
-nen_tagger = EntityMentionLinker.load("gene")
+nen_tagger = EntityMentionLinker.build("gene")
 nen_tagger.predict(sentence)
 
-nen_tagger = EntityMentionLinker.load("chemical")
+nen_tagger = EntityMentionLinker.build("chemical")
 nen_tagger.predict(sentence)
 
-nen_tagger = EntityMentionLinker.load("species", entity_type="species")
+nen_tagger = EntityMentionLinker.build("species", entity_type="species")
 nen_tagger.predict(sentence)
 
 for tag in sentence.get_labels():
@@ -55,8 +55,8 @@ You can also provide your own model and dictionary:
 ```python
 from flair.models.biomedical_entity_linking import EntityMentionLinker
 
-nen_tagger = EntityMentionLinker.load("name_or_path_to_your_model",
-                                      dictionary_names_or_path="name_or_path_to_your_dictionary")
-nen_tagger = EntityMentionLinker.load("path_to_custom_disease_model", dictionary_names_or_path="disease")
+nen_tagger = EntityMentionLinker.build("name_or_path_to_your_model",
+                                       dictionary_names_or_path="name_or_path_to_your_dictionary")
+nen_tagger = EntityMentionLinker.build("path_to_custom_disease_model", dictionary_names_or_path="disease")
 ````
 You can use any combination of provided models, provided dictionaries and your own.
