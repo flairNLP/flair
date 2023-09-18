@@ -3,6 +3,9 @@ import pwd
 from typing import Tuple, Dict, List, Callable
 
 import numpy as np
+import os
+import json
+
 import torch
 import torch.nn.functional as F
 
@@ -11,7 +14,103 @@ from flair.data import DT, Dictionary, Optional, Sentence, Span, Union
 from flair.embeddings import DocumentEmbeddings, TokenEmbeddings
 from flair.training_utils import store_embeddings
 
+from pathlib import Path
+
+from flair.nn.wikidata_utils import get_wikidata_categories
+
 log = logging.getLogger("flair")
+
+class WikidataLabelVerbalizer:
+    def __init__(self,
+                 label_dictionary,
+                 verbalizations_path: Path,
+                 use_wikidata_description: bool = False,
+                 use_wikidata_classes: bool = True,
+                 max_verbalization_length: int = 16,
+                 add_occupation: bool = True,
+                 add_field_of_work: bool =False
+                 ):
+
+        self.label_dictionary = label_dictionary
+        self.verbalizations_path = verbalizations_path
+        self.use_wikidata_description = use_wikidata_description
+        self.use_wikidata_classes = use_wikidata_classes
+        self.add_occupation = add_occupation
+        self.add_field_of_work = add_field_of_work
+
+        self.verbalized_labels: List[Sentence] = self.verbalize_all_labels(self, label_dictionary=self.label_dictionary)
+
+        self.max_verbalization_length = max_verbalization_length
+
+        if self.max_verbalization_length:
+            verbalized_labels_truncated = []
+            for l in self.verbalized_labels:
+                s = flair.data.Sentence(l)
+                s.tokens = s.tokens[:self.max_verbalization_length]
+                verbalized_labels_truncated.append(s.text)
+            self.verbalized_labels = verbalized_labels_truncated
+
+    @staticmethod
+    def verbalize_all_labels(self, label_dictionary: Dictionary) -> List[Sentence]:
+
+        if os.path.exists(self.verbalizations_path):
+            with open(self.verbalizations_path, 'r') as f:
+                self.verbalizations = json.load(f)
+                print(f"Found verbalizations for {len(self.verbalizations)} labels at  {self.verbalizations_path}")
+        else:
+            with open(self.verbalizations_path, 'w') as file:
+                json.dump({}, file)
+                self.verbalizations = {}
+                print(f"Created empty verbalization dictionary at {self.verbalizations_path}")
+
+        counter_newly_verbalized = 0
+        verbalized_labels = []
+        for byte_label, idx in label_dictionary.item2idx.items():
+            str_label = byte_label.decode("utf-8")
+            entity = str_label
+
+            if entity == "O":
+                verbalized = "outside"
+            elif entity == "<unk>":
+                verbalized = "unknown"
+            else:
+                if self.verbalizations:
+                    verbalized = self.verbalizations.get(entity, None)
+                if not verbalized:
+                    wikipedia_label = entity
+                    wikidata_info = get_wikidata_categories(wikipedia_label, method ="only_one_level_up",
+                                                            add_occupation=self.add_occupation,
+                                                            add_field_of_work=self.add_field_of_work)
+                    wikidata_classes = wikidata_info["class_names"]
+                    wikidata_title = wikidata_info["wikidata_title"]
+                    wikidata_description = wikidata_info["wikibase_description"]
+                    verbalized = wikidata_title
+                    if self.use_wikidata_description:
+                        verbalized += ", " + wikidata_description
+                    if self.use_wikidata_classes:
+                        verbalized += ", " + ", ".join(wikidata_classes)
+                    #self.verbalizations[entity] = verbalized
+                    counter_newly_verbalized +=1
+
+            verbalized_labels.append(verbalized)
+            self.verbalizations[entity] = verbalized
+            print("Verbalized id", idx, ":", str_label, "->", verbalized)
+
+            # save every n entities and final
+            if idx % 100 == 0 or idx >= len(label_dictionary.item2idx.items()) -1:
+                if self.verbalizations_path:
+                    verbalizations_dict = self.verbalizations
+                    with open(self.verbalizations_path, "w") as file:
+                        json.dump(verbalizations_dict, file)
+
+        print(f"--- Created verbalized labels for {len(verbalized_labels)} labels")
+        print(f"--- Thereof newly verbalized:", counter_newly_verbalized)
+
+        return verbalized_labels
+
+    def verbalize_list_of_labels(self, list_of_labels):
+        label_idx = [self.label_dictionary.get_idx_for_item(idx) for idx in list_of_labels]
+        return [self.verbalized_labels[idx] for idx in label_idx ]
 
 
 class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
@@ -32,9 +131,9 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         linear_size: int = 128,
         use_span_width_embeddings: bool = True,
         max_span_width: int = 8,
-        custom_label_verbalizations=None,
-        train_only_with_positive_labels = False,
-        negative_sampling_factor: [int, bool] = 1
+        custom_label_verbalizations = None,
+        train_only_with_positive_labels = True,
+        negative_sampling_factor: [int, bool] = False #1
 
     ):
         super().__init__()
@@ -81,7 +180,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             self.train_only_with_positive_labels = True
 
         self.loss_function = torch.nn.CosineEmbeddingLoss(margin=0.1)
-        self.threshold_in_prediction = 0.9
+        self.threshold_in_prediction = 0.5
 
         cases: Dict[str, Callable[[Span, List[str]], torch.Tensor]] = {
             "average": self.emb_mean,
@@ -147,16 +246,17 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         labels_ids = [self.label_dictionary.get_idx_for_item(l) for l in labels]
 
         if self.custom_label_verbalizations:
-            raise NotImplementedError
-
+            labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(labels)
+            labels_verbalized = [Sentence(label) for label in labels_verbalized]
         else:
             labels_verbalized = [Sentence(label) for label in labels]
-            self.label_encoder.embed(labels_verbalized)
-            label_hidden_states_batch = torch.stack([label.get_embedding() for label in labels_verbalized])
 
-            label_hidden_states = torch.zeros(len(self.label_dictionary), self.label_encoder.embedding_length,
-                                              device=flair.device)
-            label_hidden_states[torch.LongTensor(list(labels_ids)), :] = label_hidden_states_batch
+        self.label_encoder.embed(labels_verbalized)
+        label_hidden_states_batch = torch.stack([label.get_embedding() for label in labels_verbalized])
+
+        label_hidden_states = torch.zeros(len(self.label_dictionary), self.label_encoder.embedding_length,
+                                          device=flair.device)
+        label_hidden_states[torch.LongTensor(list(labels_ids)), :] = label_hidden_states_batch
 
         return span_hidden_states, label_hidden_states, datapoints, sentences
 
@@ -166,18 +266,22 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         random_idx = random.sample(range(len(self.label_dictionary)), nr)
         random_labels = [self.label_dictionary.get_items()[idx] for idx in random_idx]
         if self.custom_label_verbalizations:
-            raise NotImplementedError
-            #random_labels_verbalized =
+            random_labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(random_labels)
+            random_labels_verbalized = [Sentence(label) for label in random_labels_verbalized]
+
         else:
             random_labels_verbalized = [Sentence(label) for label in random_labels]
-            self.label_encoder.embed(random_labels_verbalized)
-            random_label_hidden_states = torch.stack([label.get_embedding() for label in random_labels_verbalized])
+        self.label_encoder.embed(random_labels_verbalized)
+        random_label_hidden_states = torch.stack([label.get_embedding() for label in random_labels_verbalized])
 
         return random_label_hidden_states
 
+    def _get_hard_label_embeddings(self, nr, labels):
+        raise NotImplementedError
+        pass
+
 
     def _calculate_loss(self, span_hidden_states, label_hidden_states, datapoints, sentences, label_name):
-       # if self.training:
         gold_label_name = label_name
         # todo: This is not quite right. We're comparing the label embeddings of the gold labels to the span embeddings.
         # todo: Shouldn't we compare the labels? Or the embeddings of the predicted labels against the embeddings of the real label?
@@ -194,11 +298,12 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                 nr_datapoints = len(gold_labels_idx)
                 span_hidden_states_with_negatives = span_hidden_states
                 gold_labels_hidden_states_with_negatives = gold_labels_hidden_states
+                y_with_negatives = y
                 for f in range(self.negative_sampling_factor):
                     span_hidden_states_with_negatives = torch.cat((span_hidden_states_with_negatives, span_hidden_states), dim = 0)
                     some_random_label_hidden_states = self._get_random_label_embeddings(nr_datapoints)
                     gold_labels_hidden_states_with_negatives = torch.cat((gold_labels_hidden_states_with_negatives, some_random_label_hidden_states), dim = 0)
-                    y = torch.cat((y, -torch.ones(nr_datapoints, device=flair.device)), dim = 0)
+                    y = torch.cat((y_with_negatives, -torch.ones(nr_datapoints, device=flair.device)), dim = 0)
 
                 span_hidden_states = span_hidden_states_with_negatives
                 gold_labels_hidden_states = gold_labels_hidden_states_with_negatives
@@ -244,8 +349,6 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             span_hidden_states, label_hidden_states, datapoints, sentences = self._encode_data_points(sentences)
 
             # Compute cosine similarity and use threshold for prediction
-
-            # version 1:
             # Normalize the embeddings along the dimension D (this is crucial for cosine similarity)
             span_hidden_states = F.normalize(span_hidden_states, p=2, dim=1).detach().cpu()
             label_hidden_states = F.normalize(label_hidden_states, p=2, dim=1).detach().cpu()
