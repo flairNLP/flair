@@ -1,7 +1,7 @@
 name: 'Build doc page'
 on:
   push:
-    branches: [ main, doc-page ]
+    branches: [ master ]
     tags:
       - "*"
 
