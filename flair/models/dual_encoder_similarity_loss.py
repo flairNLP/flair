@@ -138,6 +138,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         negative_sampling_strategy: str = "random",
         margin_loss: float = 0.5,
         threshold_in_prediction: float = 0.5,
+        label_embeddings_save_path: Path = None,
 
     ):
         super().__init__()
@@ -179,6 +180,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         self.negative_sampling_factor = negative_sampling_factor
         self.negative_sampling_strategy = negative_sampling_strategy
         self.current_label_embeddings = []
+        self.is_first_batch_in_evaluation = True
         if not self.train_only_with_positive_labels:
             self.negative_sampling_factor = False
         if isinstance(self.negative_sampling_factor, bool):
@@ -194,6 +196,9 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                                                           #reduction="sum"
                                                           )
         self.threshold_in_prediction = threshold_in_prediction
+        self.label_embeddings_save_path = label_embeddings_save_path
+        if self.label_embeddings_save_path:
+            self.label_embeddings_save_path.mkdir(parents=True, exist_ok=True)
 
         cases: Dict[str, Callable[[Span, List[str]], torch.Tensor]] = {
             "average": self.emb_mean,
@@ -315,6 +320,23 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                 label_hidden_states = self._embed_labels_batchwise(cpu = True)
                 self.current_label_embeddings = label_hidden_states
                 self.is_first_batch_in_evaluation = False
+
+                # save them to enable inspection:
+                if self.training and self.label_embeddings_save_path:
+                    print("\nSaving current embeddings here:")
+                    print(self.label_embeddings_save_path)
+                    label_tensor_path = self.label_embeddings_save_path / "label_embeddings.npy"
+                    np.save(str(label_tensor_path), label_hidden_states.cpu().numpy())
+
+                    # save as tsv as well, for enabling visualizations
+                    label_tensor_tsv_path = self.label_embeddings_save_path / "label_embeddings.tsv"
+                    np.savetxt(label_tensor_tsv_path, label_hidden_states.cpu().numpy(), delimiter='\t', fmt='%.8f')
+
+                    label_names = [byte_label.decode("utf-8") for byte_label, idx in
+                                   self.label_dictionary.item2idx.items()]
+                    with open(self.label_embeddings_save_path / "label_embeddings_names.txt", 'w') as file:
+                        for item in label_names:
+                            file.write(item + '\n')
 
             else:
                 label_hidden_states = self.current_label_embeddings
@@ -528,3 +550,43 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
             lines.append(eval_line)
         return lines
+
+    def _get_state_dict(self):
+        model_state = {
+            **super()._get_state_dict(),
+            "label_encoder": self.label_encoder,
+            "token_encoder": self.token_encoder,
+            "label_type": self.label_type,
+            "label_dictionary": self.label_dictionary,
+            "pooling_operation": self.pooling_operation,
+            "custom_label_verbalizations": self.custom_label_verbalizations,
+            "train_only_with_positive_labels" : self.train_only_with_positive_labels,
+            "negative_sampling_factor": self.negative_sampling_factor,
+            "negative_sampling_strategy": self.negative_sampling_strategy,
+            "margin_loss": self.margin_loss,
+            "threshold_in_prediction": self.threshold_in_prediction,
+            "label_embeddings_save_path": self.label_embeddings_save_path,
+            "is_first_batch_in_evaluation": self.is_first_batch_in_evaluation
+        }
+        return model_state
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+
+        return super()._init_model_with_state_dict(
+            state,
+            label_encoder = state.get("label_encoder"),
+            token_encoder = state.get("token_encoder"),
+            label_type = state.get("label_type"),
+            label_dictionary = state.get("label_dictionary"),
+            pooling_operation = state.get("pooling_operation"),
+            custom_label_verbalizations = state.get("custom_label_verbalizations"),
+            train_only_with_positive_labels = state.get("train_only_with_positive_labels"),
+            negative_sampling_factor = state.get("negative_sampling_factor"),
+            negative_sampling_strategy = state.get("negative_sampling_strategy"),
+            margin_loss = state.get("margin_loss"),
+            threshold_in_prediction = state.get("threshold_in_prediction"),
+            label_embeddings_save_path = state.get("label_embeddings_save_path"),
+            **kwargs,
+        )
+
