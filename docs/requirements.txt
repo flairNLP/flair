@@ -4,5 +4,5 @@ myst-parser
 sphinx
 importlib-metadata
 sphinx-multiversion
-pydata-sphinx-theme
+pydata-sphinx-theme<0.14
 sphinx_design
