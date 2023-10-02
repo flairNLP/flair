@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 from flair.trainers.plugins.base import TrainerPlugin
 from flair.trainers.plugins.metric_records import MetricName
@@ -15,9 +15,10 @@ class LossFilePlugin(TrainerPlugin):
         super().__init__()
 
         self.first_epoch = epoch + 1
-
+        self.last_epoch = self.first_epoch
         # prepare loss logging file and set up header
         self.loss_txt = init_output_file(base_path, "loss.tsv")
+        self.base_path = base_path
 
         # set up all metrics to collect
         self.metrics_to_collect = metrics_to_collect
@@ -58,6 +59,14 @@ class LossFilePlugin(TrainerPlugin):
         # initialize the first log line
         self.current_row: Optional[Dict[MetricName, str]] = None
 
+    def get_state(self) -> Dict[str, Any]:
+        return {
+            **super().get_state(),
+            "base_path": str(self.base_path),
+            "metrics_to_collect": self.metrics_to_collect,
+            "first_epoch": self.last_epoch,
+        }
+
     @TrainerPlugin.hook
     def before_training_epoch(self, epoch, **kw):
         """Get the current epoch for loss file logging."""
@@ -83,6 +92,7 @@ class LossFilePlugin(TrainerPlugin):
     def after_evaluation(self, epoch, **kw):
         """This prints all relevant metrics."""
         if self.loss_txt is not None:
+            self.last_epoch = epoch
             self.current_row[MetricName("timestamp")] = f"{datetime.now():%H:%M:%S}"
 
             # output log file
