@@ -15,7 +15,6 @@ class LossFilePlugin(TrainerPlugin):
         super().__init__()
 
         self.first_epoch = epoch + 1
-        self.last_epoch = self.first_epoch
         # prepare loss logging file and set up header
         self.loss_txt = init_output_file(base_path, "loss.tsv")
         self.base_path = base_path
@@ -64,7 +63,6 @@ class LossFilePlugin(TrainerPlugin):
             **super().get_state(),
             "base_path": str(self.base_path),
             "metrics_to_collect": self.metrics_to_collect,
-            "first_epoch": self.last_epoch,
         }
 
     @TrainerPlugin.hook
@@ -92,7 +90,6 @@ class LossFilePlugin(TrainerPlugin):
     def after_evaluation(self, epoch, **kw):
         """This prints all relevant metrics."""
         if self.loss_txt is not None:
-            self.last_epoch = epoch
             self.current_row[MetricName("timestamp")] = f"{datetime.now():%H:%M:%S}"
 
             # output log file
