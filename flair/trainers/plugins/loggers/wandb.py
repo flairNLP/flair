@@ -78,9 +78,3 @@ class WandbLogger(TrainerPlugin):
             "emit_alerts": self.emit_alerts,
             "alert_level": self.alert_level,
         }
-
-    @classmethod
-    def from_state(cls, state: Dict[str, Any]) -> "WandbLogger":
-        import wandb
-
-        return cls(wandb=wandb, **state)

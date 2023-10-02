@@ -35,8 +35,6 @@ class AnnealingPlugin(TrainerPlugin):
         self.anneal_factor = anneal_factor
         self.patience = patience
         self.initial_extra_patience = initial_extra_patience
-        self.initial_best_value = None
-        self.initial_bad_epochs = None
 
     def store_learning_rate(self):
         optimizer = self.trainer.optimizer
@@ -67,8 +65,6 @@ class AnnealingPlugin(TrainerPlugin):
             verbose=False,
             optimizer=self.trainer.optimizer,
         )
-        if self.initial_best_value is not None:
-            self.scheduler.best
 
         self.store_learning_rate()
 
@@ -124,12 +120,3 @@ class AnnealingPlugin(TrainerPlugin):
             "bad_epochs": self.scheduler.num_bad_epochs,
             "current_best": self.scheduler.best,
         }
-
-    @classmethod
-    def from_state(cls, state: Dict[str, Any]) -> "AnnealingPlugin":
-        num_bad_epochs = state.pop("bad_epochs")
-        current_best = state.pop("current_best")
-        plugin = cls(**state)
-        plugin.initial_best_value = current_best
-        plugin.initial_bad_epochs = num_bad_epochs
-        return plugin

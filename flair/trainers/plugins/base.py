@@ -1,5 +1,3 @@
-import abc
-import importlib
 import logging
 from collections import defaultdict
 from inspect import isclass, signature
@@ -178,7 +176,7 @@ class HookHandle:
             raise err
 
 
-class BasePlugin(abc.ABC):
+class BasePlugin:
     """Base class for all plugins."""
 
     def __init__(self) -> None:
@@ -265,17 +263,8 @@ class BasePlugin(abc.ABC):
     def get_state(self) -> Dict[str, Any]:
         return {"__cls__": f"{self.__module__}.{self.__class__.__name__}"}
 
-    @classmethod
-    def from_state(cls, state: Dict[str, Any]) -> "BasePlugin":
-        if "__cls__" in state:
-            module_name, class_name = state.pop("__cls__").rsplit(".", 1)
-            module = importlib.import_module(module_name)
-            plugin_cls: BasePlugin = getattr(module, class_name)
-            return plugin_cls.from_state(state)
-        return cls(**state)
 
-
-class TrainerPlugin(BasePlugin, abc.ABC):
+class TrainerPlugin(BasePlugin):
     @property
     def trainer(self):
         return self.pluggable
@@ -287,7 +276,3 @@ class TrainerPlugin(BasePlugin, abc.ABC):
     @property
     def corpus(self):
         return self.trainer.corpus
-
-    @classmethod
-    def from_state(cls, state: Dict[str, Any]) -> "TrainerPlugin":
-        return cast(TrainerPlugin, super().from_state(state))
