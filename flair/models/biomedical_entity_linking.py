@@ -27,8 +27,9 @@ from flair.datasets import (
     HunerEntityLinkingDictionary,
     KnowledgebaseLinkingDictionary,
 )
+from flair.datasets.knowledgebase import InMemoryEntityLinkingDictionary
 from flair.embeddings import DocumentEmbeddings, DocumentTFIDFEmbeddings, TransformerDocumentEmbeddings
-from flair.file_utils import cached_path
+from flair.file_utils import cached_path, load_torch_state
 
 logger = logging.getLogger("flair")
 
@@ -766,6 +767,34 @@ class EntityMentionLinker:
             for data_point, mention_candidates in zip(data_points, candidates):
                 for candidate_id, confidence in mention_candidates:
                     data_point.add_label(self.label_type, candidate_id, confidence)
+
+    @staticmethod
+    def _fetch_model(model_name: str) -> str:
+        if Path(model_name).exists():
+            return model_name
+
+        raise NotImplementedError()
+
+    def save(self, model_path: Union[str, Path]) -> None:
+        pass
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "EntityMentionLinker":
+        if isinstance(model_path, str):
+            model_path = cls._fetch_model(model_path)
+
+        if isinstance(model_path, dict):
+            state = model_path
+        else:
+            state = load_torch_state(str(model_path))
+
+        candidate_generator = CandidateSearchIndex._from_state(state["candidate_search_index"])
+        preprocessor = EntityPreprocessor._from_state("entity_preprocessor")
+        entity_label_type = state["entity_label_type"]
+        label_type = state["label_type"]
+        dictionary = InMemoryEntityLinkingDictionary.from_state(state["dictionary"])
+
+        return cls(candidate_generator, preprocessor, entity_label_type, label_type, dictionary)
 
     @classmethod
     def build(

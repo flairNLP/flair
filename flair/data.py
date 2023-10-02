@@ -477,6 +477,16 @@ class Concept:
     def __repr__(self) -> str:
         return str(self)
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "concept_id": self.concept_id,
+            "concept_name": self.concept_name,
+            "database_name": self.database_name,
+            "additional_ids": self.additional_ids,
+            "synonyms": self.synonyms,
+            "description": self.description,
+        }
+
 
 DT = typing.TypeVar("DT", bound=DataPoint)
 DT2 = typing.TypeVar("DT2", bound=DataPoint)

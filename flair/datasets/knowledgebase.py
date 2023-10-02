@@ -1,6 +1,6 @@
 import csv
 from pathlib import Path
-from typing import Dict, Iterable, Iterator, List, Optional, Union
+from typing import Dict, Iterable, Iterator, List, Optional, Union, Any
 
 import flair
 from flair.data import Concept
@@ -52,6 +52,27 @@ class KnowledgebaseLinkingDictionary:
 
     def __getitem__(self, item: str) -> Concept:
         return self._idx_to_candidates[item]
+
+    def to_in_memory_dictionary(self) -> "InMemoryEntityLinkingDictionary":
+        return InMemoryEntityLinkingDictionary(list(self._idx_to_candidates.values()), self._dataset_name)
+
+
+class InMemoryEntityLinkingDictionary(KnowledgebaseLinkingDictionary):
+    def __init__(self, candidates: List[Concept], dataset_name: str):
+        self._dataset_name = dataset_name
+        super().__init__(candidates, dataset_name=dataset_name)
+
+    def to_state(self) -> Dict[str, Any]:
+        return {
+            "dataset_name": self._dataset_name,
+            "candidates": [candidate.to_dict() for candidate in self._idx_to_candidates.values()],
+        }
+
+    @classmethod
+    def from_state(cls, state: Dict[str, Any]) -> "InMemoryEntityLinkingDictionary":
+        return cls(
+            dataset_name=state["dataset_name"], candidates=[Concept(**candidate) for candidate in state["candidates"]]
+        )
 
 
 class HunerEntityLinkingDictionary(KnowledgebaseLinkingDictionary):
