@@ -5,16 +5,6 @@ on:
     branches: [master]
 
 jobs:
-  delete:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete workflow runs
-        uses: MajorScruffy/delete-old-workflow-runs@v0.2.0
-        with:
-          repository: flairNLP/flair
-          older-than-seconds: 21600000  # 8 months -> 8 * 30 * 25 * 60 * 60
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
     runs-on: ubuntu-latest
     env:
@@ -27,6 +17,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.8
+      - name: Cleanup Disk Space
+      - run: |
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo apt clean
       - name: Install Flair dependencies
         run: pip install -e .
       - name: Install unittest dependencies
