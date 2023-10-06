@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: 3.8
       - name: Cleanup Disk Space
-      - run: |
+        run: |
           sudo swapoff -a
           sudo rm -f /swapfile
           sudo apt clean
