@@ -5,14 +5,16 @@ on:
     branches: [master]
 
 jobs:
-  steps:
-    - name: Delete workflow runs
-      uses: MajorScruffy/delete-old-workflow-runs@v0.2.0
-      with:
-        repository: flairNLP/flair
-        older-than-seconds: 21600000  # 8 months -> 8 * 30 * 25 * 60 * 60
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  delete:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete workflow runs
+        uses: MajorScruffy/delete-old-workflow-runs@v0.2.0
+        with:
+          repository: flairNLP/flair
+          older-than-seconds: 21600000  # 8 months -> 8 * 30 * 25 * 60 * 60
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
     runs-on: ubuntu-latest
     env:
