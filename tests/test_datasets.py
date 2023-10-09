@@ -389,11 +389,8 @@ def _assert_universal_dependencies_conllu_dataset(dataset):
 
 
 def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
-    """
-    This test only covers basic universal dependencies datasets.
-    For example, multi-word tokens or the "deps" column sentence annotations
-    are not supported yet.
-    """
+    # This test only covers basic universal dependencies datasets.
+    # For example, multi-word tokens or the "deps" column sentence annotations are not supported yet.
 
     # Here, we use the default token annotation fields.
     corpus = ColumnCorpus(
@@ -422,11 +419,9 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
 
 
 def test_hipe_2022_corpus(tasks_base_path):
-    """
-    This test covers the complete HIPE 2022 dataset.
-    https://github.com/hipe-eval/HIPE-2022-data
-    Includes variant with document separator, and all versions of the dataset.
-    """
+    # This test covers the complete HIPE 2022 dataset.
+    # https://github.com/hipe-eval/HIPE-2022-data
+    # Includes variant with document separator, and all versions of the dataset.
 
     # We have manually checked, that these numbers are correct:
     hipe_stats = {
@@ -632,7 +627,7 @@ def test_hipe_2022_corpus(tasks_base_path):
 
                     current_sents = stats["sents"]
                     current_docs = stats["docs"]
-                    current_labels = set(stats["labels"] + ["<unk>"])
+                    current_labels = set(stats["labels"])
 
                     total_sentences = current_sents + current_docs if add_document_separator else stats["sents"]
 
@@ -687,10 +682,9 @@ def test_hipe_2022_corpus(tasks_base_path):
 
 
 def test_icdar_europeana_corpus(tasks_base_path):
-    """
-    This test covers the complete ICDAR Europeana corpus:
-    https://github.com/stefan-it/historic-domain-adaptation-icdar
-    """
+    # This test covers the complete ICDAR Europeana corpus:
+    # https://github.com/stefan-it/historic-domain-adaptation-icdar
+
     gold_stats = {"fr": {"train": 7936, "dev": 992, "test": 992}, "nl": {"train": 5777, "dev": 722, "test": 723}}
 
     def check_number_sentences(reference: int, actual: int, split_name: str):
@@ -705,9 +699,7 @@ def test_icdar_europeana_corpus(tasks_base_path):
 
 
 def test_masakhane_corpus(tasks_base_path):
-    """
-    This test covers the complete MasakhaNER dataset, including support for v1 and v2.
-    """
+    # This test covers the complete MasakhaNER dataset, including support for v1 and v2.
     supported_versions = ["v1", "v2"]
 
     supported_languages = {
@@ -756,7 +748,7 @@ def test_masakhane_corpus(tasks_base_path):
             "bam": {"train": 4462, "dev": 638, "test": 1274},
             "bbj": {"train": 3384, "dev": 483, "test": 966},
             "ewe": {"train": 3505, "dev": 501, "test": 1001},
-            "fon": {"train": 4343, "dev": 621, "test": 1240},
+            "fon": {"train": 4343, "dev": 623, "test": 1228},
             "hau": {"train": 5716, "dev": 816, "test": 1633},
             "ibo": {"train": 7634, "dev": 1090, "test": 2181},
             "kin": {"train": 7825, "dev": 1118, "test": 2235},
@@ -790,10 +782,8 @@ def test_masakhane_corpus(tasks_base_path):
 
 
 def test_nermud_corpus(tasks_base_path):
-    """
-    This test covers the NERMuD dataset. Official stats can be found here:
-    https://github.com/dhfbk/KIND/tree/main/evalita-2023
-    """
+    # This test covers the NERMuD dataset. Official stats can be found here:
+    # https://github.com/dhfbk/KIND/tree/main/evalita-2023
     gold_stats = {
         "WN": {"train": 10912, "dev": 2594},
         "FIC": {"train": 11423, "dev": 1051},
@@ -807,6 +797,79 @@ def test_nermud_corpus(tasks_base_path):
         corpus = flair.datasets.NER_NERMUD(domains=domain)
         check_number_sentences(len(corpus.train), stats["train"], "train")
         check_number_sentences(len(corpus.dev), stats["dev"], "dev")
+
+
+def test_german_ler_corpus(tasks_base_path):
+    corpus = flair.datasets.NER_GERMAN_LEGAL()
+
+    # Number of instances per dataset split are taken from https://huggingface.co/datasets/elenanereiss/german-ler
+    assert len(corpus.train) == 53384, "Mismatch in number of sentences for train split"
+    assert len(corpus.dev) == 6666, "Mismatch in number of sentences for dev split"
+    assert len(corpus.test) == 6673, "Mismatch in number of sentences for test split"
+
+
+def test_masakha_pos_corpus(tasks_base_path):
+    # This test covers the complete MasakhaPOS dataset.
+    supported_versions = ["v1"]
+
+    supported_languages = {
+        "v1": [
+            "bam",
+            "bbj",
+            "ewe",
+            "fon",
+            "hau",
+            "ibo",
+            "kin",
+            "lug",
+            "mos",
+            "pcm",
+            "nya",
+            "sna",
+            "swa",
+            "twi",
+            "wol",
+            "xho",
+            "yor",
+            "zul",
+        ],
+    }
+
+    africa_pos_stats = {
+        "v1": {
+            "bam": {"train": 775, "dev": 154, "test": 619},
+            "bbj": {"train": 750, "dev": 149, "test": 599},
+            "ewe": {"train": 728, "dev": 145, "test": 582},
+            "fon": {"train": 810, "dev": 161, "test": 646},
+            "hau": {"train": 753, "dev": 150, "test": 601},
+            "ibo": {"train": 803, "dev": 160, "test": 642},
+            "kin": {"train": 757, "dev": 151, "test": 604},
+            "lug": {"train": 733, "dev": 146, "test": 586},
+            "mos": {"train": 757, "dev": 151, "test": 604},
+            "pcm": {"train": 752, "dev": 150, "test": 600},
+            "nya": {"train": 728, "dev": 145, "test": 582},
+            "sna": {"train": 747, "dev": 149, "test": 596},
+            "swa": {"train": 693, "dev": 138, "test": 553},
+            "twi": {"train": 785, "dev": 157, "test": 628},
+            "wol": {"train": 782, "dev": 156, "test": 625},
+            "xho": {"train": 752, "dev": 150, "test": 601},
+            "yor": {"train": 893, "dev": 178, "test": 713},
+            "zul": {"train": 753, "dev": 150, "test": 601},
+        },
+    }
+
+    def check_number_sentences(reference: int, actual: int, split_name: str, language: str, version: str):
+        assert actual == reference, f"Mismatch in number of sentences for {language}@{version}/{split_name}"
+
+    for version in supported_versions:
+        for language in supported_languages[version]:
+            corpus = flair.datasets.MASAKHA_POS(languages=language, version=version)
+
+            gold_stats = africa_pos_stats[version][language]
+
+            check_number_sentences(len(corpus.train), gold_stats["train"], "train", language, version)
+            check_number_sentences(len(corpus.dev), gold_stats["dev"], "dev", language, version)
+            check_number_sentences(len(corpus.test), gold_stats["test"], "test", language, version)
 
 
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
@@ -831,9 +894,7 @@ def test_jsonl_corpus_should_use_label_type(tasks_base_path):
 
 
 def test_jsonl_dataset_should_use_label_type(tasks_base_path):
-    """
-    Tests whether the dataset respects the label_type parameter
-    """
+    """Tests whether the dataset respects the label_type parameter."""
     dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl", label_type="pos")  # use other type
 
     for sentence in dataset.sentences:
@@ -842,9 +903,7 @@ def test_jsonl_dataset_should_use_label_type(tasks_base_path):
 
 
 def test_reading_jsonl_dataset_should_be_successful(tasks_base_path):
-    """
-    Tests reading a JsonlDataset containing multiple tagged entries
-    """
+    """Tests reading a JsonlDataset containing multiple tagged entries."""
     dataset = JsonlDataset(tasks_base_path / "jsonl" / "train.jsonl")
 
     assert len(dataset.sentences) == 5
@@ -885,7 +944,7 @@ def test_ontonotes_extraction(tasks_base_path):
         corpus = ONTONOTES(base_path=tmp_dir)
         label_dictionary = corpus.make_label_dictionary("ner")
 
-        assert len(label_dictionary) == 15
+        assert len(label_dictionary) == 14
         assert label_dictionary.span_labels
 
         domain_specific_corpus = ONTONOTES(base_path=tmp_dir, domain=["bc"])
@@ -899,7 +958,7 @@ TESTB_FILE = "tests/resources/tasks/jsonl/testa.jsonl"
 
 
 @pytest.mark.parametrize(
-    "train_files,dev_files,test_files,expected_size",
+    ("train_files", "dev_files", "test_files", "expected_size"),
     [
         (
             [TRAIN_FILE],

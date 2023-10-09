@@ -2,12 +2,13 @@ import torch
 
 
 class LockedDropout(torch.nn.Module):
-    """
-    Implementation of locked (or variational) dropout. Randomly drops out entire parameters in embedding space.
+    """Implementation of locked (or variational) dropout.
+
+    Randomly drops out entire parameters in embedding space.
     """
 
-    def __init__(self, dropout_rate=0.5, batch_first=True, inplace=False):
-        super(LockedDropout, self).__init__()
+    def __init__(self, dropout_rate=0.5, batch_first=True, inplace=False) -> None:
+        super().__init__()
         self.dropout_rate = dropout_rate
         self.batch_first = batch_first
         self.inplace = inplace
@@ -27,16 +28,17 @@ class LockedDropout(torch.nn.Module):
 
     def extra_repr(self):
         inplace_str = ", inplace" if self.inplace else ""
-        return "p={}{}".format(self.dropout_rate, inplace_str)
+        return f"p={self.dropout_rate}{inplace_str}"
 
 
 class WordDropout(torch.nn.Module):
-    """
-    Implementation of word dropout. Randomly drops out entire words (or characters) in embedding space.
+    """Implementation of word dropout.
+
+    Randomly drops out entire words (or characters) in embedding space.
     """
 
-    def __init__(self, dropout_rate=0.05, inplace=False):
-        super(WordDropout, self).__init__()
+    def __init__(self, dropout_rate=0.05, inplace=False) -> None:
+        super().__init__()
         self.dropout_rate = dropout_rate
         self.inplace = inplace
 
@@ -51,4 +53,4 @@ class WordDropout(torch.nn.Module):
 
     def extra_repr(self):
         inplace_str = ", inplace" if self.inplace else ""
-        return "p={}{}".format(self.dropout_rate, inplace_str)
+        return f"p={self.dropout_rate}{inplace_str}"

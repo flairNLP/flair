@@ -197,7 +197,7 @@ from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorp
 
 
 # instantiate an existing LM, such as one from the FlairEmbeddings
-language_model = FlairEmbeddings('news-forward').lm
+language_model = FlairEmbeddings('news-forward', decoder=True).lm
 
 # are you fine-tuning a forward or backward LM?
 is_forward_lm = language_model.is_forward_lm

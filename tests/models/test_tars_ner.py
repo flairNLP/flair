@@ -10,25 +10,25 @@ from tests.model_test_utils import BaseModelTest
 class TestTarsTagger(BaseModelTest):
     model_cls = TARSTagger
     train_label_type = "ner"
-    model_args = dict(task_name="2_NER")
-    training_args = dict(mini_batch_size=1, max_epochs=2)
+    model_args = {"task_name": "2_NER"}
+    training_args = {"mini_batch_size": 1, "max_epochs": 2}
     pretrained_model = "tars-ner"
 
-    @pytest.fixture
+    @pytest.fixture()
     def corpus(self, tasks_base_path):
-        yield flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
+        return flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
 
-    @pytest.fixture
+    @pytest.fixture()
     def embeddings(self):
-        yield TransformerWordEmbeddings("distilbert-base-uncased")
+        return TransformerWordEmbeddings("distilbert-base-uncased")
 
-    @pytest.fixture
+    @pytest.fixture()
     def example_sentence(self):
-        yield Sentence("George Washington was born in Washington")
+        return Sentence("George Washington was born in Washington")
 
     def build_model(self, embeddings, label_dict, **kwargs):
         model_args = dict(self.model_args)
-        for k in kwargs.keys():
+        for k in kwargs:
             if k in model_args:
                 del model_args[k]
         return self.model_cls(
@@ -46,7 +46,7 @@ class TestTarsTagger(BaseModelTest):
         )
         return corpus
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_predict_zero_shot(self, loaded_pretrained_model):
         sentence = Sentence("George Washington was born in Washington")
         loaded_pretrained_model.predict_zero_shot(sentence, ["location", "person"])
@@ -56,7 +56,7 @@ class TestTarsTagger(BaseModelTest):
             "person",
         ]
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_init_tars_and_switch(self, tasks_base_path, corpus):
         tars = TARSTagger(
             task_name="2_NER",

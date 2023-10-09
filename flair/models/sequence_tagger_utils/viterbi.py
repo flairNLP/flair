@@ -14,28 +14,28 @@ STOP_TAG: str = "<STOP>"
 
 
 class ViterbiLoss(torch.nn.Module):
-    """
-    Calculates the loss for each sequence up to its length t.
-    """
+    """Calculates the loss for each sequence up to its length t."""
 
-    def __init__(self, tag_dictionary: Dictionary):
+    def __init__(self, tag_dictionary: Dictionary) -> None:
+        """Create an instance of the Viterbi loss.
+
+        Args:
+            tag_dictionary: tag_dictionary of task
         """
-        :param tag_dictionary: tag_dictionary of task
-        """
-        super(ViterbiLoss, self).__init__()
+        super().__init__()
         self.tag_dictionary = tag_dictionary
         self.tagset_size = len(tag_dictionary)
         self.start_tag = tag_dictionary.get_idx_for_item(START_TAG)
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
     def forward(self, features_tuple: tuple, targets: torch.Tensor) -> torch.Tensor:
-        """
-        Forward propagation of Viterbi Loss
+        """Forward propagation of Viterbi Loss.
 
-        :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
-            lengths of sentences in batch, transitions from CRF
-        :param targets: true tags for sentences which will be converted to matrix indices.
-        :return: summed Viterbi Loss over all data points
+        Args:
+            features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size), lengths of sentences in batch, transitions from CRF
+            targets: true tags for sentences which will be converted to matrix indices.
+
+        Returns: summed Viterbi Loss over all data points
         """
         features, lengths, transitions = features_tuple
 
@@ -55,7 +55,7 @@ class ViterbiLoss(torch.nn.Module):
         ]
         gold_score = scores_at_targets.sum() + transitions_to_stop.sum()
 
-        scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device)
+        scores_upto_t = torch.zeros(batch_size, self.tagset_size, device=flair.device, dtype=features.dtype)
 
         for t in range(max(lengths)):
             batch_size_t = sum(
@@ -82,28 +82,30 @@ class ViterbiLoss(torch.nn.Module):
 
     @staticmethod
     def _log_sum_exp(tensor, dim):
-        """
-        Calculates the log-sum-exponent of a tensor's dimension in a numerically stable way.
+        """Calculates the log-sum-exponent of a tensor's dimension in a numerically stable way.
 
-        :param tensor: tensor
-        :param dim: dimension to calculate log-sum-exp of
-        :return: log-sum-exp
+        Args:
+            tensor: tensor
+            dim: dimension to calculate log-sum-exp of
+
+        Returns: log-sum-exp
         """
         m, _ = torch.max(tensor, dim)
         m_expanded = m.unsqueeze(dim).expand_as(tensor)
         return m + torch.log(torch.sum(torch.exp(tensor - m_expanded), dim))
 
     def _format_targets(self, targets: torch.Tensor, lengths: torch.IntTensor):
-        """
-        Formats targets into matrix indices.
-        CRF scores contain per sentence, per token a (tagset_size x tagset_size) matrix, containing emission score for
-            token j + transition prob from previous token i. Means, if we think of our rows as "to tag" and our columns
-            as "from tag", the matrix in cell [10,5] would contain the emission score for tag 10 + transition score
-            from previous tag 5 and could directly be addressed through the 1-dim indices (10 + tagset_size * 5) = 70,
-            if our tagset consists of 12 tags.
+        """Formats targets into matrix indices.
 
-        :param targets: targets as in tag dictionary
-        :param lengths: lengths of sentences in batch
+        CRF scores contain per sentence, per token a (tagset_size x tagset_size) matrix, containing emission score for
+        token j + transition prob from previous token i. Means, if we think of our rows as "to tag" and our columns
+        as "from tag", the matrix in cell [10,5] would contain the emission score for tag 10 + transition score
+        from previous tag 5 and could directly be addressed through the 1-dim indices (10 + tagset_size * 5) = 70,
+        if our tagset consists of 12 tags.
+
+        Args:
+            targets: targets as in tag dictionary
+            lengths: lengths of sentences in batch
         """
         targets_per_sentence = []
 
@@ -115,25 +117,23 @@ class ViterbiLoss(torch.nn.Module):
         for t in targets_per_sentence:
             t += [self.tag_dictionary.get_idx_for_item(STOP_TAG)] * (int(lengths.max().item()) - len(t))
 
-        matrix_indices = list(
-            map(
-                lambda s: [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)]
-                + [s[i] + (s[i + 1] * self.tagset_size) for i in range(0, len(s) - 1)],
-                targets_per_sentence,
-            )
-        )
+        matrix_indices = [
+            [self.tag_dictionary.get_idx_for_item(START_TAG) + (s[0] * self.tagset_size)]
+            + [s[i] + (s[i + 1] * self.tagset_size) for i in range(len(s) - 1)]
+            for s in targets_per_sentence
+        ]
 
         return targets_per_sentence, matrix_indices
 
 
 class ViterbiDecoder:
-    """
-    Decodes a given sequence using the Viterbi algorithm.
-    """
+    """Decodes a given sequence using the Viterbi algorithm."""
 
-    def __init__(self, tag_dictionary: Dictionary):
-        """
-        :param tag_dictionary: Dictionary of tags for sequence labeling task
+    def __init__(self, tag_dictionary: Dictionary) -> None:
+        """Initialize the Viterbi Decoder.
+
+        Args:
+            tag_dictionary: Dictionary of tags for sequence labeling task
         """
         self.tag_dictionary = tag_dictionary
         self.tagset_size = len(tag_dictionary)
@@ -143,12 +143,14 @@ class ViterbiDecoder:
     def decode(
         self, features_tuple: tuple, probabilities_for_all_classes: bool, sentences: List[Sentence]
     ) -> Tuple[List, List]:
-        """
-        Decoding function returning the most likely sequence of tags.
-        :param features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size),
-            lengths of sentence in batch, transitions of CRF
-        :param probabilities_for_all_classes: whether to return probabilities for all tags
-        :return: decoded sequences
+        """Decoding function returning the most likely sequence of tags.
+
+        Args:
+            features_tuple: CRF scores from forward method in shape (batch size, seq len, tagset size, tagset size), lengths of sentence in batch, transitions of CRF
+            probabilities_for_all_classes: whether to return probabilities for all tags
+            sentences: list of the respective sentences with extracted features.
+
+        Returns: decoded sequences
         """
         features, lengths, transitions = features_tuple
         all_tags = []
@@ -157,7 +159,7 @@ class ViterbiDecoder:
         seq_len = features.size(1)
 
         # Create a tensor to hold accumulated sequence scores at each current tag
-        scores_upto_t = torch.zeros(batch_size, seq_len + 1, self.tagset_size).to(flair.device)
+        scores_upto_t = torch.zeros(batch_size, seq_len + 1, self.tagset_size, dtype=features.dtype).to(flair.device)
         # Create a tensor to hold back-pointers
         # i.e., indices of the previous_tag that corresponds to maximum accumulated score at current tag
         # Let pads be the <end> tag index, since that was the last tag in the decoded sequence
@@ -226,10 +228,7 @@ class ViterbiDecoder:
     def _all_scores_for_token(
         self, scores: torch.Tensor, tag_seq: torch.IntTensor, lengths: torch.IntTensor, sentences: List[Sentence]
     ):
-        """
-        Returns all scores for each tag in tag dictionary.
-        :param scores: Scores for current sentence.
-        """
+        """Returns all scores for each tag in tag dictionary."""
         scores = scores.numpy()
         for i_batch, batch in enumerate(scores):
             for i, (tag_id, tag_scores) in enumerate(zip(tag_seq, batch)):

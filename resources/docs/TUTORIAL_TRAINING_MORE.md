@@ -97,26 +97,35 @@ mini-batch size. Remember that this is the opposite of `mini_batch_size` so this
 
 ### Setting the Storage Mode of Embeddings
 
-Another main parameter you need to set is the `embeddings_storage_mode` in the `train()` method of the `ModelTrainer`. It
+Another main parameter you need to set is the `embeddings_storage_mode` in the `train()` method of the `ModelTrainer`.
 can have one of three values:
 
-1. **'none'**: If you set `embeddings_storage_mode='none'`, embeddings do not get stored in memory. Instead they are
+1. **'none'**: If you set `embeddings_storage_mode='none'`, embeddings do not get stored in memory. Instead, they are
    generated on-the-fly in each training mini-batch (during *training*). The main advantage is that this keeps your
    memory requirements low. Always set this if fine-tuning transformers.
 
 2. **'cpu'**: If you set `embeddings_storage_mode='cpu'`, embeddings will get stored in regular memory.
 
-* during *training*: this in many cases speeds things up significantly since embeddings only need to be computed in the
-  first epoch, after which they are just retrieved from memory. A disadvantage is that this increases memory
-  requirements. Depending on the size of your dataset and your memory setup, this option may not be possible.
-* during *inference*: this slows down your inference when used with a GPU as embeddings need to be moved from GPU memory
-  to regular memory. The only reason to use this option during inference would be to not only use the predictions but
-  also the embeddings after prediction.
+   * during *training*: this in many cases speeds things up significantly since static embeddings only need to be computed in the
+     first epoch, after which they are just retrieved from memory. A disadvantage is that this increases memory
+     requirements. Depending on the size of your dataset and your memory setup, this option may not be possible.
+   * during *inference*: this slows down your inference when used with a GPU as embeddings need to be moved from GPU memory
+     to regular memory. The only reason to use this option during inference would be to not only use the predictions but
+     also the embeddings after prediction.
 
 3. **'gpu'**: If you set `embeddings_storage_mode='gpu'`, embeddings will get stored in CUDA memory. This will often be
    the fastest one since this eliminates the need to shuffle tensors from CPU to CUDA over and over again. Of course,
    CUDA memory is often limited so large datasets will not fit into CUDA memory. However, if the dataset fits into CUDA
    memory, this option is the fastest one.
+
+### Training with Automated Mixed Precision (AMP)
+
+A good way to speed up the training time and use less memory is [Automated Mixed Precision training](https://pytorch.org/docs/stable/amp.html).
+Here calculations will be done with a smaller data type (for example by using *float16* instead of *float32*). That way 
+less memory is required and the training time is reduced by a good amount.
+AMP can be activated by setting the `use_amp` parameter in the `train()` method of the `ModelTrainer` to `True` 
+
+You can choose the data type for the AMP by using `torch.set_autocast_gpu_dtype(...)` or `torch.set_autocast_cpu_dtype(...)` respectively.
 
 ### Reducing the memory food-print when using Transformers
 

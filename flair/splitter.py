@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Union
+from typing import Any, List, Optional, Union
 
 from segtok.segmenter import split_multi
 
@@ -27,7 +27,7 @@ class SentenceSplitter(ABC):
 
     @abstractmethod
     def split(self, text: str) -> List[Sentence]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def name(self) -> str:
@@ -35,22 +35,23 @@ class SentenceSplitter(ABC):
 
     @property
     def tokenizer(self) -> Tokenizer:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @tokenizer.setter
     def tokenizer(self, value: Tokenizer):
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class SegtokSentenceSplitter(SentenceSplitter):
-    """
+    """Sentence Splitter using SegTok.
+
     Implementation of :class:`SentenceSplitter` using the SegTok library.
 
     For further details see: https://github.com/fnl/segtok
     """
 
-    def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()):
-        super(SegtokSentenceSplitter, self).__init__()
+    def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()) -> None:
+        super().__init__()
         self._tokenizer = tokenizer
 
     def split(self, text: str) -> List[Sentence]:
@@ -63,8 +64,8 @@ class SegtokSentenceSplitter(SentenceSplitter):
                 sentence_offset = text.index(sentence, sentence_offset)
             except ValueError as error:
                 raise AssertionError(
-                    f"Can't find the sentence offset for sentence {repr(sentence)} "
-                    f"starting from position {repr(sentence_offset)}"
+                    f"Can't find the sentence offset for sentence {sentence} "
+                    f"starting from position {sentence_offset}"
                 ) from error
             sentences.append(
                 Sentence(
@@ -92,15 +93,17 @@ class SegtokSentenceSplitter(SentenceSplitter):
 
 
 class SpacySentenceSplitter(SentenceSplitter):
-    """
+    """Sentence Splitter using Spacy.
+
     Implementation of :class:`SentenceSplitter`, using models from Spacy.
 
-    :param model Spacy V2 model or the name of the model to load.
-    :param tokenizer Custom tokenizer to use (default :class:`SpacyTokenizer`)
+    Args:
+        model: Spacy V2 model or the name of the model to load.
+        tokenizer: Custom tokenizer to use (default :class:`SpacyTokenizer`)
     """
 
-    def __init__(self, model: Union[Any, str], tokenizer: Tokenizer = None):
-        super(SpacySentenceSplitter, self).__init__()
+    def __init__(self, model: Union[Any, str], tokenizer: Optional[Tokenizer] = None) -> None:
+        super().__init__()
 
         try:
             import spacy
@@ -159,23 +162,25 @@ class SpacySentenceSplitter(SentenceSplitter):
 
 
 class SciSpacySentenceSplitter(SpacySentenceSplitter):
-    """
+    """Sentence splitter using the spacy model `en_core_sci_sm`.
+
     Convenience class to instantiate :class:`SpacySentenceSplitter` with Spacy model `en_core_sci_sm`
     for sentence splitting and :class:`SciSpacyTokenizer` as tokenizer.
     """
 
-    def __init__(self):
-        super(SciSpacySentenceSplitter, self).__init__("en_core_sci_sm", SciSpacyTokenizer())
+    def __init__(self) -> None:
+        super().__init__("en_core_sci_sm", SciSpacyTokenizer())
 
 
 class TagSentenceSplitter(SentenceSplitter):
-    """
+    """SentenceSplitter which assumes that there is a tag within the text that is used to mark sentence boundaries.
+
     Implementation of :class:`SentenceSplitter` which assumes that there is a special tag within
     the text that is used to mark sentence boundaries.
     """
 
-    def __init__(self, tag: str, tokenizer: Tokenizer = SegtokTokenizer()):
-        super(TagSentenceSplitter, self).__init__()
+    def __init__(self, tag: str, tokenizer: Tokenizer = SegtokTokenizer()) -> None:
+        super().__init__()
         self._tokenizer = tokenizer
         self.tag = tag
 
@@ -215,13 +220,14 @@ class TagSentenceSplitter(SentenceSplitter):
 
 
 class NewlineSentenceSplitter(TagSentenceSplitter):
-    """
+    r"""Sentence Splitter using newline as boundary marker.
+
     Convenience class to instantiate :class:`SentenceTagSplitter` with newline ("\n") as
     sentence boundary marker.
     """
 
-    def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()):
-        super(NewlineSentenceSplitter, self).__init__(tag="\n", tokenizer=tokenizer)
+    def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()) -> None:
+        super().__init__(tag="\n", tokenizer=tokenizer)
 
     @property
     def name(self) -> str:
@@ -229,12 +235,13 @@ class NewlineSentenceSplitter(TagSentenceSplitter):
 
 
 class NoSentenceSplitter(SentenceSplitter):
-    """
+    """Sentence Splitter which treats the full text as a single Sentence.
+
     Implementation of :class:`SentenceSplitter` which treats the complete text as one sentence.
     """
 
-    def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()):
-        super(NoSentenceSplitter, self).__init__()
+    def __init__(self, tokenizer: Tokenizer = SegtokTokenizer()) -> None:
+        super().__init__()
         self._tokenizer = tokenizer
 
     def split(self, text: str) -> List[Sentence]:

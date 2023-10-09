@@ -1,7 +1,7 @@
 # Transformer Embeddings
 
 Flair supports various Transformer-based architectures like BERT or XLNet from [HuggingFace](https://github.com/huggingface), 
-with two classes `TransformerWordEmbeddings` (to embed words) and `TransformerDocumentEmbeddings` (to embed documents).
+with two classes [`TransformerWordEmbeddings`](#flair.embeddings.token.TransformerWordEmbeddings) (to embed words or tokens) and [`TransformerDocumentEmbeddings`](#flair.embeddings.document.TransformerDocumentEmbeddings) (to embed documents).
 
 ## Embeddings Words with Transformers
 
@@ -35,12 +35,12 @@ sentence = Sentence('The grass is green .')
 embedding.embed(sentence)
 ```
 
-[Here](https://huggingface.co/transformers/pretrained_models.html) is a full list of all models (BERT, RoBERTa, XLM, XLNet etc.). You can use any of these models with this class.
+[Here](https://https://huggingface.co/models) you can search for models to use. You can use any NLP model.
 
 
-## Embeddings Documents with Transformers
+## Embedding Documents with Transformers
 
-To embed a whole sentence as one (instead of each word in the sentence), simply use the TransformerDocumentEmbeddings 
+To embed a whole sentence as one (instead of each word in the sentence), simply use the [`TransformerDocumentEmbeddings`](#flair.embeddings.document.TransformerDocumentEmbeddings) 
 instead:
 
 ```python
@@ -58,18 +58,18 @@ embedding.embed(sentence)
 
 ## Arguments
 
-There are several options that you can set when you init the TransformerWordEmbeddings 
-and TransformerDocumentEmbeddings classes:
+There are several options that you can set when you init the [`TransformerWordEmbeddings`](#flair.embeddings.token.TransformerWordEmbeddings) 
+and [`TransformerDocumentEmbeddings`](#flair.embeddings.document.TransformerDocumentEmbeddings) classes:
 
-| Argument             | Default             | Description
-| -------------------- | ------------------- | ------------------------------------------------------------------------------
-| `model` | `bert-base-uncased` | The string identifier of the transformer model you want to use (see above)
-| `layers`             | `all`       | Defines the layers of the Transformer-based model that produce the embedding
-| `subtoken_pooling`  | `first`             | See [Pooling operation section](#Pooling-operation).
-| `layer_mean`     | `True`             | See [Layer mean section](#Layer-mean).
-| `fine_tune`     | `False`             | Whether or not embeddings are fine-tuneable.
-| `allow_long_sentences`     | `True`             | Whether or not texts longer than maximal sequence length are supported.
-| `use_context` | `False`             | Set to True to include context outside of sentences. This can greatly increase accuracy on some tasks, but slows down embedding generation
+| Argument               | Default              | Description
+|------------------------|----------------------| ------------------------------------------------------------------------------
+| `model`                | `bert-base-uncased`  | The string identifier of the transformer model you want to use (see above)
+| `layers`               | `all`                | Defines the layers of the Transformer-based model that produce the embedding
+| `subtoken_pooling`     | `first`              | See [Pooling operation section](#Pooling-operation).
+| `layer_mean`           | `True`               | See [Layer mean section](#Layer-mean).
+| `fine_tune`            | `False`              | Whether or not embeddings are fine-tuneable.
+| `allow_long_sentences` | `True`               | Whether or not texts longer than maximal sequence length are supported.
+| `use_context`          | `False`              | Set to True to include context outside of sentences. This can greatly increase accuracy on some tasks, but slows down embedding generation.
 
 
 ### Layers
@@ -116,7 +116,7 @@ I.e. the size of the embedding increases the mode layers we use (but ONLY if lay
 
 ### Pooling operation
 
-Most of the Transformer-based models (except Transformer-XL) use subword tokenization. E.g. the following
+Most of the Transformer-based models use subword tokenization. E.g. the following
 token `puppeteer` could be tokenized into the subwords: `pupp`, `##ete` and `##er`.
 
 We implement different pooling operations for these subwords to generate the final token representation:
@@ -138,7 +138,7 @@ print(sentence[0].embedding.size())
 ### Layer mean
 
 The Transformer-based models have a certain number of layers. By default, all layers you select are
-concatenated as explained above. Alternatively, you can set layer_mean=True to do a mean over all
+concatenated as explained above. Alternatively, you can set `layer_mean=True` to do a mean over all
 selected layers. The resulting vector will then always have the same dimensionality as a single layer:
 
 ```python
@@ -175,11 +175,4 @@ tensor([-0.0323, -0.3904, -1.1946,  ...,  0.1305, -0.1365, -0.4323],
 
 ### Models
 
-Please have a look at the awesome Hugging Face [documentation](https://huggingface.co/transformers/v2.3.0/pretrained_models.html)
-for all supported pretrained models!
-
-
-## Next
-
-You can now either go back to the [embedding overview](/resources/docs/TUTORIAL_EMBEDDINGS_OVERVIEW.md), 
-or check out [how to train models](/resources/docs/TUTORIAL_TRAINING_OVERVIEW.md).
+Please have a look at the awesome Hugging Face [hub](https://huggingface.co/models) for all supported pretrained models!
