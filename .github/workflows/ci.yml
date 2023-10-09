@@ -17,11 +17,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.8
-      - name: Cleanup Disk Space
-        run: |
-          sudo swapoff -a
-          sudo rm -f /swapfile
-          sudo apt clean
+      - name: Install Torch cpu
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Install Flair dependencies
         run: pip install -e .
       - name: Install unittest dependencies
