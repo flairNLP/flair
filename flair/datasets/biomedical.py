@@ -132,7 +132,6 @@ def filter_and_map_entities(
                 new_entities.append(new_entity)
             else:
                 logging.debug(f"Skip entity type {entity.type}")
-                pass
         mapped_entities_per_document[id] = new_entities
 
     return InternalBioNerDataset(documents=dataset.documents, entities_per_document=mapped_entities_per_document)

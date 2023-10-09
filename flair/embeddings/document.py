@@ -556,7 +556,6 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
             log.warning('ATTENTION! The library "sentence-transformers" is not installed!')
             log.warning('To use Sentence Transformers, please first install with "pip install sentence-transformers"')
             log.warning("-" * 100)
-            pass
 
         self.model_name = model
         self.model = SentenceTransformer(
