@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Any, Dict
 
 from flair.trainers.plugins.base import TrainerPlugin, TrainingInterrupt
 from flair.trainers.plugins.metric_records import MetricRecord
@@ -106,3 +107,16 @@ class AnnealingPlugin(TrainerPlugin):
             f"anneal_factor: '{self.anneal_factor}', "
             f"min_learning_rate: '{self.min_learning_rate}'"
         )
+
+    def get_state(self) -> Dict[str, Any]:
+        return {
+            **super().get_state(),
+            "base_path": str(self.base_path),
+            "min_learning_rate": self.min_learning_rate,
+            "anneal_factor": self.anneal_factor,
+            "patience": self.patience,
+            "initial_extra_patience": self.initial_extra_patience,
+            "anneal_with_restarts": self.anneal_with_restarts,
+            "bad_epochs": self.scheduler.num_bad_epochs,
+            "current_best": self.scheduler.best,
+        }

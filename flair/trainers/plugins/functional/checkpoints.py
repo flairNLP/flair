@@ -1,4 +1,5 @@
 import logging
+from typing import Any, Dict
 
 from flair.trainers.plugins.base import TrainerPlugin
 
@@ -27,3 +28,11 @@ class CheckpointPlugin(TrainerPlugin):
             )
             model_name = "model_epoch_" + str(epoch) + ".pt"
             self.model.save(self.base_path / model_name, checkpoint=self.save_optimizer_state)
+
+    def get_state(self) -> Dict[str, Any]:
+        return {
+            **super().get_state(),
+            "base_path": str(self.base_path),
+            "save_model_each_k_epochs": self.save_model_each_k_epochs,
+            "save_optimizer_state": self.save_optimizer_state,
+        }

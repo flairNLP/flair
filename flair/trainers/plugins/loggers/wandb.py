@@ -1,4 +1,5 @@
 import logging
+from typing import Any, Dict
 
 from flair.trainers.plugins.base import TrainerPlugin
 
@@ -32,8 +33,8 @@ class WandbLoggingHandler(logging.Handler):
 
 
 class WandbLogger(TrainerPlugin):
-    def __init__(self, wandb, emit_alerts=True, alert_level=logging.WARNING, **kwargs) -> None:
-        super().__init__(**kwargs)
+    def __init__(self, wandb, emit_alerts=True, alert_level=logging.WARNING) -> None:
+        super().__init__()
 
         self.wandb = wandb
         self.emit_alerts = emit_alerts
@@ -70,3 +71,10 @@ class WandbLogger(TrainerPlugin):
     @TrainerPlugin.hook
     def _training_finally(self, **kw):
         self.writer.close()
+
+    def get_state(self) -> Dict[str, Any]:
+        return {
+            **super().get_state(),
+            "emit_alerts": self.emit_alerts,
+            "alert_level": self.alert_level,
+        }

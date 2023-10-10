@@ -4,6 +4,7 @@ from inspect import isclass, signature
 from itertools import count
 from queue import Queue
 from typing import (
+    Any,
     Callable,
     Dict,
     Iterator,
@@ -258,6 +259,9 @@ class BasePlugin:
 
     def __str__(self) -> str:
         return self.__class__.__name__
+
+    def get_state(self) -> Dict[str, Any]:
+        return {"__cls__": f"{self.__module__}.{self.__class__.__name__}"}
 
 
 class TrainerPlugin(BasePlugin):
