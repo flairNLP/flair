@@ -156,7 +156,6 @@ class MongoDataset(FlairDataset):
             log.warning('ATTENTION! The library "pymongo" is not installed!')
             log.warning('To use MongoDataset, please first install with "pip install pymongo"')
             log.warning("-" * 100)
-            pass
 
         self.in_memory = in_memory
         self.tokenizer = tokenizer
