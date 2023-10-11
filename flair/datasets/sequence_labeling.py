@@ -36,6 +36,9 @@ from flair.file_utils import cached_path, unpack_file
 
 log = logging.getLogger("flair")
 
+# limit corpus to 200 sentences when debugging
+DEBUG_CORPUS_LENGTH_LIMIT = 200
+
 
 class MultiFileJsonlCorpus(Corpus):
     """This class represents a generic Jsonl corpus with multiple train, dev, and test files."""
@@ -197,6 +200,9 @@ class JsonlDataset(FlairDataset):
                 self._add_labels_to_sentence(raw_text, current_sentence, current_labels)
 
                 self.sentences.append(current_sentence)
+
+                if flair.debug and len(self.sentences) >= DEBUG_CORPUS_LENGTH_LIMIT:
+                    break
 
     def _add_labels_to_sentence(self, raw_text: str, sentence: Sentence, labels: List[List[Any]]):
         # Add tags for each annotated span
