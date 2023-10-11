@@ -39,6 +39,9 @@ __version__ = "0.12.2"
 # global variable: arrow symbol
 _arrow = " → "
 
+# global variable: debug
+debug = False
+
 from . import (  # noqa: E402 import after setting device
     data,
     models,
@@ -87,6 +90,7 @@ __all__ = [
     "cache_root",
     "device",
     "__version__",
+    "debug",
     "logger",
     "set_seed",
     "data",
