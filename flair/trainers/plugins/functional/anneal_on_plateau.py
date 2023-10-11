@@ -118,6 +118,4 @@ class AnnealingPlugin(TrainerPlugin):
             "patience": self.patience,
             "initial_extra_patience": self.initial_extra_patience,
             "anneal_with_restarts": self.anneal_with_restarts,
-            "bad_epochs": self.scheduler.num_bad_epochs,
-            "current_best": self.scheduler.best,
         }
