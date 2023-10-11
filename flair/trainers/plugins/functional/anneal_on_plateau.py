@@ -35,6 +35,7 @@ class AnnealingPlugin(TrainerPlugin):
         self.anneal_factor = anneal_factor
         self.patience = patience
         self.initial_extra_patience = initial_extra_patience
+        self.scheduler: AnnealOnPlateau
 
     def store_learning_rate(self):
         optimizer = self.trainer.optimizer
