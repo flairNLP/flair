@@ -18,6 +18,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ env.python-version }}
+      - name: Install Torch cpu
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Install Flair dependencies
         run: pip install -e .
       - name: Install unittest dependencies

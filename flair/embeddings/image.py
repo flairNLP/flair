@@ -31,7 +31,7 @@ class ImageEmbeddings(Embeddings[Image]):
 
     def to_params(self) -> Dict[str, Any]:
         # legacy pickle-like saving for image embeddings, as implementation details are not obvious
-        return self.__getstate__()  # type: ignore[operator]
+        return self.__getstate__()
 
     @classmethod
     def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
@@ -104,7 +104,6 @@ class NetworkImageEmbeddings(ImageEmbeddings):
             log.warning('ATTENTION! The library "torchvision" is not installed!')
             log.warning('To use convnets pretraned on ImageNet, please first install with "pip install torchvision"')
             log.warning("-" * 100)
-            pass
 
         model_info = {
             "resnet50": (torchvision.models.resnet50, lambda x: list(x)[:-1], 2048),

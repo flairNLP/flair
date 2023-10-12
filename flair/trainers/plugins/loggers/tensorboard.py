@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Any, Dict
 
 from flair.trainers.plugins.base import TrainerPlugin
 from flair.training_utils import log_line
@@ -22,6 +23,7 @@ class TensorboardLogger(TrainerPlugin):
         super().__init__()
         self.comment = comment
         self.tracked_metrics = tracked_metrics
+        self.log_dir = log_dir
 
         try:
             from torch.utils.tensorboard import SummaryWriter
@@ -56,3 +58,11 @@ class TensorboardLogger(TrainerPlugin):
         """Closes the writer."""
         assert self.writer is not None
         self.writer.close()
+
+    def get_state(self) -> Dict[str, Any]:
+        return {
+            **super().get_state(),
+            "log_dir": str(self.log_dir) if self.log_dir is not None else None,
+            "comment": self.comment,
+            "tracked_metrics": self.tracked_metrics,
+        }

@@ -860,7 +860,11 @@ class ModelTrainer(Pluggable):
             k: str(v) if isinstance(v, Path) else v for k, v in training_parameters.items()
         }
 
-        plugins = [plugin.__class__ for plugin in model_card["training_parameters"]["plugins"]]
+        model_card["training_parameters"] = {
+            k: f"{v.__module__}.{v.__name__}" if inspect.isclass(v) else v for k, v in training_parameters.items()
+        }
+
+        plugins = [plugin.get_state() for plugin in model_card["training_parameters"]["plugins"]]
         model_card["training_parameters"]["plugins"] = plugins
 
         return model_card

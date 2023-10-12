@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Mapping
+from typing import Any, Dict, Mapping
 
 from flair.trainers.plugins.base import TrainerPlugin
 
@@ -32,3 +32,9 @@ class MetricHistoryPlugin(TrainerPlugin):
     def after_training(self, **kw):
         """Returns metric history."""
         self.trainer.return_values.update(self.metric_history)
+
+    def get_state(self) -> Dict[str, Any]:
+        return {
+            **super().get_state(),
+            "metrics_to_collect": dict(self.metrics_to_collect),
+        }
