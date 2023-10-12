@@ -932,11 +932,9 @@ document.write(`
         <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.LossFilePlugin.after_evaluation">(flair.trainers.plugins.LossFilePlugin method)</a>
 </li>
       </ul></li>
-      <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.AmpPlugin.after_setup">after_setup() (flair.trainers.plugins.AmpPlugin method)</a>
+      <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.AnnealingPlugin.after_setup">after_setup() (flair.trainers.plugins.AnnealingPlugin method)</a>
 
       <ul>
-        <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.AnnealingPlugin.after_setup">(flair.trainers.plugins.AnnealingPlugin method)</a>
-</li>
         <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.LinearSchedulerPlugin.after_setup">(flair.trainers.plugins.LinearSchedulerPlugin method)</a>
 </li>
       </ul></li>
@@ -956,8 +954,6 @@ document.write(`
 </li>
       <li><a href="api/datasets/document_classification.html#flair.datasets.document_classification.AMAZON_REVIEWS">AMAZON_REVIEWS (class in flair.datasets.document_classification)</a>
 </li>
-      <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.AmpPlugin">AmpPlugin (class in flair.trainers.plugins)</a>
-</li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.ANAT_EM">ANAT_EM (class in flair.datasets.biomedical)</a>
 </li>
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.AnnealingPlugin">AnnealingPlugin (class in flair.trainers.plugins)</a>
@@ -976,8 +972,6 @@ document.write(`
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.AmpPlugin.backward">backward() (flair.trainers.plugins.AmpPlugin method)</a>
-</li>
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.BasePlugin">BasePlugin (class in flair.trainers.plugins)</a>
 </li>
       <li><a href="api/datasets/base.html#flair.datasets.base.DataLoader.batch_size">batch_size (flair.datasets.base.DataLoader attribute)</a>
@@ -1248,12 +1242,8 @@ document.write(`
 </li>
       <li><a href="api/flair.nn.html#flair.nn.DefaultClassifier">DefaultClassifier (class in flair.nn)</a>
 </li>
-      <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.AmpPlugin.detach">detach() (flair.trainers.plugins.AmpPlugin method)</a>
-
-      <ul>
-        <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.BasePlugin.detach">(flair.trainers.plugins.BasePlugin method)</a>
+      <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.BasePlugin.detach">detach() (flair.trainers.plugins.BasePlugin method)</a>
 </li>
-      </ul></li>
       <li><a href="api/datasets/entity_linking.html#flair.datasets.entity_linking.determine_tsv_file">determine_tsv_file() (in module flair.datasets.entity_linking)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.Corpus.dev">dev (flair.data.Corpus property)</a>
@@ -1302,10 +1292,10 @@ document.write(`
         <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.MIRNA.download_and_prepare_train">(flair.datasets.biomedical.MIRNA class method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.KaewphanCorpusHelper.download_cll_dataset">download_cll_dataset() (flair.datasets.biomedical.KaewphanCorpusHelper static method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.BioBertHelper.download_corpora">download_corpora() (flair.datasets.biomedical.BioBertHelper static method)</a>
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.ANAT_EM.download_corpus">download_corpus() (flair.datasets.biomedical.ANAT_EM static method)</a>
@@ -2096,10 +2086,10 @@ document.write(`
         <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.HUNER_SPECIES_TMVAR_V3.get_entity_type_mapping">(flair.datasets.biomedical.HUNER_SPECIES_TMVAR_V3 method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.data.html#flair.data.Token.get_head">get_head() (flair.data.Token method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.data.html#flair.data.Dictionary.get_idx_for_item">get_idx_for_item() (flair.data.Dictionary method)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.Dictionary.get_idx_for_items">get_idx_for_items() (flair.data.Dictionary method)</a>
@@ -2154,6 +2144,26 @@ document.write(`
 </li>
       <li><a href="api/flair.data.html#flair.data.get_spans_from_bio">get_spans_from_bio() (in module flair.data)</a>
 </li>
+      <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.AnnealingPlugin.get_state">get_state() (flair.trainers.plugins.AnnealingPlugin method)</a>
+
+      <ul>
+        <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.BasePlugin.get_state">(flair.trainers.plugins.BasePlugin method)</a>
+</li>
+        <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.CheckpointPlugin.get_state">(flair.trainers.plugins.CheckpointPlugin method)</a>
+</li>
+        <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.LinearSchedulerPlugin.get_state">(flair.trainers.plugins.LinearSchedulerPlugin method)</a>
+</li>
+        <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.LogFilePlugin.get_state">(flair.trainers.plugins.LogFilePlugin method)</a>
+</li>
+        <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.LossFilePlugin.get_state">(flair.trainers.plugins.LossFilePlugin method)</a>
+</li>
+        <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.MetricHistoryPlugin.get_state">(flair.trainers.plugins.MetricHistoryPlugin method)</a>
+</li>
+        <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.TensorboardLogger.get_state">(flair.trainers.plugins.TensorboardLogger method)</a>
+</li>
+        <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.WeightExtractorPlugin.get_state">(flair.trainers.plugins.WeightExtractorPlugin method)</a>
+</li>
+      </ul></li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.HUNER_DISEASE_MIRNA.get_subset">get_subset() (flair.datasets.biomedical.HUNER_DISEASE_MIRNA method)</a>
 
       <ul>
