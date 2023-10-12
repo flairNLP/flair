@@ -232,13 +232,13 @@ class ViterbiDecoder:
         scores = scores.numpy()
         for i_batch, batch in enumerate(scores):
             for i, (tag_id, tag_scores) in enumerate(zip(tag_seq, batch)):
-                if type(tag_id) != int and tag_id.item() != np.argmax(tag_scores):
+                if not isinstance(tag_id, int) and tag_id.item() != np.argmax(tag_scores):
                     swap_index_score = np.argmax(tag_scores)
                     scores[i_batch][i][tag_id.item()], scores[i_batch][i][swap_index_score] = (
                         scores[i_batch][i][swap_index_score],
                         scores[i_batch][i][tag_id.item()],
                     )
-                elif type(tag_id) == int and tag_id != np.argmax(tag_scores):
+                elif isinstance(tag_id, int) and tag_id != np.argmax(tag_scores):
                     swap_index_score = np.argmax(tag_scores)
                     scores[i_batch][i][tag_id], scores[i_batch][i][swap_index_score] = (
                         scores[i_batch][i][swap_index_score],
