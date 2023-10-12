@@ -1,5 +1,4 @@
 from .base import BasePlugin, Pluggable, TrainerPlugin, TrainingInterrupt
-from .functional.amp import AmpPlugin
 from .functional.anneal_on_plateau import AnnealingPlugin
 from .functional.checkpoints import CheckpointPlugin
 from .functional.linear_scheduler import LinearSchedulerPlugin
@@ -11,7 +10,6 @@ from .loggers.tensorboard import TensorboardLogger
 from .metric_records import MetricName, MetricRecord
 
 __all__ = [
-    "AmpPlugin",
     "AnnealingPlugin",
     "CheckpointPlugin",
     "LinearSchedulerPlugin",
