@@ -232,17 +232,16 @@ class ViterbiDecoder:
         scores = scores.numpy()
         for i_batch, batch in enumerate(scores):
             for i, (tag_id, tag_scores) in enumerate(zip(tag_seq, batch)):
-                if not isinstance(tag_id, int) and tag_id.item() != np.argmax(tag_scores):
-                    swap_index_score = np.argmax(tag_scores)
-                    scores[i_batch][i][tag_id.item()], scores[i_batch][i][swap_index_score] = (
+                if isinstance(tag_id, int):
+                    tag_id_int = tag_id
+                else:
+                    tag_id_int = int(tag_id.item())
+
+                if tag_id_int != np.argmax(tag_scores):
+                    swap_index_score = int(np.argmax(tag_scores))
+                    scores[i_batch][i][tag_id_int], scores[i_batch][i][swap_index_score] = (
                         scores[i_batch][i][swap_index_score],
-                        scores[i_batch][i][tag_id.item()],
-                    )
-                elif isinstance(tag_id, int) and tag_id != np.argmax(tag_scores):
-                    swap_index_score = np.argmax(tag_scores)
-                    scores[i_batch][i][tag_id], scores[i_batch][i][swap_index_score] = (
-                        scores[i_batch][i][swap_index_score],
-                        scores[i_batch][i][tag_id],
+                        scores[i_batch][i][tag_id_int],
                     )
         prob_tags_per_sentence = []
         for scores_sentence, length, sentence in zip(scores, lengths, sentences):
