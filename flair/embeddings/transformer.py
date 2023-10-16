@@ -1021,7 +1021,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             feature_extractor_data: Feature extractor data used when loading embeddings. Always use None.
             name: The name for the embeddings. Per default the name will be used from the used transformers model.
             force_max_length: If True, the tokenizer will always pad the sequences to maximum length.
-            needs_manual_ocr: If True, bounding boxes will be calculated manually. This is used for models like [layoutlm](https://huggingface.co/docs/transformers/model_doc/layoutlm) where the tokenizer doesn't compute the bounding boxes itself.
+            needs_manual_ocr: If True, bounding boxes will be calculated manually. This is used for models like `layoutlm <https://huggingface.co/docs/transformers/model_doc/layoutlm>`_ where the tokenizer doesn't compute the bounding boxes itself.
             use_context_separator: If True, the embedding will hold an additional token to allow the model to distingulish between context and prediction.
             **kwargs: Further values forwarded to the transformers config
         """
