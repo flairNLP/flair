@@ -5,8 +5,8 @@ import importlib_metadata
 # -- Project information -----------------------------------------------------
 from sphinx_github_style import get_linkcode_resolve
 
-version = "0.12.2"
-release = "0.12.2"
+version = "0.13.0"
+release = "0.13.0"
 project = "flair"
 author = importlib_metadata.metadata(project)["Author"]
 copyright = f"2023 {author}"

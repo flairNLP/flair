@@ -28,59 +28,6 @@ plotter.plot_weights('weights.txt')
 
 This generates PNG plots in the result folder.
 
-### Resuming Training
-
-If you want to stop the training at some point and resume it at a later point, you should train with the parameter
-`checkpoint` set to `True`. This will save the model plus training parameters after every epoch. Thus, you can load the
-model plus trainer at any later point and continue the training exactly there where you have left.
-
-The example code below shows how to train, stop, and continue training of a `SequenceTagger`. The same can be done
-for `TextClassifier`.
-
-```python
-from flair.data import Corpus
-from flair.datasets import UD_ENGLISH
-from flair.embeddings import WordEmbeddings
-from flair.models import SequenceTagger
-from flair.trainers import ModelTrainer
-
-# 1. get the corpus
-corpus: Corpus = UD_ENGLISH().downsample(0.1)
-
-# 2. what label do we want to predict?
-label_type = 'upos'
-
-# 3. make the label dictionary from the corpus
-label_dict = corpus.make_label_dictionary(label_type=label_type)
-
-# 4. initialize sequence tagger
-tagger: SequenceTagger = SequenceTagger(hidden_size=128,
-                                        embeddings=WordEmbeddings('glove'),
-                                        tag_dictionary=label_dict,
-                                        tag_type=label_type)
-
-# 5. initialize trainer
-trainer: ModelTrainer = ModelTrainer(tagger, corpus)
-
-# 6. train for 10 epochs with checkpoint=True
-path = 'resources/taggers/example-pos'
-trainer.train(path,
-              learning_rate=0.1,
-              mini_batch_size=32,
-              max_epochs=10,
-              checkpoint=True,
-              )
-
-# 7. continue training at later point. Load previously trained model checkpoint, then resume
-trained_model = SequenceTagger.load(path + '/checkpoint.pt')
-
-# resume training best model, but this time until epoch 25
-trainer.resume(trained_model,
-               base_path=path + '-resume',
-               max_epochs=25,
-               )
-```
-
 ## Scalability: Training with Large Datasets
 
 Many embeddings in Flair are somewhat costly to produce in terms of runtime and may have large vectors. Examples of this
