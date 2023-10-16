@@ -1137,7 +1137,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     def _load_from_state_dict(
         self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
     ):
-        if transformers.__version__ >= Version(4, 31, 0):
+        if ".".join(transformers.__version__.split(".")[:3]) >= Version(4, 31, 0):
             assert isinstance(state_dict, dict)
             state_dict.pop(f"{prefix}model.embeddings.position_ids", None)
         super()._load_from_state_dict(
