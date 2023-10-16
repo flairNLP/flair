@@ -1004,7 +1004,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         Allows using transformers as TokenEmbeddings and DocumentEmbeddings or both.
 
         Args:
-            model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for options)
+            model: name of transformer model (see `huggingface hub <https://huggingface.co/models>`_ for options)
             fine_tune: If True, the weights of the transformers embedding will be updated during training.
             layers: Specify which layers should be extracted for the embeddings. Expects either "all" to extract all layers or a comma separated list of indices (e.g. "-1,-2,-3,-4" for the last 4 layers)
             layer_mean: If True, the extracted layers will be averaged. Otherwise, they will be concatenated.
