@@ -923,6 +923,16 @@ def test_jsonl_corpus_loads_spans(tasks_base_path):
     assert len(example.get_spans("ner")) > 0
 
 
+def test_jsonl_corpus_loads_metadata(tasks_base_path):
+    """Tests reading a JsonlDataset containing metadata."""
+    dataset = JsonlDataset(tasks_base_path / "jsonl" / "testa.jsonl")
+
+    assert len(dataset.sentences) == 3
+    assert dataset.sentences[0].get_metadata("from") == 123
+    assert dataset.sentences[1].get_metadata("from") == 124
+    assert dataset.sentences[2].get_metadata("from") == 125
+
+
 def test_ontonotes_download():
     from urllib.parse import urlparse
 
