@@ -486,6 +486,10 @@ class ModelTrainer(Pluggable):
         if epoch == 0:
             self.check_for_and_delete_previous_best_models(base_path)
 
+        # Sanity conversion: if flair.device was set as a string, convert to torch.device
+        if isinstance(flair.device, str):
+            flair.device = torch.device(flair.device)
+
         # -- AmpPlugin -> wraps with AMP
         # -- AnnealingPlugin -> initialize schedulers (requires instantiated optimizer)
         with contextlib.ExitStack() as context_stack:
