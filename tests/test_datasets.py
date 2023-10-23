@@ -891,7 +891,7 @@ def test_german_mobie(tasks_base_path):
         f"reported number of sentences ({ref_sentences})!"
     )
     assert ref_tokens == actual_tokens, (
-        "Number of parsed tokens ({actual_tokens}) does not match with reported " "number of tokens ({ref_tokens})!"
+        f"Number of parsed tokens ({actual_tokens}) does not match with reported number of tokens ({ref_tokens})!"
     )
 
 
