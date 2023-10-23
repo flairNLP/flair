@@ -182,16 +182,20 @@ class JsonlDataset(FlairDataset):
         """Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.
 
         The expected file format is:
-        {
-            "<text_column_name>": "<text>",
-            "<label_column_name>": [[<start_char_index>, <end_char_index>, <label>],...],
-            "<metadata_column_name>": [[<metadata_key>, <metadata_value>],...]
-        }
 
-        :param path_to_json._file: File to read
-        :param text_column_name: Name of the text column
-        :param label_column_name: Name of the label column
-        :param metadata_column_name: Name of the metadata column
+        .. code-block:: json
+
+            {
+                "<text_column_name>": "<text>",
+                "<label_column_name>": [[<start_char_index>, <end_char_index>, <label>],...],
+                "<metadata_column_name>": [[<metadata_key>, <metadata_value>],...]
+            }
+
+        Args:
+            path_to_jsonl_file: File to read
+            text_column_name: Name of the text column
+            label_column_name: Name of the label column
+            metadata_column_name: Name of the metadata column
         """
         path_to_json_file = Path(path_to_jsonl_file)
 
@@ -207,7 +211,7 @@ class JsonlDataset(FlairDataset):
                 current_line = json.loads(line)
                 raw_text = current_line[text_column_name]
                 current_labels = current_line[label_column_name]
-                current_metadatas = current_line.get("metadata_column_name", [])
+                current_metadatas = current_line.get(self.metadata_column_name, [])
                 current_sentence = Sentence(raw_text)
 
                 self._add_labels_to_sentence(raw_text, current_sentence, current_labels)
