@@ -413,6 +413,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.Pluggable"><code class="docutils literal notranslate"><span class="pre">Pluggable</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin"><code class="docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.TrainingInterrupt"><code class="docutils literal notranslate"><span class="pre">TrainingInterrupt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.ReduceTransformerVocabPlugin"><code class="docutils literal notranslate"><span class="pre">ReduceTransformerVocabPlugin</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.MetricName"><code class="docutils literal notranslate"><span class="pre">MetricName</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.MetricRecord"><code class="docutils literal notranslate"><span class="pre">MetricRecord</span></code></a></li>
 </ul>
@@ -924,6 +925,22 @@ document.write(`
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.ReduceTransformerVocabPlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">ReduceTransformerVocabPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_optimizer_state</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/reduce_transformer_vocab.py#L16-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.ReduceTransformerVocabPlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.ReduceTransformerVocabPlugin.register_transformer_smaller_training_vocab">
+<span class="sig-name descname"><span class="pre">register_transformer_smaller_training_vocab</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/reduce_transformer_vocab.py#L23-L41"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.ReduceTransformerVocabPlugin.register_transformer_smaller_training_vocab" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.ReduceTransformerVocabPlugin.save_model_at_the_end">
+<span class="sig-name descname"><span class="pre">save_model_at_the_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/functional/reduce_transformer_vocab.py#L43-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.ReduceTransformerVocabPlugin.save_model_at_the_end" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="flair.trainers.plugins.MetricName">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">MetricName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/metric_records.py#L9-L61"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricName" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -1136,6 +1153,11 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.TrainingInterrupt"><code class="docutils literal notranslate"><span class="pre">TrainingInterrupt</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.ReduceTransformerVocabPlugin"><code class="docutils literal notranslate"><span class="pre">ReduceTransformerVocabPlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.ReduceTransformerVocabPlugin.register_transformer_smaller_training_vocab"><code class="docutils literal notranslate"><span class="pre">ReduceTransformerVocabPlugin.register_transformer_smaller_training_vocab()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.ReduceTransformerVocabPlugin.save_model_at_the_end"><code class="docutils literal notranslate"><span class="pre">ReduceTransformerVocabPlugin.save_model_at_the_end()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricName"><code class="docutils literal notranslate"><span class="pre">MetricName</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord"><code class="docutils literal notranslate"><span class="pre">MetricRecord</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.MetricRecord.__init__"><code class="docutils literal notranslate"><span class="pre">MetricRecord.__init__()</span></code></a></li>
