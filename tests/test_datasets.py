@@ -890,9 +890,9 @@ def test_german_mobie(tasks_base_path):
         f"Number of parsed sentences ({actual_sentences}) does not match with "
         f"reported number of sentences ({ref_sentences})!"
     )
-    assert ref_tokens == actual_tokens, (
-        f"Number of parsed tokens ({actual_tokens}) does not match with reported number of tokens ({ref_tokens})!"
-    )
+    assert (
+        ref_tokens == actual_tokens
+    ), f"Number of parsed tokens ({actual_tokens}) does not match with reported number of tokens ({ref_tokens})!"
 
 
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
