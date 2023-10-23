@@ -8,7 +8,7 @@ import zipfile
 from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast, Literal
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union, cast
 
 import torch
 import transformers
