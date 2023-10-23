@@ -402,6 +402,7 @@ document.write(`
 <li class="toctree-l2 current"><a class="current reference internal" href="#">flair.trainers.plugins</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.AnnealingPlugin"><code class="docutils literal notranslate"><span class="pre">AnnealingPlugin</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.CheckpointPlugin"><code class="docutils literal notranslate"><span class="pre">CheckpointPlugin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.ClearmlLoggerPlugin"><code class="docutils literal notranslate"><span class="pre">ClearmlLoggerPlugin</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.LinearSchedulerPlugin"><code class="docutils literal notranslate"><span class="pre">LinearSchedulerPlugin</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.WeightExtractorPlugin"><code class="docutils literal notranslate"><span class="pre">WeightExtractorPlugin</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.trainers.plugins.LogFilePlugin"><code class="docutils literal notranslate"><span class="pre">LogFilePlugin</span></code></a></li>
@@ -542,6 +543,27 @@ document.write(`
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.trainers.plugins.ClearmlLoggerPlugin">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">ClearmlLoggerPlugin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_id_or_task</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/clearml_logger.py#L7-L42"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.ClearmlLoggerPlugin" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.trainers.plugins.ClearmlLoggerPlugin.logger">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#flair.trainers.plugins.ClearmlLoggerPlugin.logger" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.trainers.plugins.ClearmlLoggerPlugin.metric_recorded">
+<span class="sig-name descname"><span class="pre">metric_recorded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/clearml_logger.py#L30-L42"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.ClearmlLoggerPlugin.metric_recorded" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1041,6 +1063,11 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.CheckpointPlugin"><code class="docutils literal notranslate"><span class="pre">CheckpointPlugin</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.CheckpointPlugin.after_training_epoch"><code class="docutils literal notranslate"><span class="pre">CheckpointPlugin.after_training_epoch()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.CheckpointPlugin.get_state"><code class="docutils literal notranslate"><span class="pre">CheckpointPlugin.get_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.ClearmlLoggerPlugin"><code class="docutils literal notranslate"><span class="pre">ClearmlLoggerPlugin</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.ClearmlLoggerPlugin.logger"><code class="docutils literal notranslate"><span class="pre">ClearmlLoggerPlugin.logger</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.ClearmlLoggerPlugin.metric_recorded"><code class="docutils literal notranslate"><span class="pre">ClearmlLoggerPlugin.metric_recorded()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.trainers.plugins.LinearSchedulerPlugin"><code class="docutils literal notranslate"><span class="pre">LinearSchedulerPlugin</span></code></a><ul class="nav section-nav flex-column">
