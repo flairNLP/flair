@@ -618,7 +618,7 @@ class ModelTrainer(Pluggable):
                         scaler.update()
                         scale_after = scaler.get_scale()
                         batch_kw["optimizer_was_run"] = scale_before <= scale_after
-    
+
                         if batch_train_samples > 0:
                             total_train_samples += batch_train_samples
                             train_loss = batch_train_loss / batch_train_samples
