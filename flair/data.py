@@ -720,7 +720,7 @@ class Sentence(DataPoint):
                 :class:`flair.tokenization.SegTokTokenizer`. If `use_tokenizer` is set to False,
                 :class:`flair.tokenization.SpaceTokenizer` will be used instead. The tokenizer will be ignored,
                 if `text` refers to pretokenized tokens.
-            language_code: Language of the sentence. If not provided, [langdetect](https://pypi.org/project/langdetect/)
+            language_code: Language of the sentence. If not provided, `langdetect <https://pypi.org/project/langdetect/>`_
                 will be called when the language_code is accessed for the first time.
             start_position: Start char offset of the sentence in the superordinate document.
         """

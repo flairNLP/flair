@@ -7,7 +7,7 @@ flair
 **Version**: |version|
 
 **Useful links**:
-`Getting started <gtutorial/index/intro.html>`_ |
+`Getting started <tutorial/intro.html>`_ |
 `Source Repository <https://github.com/flairNLP/flair>`_ |
 `Issue Tracker <https://github.com/flairNLP/flair/issues>`_ |
 
@@ -55,9 +55,9 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
         Contributor's Guide
         ^^^^^^^^^^^^^^^^^^^
 
-        Want to add to the codebase? Can help add translation or a flowchart to the
+        Want to add to the codebase? Can help add to the
         documentation? The contributing guidelines will guide you through the
-        process of improving NumPy.
+        process of improving Flair.
 
         +++
 
@@ -68,6 +68,23 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
 
             To the contributor's guide
 
+    .. grid-item-card::
+        :img-top: ./_static/glossary.svg
+
+        Glossary
+        ^^^^^^^^
+
+        Not sure what the exact meaning of certain terms is? Find their definition in the Glossary.
+
+        +++
+
+        .. button-ref:: glossary/index
+            :expand:
+            :color: secondary
+            :click-parent:
+
+            To the glossary
+
 .. toctree::
    :maxdepth: 3
    :hidden:
@@ -75,3 +92,4 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
    Tutorials <tutorial/index>
    API reference <api/index>
    Contributing <contributing/index>
+   Glossary <glossary/index>

@@ -8,7 +8,7 @@ import zipfile
 from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union, cast
 
 import torch
 import transformers
@@ -982,8 +982,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         fine_tune: bool = True,
         layers: str = "-1",
         layer_mean: bool = True,
-        subtoken_pooling: str = "first",
-        cls_pooling: str = "cls",
+        subtoken_pooling: Literal["first", "last", "first_last", "mean"] = "first",
+        cls_pooling: Literal["cls", "max", "mean"] = "cls",
         is_token_embedding: bool = True,
         is_document_embedding: bool = True,
         allow_long_sentences: bool = False,
@@ -999,6 +999,32 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         use_context_separator: bool = True,
         **kwargs,
     ) -> None:
+        """Instantiate transformers embeddings.
+
+        Allows using transformers as TokenEmbeddings and DocumentEmbeddings or both.
+
+        Args:
+            model: name of transformer model (see `huggingface hub <https://huggingface.co/models>`_ for options)
+            fine_tune: If True, the weights of the transformers embedding will be updated during training.
+            layers: Specify which layers should be extracted for the embeddings. Expects either "all" to extract all layers or a comma separated list of indices (e.g. "-1,-2,-3,-4" for the last 4 layers)
+            layer_mean: If True, the extracted layers will be averaged. Otherwise, they will be concatenated.
+            subtoken_pooling: Specify how multiple sub-tokens will be aggregated for a token-embedding.
+            cls_pooling: Specify how the document-embeddings will be extracted.
+            is_token_embedding: If True, this embeddings can be handled as token-embeddings.
+            is_document_embedding: If True, this embeddings can be handled document-embeddings.
+            allow_long_sentences: If True, too long sentences will be patched and strided and afterwards combined.
+            use_context: If True, predicting multiple sentences at once, will use the previous and next sentences for context.
+            respect_document_boundaries: If True, the context calculation will stop if a sentence represents a context boundary.
+            context_dropout: Integer percentage (0-100) to specify how often the context won't be used during training.
+            saved_config: Pretrained config used when loading embeddings. Always use None.
+            tokenizer_data: Tokenizer data used when loading embeddings. Always use None.
+            feature_extractor_data: Feature extractor data used when loading embeddings. Always use None.
+            name: The name for the embeddings. Per default the name will be used from the used transformers model.
+            force_max_length: If True, the tokenizer will always pad the sequences to maximum length.
+            needs_manual_ocr: If True, bounding boxes will be calculated manually. This is used for models like `layoutlm <https://huggingface.co/docs/transformers/model_doc/layoutlm>`_ where the tokenizer doesn't compute the bounding boxes itself.
+            use_context_separator: If True, the embedding will hold an additional token to allow the model to distingulish between context and prediction.
+            **kwargs: Further values forwarded to the transformers config
+        """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
         del self.instance_parameters["saved_config"]
         del self.instance_parameters["tokenizer_data"]
