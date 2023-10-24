@@ -48,6 +48,7 @@ class MultiFileJsonlCorpus(Corpus):
         encoding: str = "utf-8",
         text_column_name: str = "data",
         label_column_name: str = "label",
+        metadata_column_name: str = "metadata",
         label_type: str = "ner",
         **corpusargs,
     ) -> None:
@@ -62,6 +63,7 @@ class MultiFileJsonlCorpus(Corpus):
         :param dev_files: the name of the dev files, if empty, dev data is sampled from train
         :param text_column_name: Name of the text column inside the jsonl files.
         :param label_column_name: Name of the label column inside the jsonl files.
+        :param metadata_column_name: Name of the metadata column inside the jsonl files.
 
         :raises RuntimeError: If no paths are given
         """
@@ -72,6 +74,7 @@ class MultiFileJsonlCorpus(Corpus):
                         train_file,
                         text_column_name=text_column_name,
                         label_column_name=label_column_name,
+                        metadata_column_name=metadata_column_name,
                         label_type=label_type,
                         encoding=encoding,
                     )
@@ -90,6 +93,7 @@ class MultiFileJsonlCorpus(Corpus):
                         test_file,
                         text_column_name=text_column_name,
                         label_column_name=label_column_name,
+                        metadata_column_name=metadata_column_name,
                         label_type=label_type,
                     )
                     for test_file in test_files
@@ -107,6 +111,7 @@ class MultiFileJsonlCorpus(Corpus):
                         dev_file,
                         text_column_name=text_column_name,
                         label_column_name=label_column_name,
+                        metadata_column_name=metadata_column_name,
                         label_type=label_type,
                     )
                     for dev_file in dev_files
@@ -128,6 +133,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
         encoding: str = "utf-8",
         text_column_name: str = "data",
         label_column_name: str = "label",
+        metadata_column_name: str = "metadata",
         label_type: str = "ner",
         autofind_splits: bool = True,
         name: Optional[str] = None,
@@ -141,6 +147,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :param text_column_name: Name of the text column inside the JSONL file.
         :param label_column_name: Name of the label column inside the JSONL file.
+        :param metadata_column_name: Name of the metadata column inside the JSONL file.
         :param autofind_splits: Whether train, test and dev file should be determined automatically
         :param name: name of the Corpus see flair.data.Corpus
         """
@@ -154,6 +161,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
             test_files=[test_file] if test_file else [],
             text_column_name=text_column_name,
             label_column_name=label_column_name,
+            metadata_column_name=metadata_column_name,
             label_type=label_type,
             name=name if data_folder is None else str(data_folder),
             encoding=encoding,
@@ -168,21 +176,32 @@ class JsonlDataset(FlairDataset):
         encoding: str = "utf-8",
         text_column_name: str = "data",
         label_column_name: str = "label",
+        metadata_column_name: str = "metadata",
         label_type: str = "ner",
     ) -> None:
         """Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.
 
         The expected file format is:
-        { "<text_column_name>": "<text>", "label_column_name": [[<start_char_index>, <end_char_index>, <label>],...] }
 
-        :param path_to_json._file: File to read
-        :param text_column_name: Name of the text column
-        :param label_column_name: Name of the label column
+        .. code-block:: json
+
+            {
+                "<text_column_name>": "<text>",
+                "<label_column_name>": [[<start_char_index>, <end_char_index>, <label>],...],
+                "<metadata_column_name>": [[<metadata_key>, <metadata_value>],...]
+            }
+
+        Args:
+            path_to_jsonl_file: File to read
+            text_column_name: Name of the text column
+            label_column_name: Name of the label column
+            metadata_column_name: Name of the metadata column
         """
         path_to_json_file = Path(path_to_jsonl_file)
 
         self.text_column_name = text_column_name
         self.label_column_name = label_column_name
+        self.metadata_column_name = metadata_column_name
         self.label_type = label_type
         self.path_to_json_file = path_to_json_file
 
@@ -192,9 +211,11 @@ class JsonlDataset(FlairDataset):
                 current_line = json.loads(line)
                 raw_text = current_line[text_column_name]
                 current_labels = current_line[label_column_name]
+                current_metadatas = current_line.get(self.metadata_column_name, [])
                 current_sentence = Sentence(raw_text)
 
                 self._add_labels_to_sentence(raw_text, current_sentence, current_labels)
+                self._add_metadatas_to_sentence(current_sentence, current_metadatas)
 
                 self.sentences.append(current_sentence)
 
@@ -247,6 +268,15 @@ class JsonlDataset(FlairDataset):
             )
 
         sentence[start_idx : end_idx + 1].add_label(self.label_type, label)
+
+    def _add_metadatas_to_sentence(self, sentence: Sentence, metadatas: List[Tuple[str, str]]):
+        # Add metadatas for sentence
+        for metadata in metadatas:
+            self._add_metadata_to_sentence(sentence, metadata[0], metadata[1])
+
+    @staticmethod
+    def _add_metadata_to_sentence(sentence: Sentence, metadata_key: str, metadata_value: str):
+        sentence.add_metadata(metadata_key, metadata_value)
 
     def is_in_memory(self) -> bool:
         # Currently all Jsonl Datasets are stored in Memory
