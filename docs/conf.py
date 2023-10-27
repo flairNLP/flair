@@ -5,8 +5,8 @@ import importlib_metadata
 # -- Project information -----------------------------------------------------
 from sphinx_github_style import get_linkcode_resolve
 
-version = "0.12.2"
-release = "0.12.2"
+version = "0.13.0"
+release = "0.13.0"
 project = "flair"
 author = importlib_metadata.metadata(project)["Author"]
 copyright = f"2023 {author}"
@@ -113,7 +113,7 @@ html_sidebars = {
 smv_latest_version = importlib_metadata.version(project)
 
 # Whitelist pattern for tags (set to None to ignore all tags)
-smv_tag_whitelist = r"^\d+\.\d+\.\d+$"
+smv_tag_whitelist = r"^v\d+\.\d+\.\d+$"
 
 # Whitelist pattern for branches (set to None to ignore all branches)
 smv_branch_whitelist = r"^master$"
@@ -122,7 +122,7 @@ smv_branch_whitelist = r"^master$"
 smv_remote_whitelist = r"^origin$"
 
 # Pattern for released versions
-smv_released_pattern = r"^refs/tags/\d+\.\d+\.\d+$"
+smv_released_pattern = r"^refs/tags/v\d+\.\d+\.\d+$"
 
 # Format for versioned output directories inside the build directory
 smv_outputdir_format = "{ref.name}"
