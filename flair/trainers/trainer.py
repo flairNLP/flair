@@ -767,39 +767,39 @@ class ModelTrainer(Pluggable):
                 # TensorboardLogger -> closes writer
                 self.dispatch("_training_finally")
 
-        # test best model if test data is present
-        if self.corpus.test and not train_with_test:
-            log_line(log)
+            # test best model if test data is present
+            if self.corpus.test and not train_with_test:
+                log_line(log)
 
-            self.model.eval()
+                self.model.eval()
 
-            if (base_path / "best-model.pt").exists():
-                log.info("Loading model from best epoch ...")
-                self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
+                if (base_path / "best-model.pt").exists():
+                    log.info("Loading model from best epoch ...")
+                    self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
+                else:
+                    log.info("Testing using last state of model ...")
+
+                test_results = self.model.evaluate(
+                    self.corpus.test,
+                    gold_label_type=self.model.label_type,
+                    mini_batch_size=eval_batch_size,
+                    out_path=base_path / "test.tsv",
+                    embedding_storage_mode="none",
+                    main_evaluation_metric=main_evaluation_metric,
+                    gold_label_dictionary=gold_label_dictionary_for_eval,
+                    exclude_labels=exclude_labels,
+                    return_loss=False,
+                )
+
+                log.info(test_results.detailed_results)
+                log_line(log)
+
+                # get and return the final test score of best model
+                self.return_values["test_score"] = test_results.main_score
+
             else:
-                log.info("Testing using last state of model ...")
-
-            test_results = self.model.evaluate(
-                self.corpus.test,
-                gold_label_type=self.model.label_type,
-                mini_batch_size=eval_batch_size,
-                out_path=base_path / "test.tsv",
-                embedding_storage_mode="none",
-                main_evaluation_metric=main_evaluation_metric,
-                gold_label_dictionary=gold_label_dictionary_for_eval,
-                exclude_labels=exclude_labels,
-                return_loss=False,
-            )
-
-            log.info(test_results.detailed_results)
-            log_line(log)
-
-            # get and return the final test score of best model
-            self.return_values["test_score"] = test_results.main_score
-
-        else:
-            self.return_values["test_score"] = 0
-            log.info("Test data not provided setting final score to 0")
+                self.return_values["test_score"] = 0
+                log.info("Test data not provided setting final score to 0")
 
         # MetricHistoryPlugin -> stores the loss history in return_values
         self.dispatch("after_training")
