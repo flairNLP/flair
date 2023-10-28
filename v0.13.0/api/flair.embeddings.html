@@ -1,0 +1,684 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>flair.embeddings &#8212; flair 0.13.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../_static/github_style.css?v=1093691d" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=f17e68eb"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/flair.embeddings';</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="flair.embeddings.base" href="embeddings/base.html" />
+    <link rel="prev" title="flair.datasets.treebanks" href="datasets/treebanks.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">flair 0.13.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../glossary/index.html">
+                        Glossary
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       v0.13.0  
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="../../master/api/flair.embeddings.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="flair.embeddings.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.0
+      
+    
+    
+    [x]
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../glossary/index.html">
+                        Glossary
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       v0.13.0  
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="../../master/api/flair.embeddings.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="flair.embeddings.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.0
+      
+    
+    
+    [x]
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="flair.html">flair</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.data.html">flair.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.datasets.html">flair.datasets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">flair.embeddings</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="embeddings/base.html">flair.embeddings.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="embeddings/document.html">flair.embeddings.document</a></li>
+<li class="toctree-l3"><a class="reference internal" href="embeddings/image.html">flair.embeddings.image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="embeddings/legacy.html">flair.embeddings.legacy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="embeddings/token.html">flair.embeddings.token</a></li>
+<li class="toctree-l3"><a class="reference internal" href="embeddings/transformer.html">flair.embeddings.transformer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="flair.models.html">flair.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.nn.html">flair.nn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.splitter.html">flair.splitter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.tokenization.html">flair.tokenization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.trainers.html">flair.trainers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.trainers.plugins.html">flair.trainers.plugins</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../glossary/index.html">Glossary</a></li>
+</ul>
+</div>
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+<h3>Versions</h3>
+<ul>
+  <li><a href="../../master/api/flair.embeddings.html">
+    
+    latest (master)
+    
+  </a></li>
+  <li><a href="flair.embeddings.html">
+    
+    v0.13.0
+      
+    
+  </a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API Docs</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">flair.embeddings</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="flair-embeddings">
+<h1>flair.embeddings<a class="headerlink" href="#flair-embeddings" title="Permalink to this heading">#</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="embeddings/base.html">flair.embeddings.base</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.Embeddings"><code class="docutils literal notranslate"><span class="pre">Embeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.ScalarMix"><code class="docutils literal notranslate"><span class="pre">ScalarMix</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.DocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.TokenEmbeddings"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.register_embeddings"><code class="docutils literal notranslate"><span class="pre">register_embeddings()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.load_embeddings"><code class="docutils literal notranslate"><span class="pre">load_embeddings()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="embeddings/document.html">flair.embeddings.document</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentTFIDFEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentLMEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentLMEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.SentenceTransformerDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/document.html#flair.embeddings.document.DocumentCNNEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="embeddings/image.html">flair.embeddings.image</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">ImageEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.IdentityImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">IdentityImageEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.PrecomputedImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">PrecomputedImageEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.NetworkImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">NetworkImageEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/image.html#flair.embeddings.image.ConvTransformNetworkImageEmbeddings"><code class="docutils literal notranslate"><span class="pre">ConvTransformNetworkImageEmbeddings</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="embeddings/legacy.html">flair.embeddings.legacy</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.ELMoEmbeddings"><code class="docutils literal notranslate"><span class="pre">ELMoEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.CharLMEmbeddings"><code class="docutils literal notranslate"><span class="pre">CharLMEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentMeanEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentMeanEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/legacy.html#flair.embeddings.legacy.DocumentLSTMEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentLSTMEmbeddings</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="embeddings/token.html">flair.embeddings.token</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.StackedEmbeddings"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.WordEmbeddings"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.CharacterEmbeddings"><code class="docutils literal notranslate"><span class="pre">CharacterEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FlairEmbeddings"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.FastTextEmbeddings"><code class="docutils literal notranslate"><span class="pre">FastTextEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.OneHotEmbeddings"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.HashEmbeddings"><code class="docutils literal notranslate"><span class="pre">HashEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.MuseCrosslingualEmbeddings"><code class="docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.BytePairEmbeddings"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/token.html#flair.embeddings.token.NILCEmbeddings"><code class="docutils literal notranslate"><span class="pre">NILCEmbeddings</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="embeddings/transformer.html">flair.embeddings.transformer</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.pad_sequence_embeddings"><code class="docutils literal notranslate"><span class="pre">pad_sequence_embeddings()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.truncate_hidden_states"><code class="docutils literal notranslate"><span class="pre">truncate_hidden_states()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.combine_strided_tensors"><code class="docutils literal notranslate"><span class="pre">combine_strided_tensors()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.fill_masked_elements"><code class="docutils literal notranslate"><span class="pre">fill_masked_elements()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.insert_missing_embeddings"><code class="docutils literal notranslate"><span class="pre">insert_missing_embeddings()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.fill_mean_token_embeddings"><code class="docutils literal notranslate"><span class="pre">fill_mean_token_embeddings()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.document_mean_pooling"><code class="docutils literal notranslate"><span class="pre">document_mean_pooling()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.document_max_pooling"><code class="docutils literal notranslate"><span class="pre">document_max_pooling()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.remove_special_markup"><code class="docutils literal notranslate"><span class="pre">remove_special_markup()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerBaseEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerBaseEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitWordEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerJitDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerJitDocumentEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxWordEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxWordEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerOnnxDocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerOnnxDocumentEmbeddings</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="datasets/treebanks.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">flair.datasets.treebanks</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="embeddings/base.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">flair.embeddings.base</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="../_sources/api/flair.embeddings.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
