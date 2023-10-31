@@ -14,6 +14,7 @@ import flair
 from flair.data import DT, Dictionary, Optional, Sentence, Span, Union
 from flair.embeddings import DocumentEmbeddings, TokenEmbeddings
 from flair.training_utils import store_embeddings
+from flair.models.entity_linker_model import CandidateGenerator
 
 from pathlib import Path
 
@@ -29,7 +30,7 @@ class WikidataLabelVerbalizer:
                  use_wikidata_classes: bool = True,
                  max_verbalization_length: int = 16,
                  add_occupation: bool = True,
-                 add_field_of_work: bool =False
+                 add_field_of_work: bool =False,
                  ):
 
         self.label_dictionary = label_dictionary
@@ -50,6 +51,22 @@ class WikidataLabelVerbalizer:
                 s.tokens = s.tokens[:self.max_verbalization_length]
                 verbalized_labels_truncated.append(s.text)
             self.verbalized_labels = verbalized_labels_truncated
+
+    def verbalize_entity(self, entity):
+        wikipedia_label = entity
+        wikidata_info = get_wikidata_categories(wikipedia_label, method="only_one_level_up",
+                                                add_occupation=self.add_occupation,
+                                                add_field_of_work=self.add_field_of_work)
+        wikidata_classes = wikidata_info["class_names"]
+        wikidata_title = wikidata_info["wikidata_title"]
+        wikidata_description = wikidata_info["wikibase_description"]
+        verbalized = wikidata_title
+        if self.use_wikidata_description:
+            verbalized += ", " + wikidata_description
+        if self.use_wikidata_classes:
+            verbalized += ", " + ", ".join(wikidata_classes)
+
+        return verbalized
 
     @staticmethod
     def verbalize_all_labels(self, label_dictionary: Dictionary, save_verbalizations = True) -> List[Sentence]:
@@ -83,18 +100,7 @@ class WikidataLabelVerbalizer:
             else:
                 verbalized = self.verbalizations.get(entity, None)
                 if not verbalized:
-                    wikipedia_label = entity
-                    wikidata_info = get_wikidata_categories(wikipedia_label, method ="only_one_level_up",
-                                                            add_occupation=self.add_occupation,
-                                                            add_field_of_work=self.add_field_of_work)
-                    wikidata_classes = wikidata_info["class_names"]
-                    wikidata_title = wikidata_info["wikidata_title"]
-                    wikidata_description = wikidata_info["wikibase_description"]
-                    verbalized = wikidata_title
-                    if self.use_wikidata_description:
-                        verbalized += ", " + wikidata_description
-                    if self.use_wikidata_classes:
-                        verbalized += ", " + ", ".join(wikidata_classes)
+                    verbalized = self.verbalize_entity(entity)
                     #self.verbalizations[entity] = verbalized
                     counter_newly_verbalized +=1
 
@@ -115,8 +121,20 @@ class WikidataLabelVerbalizer:
         return verbalized_labels
 
     def verbalize_list_of_labels(self, list_of_labels):
-        label_idx = [self.label_dictionary.get_idx_for_item(idx) for idx in list_of_labels]
-        return [self.verbalized_labels[idx] for idx in label_idx ]
+        if set(list_of_labels).issubset(self.label_dictionary.get_items()):
+            label_idx = [self.label_dictionary.get_idx_for_item(idx) for idx in list_of_labels]
+            return [self.verbalized_labels[idx] for idx in label_idx ]
+
+        else:
+            rt = []
+            for l in list_of_labels:
+                if l in self.verbalizations:
+                    rt.append(self.verbalizations[l])
+                else:
+                    verbalization = self.verbalize_entity(l)
+                    self.verbalizations[l] = verbalization
+                    rt.append(verbalization)
+            return rt
 
     def add_new_verbalization_path(self, json_path):
         self.verbalizations_paths.append(json_path)
@@ -149,6 +167,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         threshold_in_prediction: float = 0.5,
         label_embeddings_save_path: Path = None,
         BCE_loss: bool = False,
+        candidates: Optional[CandidateGenerator] = None,
 
     ):
         super().__init__()
@@ -190,6 +209,8 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         self.label_embeddings_save_path = label_embeddings_save_path
         if self.label_embeddings_save_path:
             self.label_embeddings_save_path.mkdir(parents=True, exist_ok=True)
+
+        self.candidates = candidates
 
 
         cases: Dict[str, Callable[[Span, List[str]], torch.Tensor]] = {
@@ -505,6 +526,24 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
         return loss, nr_datapoints
 
+    def _mask_scores(self, scores: torch.Tensor, data_points: List[Span], label_order):
+        if not self.candidates:
+            return scores
+
+        masked_scores = -torch.inf * torch.ones(scores.size(), requires_grad=True, device=flair.device)
+
+        for idx, span in enumerate(data_points):
+            # get the candidates
+            candidate_set = self.candidates.get_candidates(span.text)
+            # during training, add the gold value as candidate
+            if self.training:
+                candidate_set.add(span.get_label(self.label_type).value)
+            #candidate_set.add("<unk>")
+            indices_of_candidates = [label_order.index(candidate) for candidate in candidate_set]
+            masked_scores[idx, indices_of_candidates] = scores[idx, indices_of_candidates]
+
+        return masked_scores
+
 
     def predict(
         self,
@@ -519,6 +558,27 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         with torch.no_grad():
             span_hidden_states, label_hidden_states, datapoints, sentences = self._encode_data_points(sentences)
             if len(datapoints) != 0:
+
+                if self.candidates:
+                    # we need to: a) add the candidates that are not yet in there, b) mask the non-candidates for each span
+                    new_labels = set()
+                    for d in datapoints:
+                        candidate_set = self.candidates.get_candidates(d.text)
+                        new_labels.update({c for c in candidate_set if c not in self.label_dictionary.get_items()})
+                    new_labels = list(new_labels)
+
+                    if self.custom_label_verbalizations:
+                        new_labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(new_labels)
+                        new_labels_verbalized = [Sentence(label) for label in new_labels_verbalized]
+                    else:
+                        new_labels_verbalized = [Sentence(label) for label in new_labels]
+
+                    self.label_encoder.embed(new_labels_verbalized)
+                    new_labels_hidden_states_batch = torch.stack([label.get_embedding() for label in new_labels_verbalized]).detach().cpu()
+
+                    label_hidden_states = torch.cat((label_hidden_states, new_labels_hidden_states_batch), dim = 0)
+
+                    label_ordering = self.label_dictionary.get_items() + new_labels
 
                 if self.BCE_loss:
                     span_hidden_states = span_hidden_states.detach().cpu()
@@ -547,6 +607,9 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                     #    for j in range(label_hidden_states.shape[0]):
                     #        similarity[i, j] = cosine_sim(span_hidden_states[i].unsqueeze(0), label_hidden_states[j].unsqueeze(0))
 
+                    if self.candidates:
+                        similarity = self._mask_scores(similarity, datapoints, label_order=label_ordering)
+
                     # Check which similarities are above the threshold
                     above_threshold = similarity > self.threshold_in_prediction
 
@@ -570,7 +633,10 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                         conf = similarity[i, label_idx]
 
                     if label_idx != -1:
-                        label = self.label_dictionary.get_items()[label_idx]
+                        if self.candidates:
+                            label = label_ordering[label_idx]
+                        else:
+                            label = self.label_dictionary.get_items()[label_idx]
                         d.add_label(label_name,
                                     value=label,
                                     score=conf
@@ -618,7 +684,8 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             "margin_loss": self.margin_loss,
             "threshold_in_prediction": self.threshold_in_prediction,
             "label_embeddings_save_path": self.label_embeddings_save_path,
-            "is_first_batch_in_evaluation": self.is_first_batch_in_evaluation
+            "is_first_batch_in_evaluation": self.is_first_batch_in_evaluation,
+            #"candidates": self.candidates
         }
         return model_state
 
@@ -640,6 +707,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             threshold_in_prediction = state.get("threshold_in_prediction"),
             BCE_loss = state.get("BCE_loss"),
             label_embeddings_save_path = state.get("label_embeddings_save_path"),
+            #candidates = state.get("candidates")
             **kwargs,
         )
 
