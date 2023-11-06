@@ -471,7 +471,7 @@ class ColumnDataset(FlairDataset):
         Args:
             path_to_column_file: path to the file with the column-formatted data
             column_name_map: a map specifying the column format
-            column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t" to split only on tabs
+            column_delimiter: default is to split on any separator, but you can overwrite for instance with "\t" to split only on tabs
             comment_symbol: if set, lines that begin with this symbol are treated as comments
             in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
             document_separator_token: If provided, sentences that function as document boundaries are so marked

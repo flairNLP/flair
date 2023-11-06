@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Union
 from unicodedata import category
 
 import torch
+from deprecated.sphinx import deprecated
 
 import flair.embeddings
 import flair.nn
@@ -18,7 +19,7 @@ log = logging.getLogger("flair")
 class CandidateGenerator:
     """Given a string, the CandidateGenerator returns possible target classes as candidates."""
 
-    def __init__(self, candidates: Union[str, Dict], backoff: bool = True) -> None:
+    def __init__(self, candidates: Union[str, Dict[str, List[str]]], backoff: bool = True) -> None:
         # internal candidate lists of generator
         self.mention_to_candidates_map: Dict = {}
 
@@ -40,6 +41,8 @@ class CandidateGenerator:
 
         elif isinstance(candidates, Dict):
             self.mention_to_candidates_map = candidates
+        else:
+            raise ValueError(f"'{candidates}' could not be loaded.")
 
         # if lower casing is enabled, create candidate lists of lower cased versions
         self.backoff = backoff
@@ -92,7 +95,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
         candidates: Optional[CandidateGenerator] = None,
         **classifierargs,
     ) -> None:
-        """Initializes an EntityLinker.
+        """Initializes an SpanClassifier.
 
         Args:
             embeddings: embeddings used to embed the tokens of the sentences.
@@ -232,8 +235,6 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
         return cast("SpanClassifier", super().load(model_path=model_path))
 
 
-def EntityLinker(**classifierargs):
-    from warnings import warn
-
-    warn("The EntityLinker class is deprecated and will be removed in Flair 1.0. Use SpanClassifier instead!")
-    return SpanClassifier(**classifierargs)
+@deprecated(reason="The EntityLinker was renamed to :class:`flair.models.SpanClassifier`.", version="0.12.2")
+class EntityLinker(SpanClassifier):
+    pass
