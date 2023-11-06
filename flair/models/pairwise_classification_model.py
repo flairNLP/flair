@@ -114,7 +114,13 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             **kwargs,
         )
 
-    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+    def get_used_tokens(
+        self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
+    ) -> typing.Iterable[List[str]]:
         for sentence_pair in _iter_dataset(corpus.get_all_sentences()):
             yield [t.text for t in sentence_pair.first]
+            yield [t.text for t in sentence_pair.first.left_context(context_length, respect_document_boundaries)]
+            yield [t.text for t in sentence_pair.first.right_context(context_length, respect_document_boundaries)]
             yield [t.text for t in sentence_pair.second]
+            yield [t.text for t in sentence_pair.second.left_context(context_length, respect_document_boundaries)]
+            yield [t.text for t in sentence_pair.second.right_context(context_length, respect_document_boundaries)]

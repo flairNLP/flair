@@ -237,6 +237,10 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
 
         return cast("TextRegressor", super().load(model_path=model_path))
 
-    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+    def get_used_tokens(
+        self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
+    ) -> typing.Iterable[List[str]]:
         for sentence in _iter_dataset(corpus.get_all_sentences()):
             yield [t.text for t in sentence]
+            yield [t.text for t in sentence.left_context(context_length, respect_document_boundaries)]
+            yield [t.text for t in sentence.right_context(context_length, respect_document_boundaries)]

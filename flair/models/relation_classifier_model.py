@@ -716,8 +716,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
     def allow_unk_tag(self) -> bool:
         return self._allow_unk_tag
 
-    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
-        yield from super().get_used_tokens(corpus)
+    def get_used_tokens(
+        self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
+    ) -> typing.Iterable[List[str]]:
+        yield from super().get_used_tokens(corpus, context_length, respect_document_boundaries)
         for sentence in _iter_dataset(corpus.get_all_sentences()):
             for span in sentence.get_spans(self.label_type):
                 yield self.encoding_strategy.encode_head(span, span.get_label(self.label_type)).split(" ")
