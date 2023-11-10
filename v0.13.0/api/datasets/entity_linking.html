@@ -680,8 +680,8 @@ to point to a different folder but typically this should not be necessary.</p></
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.</p></li>
-<li><p><strong>in_memory</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, keeps dataset in memory giving speedups in training.</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.</p></li>
+<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
 <li><p><strong>document_as_sequence</strong> – If True, all sentences of a document are read into a single Sentence object</p></li>
 </ul>
 </dd>
@@ -695,8 +695,8 @@ to point to a different folder but typically this should not be necessary.</p></
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sentence</strong> (<a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>) – Flair Sentence object containing a tokenized post title or comment thread</p></li>
-<li><p><strong>links</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>) – array containing information about the starting and ending position of an entity mention, as well as its corresponding wiki tag</p></li>
+<li><p><strong>sentence</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a></span>) – Flair Sentence object containing a tokenized post title or comment thread</p></li>
+<li><p><strong>links</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span>) – array containing information about the starting and ending position of an entity mention, as well as its corresponding wiki tag</p></li>
 <li><p><strong>outfile</strong> – file, to which the output is written</p></li>
 </ul>
 </dd>
@@ -710,13 +710,13 @@ to point to a different folder but typically this should not be necessary.</p></
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>annot_array</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>) – array to be filled</p></li>
-<li><p><strong>key</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – reddit id, on which the post title/comment thread is matched with its corresponding annotation</p></li>
-<li><p><strong>post_flag</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – flag indicating whether the annotations are collected for the post titles or comment threads</p></li>
+<li><p><strong>annot_array</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span>) – array to be filled</p></li>
+<li><p><strong>key</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – reddit id, on which the post title/comment thread is matched with its corresponding annotation</p></li>
+<li><p><strong>post_flag</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – flag indicating whether the annotations are collected for the post titles or comment threads</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -727,7 +727,7 @@ to point to a different folder but typically this should not be necessary.</p></
 <dd><p>Extends the string containing the current comment thread, which is passed to _text_to_cols method, when the comments are parsed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>fix_flag</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – flag indicating whether the method is called when the incorrectly imported rows are parsed or regular rows</p>
+<dd class="field-odd"><p><strong>fix_flag</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – flag indicating whether the method is called when the incorrectly imported rows are parsed or regular rows</p>
 </dd>
 </dl>
 </dd></dl>
@@ -760,15 +760,15 @@ as one new sense. The default is True.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filename</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the file.</p></li>
-<li><p><strong>data_folder</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>) – The name of the folder in which the CoNLL file should reside.</p></li>
-<li><p><strong>cut_multisense</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – Determines whether the wn30_key tag should be cut if it contains multiple possible senses.
+<li><p><strong>filename</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The name of the file.</p></li>
+<li><p><strong>data_folder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></span>) – The name of the folder in which the CoNLL file should reside.</p></li>
+<li><p><strong>cut_multisense</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Determines whether the wn30_key tag should be cut if it contains multiple possible senses.
 If True only the first listed sense will be used. Otherwise, the whole list of senses will be detected
 as one new sense. The default is True.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the name of the file.</p>
@@ -793,16 +793,16 @@ Also we ignore the id annotation used in datasets that were originally created f
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>filenames</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]) – Here you can pass a single datasetname or a list of datasetnames. The available names are: ‘masc’, ‘omsti’, ‘raganato_ALL’, ‘raganato_semeval2007’, ‘raganato_semeval2013’, ‘raganato_semeval2015’, ‘raganato_senseval2’, ‘raganato_senseval3’, ‘semcor’, ‘semeval2007task17’, ‘semeval2007task7’, ‘semeval2013task12’, ‘semeval2015task13’, ‘senseval2’, ‘senseval2_lexical_sample_test’, ‘senseval2_lexical_sample_train’, ‘senseval3task1’, ‘senseval3task6_test’, ‘senseval3task6_train’, ‘trainomatic’, ‘wngt’,</p></li>
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – You can override this to point to a specific folder but typically this should not be necessary.</p></li>
-<li><p><strong>in_memory</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>cut_multisense</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – Boolean that determines whether the wn30_key tag should be cut if it contains multiple possible senses. If True only the first listed sense will be used and the suffix ‘_cut’ will be added to the name of the CoNLL file. Otherwise the whole list of senses will be detected as one new sense. The default is True.</p></li>
+<li><p><strong>filenames</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Here you can pass a single datasetname or a list of datasetnames. The available names are: ‘masc’, ‘omsti’, ‘raganato_ALL’, ‘raganato_semeval2007’, ‘raganato_semeval2013’, ‘raganato_semeval2015’, ‘raganato_senseval2’, ‘raganato_senseval3’, ‘semcor’, ‘semeval2007task17’, ‘semeval2007task7’, ‘semeval2013task12’, ‘semeval2015task13’, ‘senseval2’, ‘senseval2_lexical_sample_test’, ‘senseval2_lexical_sample_train’, ‘senseval3task1’, ‘senseval3task6_test’, ‘senseval3task6_train’, ‘trainomatic’, ‘wngt’,</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – You can override this to point to a specific folder but typically this should not be necessary.</p></li>
+<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
+<li><p><strong>cut_multisense</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Boolean that determines whether the wn30_key tag should be cut if it contains multiple possible senses. If True only the first listed sense will be used and the suffix ‘_cut’ will be added to the name of the CoNLL file. Otherwise the whole list of senses will be detected as one new sense. The default is True.</p></li>
 <li><p><strong>columns</strong> – Columns to consider when loading the dataset. You can add 1: “lemma” or 2: “pos” to the default dict {0: “text”, 3: “sense”} if you want to use additional pos and/or lemma for the words.</p></li>
-<li><p><strong>banned_sentences</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]) – Optionally remove sentences from the corpus. Works only if <cite>in_memory</cite> is true</p></li>
-<li><p><strong>sample_missing_splits_in_multicorpus</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Whether to sample missing splits when loading the multicorpus (this is redundant if sample_missing_splits_in_each_corpus is True)</p></li>
-<li><p><strong>sample_missing_splits_in_each_corpus</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – Whether to sample missing splits when loading each single corpus given in filenames.</p></li>
-<li><p><strong>use_raganato_ALL_as_test_data</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, the raganato_ALL dataset (Raganato et al. “Word Sense Disambiguation: A unified evaluation framework and empirical compariso”) will be used as test data. Note that the sample_missing_splits parameters are set to ‘only_dev’ in this case if set to True.</p></li>
-<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Name of your corpus</p></li>
+<li><p><strong>banned_sentences</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Optionally remove sentences from the corpus. Works only if <cite>in_memory</cite> is true</p></li>
+<li><p><strong>sample_missing_splits_in_multicorpus</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Whether to sample missing splits when loading the multicorpus (this is redundant if sample_missing_splits_in_each_corpus is True)</p></li>
+<li><p><strong>sample_missing_splits_in_each_corpus</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Whether to sample missing splits when loading each single corpus given in filenames.</p></li>
+<li><p><strong>use_raganato_ALL_as_test_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, the raganato_ALL dataset (Raganato et al. “Word Sense Disambiguation: A unified evaluation framework and empirical compariso”) will be used as test data. Note that the sample_missing_splits parameters are set to ‘only_dev’ in this case if set to True.</p></li>
+<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of your corpus</p></li>
 </ul>
 </dd>
 </dl>

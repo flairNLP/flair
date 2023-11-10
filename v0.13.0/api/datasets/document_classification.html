@@ -523,19 +523,19 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data_folder</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]) – base folder with the task data</p></li>
-<li><p><strong>label_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of the label</p></li>
+<li><p><strong>data_folder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – base folder with the task data</p></li>
+<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the label</p></li>
 <li><p><strong>train_file</strong> – the name of the train file</p></li>
 <li><p><strong>test_file</strong> – the name of the test file</p></li>
 <li><p><strong>dev_file</strong> – the name of the dev file, if None, dev data is sampled from train</p></li>
-<li><p><strong>truncate_to_max_tokens</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – If set, truncates each Sentence to a maximum number of tokens</p></li>
-<li><p><strong>truncate_to_max_chars</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – If set, truncates each Sentence to a maximum number of chars</p></li>
-<li><p><strong>filter_if_longer_than</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – If set, filters documents that are longer that the specified number of tokens.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Tokenizer for dataset, default is SegtokTokenizer</p></li>
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’ if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if even this is too much for your memory, use ‘disk’.</p></li>
-<li><p><strong>label_name_map</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]) – Optionally map label names to different schema.</p></li>
+<li><p><strong>truncate_to_max_tokens</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of tokens</p></li>
+<li><p><strong>truncate_to_max_chars</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of chars</p></li>
+<li><p><strong>filter_if_longer_than</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, filters documents that are longer that the specified number of tokens.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Tokenizer for dataset, default is SegtokTokenizer</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’ if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if even this is too much for your memory, use ‘disk’.</p></li>
+<li><p><strong>label_name_map</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Optionally map label names to different schema.</p></li>
 <li><p><strong>allow_examples_without_labels</strong> – set to True to allow Sentences without label in the corpus.</p></li>
-<li><p><strong>encoding</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Default is ‘utf-8’ but some datasets are in ‘latin-1</p></li>
+<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Default is ‘utf-8’ but some datasets are in ‘latin-1</p></li>
 </ul>
 </dd>
 </dl>
@@ -557,27 +557,27 @@ The line should have the following format:
 __label__&lt;class_name&gt; &lt;text&gt;
 If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
 __label__&lt;class_name_1&gt; __label__&lt;class_name_2&gt; &lt;text&gt;
-:type path_to_file: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]
+:type path_to_file: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>
 :param path_to_file: the path to the data file
-:type label_type: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
+:type label_type: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
 :param label_type: name of the label
 :type truncate_to_max_tokens: 
 :param truncate_to_max_tokens: If set, truncates each Sentence to a maximum number of tokens
 :type truncate_to_max_chars: 
 :param truncate_to_max_chars: If set, truncates each Sentence to a maximum number of chars
-:type filter_if_longer_than: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
+:type filter_if_longer_than: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
 :param filter_if_longer_than: If set, filters documents that are longer that the specified number of tokens.
-:type tokenizer: <code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]
+:type tokenizer: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>
 :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
-:type memory_mode: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
+:type memory_mode: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
 :param memory_mode: Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’
 if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if
 even this is too much for your memory, use ‘disk’.
-:type label_name_map: <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]
+:type label_name_map: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>
 :param label_name_map: Optionally map label names to different schema.
 :type allow_examples_without_labels: 
 :param allow_examples_without_labels: set to True to allow Sentences without label in the Dataset.
-:type encoding: <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>
+:type encoding: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
 :param encoding: Default is ‘utf-8’ but some datasets are in ‘latin-1
 :return: list of sentences</p>
 </dd></dl>
@@ -587,7 +587,7 @@ even this is too much for your memory, use ‘disk’.
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L279-L284"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.ClassificationDataset.is_in_memory" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -606,18 +606,18 @@ even this is too much for your memory, use ‘disk’.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data_folder</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]) – base folder with the task data</p></li>
-<li><p><strong>column_name_map</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – a column name map that indicates which column is text and which the label(s)</p></li>
-<li><p><strong>label_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of the label</p></li>
+<li><p><strong>data_folder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – base folder with the task data</p></li>
+<li><p><strong>column_name_map</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – a column name map that indicates which column is text and which the label(s)</p></li>
+<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the label</p></li>
 <li><p><strong>train_file</strong> – the name of the train file</p></li>
 <li><p><strong>test_file</strong> – the name of the test file</p></li>
 <li><p><strong>dev_file</strong> – the name of the dev file, if None, dev data is sampled from train</p></li>
 <li><p><strong>max_tokens_per_doc</strong> – If set, truncates each Sentence to a maximum number of Tokens</p></li>
 <li><p><strong>max_chars_per_doc</strong> – If set, truncates each Sentence to a maximum number of chars</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Tokenizer for dataset, default is SegtokTokenizer</p></li>
-<li><p><strong>in_memory</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, keeps dataset as Sentences in memory, otherwise only keeps strings</p></li>
-<li><p><strong>skip_header</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, skips first line because it is header</p></li>
-<li><p><strong>encoding</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Default is ‘utf-8’ but some datasets are in ‘latin-1</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Tokenizer for dataset, default is SegtokTokenizer</p></li>
+<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset as Sentences in memory, otherwise only keeps strings</p></li>
+<li><p><strong>skip_header</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, skips first line because it is header</p></li>
+<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Default is ‘utf-8’ but some datasets are in ‘latin-1</p></li>
 <li><p><strong>fmtparams</strong> – additional parameters for the CSV file reader</p></li>
 </ul>
 </dd>
@@ -641,15 +641,15 @@ even this is too much for your memory, use ‘disk’.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>path_to_file</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]) – path to the file with the CSV data</p></li>
-<li><p><strong>column_name_map</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]) – a column name map that indicates which column is text and which the label(s)</p></li>
-<li><p><strong>label_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of the label</p></li>
-<li><p><strong>max_tokens_per_doc</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – If set, truncates each Sentence to a maximum number of Tokens</p></li>
-<li><p><strong>max_chars_per_doc</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – If set, truncates each Sentence to a maximum number of chars</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Tokenizer for dataset, default is SegTokTokenizer</p></li>
-<li><p><strong>in_memory</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, keeps dataset as Sentences in memory, otherwise only keeps strings</p></li>
-<li><p><strong>skip_header</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, skips first line because it is header</p></li>
-<li><p><strong>encoding</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Most datasets are ‘utf-8’ but some are ‘latin-1’</p></li>
+<li><p><strong>path_to_file</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – path to the file with the CSV data</p></li>
+<li><p><strong>column_name_map</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – a column name map that indicates which column is text and which the label(s)</p></li>
+<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the label</p></li>
+<li><p><strong>max_tokens_per_doc</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of Tokens</p></li>
+<li><p><strong>max_chars_per_doc</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of chars</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Tokenizer for dataset, default is SegTokTokenizer</p></li>
+<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset as Sentences in memory, otherwise only keeps strings</p></li>
+<li><p><strong>skip_header</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, skips first line because it is header</p></li>
+<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Most datasets are ‘utf-8’ but some are ‘latin-1’</p></li>
 <li><p><strong>fmtparams</strong> – additional parameters for the CSV file reader</p></li>
 </ul>
 </dd>
@@ -664,7 +664,7 @@ even this is too much for your memory, use ‘disk’.
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L540-L541"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.CSVClassificationDataset.is_in_memory" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -686,17 +686,17 @@ reviews.</p>
 <dd><p>Constructs corpus object.</p>
 <p>Split_max indicates how many data points from each of the 28 splits are used, so
 set this higher or lower to increase/decrease corpus size.
-:type label_name_map: <code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]
+:type label_name_map: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>
 :param label_name_map: Map label names to different schema. By default, the 5-star rating is mapped onto 3
 classes (POSITIVE, NEGATIVE, NEUTRAL)
-:type split_max: <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>
+:type split_max: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
 :param split_max: Split_max indicates how many data points from each of the 28 splits are used, so
 set this higher or lower to increase/decrease corpus size.
 :type memory_mode: 
 :param memory_mode: Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’
 if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if
 even this is too much for your memory, use ‘disk’.
-:type tokenizer: <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>
+:type tokenizer: <span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>
 :param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
 :type corpusargs: 
 :param corpusargs: Arguments for ClassificationCorpus</p>
@@ -722,9 +722,9 @@ even this is too much for your memory, use ‘disk’.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>rebalance_corpus</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – Weather to use a 80/10/10 data split instead of the original 50/0/50 split.</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
+<li><p><strong>rebalance_corpus</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Weather to use a 80/10/10 data split instead of the original 50/0/50 split.</p></li>
 <li><p><strong>memory_mode</strong> – <p>Set to ‘partial’ because this is a huge corpus, but you can also set to ‘full’ for faster</p>
 <dl class="simple">
 <dt>processing or ‘none’ for less memory.</dt><dd><p>corpusargs: Other args for ClassificationCorpus.</p>
@@ -755,9 +755,9 @@ long.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘partial’ because this is a big corpus, but you can also set to ‘full’ for faster
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘partial’ because this is a big corpus, but you can also set to ‘full’ for faster
 processing or ‘none’ for less memory.</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
@@ -781,9 +781,9 @@ processing or ‘none’ for less memory.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘partial’ because this is a big corpus, but you can also set to ‘full’ for faster
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘partial’ because this is a big corpus, but you can also set to ‘full’ for faster
 processing or ‘none’ for less memory.</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
@@ -809,8 +809,8 @@ sentiments in test data (POSITIVE, NEGATIVE, NEUTRAL).</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>label_name_map</strong> – By default, the numeric values are mapped to (‘NEGATIVE’, ‘POSITIVE’ and ‘NEUTRAL’)</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘partial’ because this is a big corpus, but you can also set to ‘full’ for faster
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘partial’ because this is a big corpus, but you can also set to ‘full’ for faster
 processing or ‘none’ for less memory.</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
@@ -834,8 +834,8 @@ processing or ‘none’ for less memory.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer())</p></li>
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer())</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
 </ul>
 </dd>
 </dl>
@@ -857,8 +857,8 @@ processing or ‘none’ for less memory.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
 </ul>
 </dd>
 </dl>
@@ -880,8 +880,8 @@ processing or ‘none’ for less memory.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
 </ul>
 </dd>
 </dl>
@@ -903,8 +903,8 @@ processing or ‘none’ for less memory.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
 </ul>
 </dd>
 </dl>
@@ -925,8 +925,8 @@ processing or ‘none’ for less memory.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
 </dd>
@@ -948,8 +948,8 @@ processing or ‘none’ for less memory.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
 </dd>
@@ -974,8 +974,8 @@ the unlabeled test data for Glue evaluation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the COLA corpus in a specific folder.</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the COLA corpus in a specific folder.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
 </dd>
@@ -1047,8 +1047,8 @@ even this is too much for your memory, use ‘disk’.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the TREC corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the TREC corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
 <li><p><strong>memory_mode</strong> – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
@@ -1070,8 +1070,8 @@ even this is too much for your memory, use ‘disk’.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the TREC corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the TREC corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
 <li><p><strong>memory_mode</strong> – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
@@ -1093,8 +1093,8 @@ even this is too much for your memory, use ‘disk’.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the YAHOO corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the YAHOO corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
 <li><p><strong>memory_mode</strong> – Set to ‘partial’ by default since this is a rather big corpus. Can also be ‘full’ or ‘none’.</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
@@ -1119,10 +1119,10 @@ OTHER.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the Offensive Language corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-<li><p><strong>fine_grained_classes</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – Set to True to load the dataset with 4 fine-grained classes</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the Offensive Language corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
+<li><p><strong>fine_grained_classes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Set to True to load the dataset with 4 fine-grained classes</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
 </dd>
@@ -1144,9 +1144,9 @@ OTHER.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the Communicative Functions date in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the Communicative Functions date in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
+<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
 </dd>
@@ -1168,8 +1168,8 @@ OTHER.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
 </dd>
@@ -1191,8 +1191,8 @@ OTHER.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
 </dd>
@@ -1214,8 +1214,8 @@ OTHER.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
 </dd>
@@ -1237,8 +1237,8 @@ OTHER.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
+<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
+<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
 <li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
 </ul>
 </dd>

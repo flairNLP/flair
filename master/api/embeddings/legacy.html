@@ -578,14 +578,14 @@ strings are acceptable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – model string, one of ‘news-forward’, ‘news-backward’, ‘news-forward-fast’, ‘news-backward-fast’,
+<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – model string, one of ‘news-forward’, ‘news-backward’, ‘news-forward-fast’, ‘news-backward-fast’,
 ‘mix-forward’, ‘mix-backward’, ‘german-forward’, ‘german-backward’, ‘polish-backward’, ‘polish-forward’
 depending on which character language model is desired.</p></li>
-<li><p><strong>detach</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – if set to False, the gradient will propagate into the language model. this dramatically slows down
+<li><p><strong>detach</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if set to False, the gradient will propagate into the language model. this dramatically slows down
 training and often leads to worse results, so not recommended.</p></li>
-<li><p><strong>use_cache</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
+<li><p><strong>use_cache</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
 not allow re-use of once computed embeddings that do not fit into memory</p></li>
-<li><p><strong>cache_directory</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]) – if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
+<li><p><strong>cache_directory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
 is written to the provided directory.</p></li>
 </ul>
 </dd>
@@ -695,15 +695,15 @@ only if embeddings are non-static.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>embeddings</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]) – a list of token embeddings</p></li>
+<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]</span>) – a list of token embeddings</p></li>
 <li><p><strong>hidden_size</strong> – the number of hidden states in the lstm</p></li>
 <li><p><strong>rnn_layers</strong> – the number of layers for the lstm</p></li>
-<li><p><strong>reproject_words</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the lstm or not.</p></li>
-<li><p><strong>reproject_words_dimension</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.</p></li>
-<li><p><strong>bidirectional</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – boolean value, indicating whether to use a bidirectional lstm or not</p></li>
-<li><p><strong>dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the dropout value to be used</p></li>
-<li><p><strong>word_dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the word dropout value to be used, if 0.0 word dropout is not used</p></li>
-<li><p><strong>locked_dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the locked dropout value to be used, if 0.0 locked dropout is not used.</p></li>
+<li><p><strong>reproject_words</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the lstm or not.</p></li>
+<li><p><strong>reproject_words_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.</p></li>
+<li><p><strong>bidirectional</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – boolean value, indicating whether to use a bidirectional lstm or not</p></li>
+<li><p><strong>dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the dropout value to be used</p></li>
+<li><p><strong>word_dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the word dropout value to be used, if 0.0 word dropout is not used</p></li>
+<li><p><strong>locked_dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the locked dropout value to be used, if 0.0 locked dropout is not used.</p></li>
 </ul>
 </dd>
 </dl>

@@ -524,12 +524,12 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – name of transformer model (see <a class="reference external" href="https://huggingface.co/transformers/pretrained_models.html">https://huggingface.co/transformers/pretrained_models.html</a> for options)</p></li>
-<li><p><strong>layers</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – string indicating which layers to take for embedding (-1 is topmost layer)</p></li>
+<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of transformer model (see <a class="reference external" href="https://huggingface.co/transformers/pretrained_models.html">https://huggingface.co/transformers/pretrained_models.html</a> for options)</p></li>
+<li><p><strong>layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – string indicating which layers to take for embedding (-1 is topmost layer)</p></li>
 <li><p><strong>cls_pooling</strong> – Pooling strategy for combining token level embeddings. options are ‘cls’, ‘max’, ‘mean’.</p></li>
-<li><p><strong>layer_mean</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, uses a scalar mix of layers as embedding</p></li>
+<li><p><strong>layer_mean</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, uses a scalar mix of layers as embedding</p></li>
 <li><p><strong>fine_tune</strong> – If True, allows transformers to be fine-tuned during training</p></li>
-<li><p><strong>is_token_embedding</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – If True, the embedding can be used as TokenEmbedding too.</p></li>
+<li><p><strong>is_token_embedding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, the embedding can be used as TokenEmbedding too.</p></li>
 <li><p><strong>**kwargs</strong> – Arguments propagated to <a class="reference internal" href="transformer.html#flair.embeddings.transformer.TransformerEmbeddings.__init__" title="flair.embeddings.transformer.TransformerEmbeddings.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.embeddings.transformer.TransformerEmbeddings.__init__()</span></code></a></p></li>
 </ul>
 </dd>
@@ -569,9 +569,9 @@ document.write(`
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>embeddings</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]]) – a list of token embeddings</p></li>
-<li><p><strong>fine_tune_mode</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – if set to “linear” a trainable layer is added, if set to “nonlinear”, a nonlinearity is added as well. Set this to make the pooling trainable.</p></li>
-<li><p><strong>pooling</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – a string which can any value from [‘mean’, ‘max’, ‘min’]</p></li>
+<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]]</span>) – a list of token embeddings</p></li>
+<li><p><strong>fine_tune_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – if set to “linear” a trainable layer is added, if set to “nonlinear”, a nonlinearity is added as well. Set this to make the pooling trainable.</p></li>
+<li><p><strong>pooling</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – a string which can any value from [‘mean’, ‘max’, ‘min’]</p></li>
 </ul>
 </dd>
 </dl>
@@ -609,7 +609,7 @@ strings are acceptable.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L155-L158"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></a></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -619,7 +619,7 @@ strings are acceptable.</p>
 <span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L160-L165"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentPoolEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -647,8 +647,8 @@ strings are acceptable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train_dataset</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]) – the train dataset which will be used to construct a vectorizer</p></li>
-<li><p><strong>vectorizer</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TfidfVectorizer</span></code>]) – a precalculated vectorizer. If provided, requires the train_dataset to be an empty list.</p></li>
+<li><p><strong>train_dataset</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span>) – the train dataset which will be used to construct a vectorizer</p></li>
+<li><p><strong>vectorizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TfidfVectorizer</span></code>]</span>) – a precalculated vectorizer. If provided, requires the train_dataset to be an empty list.</p></li>
 <li><p><strong>vectorizer_params</strong> – parameters given to Scikit-learn’s TfidfVectorizer constructor</p></li>
 </ul>
 </dd>
@@ -677,7 +677,7 @@ strings are acceptable.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L221-L223"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.DocumentTFIDFEmbeddings" title="flair.embeddings.document.DocumentTFIDFEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings</span></code></a></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.embeddings.document.DocumentTFIDFEmbeddings" title="flair.embeddings.document.DocumentTFIDFEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentTFIDFEmbeddings</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -687,7 +687,7 @@ strings are acceptable.</p>
 <span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L225-L228"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -715,17 +715,17 @@ strings are acceptable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>embeddings</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]) – a list of token embeddings</p></li>
+<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]</span>) – a list of token embeddings</p></li>
 <li><p><strong>hidden_size</strong> – the number of hidden states in the rnn</p></li>
 <li><p><strong>rnn_layers</strong> – the number of layers for the rnn</p></li>
-<li><p><strong>reproject_words</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not</p></li>
-<li><p><strong>reproject_words_dimension</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.</p></li>
-<li><p><strong>bidirectional</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – boolean value, indicating whether to use a bidirectional rnn or not</p></li>
-<li><p><strong>dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the dropout value to be used</p></li>
-<li><p><strong>word_dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the word dropout value to be used, if 0.0 word dropout is not used</p></li>
-<li><p><strong>locked_dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the locked dropout value to be used, if 0.0 locked dropout is not used</p></li>
-<li><p><strong>rnn_type</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – ‘GRU’ or ‘LSTM’</p></li>
-<li><p><strong>fine_tune</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – if True, allow to finetune the embeddings.</p></li>
+<li><p><strong>reproject_words</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not</p></li>
+<li><p><strong>reproject_words_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.</p></li>
+<li><p><strong>bidirectional</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – boolean value, indicating whether to use a bidirectional rnn or not</p></li>
+<li><p><strong>dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the dropout value to be used</p></li>
+<li><p><strong>word_dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the word dropout value to be used, if 0.0 word dropout is not used</p></li>
+<li><p><strong>locked_dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the locked dropout value to be used, if 0.0 locked dropout is not used</p></li>
+<li><p><strong>rnn_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – ‘GRU’ or ‘LSTM’</p></li>
+<li><p><strong>fine_tune</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if True, allow to finetune the embeddings.</p></li>
 </ul>
 </dd>
 </dl>
@@ -759,7 +759,7 @@ strings are acceptable.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L438-L454"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentRNNEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></a></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -800,7 +800,7 @@ this embedding. But in some cases, the embedding is made up by different embeddi
 Then, the list contains the names of all embeddings in the stack.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -810,7 +810,7 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L529-L530"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentLMEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -820,7 +820,7 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L532-L534"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentLMEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.DocumentLMEmbeddings" title="flair.embeddings.document.DocumentLMEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentLMEmbeddings</span></code></a></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.embeddings.document.DocumentLMEmbeddings" title="flair.embeddings.document.DocumentLMEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentLMEmbeddings</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -848,8 +848,8 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – string name of models from SentencesTransformer Class</p></li>
-<li><p><strong>batch_size</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – int number of sentences to processed in one batch</p></li>
+<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – string name of models from SentencesTransformer Class</p></li>
+<li><p><strong>batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – int number of sentences to processed in one batch</p></li>
 </ul>
 </dd>
 </dl>
@@ -871,7 +871,7 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L593-L595"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings" title="flair.embeddings.document.SentenceTransformerDocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings</span></code></a></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings" title="flair.embeddings.document.SentenceTransformerDocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceTransformerDocumentEmbeddings</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -881,7 +881,7 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L597-L601"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.SentenceTransformerDocumentEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -909,14 +909,14 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>embeddings</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]) – a list of token embeddings</p></li>
+<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]</span>) – a list of token embeddings</p></li>
 <li><p><strong>kernels</strong> – list of (number of kernels, kernel size)</p></li>
-<li><p><strong>reproject_words</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not</p></li>
-<li><p><strong>reproject_words_dimension</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]) – output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.</p></li>
-<li><p><strong>dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the dropout value to be used</p></li>
-<li><p><strong>word_dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the word dropout value to be used, if 0.0 word dropout is not used</p></li>
-<li><p><strong>locked_dropout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – the locked dropout value to be used, if 0.0 locked dropout is not used</p></li>
-<li><p><strong>fine_tune</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>) – if True, allow to finetune the embeddings.</p></li>
+<li><p><strong>reproject_words</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not</p></li>
+<li><p><strong>reproject_words_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.</p></li>
+<li><p><strong>dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the dropout value to be used</p></li>
+<li><p><strong>word_dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the word dropout value to be used, if 0.0 word dropout is not used</p></li>
+<li><p><strong>locked_dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the locked dropout value to be used, if 0.0 locked dropout is not used</p></li>
+<li><p><strong>fine_tune</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if True, allow to finetune the embeddings.</p></li>
 </ul>
 </dd>
 </dl>
@@ -955,7 +955,7 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L759-L762"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings.from_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#flair.embeddings.document.DocumentCNNEmbeddings" title="flair.embeddings.document.DocumentCNNEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings</span></code></a></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.embeddings.document.DocumentCNNEmbeddings" title="flair.embeddings.document.DocumentCNNEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentCNNEmbeddings</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -965,7 +965,7 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L764-L774"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings.to_params" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
