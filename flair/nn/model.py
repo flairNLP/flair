@@ -455,8 +455,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 "\n\nBy class:\n" + classification_report
             )
 
-            # Create and populate score obect for logging with all evaluation values
-            # (TODO: could the classification_report be used here instead?)
+            # Create and populate score object for logging with all evaluation values, plus the loss
             scores: Dict[Union[Tuple[str, ...], str], Any] = {}
 
             for avg_type in ("micro avg", "macro avg"):
