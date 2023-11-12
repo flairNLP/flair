@@ -455,17 +455,13 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 "\n\nBy class:\n" + classification_report
             )
 
+            # Create and populate score obect for logging with all evaluation values
+            # (TODO: could the classification_report be used here instead?)
             scores: Dict[Union[Tuple[str, ...], str], Any] = {}
 
             for avg_type in ("micro avg", "macro avg"):
                 for metric_type in ("f1-score", "precision", "recall"):
-                    if avg_type == "micro avg" and avg_type not in classification_report_dict:
-                        value = classification_report_dict["accuracy"]
-
-                    else:
-                        value = classification_report_dict[avg_type][metric_type]
-
-                    scores[(avg_type, metric_type)] = value
+                    scores[(avg_type, metric_type)] = classification_report_dict[avg_type][metric_type]
 
             scores["accuracy"] = classification_report_dict["accuracy"]
 
