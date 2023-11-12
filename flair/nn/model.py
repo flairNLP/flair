@@ -828,6 +828,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
+            has_any_unknown_label = False
             for batch in batches:
                 # filter data points in batch
                 batch = [dp for dp in batch if self._filter_data_point(dp)]
@@ -865,6 +866,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                                 has_unknown_label = True
 
                         if has_unknown_label:
+                            has_any_unknown_label = True
                             scores = torch.index_select(scores, 0, torch.tensor(filtered_indices, device=flair.device))
 
                         gold_labels = self._prepare_label_tensor([data_points[index] for index in filtered_indices])
@@ -908,7 +910,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 self._post_process_batch_after_prediction(batch, label_name)
 
             if return_loss:
-                if has_unknown_label:
+                if has_any_unknown_label:
                     log.info(
                         "During evaluation, encountered labels that are not in the label_dictionary:"
                         "Evaluation loss is computed without them."
