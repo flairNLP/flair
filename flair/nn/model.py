@@ -434,6 +434,9 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 labels=labels,
             )
 
+            # compute accuracy separately as it is not always in classification_report (e.. when micro avg exists)
+            accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
+
             # if there is only one label, then "micro avg" = "macro avg"
             if len(target_names) == 1:
                 classification_report_dict["micro avg"] = classification_report_dict["macro avg"]
@@ -451,7 +454,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 "\nResults:"
                 f"\n- F-score (micro) {round(classification_report_dict['micro avg']['f1-score'], 4)}"
                 f"\n- F-score (macro) {round(classification_report_dict['macro avg']['f1-score'], 4)}"
-                f"\n- Accuracy {round(classification_report_dict['accuracy'], 4)}"
+                f"\n- Accuracy {accuracy_score}"
                 "\n\nBy class:\n" + classification_report
             )
 
@@ -462,7 +465,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 for metric_type in ("f1-score", "precision", "recall"):
                     scores[(avg_type, metric_type)] = classification_report_dict[avg_type][metric_type]
 
-            scores["accuracy"] = classification_report_dict["accuracy"]
+            scores["accuracy"] = accuracy_score
 
             if average_over > 0:
                 eval_loss /= average_over
