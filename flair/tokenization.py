@@ -1,4 +1,5 @@
 import logging
+import sys
 from abc import ABC, abstractmethod
 from typing import Callable, List
 
@@ -20,7 +21,7 @@ class Tokenizer(ABC):
 
     @abstractmethod
     def tokenize(self, text: str) -> List[str]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def name(self) -> str:
@@ -28,14 +29,14 @@ class Tokenizer(ABC):
 
 
 class SpacyTokenizer(Tokenizer):
-    """
-    Implementation of :class:`Tokenizer`, using models from Spacy.
+    """Tokenizer using spacy under the hood.
 
-    :param model a Spacy V2 model or the name of the model to load.
+    Args:
+        model: a Spacy V2 model or the name of the model to load.
     """
 
-    def __init__(self, model):
-        super(SpacyTokenizer, self).__init__()
+    def __init__(self, model) -> None:
+        super().__init__()
 
         try:
             import spacy
@@ -47,9 +48,9 @@ class SpacyTokenizer(Tokenizer):
             )
 
         if isinstance(model, Language):
-            self.model: Language = model
+            self.model = model
         elif isinstance(model, str):
-            self.model: Language = spacy.load(model)
+            self.model = spacy.load(model)
         else:
             raise AssertionError(
                 "Unexpected type of parameter model. Please provide a loaded "
@@ -73,14 +74,13 @@ class SpacyTokenizer(Tokenizer):
 
 
 class SegtokTokenizer(Tokenizer):
-    """
-    Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
+    """Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
 
     For further details see: https://github.com/fnl/segtok
     """
 
-    def __init__(self):
-        super(SegtokTokenizer, self).__init__()
+    def __init__(self) -> None:
+        super().__init__()
 
     def tokenize(self, text: str) -> List[str]:
         return SegtokTokenizer.run_tokenize(text)
@@ -100,12 +100,10 @@ class SegtokTokenizer(Tokenizer):
 
 
 class SpaceTokenizer(Tokenizer):
-    """
-    Tokenizer based on space character only.
-    """
+    """Tokenizer based on space character only."""
 
-    def __init__(self):
-        super(SpaceTokenizer, self).__init__()
+    def __init__(self) -> None:
+        super().__init__()
 
     def tokenize(self, text: str) -> List[str]:
         return SpaceTokenizer.run_tokenize(text)
@@ -132,7 +130,8 @@ class SpaceTokenizer(Tokenizer):
 
 
 class JapaneseTokenizer(Tokenizer):
-    """
+    """Tokenizer using konoha to support popular japanese tokenizers.
+
     Tokenizer using konoha, a third party library which supports
     multiple Japanese tokenizer such as MeCab, Janome and SudachiPy.
 
@@ -140,8 +139,8 @@ class JapaneseTokenizer(Tokenizer):
         https://github.com/himkt/konoha
     """
 
-    def __init__(self, tokenizer: str, sudachi_mode: str = "A"):
-        super(JapaneseTokenizer, self).__init__()
+    def __init__(self, tokenizer: str, sudachi_mode: str = "A") -> None:
+        super().__init__()
 
         available_tokenizers = ["mecab", "janome", "sudachi"]
 
@@ -162,7 +161,7 @@ class JapaneseTokenizer(Tokenizer):
             log.warning('  - You can choose tokenizer from ["mecab", "janome", "sudachi"].')
             log.warning("Note that we Flair support only konoha<5.0.0,>=4.0.0")
             log.warning("-" * 100)
-            exit()
+            sys.exit()
 
         self.tokenizer = tokenizer
         self.sentence_tokenizer = konoha.SentenceTokenizer()
@@ -184,12 +183,10 @@ class JapaneseTokenizer(Tokenizer):
 
 
 class TokenizerWrapper(Tokenizer):
-    """
-    Helper class to wrap tokenizer functions to the class-based tokenizer interface.
-    """
+    """Helper class to wrap tokenizer functions to the class-based tokenizer interface."""
 
-    def __init__(self, tokenizer_func: Callable[[str], List[str]]):
-        super(TokenizerWrapper, self).__init__()
+    def __init__(self, tokenizer_func: Callable[[str], List[str]]) -> None:
+        super().__init__()
         self.tokenizer_func = tokenizer_func
 
     def tokenize(self, text: str) -> List[str]:
@@ -201,18 +198,19 @@ class TokenizerWrapper(Tokenizer):
 
 
 class SciSpacyTokenizer(Tokenizer):
-    """
+    """Tokenizer that uses the en_core_sci_sm Spacy model and some special heuristics.
+
     Implementation of :class:`Tokenizer` which uses the en_core_sci_sm Spacy model
     extended by special heuristics to consider characters such as "(", ")" "-" as
-    additional token separators. The latter distinguishs this implementation from
+    additional token separators. The latter distinguishes this implementation from
     :class:`SpacyTokenizer`.
 
     Note, you if you want to use the "normal" SciSpacy tokenization just use
     :class:`SpacyTokenizer`.
     """
 
-    def __init__(self):
-        super(SciSpacyTokenizer, self).__init__()
+    def __init__(self) -> None:
+        super().__init__()
 
         try:
             import spacy
@@ -230,33 +228,36 @@ class SciSpacyTokenizer(Tokenizer):
 
         def combined_rule_prefixes() -> List[str]:
             """Helper function that returns the prefix pattern for the tokenizer.
-            It is a helper function to accommodate spacy tests that only test
-            prefixes.
+
+            It is a helper function to accommodate spacy tests that only test prefixes.
             """
             prefix_punct = char_classes.PUNCT.replace("|", " ")
 
-            prefixes = (
-                ["§", "%", "=", r"\+"]
-                + char_classes.split_chars(prefix_punct)
-                + char_classes.LIST_ELLIPSES
-                + char_classes.LIST_QUOTES
-                + char_classes.LIST_CURRENCY
-                + char_classes.LIST_ICONS
-            )
+            prefixes = [
+                "§",
+                "%",
+                "=",
+                "\\+",
+                *char_classes.split_chars(prefix_punct),
+                *char_classes.LIST_ELLIPSES,
+                *char_classes.LIST_QUOTES,
+                *char_classes.LIST_CURRENCY,
+                *char_classes.LIST_ICONS,
+            ]
             return prefixes
 
         infixes = (
             char_classes.LIST_ELLIPSES
             + char_classes.LIST_ICONS
             + [
-                r"×",  # added this special x character to tokenize it separately
+                r"x",  # added this special x character to tokenize it separately
                 r"[\(\)\[\]\{\}]",  # want to split at every bracket
                 r"/",  # want to split at every slash
                 r"(?<=[0-9])[+\-\*^](?=[0-9-])",
-                r"(?<=[{al}])\.(?=[{au}])".format(al=char_classes.ALPHA_LOWER, au=char_classes.ALPHA_UPPER),
-                r"(?<=[{a}]),(?=[{a}])".format(a=char_classes.ALPHA),
-                r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=char_classes.ALPHA, h=char_classes.HYPHENS),
-                r"(?<=[{a}0-9])[:<>=/](?=[{a}])".format(a=char_classes.ALPHA),
+                rf"(?<=[{char_classes.ALPHA_LOWER}])\.(?=[{char_classes.ALPHA_UPPER}])",
+                rf"(?<=[{char_classes.ALPHA}]),(?=[{char_classes.ALPHA}])",
+                rf'(?<=[{char_classes.ALPHA}])[?";:=,.]*(?:{char_classes.HYPHENS})(?=[{char_classes.ALPHA}])',
+                rf"(?<=[{char_classes.ALPHA}0-9])[:<>=/](?=[{char_classes.ALPHA}])",
             ]
         )
 

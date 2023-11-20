@@ -2,7 +2,6 @@ import inspect
 import itertools
 import logging
 import typing
-import warnings
 from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
@@ -25,23 +24,25 @@ log = logging.getLogger("flair")
 
 
 class Model(torch.nn.Module, typing.Generic[DT], ABC):
-    """Abstract base class for all downstream task models in Flair,
-    such as SequenceTagger and TextClassifier.
-    Every new type of model must implement these methods."""
+    """Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.
+
+    Every new type of model must implement these methods.
+    """
 
     model_card: Optional[Dict[str, Any]] = None
 
     @property
     @abstractmethod
     def label_type(self):
-        """Each model predicts labels of a certain type.
-        TODO: can we find a better name for this?"""
+        """Each model predicts labels of a certain type."""
         raise NotImplementedError
 
     @abstractmethod
     def forward_loss(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
         """Performs a forward pass and returns a loss tensor for backpropagation.
-        Implement this to enable training."""
+
+        Implement this to enable training.
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -49,22 +50,34 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         self,
         data_points: Union[List[DT], Dataset],
         gold_label_type: str,
-        out_path: Union[str, Path] = None,
+        out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         **kwargs,
     ) -> Result:
-        """Evaluates the model. Returns a Result object containing evaluation
-        results and a loss value. Implement this to enable evaluation.
-        :param data_loader: DataLoader that iterates over dataset to be evaluated
-        :param out_path: Optional output path to store predictions
-        :param embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and freshly recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU  # noqa: E501
-        :return: Returns a Tuple consisting of a Result object and a loss float value
+        """Evaluates the model. Returns a Result object containing evaluation results and a loss value.
+
+        Implement this to enable evaluation.
+
+        Args:
+            data_points: The labeled data_points to evaluate.
+            gold_label_type: The label type indicating the gold labels
+            out_path: Optional output path to store predictions
+            embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and freshly
+              recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
+            mini_batch_size: The batch_size to use for predictions
+            main_evaluation_metric: Specify which metric to highlight as main_score
+            exclude_labels: Specify classes that won't be considered in evaluation
+            gold_label_dictionary: Specify which classes should be considered, all other classes will be taken as <unk>.
+            return_loss: Weather to additionally compute the loss on the data-points.
+            **kwargs: Arguments that will be ignored.
+
+        Returns:
+            The evaluation results.
         """
         raise NotImplementedError
 
@@ -97,54 +110,29 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         return model_name
 
     def save(self, model_file: Union[str, Path], checkpoint: bool = False):
-        """
-        Saves the current model to the provided file.
-        :param model_file: the model file
+        """Saves the current model to the provided file.
+
+        Args:
+            model_file: the model file
+            checkpoint: currently unused.
         """
         model_state = self._get_state_dict()
 
-        # in Flair <0.9.1, optimizer and scheduler used to train model are not saved
-        optimizer = scheduler = None
-
         # write out a "model card" if one is set
         if self.model_card is not None:
-            # special handling for optimizer:
-            # remember optimizer class and state dictionary
-            if "training_parameters" in self.model_card:
-                training_parameters = self.model_card["training_parameters"]
-
-                if "optimizer" in training_parameters:
-                    optimizer = training_parameters["optimizer"]
-                    if checkpoint:
-                        training_parameters["optimizer_state_dict"] = optimizer.state_dict()
-                    training_parameters["optimizer"] = optimizer.__class__
-
-                if "scheduler" in training_parameters:
-                    scheduler = training_parameters["scheduler"]
-                    if checkpoint:
-                        with warnings.catch_warnings():
-                            warnings.simplefilter("ignore")
-                            training_parameters["scheduler_state_dict"] = scheduler.state_dict()
-                    training_parameters["scheduler"] = scheduler.__class__
-
             model_state["model_card"] = self.model_card
 
         # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
-        # restore optimizer and scheduler to model card if set
-        if self.model_card is not None:
-            if optimizer:
-                self.model_card["training_parameters"]["optimizer"] = optimizer
-            if scheduler:
-                self.model_card["training_parameters"]["scheduler"] = scheduler
-
     @classmethod
     def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Model":
-        """
-        Loads the model from the given file.
-        :param model_path: the model file or the already loaded state dict
-        :return: the loaded text classifier model
+        """Loads the model from the given file.
+
+        Args:
+            model_path: the model file or the already loaded state dict
+
+        Returns: the loaded text classifier model
         """
         # if this class is abstract, go through all inheriting classes and try to fetch and load the model
         if inspect.isabstract(cls):
@@ -214,7 +202,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             param_out += f"-- Flair version {self.model_card['flair_version']}\n"
             param_out += f"-- PyTorch version {self.model_card['pytorch_version']}\n"
             if "transformers_version" in self.model_card:
-                param_out += "-- Transformers version " f"{self.model_card['transformers_version']}\n"
+                param_out += f"-- Transformers version {self.model_card['transformers_version']}\n"
             param_out += "------------------------------------\n"
 
             param_out += "------- Training Parameters: -------\n"
@@ -241,19 +229,19 @@ class ReduceTransformerVocabMixin(ABC):
 
 
 class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC):
-    """Abstract base class for all Flair models that do classification,
-    both single- and multi-label. It inherits from flair.nn.Model and adds an
-    unified evaluate() function so that all classification models use the same
-    evaluation routines and compute the same numbers."""
+    """Abstract base class for all Flair models that do classification.
+
+    The classifier inherits from flair.nn.Model and adds unified functionality for both, single- and multi-label
+    classification and evaluation. Therefore, it is ensured to have a fair comparison between multiple classifiers.
+    """
 
     def evaluate(
         self,
         data_points: Union[List[DT], Dataset],
         gold_label_type: str,
-        out_path: Union[str, Path] = None,
+        out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
@@ -284,7 +272,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             all_true_values = {}
             all_predicted_values = {}
 
-            loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=0)
+            loader = DataLoader(data_points, batch_size=mini_batch_size)
 
             sentence_id = 0
             for batch in Tqdm.tqdm(loader):
@@ -384,7 +372,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 multi_label = True
                 break
 
-        log.info(f"Evaluating as a multi-label problem: {multi_label}")
+        log.debug(f"Evaluating as a multi-label problem: {multi_label}")
 
         # compute numbers by formatting true and predicted such that Scikit-Learn can use them
         y_true = []
@@ -420,7 +408,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         counter = Counter(itertools.chain.from_iterable(all_true_values.values()))
         counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
 
-        for label_name, count in counter.most_common():
+        for label_name, _count in counter.most_common():
             if label_name == "O":
                 continue
             target_names.append(label_name)
@@ -456,13 +444,9 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
 
             if "micro avg" in classification_report_dict:
                 # micro average is only computed if zero-label exists (for instance "O")
-                precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
-                recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
                 micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
             else:
                 # if no zero-label exists (such as in POS tagging) micro average is equal to accuracy
-                precision_score = round(classification_report_dict["accuracy"], 4)
-                recall_score = round(classification_report_dict["accuracy"], 4)
                 micro_f_score = round(classification_report_dict["accuracy"], 4)
 
             # same for the main score
@@ -478,7 +462,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 "Could be an error in your corpus or how you "
                 "initialize the trainer!"
             )
-            accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.0
+            accuracy_score = micro_f_score = macro_f_score = main_score = 0.0
             classification_report = ""
             classification_report_dict = {}
 
@@ -490,20 +474,29 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             "\n\nBy class:\n" + classification_report
         )
 
-        # line for log file
-        log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
+        scores: Dict[Union[Tuple[str, ...], str], Any] = {}
+
+        for avg_type in ("micro avg", "macro avg"):
+            for metric_type in ("f1-score", "precision", "recall"):
+                if avg_type == "micro avg" and avg_type not in classification_report_dict:
+                    value = classification_report_dict["accuracy"]
+
+                else:
+                    value = classification_report_dict[avg_type][metric_type]
+
+                scores[(avg_type, metric_type)] = value
+
+        scores["accuracy"] = accuracy_score
 
         if average_over > 0:
             eval_loss /= average_over
+        scores["loss"] = eval_loss.item()
 
         result = Result(
             main_score=main_score,
-            log_line=log_line,
-            log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            loss=eval_loss.item(),
+            scores=scores,
             conf_mat=confusion_matrix,
         )
 
@@ -520,15 +513,18 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         return_loss=False,
         embedding_storage_mode="none",
     ):
-        """
-        Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
-        :param sentences: list of sentences
-        :param mini_batch_size: mini batch size to use
-        :param return_probabilities_for_all_classes : return probabilities for all classes instead of only best predicted  # noqa: E501
-        :param verbose: set to True to display a progress bar
-        :param return_loss: set to True to return loss
-        :param label_name: set this to change the name of the label type that is predicted  # noqa: E501
-        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively. 'gpu' to store embeddings in GPU memory.  # noqa: E501
+        """Predicts the class labels for the given sentences.
+
+        The labels are directly added to the sentences.
+
+        Args:
+            sentences: list of sentences
+            mini_batch_size: mini batch size to use
+            return_probabilities_for_all_classes: return probabilities for all classes instead of only best predicted
+            verbose: set to True to display a progress bar
+            return_loss: set to True to return loss
+            label_name: set this to change the name of the label type that is predicted  # noqa: E501
+            embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively. 'gpu' to store embeddings in GPU memory.  # noqa: E501
         """
         raise NotImplementedError
 
@@ -562,12 +558,12 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
 
 
 class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
-    """Default base class for all Flair models that do classification, both
-    single- and multi-label. It inherits from flair.nn.Classifier and thus from
-    flair.nn.Model. All features shared by all classifiers are implemented here,
-    including the loss calculation and the predict() method. Currently, the
-    TextClassifier, RelationExtractor, TextPairClassifier and
-    SimpleSequenceTagger implement this class.
+    """Default base class for all Flair models that do classification.
+
+    It inherits from flair.nn.Classifier and thus from flair.nn.Model. All features shared by all classifiers are
+    implemented here, including the loss calculation, prediction heads for both single- and multi- label classification
+    and the `predict()` method. Example implementations of this class are the TextClassifier, RelationExtractor,
+    TextPairClassifier and TokenClassifier.
     """
 
     def __init__(
@@ -580,12 +576,12 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         word_dropout: float = 0.0,
         multi_label: bool = False,
         multi_label_threshold: float = 0.5,
-        loss_weights: Dict[str, float] = None,
+        loss_weights: Optional[Dict[str, float]] = None,
         decoder: Optional[torch.nn.Module] = None,
         inverse_model: bool = False,
         train_on_gold_pairs_only: bool = False,
         should_embed_sentence: bool = True,
-    ):
+    ) -> None:
         super().__init__()
 
         # set the embeddings
@@ -622,7 +618,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             n_classes = len(self.label_dictionary)
             weight_list = [1.0 for i in range(n_classes)]
             for i, tag in enumerate(self.label_dictionary.get_items()):
-                if tag in loss_weights.keys():
+                if tag in loss_weights:
                     weight_list[i] = loss_weights[tag]
             self.loss_weights: Optional[torch.Tensor] = torch.FloatTensor(weight_list).to(flair.device)
         else:
@@ -641,26 +637,36 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         self.train_on_gold_pairs_only = train_on_gold_pairs_only
 
     def _filter_data_point(self, data_point: DT) -> bool:
-        """Specify if a data point should be kept. That way you can remove for example empty texts.
+        """Specify if a data point should be kept.
+
+        That way you can remove for example empty texts. Per default all datapoints that have length zero
+        will be removed.
         Return true if the data point should be kept and false if it should be removed.
         """
-        return True if len(data_point) > 0 else False
+        return len(data_point) > 0
 
     @abstractmethod
     def _get_embedding_for_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     def _get_data_points_from_sentence(self, sentence: DT) -> List[DT2]:
-        """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
+        """Returns the data_points to which labels are added.
+
+        The results should be of any type that inherits from DataPoint (Sentence, Span, Token, ... objects).
+        """
         raise NotImplementedError
 
     def _get_data_points_for_batch(self, sentences: List[DT]) -> List[DT2]:
-        """Returns the data_points to which labels are added (Sentence, Span, Token, ... objects)"""
+        """Returns the data_points to which labels are added.
+
+        The results should be of any type that inherits from DataPoint (Sentence, Span, Token, ... objects).
+        """
         return [data_point for sentence in sentences for data_point in self._get_data_points_from_sentence(sentence)]
 
     def _get_label_of_datapoint(self, data_point: DT2) -> List[str]:
         """Extracts the labels from the data points.
+
         Each data point might return a list of strings, representing multiple labels.
         """
         if self.multi_label:
@@ -674,7 +680,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
     @multi_label_threshold.setter
     def multi_label_threshold(self, x):  # setter method
-        if type(x) is dict:
+        if isinstance(x, dict):
             if "default" in x:
                 self._multi_label_threshold = x
             else:
@@ -789,16 +795,17 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         return_loss=False,
         embedding_storage_mode="none",
     ):
-        """
-        Predicts the class labels for the given sentences. The labels are directly added to the sentences.  # noqa: E501
-        :param sentences: list of sentences
-        :param mini_batch_size: mini batch size to use
-        :param return_probabilities_for_all_classes : return probabilities for all classes instead of only best predicted  # noqa: E501
-        :param verbose: set to True to display a progress bar
-        :param return_loss: set to True to return loss
-        :param label_name: set this to change the name of the label type that is predicted  # noqa: E501
-        :param embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively.  # noqa: E501
-        'gpu' to store embeddings in GPU memory.
+        """Predicts the class labels for the given sentences. The labels are directly added to the sentences.
+
+        Args:
+            sentences: list of sentences to predict
+            mini_batch_size: the amount of sentences that will be predicted within one batch
+            return_probabilities_for_all_classes: return probabilities for all classes instead of only best predicted
+            verbose: set to True to display a progress bar
+            return_loss: set to True to return loss
+            label_name: set this to change the name of the label type that is predicted
+            embedding_storage_mode: default is 'none' which is the best is most cases.
+                Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively. 'gpu' to store embeddings in GPU memory.
         """
         if label_name is None:
             label_name = self.label_type if self.label_type is not None else "label"
@@ -833,6 +840,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
+            has_any_unknown_label = False
             for batch in batches:
                 # filter data points in batch
                 batch = [dp for dp in batch if self._filter_data_point(dp)]
@@ -858,9 +866,24 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                         sentence.remove_labels(label_name)
 
                     if return_loss:
-                        gold_labels = self._prepare_label_tensor(data_points)
+                        # filter data points that have labels outside of dictionary
+                        filtered_indices = []
+                        has_unknown_label = False
+                        for idx, dp in enumerate(data_points):
+                            if all(
+                                label in self.label_dictionary.get_items() for label in self._get_label_of_datapoint(dp)
+                            ):
+                                filtered_indices.append(idx)
+                            else:
+                                has_unknown_label = True
+
+                        if has_unknown_label:
+                            has_any_unknown_label = True
+                            scores = torch.index_select(scores, 0, torch.tensor(filtered_indices, device=flair.device))
+
+                        gold_labels = self._prepare_label_tensor([data_points[index] for index in filtered_indices])
                         overall_loss += self._calculate_loss(scores, gold_labels)[0]
-                        label_count += len(data_points)
+                        label_count += len(filtered_indices)
 
                     if self.multi_label:
                         sigmoided = torch.sigmoid(scores)  # size: (n_sentences, n_classes)
@@ -887,8 +910,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                                     label_score = softmax[s_idx, l_idx].item()
                                     data_point.add_label(typename=label_name, value=label_value, score=label_score)
                         else:
-                            conf, idx = torch.max(softmax, dim=-1)
-                            for data_point, c, i in zip(data_points, conf, idx):
+                            conf, indices = torch.max(softmax, dim=-1)
+                            for data_point, c, i in zip(data_points, conf, indices):
                                 label_value = self.label_dictionary.get_item_for_index(i.item())
                                 if label_value == "O":
                                     continue
@@ -896,8 +919,19 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
                 store_embeddings(batch, storage_mode=embedding_storage_mode)
 
+                self._post_process_batch_after_prediction(batch, label_name)
+
             if return_loss:
+                if has_any_unknown_label:
+                    log.info(
+                        "During evaluation, encountered labels that are not in the label_dictionary:"
+                        "Evaluation loss is computed without them."
+                    )
                 return overall_loss, label_count
+            return None
+
+    def _post_process_batch_after_prediction(self, batch, label_name):
+        pass
 
     def _get_label_threshold(self, label_value):
         label_threshold = self.multi_label_threshold["default"]
@@ -906,7 +940,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
         return label_threshold
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             super(flair.nn.Model, self).__str__().rstrip(")")
             + f"  (weights): {self.weight_dict}\n"

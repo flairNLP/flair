@@ -6,4 +6,4 @@ class TestBytePairEmbeddings(BaseEmbeddingsTest):
     embedding_cls = BytePairEmbeddings
     is_token_embedding = True
     is_document_embedding = False
-    default_args = dict(language="en")
+    default_args = {"language": "en"}

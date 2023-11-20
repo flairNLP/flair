@@ -12,7 +12,7 @@ class TestFlairEmbeddings(BaseEmbeddingsTest):
     embedding_cls = FlairEmbeddings
     is_token_embedding = True
     is_document_embedding = False
-    default_args = dict(model="news-forward-fast")
+    default_args = {"model": "news-forward-fast"}
 
     name_field = "model"
     invalid_names = ["other", "not/existing/path/to/embeddings"]

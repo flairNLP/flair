@@ -70,9 +70,8 @@ def get_flair_corpus(data_args):
     ner_task_mapping = {}
 
     for name, obj in inspect.getmembers(flair.datasets.sequence_labeling):
-        if inspect.isclass(obj):
-            if name.startswith("NER") or name.startswith("CONLL") or name.startswith("WNUT"):
-                ner_task_mapping[name] = obj
+        if inspect.isclass(obj) and name.startswith(("NER", "CONLL", "WNUT")):
+            ner_task_mapping[name] = obj
 
     dataset_args = {}
     dataset_name = data_args.dataset_name

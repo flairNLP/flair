@@ -8,10 +8,10 @@ class TFIDFEmbeddingsTest(BaseEmbeddingsTest):
     is_document_embedding = True
     is_token_embedding = False
 
-    default_args = dict(
-        train_dataset=[
+    default_args = {
+        "train_dataset": [
             Sentence("This is a sentence"),
             Sentence("This is another sentence"),
             Sentence("another a This I Berlin"),
         ]
-    )
+    }

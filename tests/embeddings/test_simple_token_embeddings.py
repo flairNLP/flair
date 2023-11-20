@@ -12,18 +12,18 @@ class TestCharacterEmbeddings(BaseEmbeddingsTest):
     embedding_cls = CharacterEmbeddings
     is_token_embedding = True
     is_document_embedding = False
-    default_args = dict(path_to_char_dict=None)
+    default_args = {"path_to_char_dict": None}
 
 
 class TestOneHotEmbeddings(BaseEmbeddingsTest):
     embedding_cls = OneHotEmbeddings
     is_token_embedding = True
     is_document_embedding = False
-    default_args = dict(vocab_dictionary=vocab_dictionary)
+    default_args = {"vocab_dictionary": vocab_dictionary}
 
 
 class TestHashEmbeddings(BaseEmbeddingsTest):
     embedding_cls = HashEmbeddings
     is_token_embedding = True
     is_document_embedding = False
-    default_args = dict(num_embeddings=10)
+    default_args = {"num_embeddings": 10}

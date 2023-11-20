@@ -9,13 +9,12 @@ exclude = '''
     | \.pytest_cache
     | build
     | dist
+    | venv
   )/
 )
 '''
 [tool.pytest.ini_options]
-flake8-max-line-length = 210
-flake8-ignore = ["E203", "W503"]  # See https://github.com/PyCQA/pycodestyle/issues/373
-addopts = "--flake8 --mypy --isort"
+addopts = "--black --mypy --ruff"
 filterwarnings = [
     "error",  # Convert all warnings to errors
     'ignore:torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables',  # Distilbert warning
@@ -27,6 +26,8 @@ filterwarnings = [
     "ignore:the imp module is deprecated:DeprecationWarning:past",  # ignore DeprecationWarning from hyperopt dependency
     "ignore:.*imp module.*:DeprecationWarning",  # ignore DeprecationWarnings that involve imp module
     "ignore:The class LayoutLMv3FeatureExtractor is deprecated and will be removed in version 5 of Transformers. Please use LayoutLMv3ImageProcessor instead.",  # huggingface layoutlmv3 has deprecated calls.
+    "ignore:pkg_resources",  # huggingface has deprecated calls.
+    'ignore:Deprecated call to `pkg_resources',  # huggingface has deprecated calls.
 ]
 markers = [
     "integration",
@@ -34,10 +35,73 @@ markers = [
 testpaths = ["flair", "tests"]
 [tool.mypy]
 ignore_missing_imports = true
+disable_error_code = ["annotation-unchecked"]
+exclude = [".git/", ".venv/", "__pycache__", "build", "venv"]
+warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
 module="flair.embeddings.legacy"
 ignore_errors = true
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+line-length = 120
+target-version = "py37"
+
+#select = ["ALL"]    # Uncommit to autofix all the things
+select = [
+  "C4",
+  "COM",
+  "D",
+  "E",
+  "EXE",
+  "F",
+  "I",
+  "INP",
+  "ISC",
+  "NPY",
+  "PD",
+  "PGH",
+  "PIE",
+  "PLE",
+  "PYI",
+  "Q",
+  "RSE",
+  "RUF",
+  "SIM",
+  "T10",
+  "TID",
+  "UP",
+  "W",
+  "YTT",
+]
+
+ignore = [
+  "COM812", # Do not force trailing commas for function argument lists
+  "D100",   # Don't force presence of docstrings (D100-D107)
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D107",
+  "E501",   # Ignore line too long
+  "RUF012",
+]
+
+unfixable = [
+  "ERA",    # Do not delete commented code
+  "EXE001", # Do not check python files for executability, doesn't work well on windows
+  "EXE002", # Do not check python files for executability, doesn't work well on windows
+  "F841",   # Do not remove unused variables automatically
+]
+
+[tool.ruff.per-file-ignores]
+"flair/embeddings/legacy.py" = ["D205"]
+"scripts/*" = ["INP001"]  #  no need for __ini__ for scripts
+"flair/datasets/*" = ["D417"]  # need to fix datasets in a unified way later.
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
+[tool.pydocstyle]
+match = "^(?!legacy).*\\.py$"

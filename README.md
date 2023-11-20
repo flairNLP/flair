@@ -23,7 +23,7 @@ document embeddings, including our proposed [Flair embeddings](https://www.aclwe
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.12.2](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.13.0](https://github.com/flairNLP/flair/releases)!
 
 
 ## State-of-the-Art Models
@@ -39,7 +39,7 @@ Flair ships with state-of-the-art models for a range of NLP tasks. For instance,
 | Spanish  | Conll-03 (4-class)   |  **90.54** | *90.3 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 4-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
 Many Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are also hosted
-on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=flair&sort=downloads)! You can browse models, check detailed information on how they were trained, and even try each model out online!
+on the [__🤗 Hugging Face model hub__](https://huggingface.co/models?library=flair&sort=downloads)! You can browse models, check detailed information on how they were trained, and even try each model out online!
 
 
 ## Quick Start
@@ -52,7 +52,7 @@ In your favorite virtual environment, simply do:
 pip install flair
 ```
 
-Flair requires Python 3.7+. 
+Flair requires Python 3.8+. 
 
 ### Example 1: Tag Entities in Text
 
