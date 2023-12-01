@@ -176,7 +176,7 @@ nel_label_dict = nel_corpus.make_label_dictionary("ner", add_unk=True)
 nel_model = SpanClassifier(
     embeddings=shared_embeddings,
     label_dictionary=nel_label_dict,
-    tag_type="ner",
+    label_type="ner",
     decoder=PrototypicalDecoder(
         num_prototypes=len(nel_label_dict),
         embeddings_size=shared_embeddings.embedding_length * 2, # we use "first_last" encoding for spans
