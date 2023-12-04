@@ -481,12 +481,11 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         else:
             # issue error and default all evaluation numbers to 0.
             error_text = (
-                f"ACHTUNG! It was not possible to compute evaluation values because: "
-                f"- The evaluation data has no gold labels for label_type='{gold_label_type}'!"
-                f"- And no predictions were made!"
+                f"It was not possible to compute evaluation values because: \n"
+                f"- The evaluation data has no gold labels for label_type='{gold_label_type}'!\n"
+                f"- And no predictions were made!\n"
                 "Double check your corpus (if the test split has labels), and how you initialize the ModelTrainer!"
             )
-            log.error(error_text)
 
             return Result(
                 main_score=0.0,
