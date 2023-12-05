@@ -17,7 +17,7 @@ def make_multitask_model_and_corpus(
         models.append(map[0])
         corpora.append(map[1])
         if len(map) == 3:
-            loss_factors.append(map[2])  # type:ignore[misc] # mypy does not understand if above checks for length
+            loss_factors.append(map[2])
         else:
             loss_factors.append(1.0)
 

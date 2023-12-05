@@ -434,71 +434,65 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 labels=labels,
             )
 
+            # compute accuracy separately as it is not always in classification_report (e.. when micro avg exists)
             accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
-            macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
 
             # if there is only one label, then "micro avg" = "macro avg"
             if len(target_names) == 1:
                 classification_report_dict["micro avg"] = classification_report_dict["macro avg"]
 
-            if "micro avg" in classification_report_dict:
-                # micro average is only computed if zero-label exists (for instance "O")
-                micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
-            else:
-                # if no zero-label exists (such as in POS tagging) micro average is equal to accuracy
-                micro_f_score = round(classification_report_dict["accuracy"], 4)
+            # The "micro avg" appears only in the classification report if no prediction is possible.
+            # Otherwise, it is identical to the "macro avg". In this case, we add it to the report.
+            if "micro avg" not in classification_report_dict:
+                classification_report_dict["micro avg"] = {}
+                for precision_recall_f1 in classification_report_dict["macro avg"]:
+                    classification_report_dict["micro avg"][precision_recall_f1] = classification_report_dict[
+                        "accuracy"
+                    ]
 
-            # same for the main score
-            if "micro avg" not in classification_report_dict and main_evaluation_metric[0] == "micro avg":
-                main_score = classification_report_dict["accuracy"]
-            else:
-                main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
+            detailed_result = (
+                "\nResults:"
+                f"\n- F-score (micro) {round(classification_report_dict['micro avg']['f1-score'], 4)}"
+                f"\n- F-score (macro) {round(classification_report_dict['macro avg']['f1-score'], 4)}"
+                f"\n- Accuracy {accuracy_score}"
+                "\n\nBy class:\n" + classification_report
+            )
+
+            # Create and populate score object for logging with all evaluation values, plus the loss
+            scores: Dict[Union[Tuple[str, ...], str], Any] = {}
+
+            for avg_type in ("micro avg", "macro avg"):
+                for metric_type in ("f1-score", "precision", "recall"):
+                    scores[(avg_type, metric_type)] = classification_report_dict[avg_type][metric_type]
+
+            scores["accuracy"] = accuracy_score
+
+            if average_over > 0:
+                eval_loss /= average_over
+            scores["loss"] = eval_loss.item()
+
+            return Result(
+                main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
+                detailed_results=detailed_result,
+                classification_report=classification_report_dict,
+                scores=scores,
+            )
 
         else:
             # issue error and default all evaluation numbers to 0.
-            log.error(
-                "ACHTUNG! No gold labels and no all_predicted_values found! "
-                "Could be an error in your corpus or how you "
-                "initialize the trainer!"
+            error_text = (
+                f"It was not possible to compute evaluation values because: \n"
+                f"- The evaluation data has no gold labels for label_type='{gold_label_type}'!\n"
+                f"- And no predictions were made!\n"
+                "Double check your corpus (if the test split has labels), and how you initialize the ModelTrainer!"
             )
-            accuracy_score = micro_f_score = macro_f_score = main_score = 0.0
-            classification_report = ""
-            classification_report_dict = {}
 
-        detailed_result = (
-            "\nResults:"
-            f"\n- F-score (micro) {micro_f_score}"
-            f"\n- F-score (macro) {macro_f_score}"
-            f"\n- Accuracy {accuracy_score}"
-            "\n\nBy class:\n" + classification_report
-        )
-
-        scores: Dict[Union[Tuple[str, ...], str], Any] = {}
-
-        for avg_type in ("micro avg", "macro avg"):
-            for metric_type in ("f1-score", "precision", "recall"):
-                if avg_type == "micro avg" and avg_type not in classification_report_dict:
-                    value = classification_report_dict["accuracy"]
-
-                else:
-                    value = classification_report_dict[avg_type][metric_type]
-
-                scores[(avg_type, metric_type)] = value
-
-        scores["accuracy"] = accuracy_score
-
-        if average_over > 0:
-            eval_loss /= average_over
-        scores["loss"] = eval_loss.item()
-
-        result = Result(
-            main_score=main_score,
-            detailed_results=detailed_result,
-            classification_report=classification_report_dict,
-            scores=scores,
-        )
-
-        return result
+            return Result(
+                main_score=0.0,
+                detailed_results=error_text,
+                classification_report={},
+                scores={"loss": 0.0},
+            )
 
     @abstractmethod
     def predict(
