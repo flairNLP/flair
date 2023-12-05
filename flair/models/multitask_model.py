@@ -201,9 +201,11 @@ class MultitaskModel(flair.nn.Classifier):
             classification_report=all_classification_report,
         )
 
-    def get_used_tokens(self, corpus: Corpus) -> typing.Iterable[List[str]]:
+    def get_used_tokens(
+        self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
+    ) -> typing.Iterable[List[str]]:
         for model in self.tasks.values():
-            yield from model.get_used_tokens(corpus)
+            yield from model.get_used_tokens(corpus, context_length, respect_document_boundaries)
 
     def _get_state_dict(self):
         """Returns the state dict of the multitask model which has multiple models underneath."""

@@ -32,7 +32,12 @@ class ReduceTransformerVocabPlugin(TrainerPlugin):
             self.disabled = True
             log.warning("Cannot reduce the transformer vocab: no transformer embeddings found.")
 
-        tokens = list(self.model.get_used_tokens(self.corpus))
+        max_context_length = max(emb.context_length for emb in embeddings)
+        respect_document_boundaries = all(emb.respect_document_boundaries for emb in embeddings)
+
+        tokens = list(
+            filter(None, self.model.get_used_tokens(self.corpus, max_context_length, respect_document_boundaries))
+        )
         for emb in embeddings:
             self.trainer.context_stack.enter_context(
                 reduce_train_vocab(
