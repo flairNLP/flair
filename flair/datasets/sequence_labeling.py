@@ -521,6 +521,7 @@ class ColumnDataset(FlairDataset):
 
                 # pointer to previous
                 previous_sentence = None
+                i=0
                 while True:
                     # parse next sentence
                     next_sentence = self._read_next_sentence(file)
@@ -553,6 +554,8 @@ class ColumnDataset(FlairDataset):
                     # append parsed sentence to list in memory
                     self.sentences.append(sentence)
 
+                    sentence.ind = i
+                    i+=1
                     previous_sentence = sentence
 
                 self.total_sentence_count = len(self.sentences)

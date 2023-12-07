@@ -723,6 +723,7 @@ class Sentence(DataPoint):
         use_tokenizer: Union[bool, Tokenizer] = True,
         language_code: Optional[str] = None,
         start_position: int = 0,
+        ind: int=0,
     ) -> None:
         """Class to hold all metadata related to a text.
 
@@ -806,6 +807,8 @@ class Sentence(DataPoint):
         # log a warning if the dataset is empty
         if text == "":
             log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
+        
+        self.ind = ind
 
     @property
     def unlabeled_identifier(self):
