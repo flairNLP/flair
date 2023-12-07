@@ -13,6 +13,8 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
+import os
+
 import flair.nn
 from flair.data import Dictionary, Label, Sentence, Span, get_spans_from_bio, DT
 from flair.datasets import DataLoader, FlairDatapointDataset
@@ -47,6 +49,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         loss_weights: Optional[Dict[str, float]] = None,
         init_from_state_dict: bool = False,
         allow_unk_predictions: bool = False,
+        calculate_sample_metrics: bool=False
     ) -> None:
         """Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
 
@@ -201,6 +204,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         if use_crf:
             self.crf = CRF(self.label_dictionary, self.tagset_size, init_from_state_dict)
             self.viterbi_decoder = ViterbiDecoder(self.label_dictionary)
+        
+        self.calculate_sample_metrics = calculate_sample_metrics
+        self.print_out_path = None
 
         self.to(flair.device)
 
@@ -271,16 +277,185 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return RNN
 
+
+    def _get_metrics_for_batch(self, sentences, lengths):
+
+        last_preds = []
+        last_confs = []
+        last_iters = []
+        last_sq_difs=[]
+        tokens_last_corr = []
+
+        longest_token_sequence_in_batch: int = max(lengths)
+        for sentence in sentences:
+            # do the same as sentence_tensor (same shape)
+            # nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
+            # tokens_last_preds = [token.get_metric('last_prediction') for token in sentence]
+            # tokens_last_preds.extend([0]*nb_padding_tokens)
+            # tokens_last_conf = [token.get_metric('last_confidence_sum') for token in sentence]
+            # tokens_last_conf.extend([0]*nb_padding_tokens)
+            # tokens_last_iter = [token.get_metric('last_iteration') for token in sentence]
+            # tokens_last_iter.extend([0]*nb_padding_tokens)
+            # last_preds.append(tokens_last_preds)
+            # last_confs.append(tokens_last_conf)
+            # last_iters.append(tokens_last_iter)
+
+            tokens_last_preds = [token.get_metric('last_prediction') for token in sentence]
+            tokens_last_conf = [token.get_metric('last_confidence_sum') for token in sentence]
+            tokens_last_sq_difs = [token.get_metric('last_confidence_sum') for token in sentence]
+            tokens_last_correctness = [token.get_metric('last_correctness') for token in sentence]
+            tokens_last_iter = [token.get_metric('last_iteration') for token in sentence]
+            last_preds.extend(tokens_last_preds)
+            last_confs.extend(tokens_last_conf)
+            last_sq_difs.extend(tokens_last_sq_difs)
+            tokens_last_corr.extend(tokens_last_correctness)
+            last_iters.extend(tokens_last_iter)
+
+        return torch.tensor(last_preds,device=flair.device),  torch.tensor(last_confs,device=flair.device), torch.tensor(last_sq_difs,device=flair.device),torch.tensor(tokens_last_corr,device=flair.device),torch.tensor(last_iters,device=flair.device)
+
+
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
         sentences = sorted(sentences, key=len, reverse=True)
-        gold_labels = self._prepare_label_tensor(sentences)
-        sentence_tensor, lengths = self._prepare_tensors(sentences)
+        gold_labels = self._prepare_bio_label_tensor(sentences)
 
+        #not really needed for now.
+        clean_labels = self._prepare_bio_clean_label_tensor(sentences)
+
+        sentence_tensor, lengths = self._prepare_tensors(sentences)
+        # sentence_tensor has shape (batch_size, max num tokens in sentence, embedding length)
+
+        if self.calculate_sample_metrics:
+            epoch_log_path = "epoch_log_"+str(self.model_card["training_parameters"]["epoch"])+'.log'
+        
+            if not os.path.isfile(self.print_out_path / epoch_log_path):
+                with open(self.print_out_path / epoch_log_path, "w") as outfile:
+                    outfile.write('Text' + "\t" + 
+                                  'sent_ind' + "\t" +
+                                'token_ind' + "\t" +
+                                'pred' + "\t" + 
+                                'noisy' + "\t" + 
+                                'clean' + "\t" + 
+                                'noisy_flag' + "\t" + 
+                                'last_pred' + "\t" +
+                                'last_iteration' + "\t" +
+                                'iter_norm' + "\t" +
+                                'current_prob_true_label' + "\t" +
+                                'last_conf_sum' + "\t" +
+                                'confidence' + "\t" +      
+                                'variability' + "\t" +
+                                'correctness' + "\t" +              
+                                'msp' + "\t" +
+                                'BvSB' + "\t" +
+                                'cross_entropy' + "\t" +                            
+                                'entropy'+ "\n")
+                    
+            if self.model_card["training_parameters"]["epoch"]==1:
+                # function, initialize metrics history
+                for sent in sentences:
+                    for dp in sent.tokens:
+                        # enable choice of metrics to store?
+                        dp.set_metric('last_prediction', -1)
+                        dp.set_metric('last_confidence_sum', 0 )
+                        dp.set_metric('last_sq_difference_sum', 0 )
+                        dp.set_metric('last_correctness', 0 )
+                        dp.set_metric('last_iteration', 0 )
+
+            last_prediction, last_confidence, last_sq_difference_sum, last_correctness, last_iteration = self._get_metrics_for_batch(sentences, lengths)
+
+            # shape (batch_size, max num tokens, 1): change this to (total_num_tokens, 1)
+
+
+        # before forward: embeddings
+        
         # forward pass to get scores
         scores = self.forward(sentence_tensor, lengths)
+
+        if self.calculate_sample_metrics:
+            # metric keys 'confidence', msp, bvsb, iter_norm...
+            # metric history keys: confidence_sum, last prediction, last_iter_norm
+            # to do: metrics = self._calculate_metrics_for_batch(scores, label_tensor, )
+            
+            # scores: shape = (total_num_tokens, 17)
+
+            softmax = torch.nn.functional.softmax(scores)
+            
+            # softmax: shape = (total_num_tokens, 17) 
+
+            pred = torch.argmax(softmax, dim=1)
+
+            values, indices = softmax.topk(2)
+
+            # Metric: Max softmax prob (calculate_loss)
+            msp = values[:,0]
+
+            # Best vs second best (calculate_loss)
+            BvSB = msp - values[:,1]
+            # label_tensor ~ gold_labels : shape = (total_num_tokens, 17)
+
+            batch_label_indexer = gold_labels.reshape(gold_labels.size(dim=0),1)
+            current_prob_true_labl = softmax.gather(index=batch_label_indexer, dim=1)[:,0]
+
+            confidence_sum = torch.add(last_confidence, current_prob_true_labl)
+            confidence = torch.div(confidence_sum,self.model_card["training_parameters"]["epoch"])
+            
+            sq_difference_sum = torch.add(last_sq_difference_sum, torch.square(torch.sub(current_prob_true_labl,confidence)))
+            variability = torch.sqrt(torch.div(sq_difference_sum, self.model_card["training_parameters"]["epoch"]))
+
+            correctness = torch.add(last_correctness,(gold_labels == pred).bool())
+
+            iteration = last_iteration.clone()
+
+            prediction_changed_list = (pred != last_prediction).bool()
+            iteration[prediction_changed_list] = self.model_card["training_parameters"]["epoch"]
+
+            iter_norm = torch.div(iteration,self.model_card["training_parameters"]["epoch"])
+
+            entropy = -torch.sum(torch.mul(softmax, torch.log(softmax)), dim = -1)
+
+            # calc cross entropy for each data point
+            cross_entropy = torch.nn.functional.nll_loss(torch.log(softmax), gold_labels, reduction='none')
+
+            i=0
+            with open(self.print_out_path / epoch_log_path, "a") as outfile:
+                for sent_ind, sent in enumerate(sentences):
+                    token_ind=0
+                    for token in sent:
+                        outfile.write(str(token.text) + "\t" + 
+                                    str(sent.ind) + "\t" +
+                                    str(token_ind) + "\t" +
+                                    str(self.label_dictionary.get_item_for_index(pred[i].item())) + "\t" + 
+                                    str(self.label_dictionary.get_item_for_index(gold_labels[i].item())) + "\t" + 
+                                    str(self.label_dictionary.get_item_for_index(clean_labels[i].item())) + "\t" + 
+                                    str(self.label_dictionary.get_item_for_index(gold_labels[i].item()) != self.label_dictionary.get_item_for_index(clean_labels[i].item())) + "\t" + 
+                                    str(last_prediction[i].item()) + "\t" +
+                                    str(last_iteration[i].item()) + "\t" +
+                                    str(round(iter_norm[i].item(),4)) + "\t" +
+                                    str(round(current_prob_true_labl[i].item(),4)) + "\t" +
+                                    str(round(last_confidence[i].item(),4)) + "\t" +
+                                    str(round(confidence[i].item(),4)) + "\t" +
+                                    str(round(variability[i].item(),4)) + "\t" +
+                                    str(round(correctness[i].item(),4)) + "\t" +
+                                    str(round(msp[i].item(),4)) + "\t" +
+                                    str(round(BvSB[i].item(),4)) + "\t" +
+                                    
+                                    str(round(cross_entropy[i].item(),4)) + "\t" +
+                                    str(round(entropy[i].item(),4)) + "\n")
+                        token.set_metric('last_prediction',pred[i] )
+                        token.set_metric('last_confidence_sum', confidence_sum[i] )
+                        token.set_metric('last_sq_difference_sum', sq_difference_sum[i] )
+                        token.set_metric('last_correctness', last_correctness[i] )
+                        token.set_metric('last_iteration',iteration[i] )
+                        # new dp properties: last_iter; last_pred; last_conf, last_sq_sum   
+                        i+=1 
+                        token_ind+=1
+                    outfile.write('\n')
+            #print(i)
+        
+        # BIOES
+        gold_labels = self._prepare_label_tensor(sentences)
 
         # calculate loss given scores and labels
         return self._calculate_loss(scores, gold_labels)
@@ -354,7 +529,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         for sentence in sentences:
             all_embs += [emb for token in sentence for emb in token.get_each_embedding(names)]
             nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
-
             if nb_padding_tokens > 0:
                 t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
                 all_embs.append(t)
@@ -386,7 +560,37 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return scores
 
+
+    def _get_bio_gold_labels(self, sentences: List[Sentence]) -> List[str]:
+        # is esentially noisy (observed) label
+        """Extracts gold labels from each sentence.
+
+        Args:
+            sentences: List of sentences in batch
+        """
+        # spans need to be encoded as token-level predictions
+        if self.predict_spans:
+            all_sentence_labels = []
+            for sentence in sentences:
+                sentence_labels = ["O"] * len(sentence)
+                for label in sentence.get_labels(self.label_type):
+                    span: Span = label.data_point
+                    sentence_labels[span[0].idx - 1] = "B-" + label.value
+                    for i in range(span[0].idx, span[-1].idx):
+                        sentence_labels[i] = "I-" + label.value
+                all_sentence_labels.extend(sentence_labels)
+            labels = all_sentence_labels
+
+        # all others are regular labels for each token
+        else:
+            labels = [token.get_label(self.label_type, "O").value for sentence in sentences for token in sentence]
+
+        return labels
+    
+
+
     def _get_gold_labels(self, sentences: List[Sentence]) -> List[str]:
+        # is esentially noisy (observed) label
         """Extracts gold labels from each sentence.
 
         Args:
@@ -420,6 +624,81 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return labels
 
+
+
+    def _get_bio_clean_labels(self, sentences: List[Sentence]) -> List[str]:
+        # clean labels
+        """Extracts gold labels from each sentence.
+
+        Args:
+            sentences: List of sentences in batch
+        """
+        # spans need to be encoded as token-level predictions
+        if self.predict_spans:
+            all_sentence_labels = []
+            for sentence in sentences:
+                sentence_labels = ["O"] * len(sentence)
+                for label in sentence.get_labels(self.label_type+'_clean'):
+                    span: Span = label.data_point
+                    sentence_labels[span[0].idx - 1] = "B-" + label.value
+                    for i in range(span[0].idx, span[-1].idx):
+                        sentence_labels[i] = "I-" + label.value
+                all_sentence_labels.extend(sentence_labels)
+            labels = all_sentence_labels
+
+        # all others are regular labels for each token
+        else:
+            labels = [token.get_label(self.label_type, "O").value for sentence in sentences for token in sentence]
+
+        return labels
+
+
+
+    def _get_clean_labels(self, sentences: List[Sentence]) -> List[str]:
+        # clean labels
+        """Extracts gold labels from each sentence.
+
+        Args:
+            sentences: List of sentences in batch
+        """
+        # spans need to be encoded as token-level predictions
+        if self.predict_spans:
+            all_sentence_labels = []
+            for sentence in sentences:
+                sentence_labels = ["O"] * len(sentence)
+                for label in sentence.get_labels(self.label_type+'_clean'):
+                    span: Span = label.data_point
+                    if self.tag_format == "BIOES":
+                        if len(span) == 1:
+                            sentence_labels[span[0].idx - 1] = "S-" + label.value
+                        else:
+                            sentence_labels[span[0].idx - 1] = "B-" + label.value
+                            sentence_labels[span[-1].idx - 1] = "E-" + label.value
+                            for i in range(span[0].idx, span[-1].idx - 1):
+                                sentence_labels[i] = "I-" + label.value
+                    else:
+                        sentence_labels[span[0].idx - 1] = "B-" + label.value
+                        for i in range(span[0].idx, span[-1].idx):
+                            sentence_labels[i] = "I-" + label.value
+                all_sentence_labels.extend(sentence_labels)
+            labels = all_sentence_labels
+
+        # all others are regular labels for each token
+        else:
+            labels = [token.get_label(self.label_type, "O").value for sentence in sentences for token in sentence]
+
+        return labels
+
+    def _prepare_clean_label_tensor(self, sentences: List[Sentence]):
+        clean_labels = self._get_clean_labels(sentences)
+        labels = torch.tensor(
+            [self.label_dictionary.get_idx_for_item(label) for label in clean_labels],
+            dtype=torch.long,
+            device=flair.device,
+        )
+        return labels
+
+
     def _prepare_label_tensor(self, sentences: List[Sentence]):
         gold_labels = self._get_gold_labels(sentences)
         labels = torch.tensor(
@@ -428,6 +707,28 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             device=flair.device,
         )
         return labels
+
+
+    def _prepare_bio_clean_label_tensor(self, sentences: List[Sentence]):
+        clean_labels = self._get_bio_clean_labels(sentences)
+        labels = torch.tensor(
+            [self.label_dictionary.get_idx_for_item(label) for label in clean_labels],
+            dtype=torch.long,
+            device=flair.device,
+        )
+        return labels
+
+
+    def _prepare_bio_label_tensor(self, sentences: List[Sentence]):
+        gold_labels = self._get_bio_gold_labels(sentences)
+        labels = torch.tensor(
+            [self.label_dictionary.get_idx_for_item(label) for label in gold_labels],
+            dtype=torch.long,
+            device=flair.device,
+        )
+        return labels
+
+
 
     def predict(
         self,
