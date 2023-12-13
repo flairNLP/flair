@@ -108,6 +108,7 @@ from .document_classification import (
     GO_EMOTIONS,
     IMDB,
     NEWSGROUPS,
+    AGNEWS,
     SENTEVAL_CR,
     SENTEVAL_MPQA,
     SENTEVAL_MR,
