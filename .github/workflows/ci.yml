@@ -8,7 +8,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      TRANSFORMERS_CACHE: ./cache/transformers
+      HF_HOME: ./cache/transformers
       FLAIR_CACHE_ROOT: ./cache/flair
     steps:
       - uses: actions/checkout@v3
