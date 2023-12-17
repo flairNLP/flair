@@ -965,11 +965,10 @@ class AGNEWS(ClassificationCorpus):
                         label, title, description = row
                         # Original labels are [1, 2, 3, 4] -> ['World', 'Sports', 'Business', 'Sci/Tech']
                         # Re-map to [0, 1, 2, 3].
-                        label = int(label) - 1
                         text = " ".join((title, description))
 
                         new_label = "__label__"
-                        new_label += label_dict[label]
+                        new_label += label_dict[int(label) - 1]
 
                         write_fp.write(f"{new_label} {text}\n")
 
