@@ -100,6 +100,7 @@ from .biomedical import (
 
 # Expose all document classification datasets
 from .document_classification import (
+    AGNEWS,
     AMAZON_REVIEWS,
     COMMUNICATIVE_FUNCTIONS,
     GERMEVAL_2018_OFFENSIVE_LANGUAGE,
@@ -314,6 +315,7 @@ __all__ = [
     "SentenceDataset",
     "MongoDataset",
     "StringDataset",
+    "AGNEWS",
     "ANAT_EM",
     "AZDZ",
     "BC2GM",
