@@ -1657,6 +1657,37 @@ class Corpus(typing.Generic[T_co]):
             f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count / total_label_count) * 100, 2)}%."
         )
 
+    def print_noisy_dataset(self, label_type, path, split='train'):
+        """Saves dataset with both gold (clean) and noisy labels to a file.
+
+        Args:
+            label_type: the name of the (noisy) label type.
+            path: the path to the folder.
+            split: which dataset split(s) to print out - in separate files.
+        """
+        log.info(f"Saving dataset split(s) with both gold and noisy labels to: {path}." )
+        if split == "train":
+            assert self.train
+            datasets = [self.train]
+        elif split == "dev":
+            assert self.dev
+            datasets = [self.dev]
+        elif split == "test":
+            assert self.test
+            datasets = [self.test]
+        else:
+            raise ValueError("split must be either train, dev or test.")
+        import os
+        data: ConcatDataset = ConcatDataset(datasets)
+        filepath = path+os.sep+split+'_set.tsv'
+        outfile = open(filepath, 'w')
+        outfile.write(f"Text\tGold label\tNoisy label\tNoise flag\n")
+        for data_point in Tqdm.tqdm(_iter_dataset(data)):
+            for label in data_point.get_labels(label_type):
+                clean_label = label.data_point.get_label(label_type+'_clean')
+                outfile.write(f"{str(data_point.text)}\t{str(clean_label.value)}\t{str(label.value)}\t{str(clean_label.value!=label.value)}\n")
+        outfile.close()
+
     def get_label_distribution(self):
         class_to_count = defaultdict(lambda: 0)
         for sent in self.train:
