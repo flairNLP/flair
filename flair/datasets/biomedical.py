@@ -46,7 +46,6 @@ SPECIES_TAG = "Species"
 SENTENCE_TAG = "[__SENT__]"
 
 MULTI_TASK_LEARNING = False
-AIONER = False
 IGNORE_NEGATIVE_SAMPLES = False
 
 logger = logging.getLogger("flair")
@@ -428,22 +427,6 @@ class CoNLLWriter:
             GENE_TAG: "genes",
             SPECIES_TAG: "species",
         }
-        label_mapping = {
-            CELL_LINE_TAG: "CellLine",
-            CHEMICAL_TAG: "Chemical",
-            DISEASE_TAG: "Disease",
-            GENE_TAG: "Gene",
-            SPECIES_TAG: "Species",
-        }
-        # tag_mapping = {
-        #     "cell": "B-CellLine",
-        #     "lines": "I-CellLine",
-        #     "chemicals": "B-Chemical",
-        #     "diseases": "B-Disease",
-        #     "genes": "B-Gene",
-        #     "species": "B-Species",
-        # }
-
         if not MULTI_TASK_LEARNING:
             task_description = ""
         else:
@@ -500,17 +483,6 @@ class CoNLLWriter:
                             else:
                                 whitespace_after = "-"
                             if len(token) > 0:
-                                # tag = "O"
-                                # if token in tag_mapping:
-                                #     tag = tag_mapping[token]
-                                # f.write(" ".join([token, tag, whitespace_after]) + "\n")
-                                # if MULTI_TASK_LEARNING and AIONER:
-                                #     if len(entity_types) > 1:
-                                #         tag = "O-ALL"
-                                #     else:
-                                #         tag = "O-" + label_mapping[entity_types[0]]
-                                # else:
-                                #     tag = "O"
                                 tag = "O"
                                 document_buffer += (
                                     " ".join([token, tag, whitespace_after]) + "\n"
@@ -541,13 +513,6 @@ class CoNLLWriter:
                             else:
                                 tag = "I-" + current_entity.type
                         else:
-                            # if MULTI_TASK_LEARNING and AIONER:
-                            #     if len(entity_types) > 1:
-                            #         tag = "O-ALL"
-                            #     else:
-                            #         tag = "O-" + label_mapping[entity_types[0]]
-                            # else:
-                            #     tag = "O"
                             tag = "O"
                             in_entity = False
 
