@@ -8,7 +8,7 @@ TAGGED_ENTITY = """
     {entity}
     <span style="font-size: 0.8em; font-weight: bold; line-height: 3; border-radius: 0.35em; text-transform: uppercase; vertical-align: middle; margin-left: 0.5rem">{label}</span>
 </mark>
-"""  # noqa: E501
+"""
 
 PARAGRAPH = """<p>{sentence}</p>"""
 
@@ -21,7 +21,7 @@ HTML_PAGE = """
 
     <body style="font-size: 16px; font-family: 'Segoe UI'; padding: 4rem 2rem">{text}</body>
 </html>
-"""  # noqa: E501
+"""
 
 
 def split_to_spans(s: Sentence, label_name="ner"):
@@ -54,20 +54,24 @@ def render_ner_html(
     wrap_page=True,
     label_name="ner",
 ) -> str:
-    """
-    :param sentences: single sentence or list of sentences to convert to HTML
-    :param title: title of the HTML page
-    :param colors: dict where keys are tags and values are color HTML codes
-    :param default_color: color to use if colors parameter is missing a tag
-    :param wrap_page: if True method returns result of processing sentences wrapped by &lt;html&gt; and &lt;body&gt; tags, otherwise - without these tags  # noqa: E501
-    :return: HTML as a string
+    """Create the html code to visualize some sentences.
+
+    Args:
+        sentences: single sentence or list of sentences to convert to HTML
+        title: title of the HTML page
+        colors: dict where keys are tags and values are color HTML codes
+        default_color: color to use if colors parameter is missing a tag
+        wrap_page: if True method returns result of processing sentences wrapped by &lt;html&gt; and &lt;body&gt; tags, otherwise - without these tags
+        label_name: the label name to specify which labels of the sentence are visualized.
+
+    Returns: HTML as a string
     """
     if isinstance(sentences, Sentence):
         sentences = [sentences]
     sentences_html = []
     for s in sentences:
         spans = split_to_spans(s, label_name=label_name)
-        spans_html = list()
+        spans_html = []
         for fragment, tag in spans:
             escaped_fragment = html.escape(fragment).replace("\n", "<br/>")
             if tag:

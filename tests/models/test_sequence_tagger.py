@@ -11,25 +11,22 @@ class TestSequenceTagger(BaseModelTest):
     model_cls = SequenceTagger
     pretrained_model = "ner-fast"
     train_label_type = "ner"
-    training_args = dict(
-        max_epochs=2,
-        learning_rate=0.1,
-        mini_batch_size=2,
-    )
-    model_args = dict(
-        hidden_size=64,
-        use_crf=False,
-    )
+    training_args = {
+        "max_epochs": 2,
+        "learning_rate": 0.1,
+        "mini_batch_size": 2,
+    }
+    model_args = {
+        "hidden_size": 64,
+        "use_crf": False,
+    }
 
     def has_embedding(self, sentence):
-        for token in sentence:
-            if token.get_embedding().cpu().numpy().size == 0:
-                return False
-        return True
+        return all(token.get_embedding().cpu().numpy().size != 0 for token in sentence)
 
     def build_model(self, embeddings, label_dict, **kwargs):
         model_args = dict(self.model_args)
-        for k in kwargs.keys():
+        for k in kwargs:
             if k in model_args:
                 del model_args[k]
         return self.model_cls(
@@ -40,15 +37,15 @@ class TestSequenceTagger(BaseModelTest):
             **kwargs,
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def embeddings(self):
-        yield WordEmbeddings("turian")
+        return WordEmbeddings("turian")
 
-    @pytest.fixture
+    @pytest.fixture()
     def corpus(self, tasks_base_path):
-        yield flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
+        return flair.datasets.ColumnCorpus(data_folder=tasks_base_path / "fashion", column_format={0: "text", 3: "ner"})
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_all_tag_proba_embedding(self, example_sentence, loaded_pretrained_model):
         loaded_pretrained_model.predict(example_sentence, return_probabilities_for_all_classes=True)
         for token in example_sentence:
@@ -61,13 +58,13 @@ class TestSequenceTagger(BaseModelTest):
                 score_sum += label.score
             assert abs(score_sum - 1.0) < 1.0e-5
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_force_token_predictions(self, example_sentence, loaded_pretrained_model):
         loaded_pretrained_model.predict(example_sentence, force_token_predictions=True)
         assert example_sentence.get_token(3).text == "Berlin"
         assert example_sentence.get_token(3).tag == "S-LOC"
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_train_load_use_tagger_flair_embeddings(self, results_base_path, corpus, example_sentence):
         tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
 
@@ -84,7 +81,7 @@ class TestSequenceTagger(BaseModelTest):
         loaded_model.predict([self.empty_sentence])
         del loaded_model
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_train_load_use_tagger_with_trainable_hidden_state(
         self, embeddings, results_base_path, corpus, example_sentence
     ):
@@ -103,7 +100,7 @@ class TestSequenceTagger(BaseModelTest):
         loaded_model.predict([self.empty_sentence])
         del loaded_model
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_train_load_use_tagger_disjunct_tags(
         self, results_base_path, tasks_base_path, embeddings, example_sentence
     ):

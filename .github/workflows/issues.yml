@@ -1,0 +1,11 @@
+on: issue_comment
+
+jobs:
+  issue_commented:
+    name: Issue comment
+    if: ${{ github.event.issue.author == github.even.issue_comment.author }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          labels: "Awaiting Response"

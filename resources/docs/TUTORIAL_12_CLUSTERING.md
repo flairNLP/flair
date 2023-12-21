@@ -20,7 +20,7 @@ So the choice of *k* is very important.
 More about k-Means can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html).
 
 
-```
+```python
 from flair.models import ClusteringModel
 from flair.datasets import TREC_6
 from flair.embeddings import SentenceTransformerDocumentEmbeddings
@@ -52,7 +52,7 @@ BIRCH is specialized to handle large amounts of data. BIRCH scans the data a sin
 structure. This data structure contains the data but in a compressed way.
 More about BIRCH can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.Birch.html).
 
-```
+```python
 from sklearn.cluster import Birch
 from flair.datasets import TREC_6
 from flair.embeddings import SentenceTransformerDocumentEmbeddings
@@ -87,7 +87,7 @@ algorithm is a soft clustering algorithm.
 More about EM can be read on the official [sklearn](https://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html).
 
 
-```
+```python
 from sklearn.mixture import GaussianMixture
 from flair.datasets import TREC_6
 from flair.embeddings import SentenceTransformerDocumentEmbeddings
@@ -118,7 +118,7 @@ Loading/Saving the model
 -----------
 
 The model can be saved and loaded. The code below shows how to save a model.
-```
+```python
 from flair.models import ClusteringModel
 from flair.datasets import TREC_6
 from flair.embeddings import SentenceTransformerDocumentEmbeddings
@@ -145,7 +145,7 @@ clustering_model.save(model_file="clustering_model.pt")
 
 The code for loading a model.
 
-````
+````python
 # load saved clustering model
 model = ClusteringModel.load(model_file="clustering_model.pt")
 
@@ -164,7 +164,7 @@ The result of the clustering can be evaluated. For this we will use the
 [NMI](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.normalized_mutual_info_score.html).
 (Normalized Mutual Info) score.
 
-````
+````python
 # need to fit() the model first
 # evaluate the model on a corpus with the given label
 clustering_model.evaluate(corpus, label_type="question_class")

@@ -1,37 +1,13 @@
 import logging
 import re
-from abc import abstractmethod
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import List, Optional, Union
 
 import torch
-from deprecated import deprecated
-from transformers import (
-    AlbertModel,
-    AlbertTokenizer,
-    BertModel,
-    BertTokenizer,
-    CamembertModel,
-    CamembertTokenizer,
-    GPT2Model,
-    GPT2Tokenizer,
-    OpenAIGPTModel,
-    OpenAIGPTTokenizer,
-    PreTrainedModel,
-    PreTrainedTokenizer,
-    RobertaModel,
-    RobertaTokenizer,
-    XLMModel,
-    XLMRobertaModel,
-    XLMRobertaTokenizer,
-    XLMTokenizer,
-    XLNetModel,
-    XLNetTokenizer,
-)
+from deprecated.sphinx import deprecated
 
 import flair
 from flair.data import Sentence, Token
-from flair.embeddings.base import ScalarMix
 from flair.embeddings.document import DocumentEmbeddings
 from flair.embeddings.token import StackedEmbeddings, TokenEmbeddings
 from flair.file_utils import cached_path
@@ -43,15 +19,16 @@ log = logging.getLogger("flair")
 class ELMoEmbeddings(TokenEmbeddings):
     """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018.
     ELMo word vectors can be constructed by combining layers in different ways.
-    Default is to concatene the top 3 layers in the LM."""
+    Default is to concatene the top 3 layers in the LM.
+    """
 
     def __init__(
         self,
         model: str = "original",
-        options_file: str = None,
-        weight_file: str = None,
+        options_file: Optional[str] = None,
+        weight_file: Optional[str] = None,
         embedding_mode: str = "all",
-    ):
+    ) -> None:
         super().__init__()
 
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -63,7 +40,6 @@ class ELMoEmbeddings(TokenEmbeddings):
             log.warning('ATTENTION! The library "allennlp" is not installed!')
             log.warning('To use ELMoEmbeddings, please first install with "pip install allennlp==0.9.0"')
             log.warning("-" * 100)
-            pass
 
         assert embedding_mode in ["all", "top", "average"]
 
@@ -160,9 +136,9 @@ class ELMoEmbeddings(TokenEmbeddings):
         return sentences
 
     def extra_repr(self):
-        return "model={}".format(self.name)
+        return f"model={self.name}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def __setstate__(self, state):
@@ -192,18 +168,19 @@ class CharLMEmbeddings(TokenEmbeddings):
         model: str,
         detach: bool = True,
         use_cache: bool = False,
-        cache_directory: Path = None,
-    ):
-        """
-        initializes contextual string embeddings using a character-level language model.
-        :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
+        cache_directory: Optional[Path] = None,
+    ) -> None:
+        """Initializes contextual string embeddings using a character-level language model.
+
+        Args:
+            model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
                 'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward'
                 depending on which character language model is desired.
-        :param detach: if set to False, the gradient will propagate into the language model. this dramatically slows down
+            detach: if set to False, the gradient will propagate into the language model. this dramatically slows down
                 training and often leads to worse results, so not recommended.
-        :param use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
+            use_cache: if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
                 not allow re-use of once computed embeddings that do not fit into memory
-        :param cache_directory: if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
+            cache_directory: if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
                 is written to the provided directory.
         """
         super().__init__()
@@ -457,10 +434,7 @@ class CharLMEmbeddings(TokenEmbeddings):
             for token in sentence.tokens:
                 offset_forward += len(token.text)
 
-                if self.is_forward_lm:
-                    offset = offset_forward
-                else:
-                    offset = offset_backward
+                offset = offset_forward if self.is_forward_lm else offset_backward
 
                 embedding = all_hidden_states_in_lm[offset, i, :]
 
@@ -480,830 +454,8 @@ class CharLMEmbeddings(TokenEmbeddings):
 
         return sentences
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
-
-
-class XLNetEmbeddings(TokenEmbeddings):
-    @deprecated(
-        version="0.4.5",
-        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
-    )
-    def __init__(
-        self,
-        pretrained_model_name_or_path: str = "xlnet-large-cased",
-        layers: str = "1",
-        pooling_operation: str = "first_last",
-        use_scalar_mix: bool = False,
-    ):
-        """XLNet embeddings, as proposed in Yang et al., 2019.
-        :param pretrained_model_name_or_path: name or path of XLNet model
-        :param layers: comma-separated list of layers
-        :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
-        """
-        super().__init__()
-
-        self.tokenizer = XLNetTokenizer.from_pretrained(pretrained_model_name_or_path)
-        self.model = XLNetModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path,
-            output_hidden_states=True,
-        )
-        self.name = pretrained_model_name_or_path
-        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
-        self.pooling_operation = pooling_operation
-        self.use_scalar_mix = use_scalar_mix
-        self.static_embeddings = True
-
-        dummy_sentence: Sentence = Sentence(["hello"])
-        embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        self.model.to(flair.device)
-        self.model.eval()
-
-        sentences = _get_transformer_sentence_embeddings(
-            sentences=sentences,
-            tokenizer=self.tokenizer,
-            model=self.model,
-            name=self.name,
-            layers=self.layers,
-            pooling_operation=self.pooling_operation,
-            use_scalar_mix=self.use_scalar_mix,
-            bos_token="<s>",
-            eos_token="</s>",
-        )
-
-        return sentences
-
-    def extra_repr(self):
-        return "model={}".format(self.name)
-
-    def __str__(self):
-        return self.name
-
-
-class XLMEmbeddings(TokenEmbeddings):
-    @deprecated(
-        version="0.4.5",
-        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
-    )
-    def __init__(
-        self,
-        pretrained_model_name_or_path: str = "xlm-mlm-en-2048",
-        layers: str = "1",
-        pooling_operation: str = "first_last",
-        use_scalar_mix: bool = False,
-    ):
-        """
-        XLM embeddings, as proposed in Guillaume et al., 2019.
-        :param pretrained_model_name_or_path: name or path of XLM model
-        :param layers: comma-separated list of layers
-        :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
-        """
-        super().__init__()
-
-        self.tokenizer = XLMTokenizer.from_pretrained(pretrained_model_name_or_path)
-        self.model = XLMModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path,
-            output_hidden_states=True,
-        )
-        self.name = pretrained_model_name_or_path
-        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
-        self.pooling_operation = pooling_operation
-        self.use_scalar_mix = use_scalar_mix
-        self.static_embeddings = True
-
-        dummy_sentence: Sentence = Sentence(["hello"])
-        embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        self.model.to(flair.device)
-        self.model.eval()
-
-        sentences = _get_transformer_sentence_embeddings(
-            sentences=sentences,
-            tokenizer=self.tokenizer,
-            model=self.model,
-            name=self.name,
-            layers=self.layers,
-            pooling_operation=self.pooling_operation,
-            use_scalar_mix=self.use_scalar_mix,
-            bos_token="<s>",
-            eos_token="</s>",
-        )
-
-        return sentences
-
-    def extra_repr(self):
-        return "model={}".format(self.name)
-
-    def __str__(self):
-        return self.name
-
-
-class OpenAIGPTEmbeddings(TokenEmbeddings):
-    @deprecated(
-        version="0.4.5",
-        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
-    )
-    def __init__(
-        self,
-        pretrained_model_name_or_path: str = "openai-gpt",
-        layers: str = "1",
-        pooling_operation: str = "first_last",
-        use_scalar_mix: bool = False,
-    ):
-        """OpenAI GPT embeddings, as proposed in Radford et al. 2018.
-        :param pretrained_model_name_or_path: name or path of OpenAI GPT model
-        :param layers: comma-separated list of layers
-        :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
-        """
-        super().__init__()
-
-        self.tokenizer = OpenAIGPTTokenizer.from_pretrained(pretrained_model_name_or_path)
-        self.model = OpenAIGPTModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path,
-            output_hidden_states=True,
-        )
-        self.name = pretrained_model_name_or_path
-        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
-        self.pooling_operation = pooling_operation
-        self.use_scalar_mix = use_scalar_mix
-        self.static_embeddings = True
-
-        dummy_sentence: Sentence = Sentence(["hello"])
-        embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        self.model.to(flair.device)
-        self.model.eval()
-
-        sentences = _get_transformer_sentence_embeddings(
-            sentences=sentences,
-            tokenizer=self.tokenizer,
-            model=self.model,
-            name=self.name,
-            layers=self.layers,
-            pooling_operation=self.pooling_operation,
-            use_scalar_mix=self.use_scalar_mix,
-        )
-
-        return sentences
-
-    def extra_repr(self):
-        return "model={}".format(self.name)
-
-    def __str__(self):
-        return self.name
-
-
-class OpenAIGPT2Embeddings(TokenEmbeddings):
-    @deprecated(
-        version="0.4.5",
-        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
-    )
-    def __init__(
-        self,
-        pretrained_model_name_or_path: str = "gpt2-medium",
-        layers: str = "1",
-        pooling_operation: str = "first_last",
-        use_scalar_mix: bool = False,
-    ):
-        """OpenAI GPT-2 embeddings, as proposed in Radford et al. 2019.
-        :param pretrained_model_name_or_path: name or path of OpenAI GPT-2 model
-        :param layers: comma-separated list of layers
-        :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
-        """
-        super().__init__()
-
-        self.tokenizer = GPT2Tokenizer.from_pretrained(pretrained_model_name_or_path)
-        self.model = GPT2Model.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path,
-            output_hidden_states=True,
-        )
-        self.name = pretrained_model_name_or_path
-        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
-        self.pooling_operation = pooling_operation
-        self.use_scalar_mix = use_scalar_mix
-        self.static_embeddings = True
-
-        dummy_sentence: Sentence = Sentence(["hello"])
-        embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        self.model.to(flair.device)
-        self.model.eval()
-
-        sentences = _get_transformer_sentence_embeddings(
-            sentences=sentences,
-            tokenizer=self.tokenizer,
-            model=self.model,
-            name=self.name,
-            layers=self.layers,
-            pooling_operation=self.pooling_operation,
-            use_scalar_mix=self.use_scalar_mix,
-            bos_token="<|endoftext|>",
-            eos_token="<|endoftext|>",
-        )
-
-        return sentences
-
-
-class RoBERTaEmbeddings(TokenEmbeddings):
-    @deprecated(
-        version="0.4.5",
-        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
-    )
-    def __init__(
-        self,
-        pretrained_model_name_or_path: str = "roberta-base",
-        layers: str = "-1",
-        pooling_operation: str = "first",
-        use_scalar_mix: bool = False,
-    ):
-        """RoBERTa, as proposed by Liu et al. 2019.
-        :param pretrained_model_name_or_path: name or path of RoBERTa model
-        :param layers: comma-separated list of layers
-        :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
-        """
-        super().__init__()
-
-        self.tokenizer = RobertaTokenizer.from_pretrained(pretrained_model_name_or_path)
-        self.model = RobertaModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path,
-            output_hidden_states=True,
-        )
-        self.name = pretrained_model_name_or_path
-        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
-        self.pooling_operation = pooling_operation
-        self.use_scalar_mix = use_scalar_mix
-        self.static_embeddings = True
-
-        dummy_sentence: Sentence = Sentence(["hello"])
-        embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        self.model.to(flair.device)
-        self.model.eval()
-
-        sentences = _get_transformer_sentence_embeddings(
-            sentences=sentences,
-            tokenizer=self.tokenizer,
-            model=self.model,
-            name=self.name,
-            layers=self.layers,
-            pooling_operation=self.pooling_operation,
-            use_scalar_mix=self.use_scalar_mix,
-            bos_token="<s>",
-            eos_token="</s>",
-        )
-
-        return sentences
-
-
-class CamembertEmbeddings(TokenEmbeddings):
-    @deprecated(
-        version="0.4.5",
-        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
-    )
-    def __init__(
-        self,
-        pretrained_model_name_or_path: str = "camembert-base",
-        layers: str = "-1",
-        pooling_operation: str = "first",
-        use_scalar_mix: bool = False,
-    ):
-        """CamemBERT, a Tasty French Language Model, as proposed by Martin et al. 2019.
-        :param pretrained_model_name_or_path: name or path of RoBERTa model
-        :param layers: comma-separated list of layers
-        :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
-        """
-        super().__init__()
-
-        self.tokenizer = CamembertTokenizer.from_pretrained(pretrained_model_name_or_path)
-        self.model = CamembertModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path,
-            output_hidden_states=True,
-        )
-        self.name = pretrained_model_name_or_path
-        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
-        self.pooling_operation = pooling_operation
-        self.use_scalar_mix = use_scalar_mix
-        self.static_embeddings = True
-
-        dummy_sentence: Sentence = Sentence(["hello"])
-        embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        state["tokenizer"] = None
-        return state
-
-    def __setstate__(self, d):
-        super().__setstate__(d)
-
-        # 1-camembert-base -> camembert-base
-        if any(char.isdigit() for char in self.name):
-            self.tokenizer = CamembertTokenizer.from_pretrained("-".join(self.name.split("-")[1:]))
-        else:
-            self.tokenizer = CamembertTokenizer.from_pretrained(self.name)
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        self.model.to(flair.device)
-        self.model.eval()
-
-        sentences = _get_transformer_sentence_embeddings(
-            sentences=sentences,
-            tokenizer=self.tokenizer,
-            model=self.model,
-            name=self.name,
-            layers=self.layers,
-            pooling_operation=self.pooling_operation,
-            use_scalar_mix=self.use_scalar_mix,
-            bos_token="<s>",
-            eos_token="</s>",
-        )
-
-        return sentences
-
-
-class XLMRobertaEmbeddings(TokenEmbeddings):
-    @deprecated(
-        version="0.4.5",
-        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
-    )
-    def __init__(
-        self,
-        pretrained_model_name_or_path: str = "xlm-roberta-large",
-        layers: str = "-1",
-        pooling_operation: str = "first",
-        use_scalar_mix: bool = False,
-    ):
-        """XLM-RoBERTa as proposed by Conneau et al. 2019.
-        :param pretrained_model_name_or_path: name or path of XLM-R model
-        :param layers: comma-separated list of layers
-        :param pooling_operation: defines pooling operation for subwords
-        :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
-        """
-        super().__init__()
-
-        self.tokenizer = XLMRobertaTokenizer.from_pretrained(pretrained_model_name_or_path)
-        self.model = XLMRobertaModel.from_pretrained(
-            pretrained_model_name_or_path=pretrained_model_name_or_path,
-            output_hidden_states=True,
-        )
-        self.name = pretrained_model_name_or_path
-        self.layers: List[int] = [int(layer) for layer in layers.split(",")]
-        self.pooling_operation = pooling_operation
-        self.use_scalar_mix = use_scalar_mix
-        self.static_embeddings = True
-
-        dummy_sentence: Sentence = Sentence(["hello"])
-        embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
-
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        state["tokenizer"] = None
-        return state
-
-    def __setstate__(self, d):
-        super().__setstate__(d)
-
-        # 1-xlm-roberta-large -> xlm-roberta-large
-        self.tokenizer = self.tokenizer = XLMRobertaTokenizer.from_pretrained("-".join(self.name.split("-")[1:]))
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        self.model.to(flair.device)
-        self.model.eval()
-
-        sentences = _get_transformer_sentence_embeddings(
-            sentences=sentences,
-            tokenizer=self.tokenizer,
-            model=self.model,
-            name=self.name,
-            layers=self.layers,
-            pooling_operation=self.pooling_operation,
-            use_scalar_mix=self.use_scalar_mix,
-            bos_token="<s>",
-            eos_token="</s>",
-        )
-
-        return sentences
-
-
-def _extract_embeddings(
-    hidden_states: List[torch.FloatTensor],
-    layers: List[int],
-    pooling_operation: str,
-    subword_start_idx: int,
-    subword_end_idx: int,
-    use_scalar_mix: bool = False,
-) -> List[torch.FloatTensor]:
-    """
-    Extracts subword embeddings from specified layers from hidden states.
-    :param hidden_states: list of hidden states from model
-    :param layers: list of layers
-    :param pooling_operation: pooling operation for subword embeddings (supported: first, last, first_last and mean)
-    :param subword_start_idx: defines start index for subword
-    :param subword_end_idx: defines end index for subword
-    :param use_scalar_mix: determines, if scalar mix should be used
-    :return: list of extracted subword embeddings
-    """
-    subtoken_embeddings: List[torch.FloatTensor] = []
-
-    for layer in layers:
-        current_embeddings = hidden_states[layer][0][subword_start_idx:subword_end_idx]
-
-        first_embedding: torch.FloatTensor = current_embeddings[0]
-        if pooling_operation == "first_last":
-            last_embedding: torch.FloatTensor = current_embeddings[-1]
-            final_embedding: torch.FloatTensor = torch.cat([first_embedding, last_embedding])
-        elif pooling_operation == "last":
-            final_embedding: torch.FloatTensor = current_embeddings[-1]
-        elif pooling_operation == "mean":
-            all_embeddings: List[torch.FloatTensor] = [embedding.unsqueeze(0) for embedding in current_embeddings]
-            final_embedding: torch.FloatTensor = torch.mean(torch.cat(all_embeddings, dim=0), dim=0)
-        else:
-            final_embedding: torch.FloatTensor = first_embedding
-
-        subtoken_embeddings.append(final_embedding)
-
-    if use_scalar_mix:
-        sm = ScalarMix(mixture_size=len(subtoken_embeddings))
-        sm_embeddings = sm(subtoken_embeddings)
-
-        subtoken_embeddings = [sm_embeddings]
-
-    return subtoken_embeddings
-
-
-def _build_token_subwords_mapping(sentence: Sentence, tokenizer: PreTrainedTokenizer) -> Tuple[Dict[int, int], str]:
-    """Builds a dictionary that stores the following information:
-    Token index (key) and number of corresponding subwords (value) for a sentence.
-
-    :param sentence: input sentence
-    :param tokenizer: Transformers tokenization object
-    :return: dictionary of token index to corresponding number of subwords, tokenized string
-    """
-    token_subwords_mapping: Dict[int, int] = {}
-
-    tokens = []
-
-    for token in sentence.tokens:
-        token_text = token.text
-
-        subwords = tokenizer.tokenize(token_text)
-
-        tokens.append(token.text if subwords else tokenizer.unk_token)
-
-        token_subwords_mapping[token.idx] = len(subwords) if subwords else 1
-
-    return token_subwords_mapping, " ".join(tokens)
-
-
-def _build_token_subwords_mapping_gpt2(
-    sentence: Sentence, tokenizer: PreTrainedTokenizer
-) -> Tuple[Dict[int, int], str]:
-    """Builds a dictionary that stores the following information:
-    Token index (key) and number of corresponding subwords (value) for a sentence.
-
-    :param sentence: input sentence
-    :param tokenizer: Transformers tokenization object
-    :return: dictionary of token index to corresponding number of subwords, tokenized string
-    """
-    token_subwords_mapping: Dict[int, int] = {}
-
-    tokens = []
-
-    for token in sentence.tokens:
-        # Dummy token is needed to get the actually token tokenized correctly with special ``Ġ`` symbol
-
-        if token.idx == 1:
-            token_text = token.text
-            subwords = tokenizer.tokenize(token_text)
-        else:
-            token_text = "X " + token.text
-            subwords = tokenizer.tokenize(token_text)[1:]
-
-        tokens.append(token.text if subwords else tokenizer.unk_token)
-
-        token_subwords_mapping[token.idx] = len(subwords) if subwords else 1
-
-    return token_subwords_mapping, " ".join(tokens)
-
-
-def _get_transformer_sentence_embeddings(
-    sentences: List[Sentence],
-    tokenizer: PreTrainedTokenizer,
-    model: PreTrainedModel,
-    name: str,
-    layers: List[int],
-    pooling_operation: str,
-    use_scalar_mix: bool,
-    bos_token: str = None,
-    eos_token: str = None,
-) -> List[Sentence]:
-    """
-    Builds sentence embeddings for Transformer-based architectures.
-    :param sentences: input sentences
-    :param tokenizer: tokenization object
-    :param model: model object
-    :param name: name of the Transformer-based model
-    :param layers: list of layers
-    :param pooling_operation: defines pooling operation for subword extraction
-    :param use_scalar_mix: defines the usage of scalar mix for specified layer(s)
-    :param bos_token: defines begin of sentence token (used for left padding)
-    :param eos_token: defines end of sentence token (used for right padding)
-    :return: list of sentences (each token of a sentence is now embedded)
-    """
-    with torch.no_grad():
-        for sentence in sentences:
-            token_subwords_mapping: Dict[int, int] = {}
-
-            if ("gpt2" in name or "roberta" in name) and "xlm" not in name:
-                (
-                    token_subwords_mapping,
-                    tokenized_string,
-                ) = _build_token_subwords_mapping_gpt2(sentence=sentence, tokenizer=tokenizer)
-            else:
-                (
-                    token_subwords_mapping,
-                    tokenized_string,
-                ) = _build_token_subwords_mapping(sentence=sentence, tokenizer=tokenizer)
-
-            subwords = tokenizer.tokenize(tokenized_string)
-
-            offset = 0
-
-            if bos_token:
-                subwords = [bos_token] + subwords
-                offset = 1
-
-            if eos_token:
-                subwords = subwords + [eos_token]
-
-            indexed_tokens = tokenizer.convert_tokens_to_ids(subwords)
-            tokens_tensor = torch.tensor([indexed_tokens])
-            tokens_tensor = tokens_tensor.to(flair.device)
-
-            hidden_states = model(tokens_tensor)[-1]
-
-            for token in sentence.tokens:
-                len_subwords = token_subwords_mapping[token.idx]
-
-                subtoken_embeddings = _extract_embeddings(
-                    hidden_states=hidden_states,
-                    layers=layers,
-                    pooling_operation=pooling_operation,
-                    subword_start_idx=offset,
-                    subword_end_idx=offset + len_subwords,
-                    use_scalar_mix=use_scalar_mix,
-                )
-
-                offset += len_subwords
-
-                final_subtoken_embedding = torch.cat(subtoken_embeddings)
-                token.set_embedding(name, final_subtoken_embedding)
-
-    return sentences
-
-
-class BertEmbeddings(TokenEmbeddings):
-    @deprecated(
-        version="0.4.5",
-        reason="Use 'TransformerWordEmbeddings' for all transformer-based word embeddings",
-    )
-    def __init__(
-        self,
-        bert_model_or_path: str = "bert-base-uncased",
-        layers: str = "-1,-2,-3,-4",
-        pooling_operation: str = "first",
-        use_scalar_mix: bool = False,
-    ):
-        """
-        Bidirectional transformer embeddings of words, as proposed in Devlin et al., 2018.
-        :param bert_model_or_path: name of BERT model ('') or directory path containing custom model, configuration file
-        and vocab file (names of three files should be - config.json, pytorch_model.bin/model.chkpt, vocab.txt)
-        :param layers: string indicating which layers to take for embedding
-        :param pooling_operation: how to get from token piece embeddings to token embedding. Either pool them and take
-        the average ('mean') or use first word piece embedding as token embedding ('first)
-        """
-        super().__init__()
-
-        if "distilbert" in bert_model_or_path:
-            try:
-                from transformers import DistilBertModel, DistilBertTokenizer
-            except ImportError:
-                log.warning("-" * 100)
-                log.warning("ATTENTION! To use DistilBert, please first install a recent version of transformers!")
-                log.warning("-" * 100)
-                pass
-
-            self.tokenizer = DistilBertTokenizer.from_pretrained(bert_model_or_path)
-            self.model = DistilBertModel.from_pretrained(
-                pretrained_model_name_or_path=bert_model_or_path,
-                output_hidden_states=True,
-            )
-        elif "albert" in bert_model_or_path:
-            self.tokenizer = AlbertTokenizer.from_pretrained(bert_model_or_path)
-            self.model = AlbertModel.from_pretrained(
-                pretrained_model_name_or_path=bert_model_or_path,
-                output_hidden_states=True,
-            )
-        else:
-            self.tokenizer = BertTokenizer.from_pretrained(bert_model_or_path)
-            self.model = BertModel.from_pretrained(
-                pretrained_model_name_or_path=bert_model_or_path,
-                output_hidden_states=True,
-            )
-        self.layer_indexes = [int(x) for x in layers.split(",")]
-        self.pooling_operation = pooling_operation
-        self.use_scalar_mix = use_scalar_mix
-        self.name = str(bert_model_or_path)
-        self.static_embeddings = True
-
-    class BertInputFeatures(object):
-        """Private helper class for holding BERT-formatted features"""
-
-        def __init__(
-            self,
-            unique_id,
-            tokens,
-            input_ids,
-            input_mask,
-            input_type_ids,
-            token_subtoken_count,
-        ):
-            self.unique_id = unique_id
-            self.tokens = tokens
-            self.input_ids = input_ids
-            self.input_mask = input_mask
-            self.input_type_ids = input_type_ids
-            self.token_subtoken_count = token_subtoken_count
-
-    def _convert_sentences_to_features(self, sentences, max_sequence_length: int) -> [BertInputFeatures]:
-        max_sequence_length = max_sequence_length + 2
-
-        features: List[BertEmbeddings.BertInputFeatures] = []
-        for sentence_index, sentence in enumerate(sentences):
-            bert_tokenization: List[str] = []
-            token_subtoken_count: Dict[int, int] = {}
-
-            for token in sentence:
-                subtokens = self.tokenizer.tokenize(token.text)
-                bert_tokenization.extend(subtokens)
-                token_subtoken_count[token.idx] = len(subtokens)
-
-            if len(bert_tokenization) > max_sequence_length - 2:
-                bert_tokenization = bert_tokenization[0 : (max_sequence_length - 2)]
-
-            tokens = []
-            input_type_ids = []
-            tokens.append("[CLS]")
-            input_type_ids.append(0)
-            for token in bert_tokenization:
-                tokens.append(token)
-                input_type_ids.append(0)
-            tokens.append("[SEP]")
-            input_type_ids.append(0)
-
-            input_ids = self.tokenizer.convert_tokens_to_ids(tokens)
-            # The mask has 1 for real tokens and 0 for padding tokens. Only real
-            # tokens are attended to.
-            input_mask = [1] * len(input_ids)
-
-            # Zero-pad up to the sequence length.
-            while len(input_ids) < max_sequence_length:
-                input_ids.append(0)
-                input_mask.append(0)
-                input_type_ids.append(0)
-
-            features.append(
-                BertEmbeddings.BertInputFeatures(
-                    unique_id=sentence_index,
-                    tokens=tokens,
-                    input_ids=input_ids,
-                    input_mask=input_mask,
-                    input_type_ids=input_type_ids,
-                    token_subtoken_count=token_subtoken_count,
-                )
-            )
-
-        return features
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        """Add embeddings to all words in a list of sentences. If embeddings are already added,
-        updates only if embeddings are non-static."""
-
-        # first, find longest sentence in batch
-        longest_sentence_in_batch: int = len(
-            max(
-                [self.tokenizer.tokenize(sentence.to_tokenized_string()) for sentence in sentences],
-                key=len,
-            )
-        )
-
-        # prepare id maps for BERT model
-        features = self._convert_sentences_to_features(sentences, longest_sentence_in_batch)
-        all_input_ids = torch.LongTensor([f.input_ids for f in features]).to(flair.device)
-        all_input_masks = torch.LongTensor([f.input_mask for f in features]).to(flair.device)
-
-        # put encoded batch through BERT model to get all hidden states of all encoder layers
-        self.model.to(flair.device)
-        self.model.eval()
-        all_encoder_layers = self.model(all_input_ids, attention_mask=all_input_masks)[-1]
-
-        with torch.no_grad():
-            for sentence_index, sentence in enumerate(sentences):
-                feature = features[sentence_index]
-
-                # get aggregated embeddings for each BERT-subtoken in sentence
-                subtoken_embeddings = []
-                for token_index, _ in enumerate(feature.tokens):
-                    all_layers = []
-                    for layer_index in self.layer_indexes:
-                        layer_output = all_encoder_layers[int(layer_index)][sentence_index]
-                        all_layers.append(layer_output[token_index])
-
-                    if self.use_scalar_mix:
-                        sm = ScalarMix(mixture_size=len(all_layers))
-                        sm_embeddings = sm(all_layers)
-                        all_layers = [sm_embeddings]
-
-                    subtoken_embeddings.append(torch.cat(all_layers))
-
-                # get the current sentence object
-                token_idx = 0
-                for token in sentence:
-                    # add concatenated embedding to sentence
-                    token_idx += 1
-
-                    if self.pooling_operation == "first":
-                        # use first subword embedding if pooling operation is 'first'
-                        token.set_embedding(self.name, subtoken_embeddings[token_idx])
-                    else:
-                        # otherwise, do a mean over all subwords in token
-                        embeddings = subtoken_embeddings[
-                            token_idx : token_idx + feature.token_subtoken_count[token.idx]
-                        ]
-                        embeddings = [embedding.unsqueeze(0) for embedding in embeddings]
-                        mean = torch.mean(torch.cat(embeddings, dim=0), dim=0)
-                        token.set_embedding(self.name, mean)
-
-                    token_idx += feature.token_subtoken_count[token.idx] - 1
-
-        return sentences
-
-    @property
-    @abstractmethod
-    def embedding_length(self) -> int:
-        """Returns the length of the embedding vector."""
-        return (
-            len(self.layer_indexes) * self.model.config.hidden_size
-            if not self.use_scalar_mix
-            else self.model.config.hidden_size
-        )
 
 
 class DocumentMeanEmbeddings(DocumentEmbeddings):
@@ -1311,7 +463,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
         version="0.3.1",
         reason="The functionality of this class is moved to 'DocumentPoolEmbeddings'",
     )
-    def __init__(self, token_embeddings: List[TokenEmbeddings]):
+    def __init__(self, token_embeddings: List[TokenEmbeddings]) -> None:
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -1328,8 +480,8 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
     def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
-        only if embeddings are non-static."""
-
+        only if embeddings are non-static.
+        """
         everything_embedded: bool = True
 
         # if only one sentence is passed, convert to list of sentence
@@ -1337,7 +489,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
             sentences = [sentences]
 
         for sentence in sentences:
-            if self.name not in sentence._embeddings.keys():
+            if self.name not in sentence._embeddings:
                 everything_embedded = False
 
         if not everything_embedded:
@@ -1369,24 +521,24 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         hidden_size=128,
         rnn_layers=1,
         reproject_words: bool = True,
-        reproject_words_dimension: int = None,
+        reproject_words_dimension: Optional[int] = None,
         bidirectional: bool = False,
         dropout: float = 0.5,
         word_dropout: float = 0.0,
         locked_dropout: float = 0.0,
-    ):
+    ) -> None:
         """The constructor takes a list of embeddings to be combined.
-        :param embeddings: a list of token embeddings
-        :param hidden_size: the number of hidden states in the lstm
-        :param rnn_layers: the number of layers for the lstm
-        :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
-        layer before putting them into the lstm or not
-        :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
-        dimension as before will be taken.
-        :param bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
-        :param dropout: the dropout value to be used
-        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
-        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+
+        Args:
+            embeddings: a list of token embeddings
+            hidden_size: the number of hidden states in the lstm
+            rnn_layers: the number of layers for the lstm
+            reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the lstm or not.
+            reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.
+            bidirectional: boolean value, indicating whether to use a bidirectional lstm or not
+            dropout: the dropout value to be used
+            word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+            locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used.
         """
         super().__init__()
 
@@ -1437,8 +589,8 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
-        only if embeddings are non-static."""
-
+        only if embeddings are non-static.
+        """
         if type(sentences) is Sentence:
             sentences = [sentences]
 
@@ -1455,16 +607,16 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         lengths: List[int] = []
 
         # go through each sentence in batch
-        for i, sentence in enumerate(sentences):
+        for _i, sentence in enumerate(sentences):
             lengths.append(len(sentence.tokens))
 
             word_embeddings = []
 
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
+            for token, _token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
                 word_embeddings.append(token.get_embedding().unsqueeze(0))
 
             # PADDING: pad shorter sentences out
-            for add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
+            for _add in range(longest_token_sequence_in_batch - len(sentence.tokens)):
                 word_embeddings.append(
                     torch.zeros(self.length_of_all_token_embeddings, dtype=torch.float).unsqueeze(0).to(flair.device)
                 )
@@ -1519,81 +671,3 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         pass
-
-
-class ELMoTransformerEmbeddings(TokenEmbeddings):
-    """Contextual word embeddings using word-level Transformer-based LM, as proposed in Peters et al., 2018."""
-
-    @deprecated(
-        version="0.4.2",
-        reason="Not possible to load or save ELMo Transformer models. @stefan-it is working on it.",
-    )
-    def __init__(self, model_file: str):
-        super().__init__()
-
-        try:
-            from allennlp.data.token_indexers.elmo_indexer import (
-                ELMoTokenCharactersIndexer,
-            )
-            from allennlp.modules.token_embedders.bidirectional_language_model_token_embedder import (
-                BidirectionalLanguageModelTokenEmbedder,
-            )
-        except ModuleNotFoundError:
-            log.warning("-" * 100)
-            log.warning('ATTENTION! The library "allennlp" is not installed!')
-            log.warning(
-                "To use ELMoTransformerEmbeddings, please first install a recent version from https://github.com/allenai/allennlp"
-            )
-            log.warning("-" * 100)
-            pass
-
-        self.name = "elmo-transformer"
-        self.static_embeddings = True
-        self.lm_embedder = BidirectionalLanguageModelTokenEmbedder(
-            archive_file=model_file,
-            dropout=0.2,
-            bos_eos_tokens=("<S>", "</S>"),
-            remove_bos_eos=True,
-            requires_grad=False,
-        )
-        self.lm_embedder = self.lm_embedder.to(device=flair.device)
-        self.vocab = self.lm_embedder._lm.vocab
-        self.indexer = ELMoTokenCharactersIndexer()
-
-        # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence(["hello"])
-        embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(embedded_dummy[0].get_token(1).get_embedding())
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        # Avoid conflicts with flair's Token class
-        import allennlp.data.tokenizers.token as allen_nlp_token
-
-        indexer = self.indexer
-        vocab = self.vocab
-
-        for sentence in sentences:
-            character_indices = indexer.tokens_to_indices(
-                [allen_nlp_token.Token(token.text) for token in sentence], vocab, "elmo"
-            )["elmo"]
-
-            indices_tensor = torch.LongTensor([character_indices])
-            indices_tensor = indices_tensor.to(device=flair.device)
-            embeddings = self.lm_embedder(indices_tensor)[0].detach().cpu().numpy()
-
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                embedding = embeddings[token_idx]
-                word_embedding = torch.FloatTensor(embedding)
-                token.set_embedding(self.name, word_embedding)
-
-        return sentences
-
-    def extra_repr(self):
-        return "model={}".format(self.name)
-
-    def __str__(self):
-        return self.name

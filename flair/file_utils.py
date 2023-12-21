@@ -1,6 +1,4 @@
-"""
-Utilities for working with the local dataset cache. Copied from AllenNLP
-"""
+"""Utilities for working with the local dataset cache. Copied from AllenNLP."""
 import base64
 import functools
 import io
@@ -28,12 +26,25 @@ import flair
 
 logger = logging.getLogger("flair")
 
+url_proxies: Optional[typing.Dict[str, str]] = None
+
+
+def set_proxies(proxies: typing.Dict[str, str]) -> None:
+    r"""Allows for data downloaded from urls to be forwarded to a proxy.
+
+    see https://requests.readthedocs.io/en/latest/user/advanced/#proxies
+
+    Args:
+        proxies: A dictionary of proxies according to the requests documentation.
+    """
+    global url_proxies
+    url_proxies = proxies
+
 
 def load_big_file(f: str):
-    """
-    Workaround for loading a big pickle file. Files over 2GB cause pickle errors on certain Mac and Windows distributions.
-    :param f:
-    :return:
+    """Workaround for loading a big pickle file.
+
+    Files over 2GB cause pickle errors on certain Mac and Windows distributions.
     """
     with open(f, "rb") as f_in:
         # mmap seems to be much more memory efficient
@@ -42,9 +53,9 @@ def load_big_file(f: str):
     return bf
 
 
-def url_to_filename(url: str, etag: str = None) -> str:
-    """
-    Converts a url into a filename in a reversible way.
+def url_to_filename(url: str, etag: Optional[str] = None) -> str:
+    """Converts an url into a filename in a reversible way.
+
     If `etag` is specified, add it on the end, separated by a period
     (which necessarily won't appear in the base64-encoded filename).
     Get rid of the quotes in the etag, since Windows doesn't like them.
@@ -62,9 +73,9 @@ def url_to_filename(url: str, etag: str = None) -> str:
 
 
 def filename_to_url(filename: str) -> Tuple[str, Optional[str]]:
-    """
-    Recovers the the url from the encoded filename. Returns it and the ETag
-    (which may be ``None``)
+    """Recovers the the url from the encoded filename.
+
+    Returns it and the ETag (which may be ``None``)
     """
     etag: Optional[str]
     try:
@@ -80,7 +91,8 @@ def filename_to_url(filename: str) -> Tuple[str, Optional[str]]:
 
 
 def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
-    """
+    """Download the given path and return the local path from the cache.
+
     Given something that might be a URL (or might be a local path),
     determine which. If it's a URL, download the file and cache it, and
     return the path to the cached file. If it's already a local path,
@@ -88,10 +100,7 @@ def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
     """
     cache_dir = Path(cache_dir)
 
-    if flair.cache_root not in cache_dir.parents:
-        dataset_cache = flair.cache_root / cache_dir
-    else:
-        dataset_cache = cache_dir
+    dataset_cache = flair.cache_root / cache_dir if flair.cache_root not in cache_dir.parents else cache_dir
 
     parsed = urlparse(url_or_filename)
 
@@ -105,10 +114,10 @@ def cached_path(url_or_filename: str, cache_dir: Union[str, Path]) -> Path:
         return Path(url_or_filename)
     elif len(parsed.scheme) < 2:
         # File, but it doesn't exist.
-        raise FileNotFoundError("file {} not found".format(url_or_filename))
+        raise FileNotFoundError(f"file {url_or_filename} not found")
     else:
         # Something unknown
-        raise ValueError("unable to parse {} as a URL or as a local path".format(url_or_filename))
+        raise ValueError(f"unable to parse {url_or_filename} as a URL or as a local path")
 
 
 def download_s3_to_path(bucket_name: str, cache_path: Path) -> Path:
@@ -134,14 +143,14 @@ def unzip_file(file: Union[str, Path], unzip_to: Union[str, Path]):
         zipObj.extractall(Path(unzip_to))
 
 
-def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True):
-    """
-    Unpacks a file to the given location.
+def unpack_file(file: Path, unpack_to: Path, mode: Optional[str] = None, keep: bool = True):
+    """Unpacks an archive file to the given location.
 
-    :param file Archive file to unpack
-    :param unpack_to Destination where to store the output
-    :param mode Type of the archive (zip, tar, gz, targz, rar)
-    :param keep Indicates whether to keep the archive after extraction or delete it
+    Args:
+        file: Archive file to unpack
+        unpack_to: Destination where to store the output
+        mode: Type of the archive (zip, tar, gz, targz, rar)
+        keep: Indicates whether to keep the archive after extraction or delete it
     """
     if mode == "zip" or (mode is None and str(file).endswith("zip")):
         from zipfile import ZipFile
@@ -165,9 +174,8 @@ def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True
     elif mode == "gz" or (mode is None and str(file).endswith("gz")):
         import gzip
 
-        with gzip.open(str(file), "rb") as f_in:
-            with open(str(unpack_to), "wb") as f_out:
-                shutil.copyfileobj(f_in, f_out)
+        with gzip.open(str(file), "rb") as f_in, open(str(unpack_to), "wb") as f_out:
+            shutil.copyfileobj(f_in, f_out)
 
     elif mode == "rar" or (mode is None and str(file).endswith("rar")):
         import patoolib
@@ -184,46 +192,11 @@ def unpack_file(file: Path, unpack_to: Path, mode: str = None, keep: bool = True
         os.remove(str(file))
 
 
-def download_file(url: str, cache_dir: Union[str, Path]):
-    cache_dir = Path(cache_dir)
-    cache_dir.mkdir(parents=True, exist_ok=True)
-
-    filename = re.sub(r".+/", "", url)
-    # get cache path to put the file
-    cache_path = cache_dir / filename
-
-    # Download to temporary file, then copy to cache dir once finished.
-    # Otherwise you get corrupt cache entries if the download gets interrupted.
-    fd, temp_filename = tempfile.mkstemp()
-    logger.info("%s not found in cache, downloading to %s", url, temp_filename)
-
-    # GET file object
-    req = requests.get(url, stream=True)
-    content_length = req.headers.get("Content-Length")
-    total = int(content_length) if content_length is not None else None
-    progress = Tqdm.tqdm(unit="B", total=total)
-    with open(temp_filename, "wb") as temp_file:
-        for chunk in req.iter_content(chunk_size=1024):
-            if chunk:  # filter out keep-alive new chunks
-                progress.update(len(chunk))
-                temp_file.write(chunk)
-
-    progress.close()
-
-    logger.info("copying %s to cache at %s", temp_filename, cache_path)
-    shutil.copyfile(temp_filename, str(cache_path))
-    logger.info("removing temp file %s", temp_filename)
-    os.close(fd)
-    os.remove(temp_filename)
-
-    progress.close()
-
-
 # TODO(joelgrus): do we want to do checksums or anything like that?
 def get_from_cache(url: str, cache_dir: Path) -> Path:
-    """
-    Given a URL, look for the corresponding dataset in the local cache.
-    If it's not there, download it. Then return the path to the cached file.
+    """Given a URL, look for the corresponding file in the local cache or download it.
+
+    return: the path to the cached file.
     """
     cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -236,7 +209,7 @@ def get_from_cache(url: str, cache_dir: Path) -> Path:
     # make HEAD request to check ETag
     response = requests.head(url, headers={"User-Agent": "Flair"}, allow_redirects=True)
     if response.status_code != 200:
-        raise IOError(f"HEAD request failed for url {url} with status code {response.status_code}.")
+        raise OSError(f"HEAD request failed for url {url} with status code {response.status_code}.")
 
     # add ETag to filename if it exists
     # etag = response.headers.get("ETag")
@@ -248,7 +221,7 @@ def get_from_cache(url: str, cache_dir: Path) -> Path:
         logger.info("%s not found in cache, downloading to %s", url, temp_filename)
 
         # GET file object
-        req = requests.get(url, stream=True, headers={"User-Agent": "Flair"})
+        req = requests.get(url, stream=True, headers={"User-Agent": "Flair"}, proxies=url_proxies)
         content_length = req.headers.get("Content-Length")
         total = int(content_length) if content_length is not None else None
         progress = Tqdm.tqdm(unit="B", total=total, unit_scale=True, unit_divisor=1024)
@@ -292,10 +265,11 @@ def extract_single_zip_file(
 ) -> Path:
     cache_dir = Path(cache_dir)
     cached_archive_path = cached_path(archive_path, cache_dir=cache_dir)
-    if flair.cache_root not in cache_dir.parents:
-        dataset_cache = flair.cache_root / cache_dir
-    else:
-        dataset_cache = cache_dir
+    dataset_cache = flair.cache_root / cache_dir if flair.cache_root not in cache_dir.parents else cache_dir
+    if member_path is not None:
+        output_path = dataset_cache / member_path
+        if output_path.exists():
+            return output_path
     with zipfile.ZipFile(cached_archive_path, "r") as archive:
         if member_path is None:
             members_list = archive.namelist()
@@ -310,9 +284,8 @@ def extract_single_zip_file(
 def get_the_only_file_in_the_archive(members_list: Sequence[str], archive_path: str) -> str:
     if len(members_list) > 1:
         raise ValueError(
-            "The archive %s contains multiple files, so you must select "
-            "one of the files inside providing a uri of the type: %s"
-            % (
+            "The archive {} contains multiple files, so you must select "
+            "one of the files inside providing a uri of the type: {}".format(
                 archive_path,
                 format_embeddings_file_uri("path_or_url_to_archive", "path_inside_archive"),
             )
@@ -322,7 +295,7 @@ def get_the_only_file_in_the_archive(members_list: Sequence[str], archive_path: 
 
 def format_embeddings_file_uri(main_file_path_or_url: str, path_inside_archive: Optional[str] = None) -> str:
     if path_inside_archive:
-        return "({})#{}".format(main_file_path_or_url, path_inside_archive)
+        return f"({main_file_path_or_url})#{path_inside_archive}"
     return main_file_path_or_url
 
 
@@ -336,7 +309,8 @@ class Tqdm:
 
     @staticmethod
     def set_slower_interval(use_slower_interval: bool) -> None:
-        """
+        """Slows down the tqdm update interval.
+
         If ``use_slower_interval`` is ``True``, we will dramatically slow down ``tqdm's`` default
         output rate.  ``tqdm's`` default output rate is great for interactively watching progress,
         but it is not great for log files.  You might want to set this if you are primarily going

@@ -1,9 +1,11 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 
 import torch
 
 import flair
+from flair.data import Dictionary, Sentence
+from flair.embeddings import Embeddings
 from flair.nn.distance import (
     CosineDistance,
     EuclideanDistance,
@@ -11,6 +13,7 @@ from flair.nn.distance import (
     LogitCosineDistance,
     NegativeScaledDotProduct,
 )
+from flair.training_utils import store_embeddings
 
 logger = logging.getLogger("flair")
 
@@ -28,7 +31,7 @@ class PrototypicalDecoder(torch.nn.Module):
         unlabeled_idx: Optional[int] = None,
         learning_mode: Optional[str] = "joint",
         normal_distributed_initial_prototypes: bool = False,
-    ):
+    ) -> None:
         super().__init__()
 
         if not prototype_size:
@@ -92,10 +95,7 @@ class PrototypicalDecoder(torch.nn.Module):
             embedded = embedded.detach()
 
         # decode embeddings into prototype space
-        if self.metric_space_decoder is not None:
-            encoded = self.metric_space_decoder(embedded)
-        else:
-            encoded = embedded
+        encoded = self.metric_space_decoder(embedded) if self.metric_space_decoder is not None else embedded
 
         prot = self.prototype_vectors
         radii = self.prototype_radii
@@ -119,5 +119,99 @@ class PrototypicalDecoder(torch.nn.Module):
             distance[..., self.unlabeled_idx] = self.unlabeled_distance
 
         scores = -distance
+
+        return scores
+
+
+class LabelVerbalizerDecoder(torch.nn.Module):
+    """A class for decoding labels using the idea of siamese networks / bi-encoders. This can be used for all classification tasks in flair.
+
+    Args:
+        label_encoder (flair.embeddings.TokenEmbeddings):
+            The label encoder used to encode the labels into an embedding.
+        label_dictionary (flair.data.Dictionary):
+            The label dictionary containing the mapping between labels and indices.
+
+    Attributes:
+        label_encoder (flair.embeddings.TokenEmbeddings):
+            The label encoder used to encode the labels into an embedding.
+        label_dictionary (flair.data.Dictionary):
+            The label dictionary containing the mapping between labels and indices.
+
+    Methods:
+        forward(self, label_embeddings: torch.Tensor, context_embeddings: torch.Tensor) -> torch.Tensor:
+            Takes the label embeddings and context embeddings as input and returns a tensor of label scores.
+
+    Examples:
+        label_dictionary = corpus.make_label_dictionary("ner")
+        label_encoder = TransformerWordEmbeddings('bert-base-ucnased')
+        label_verbalizer_decoder = LabelVerbalizerDecoder(label_encoder, label_dictionary)
+    """
+
+    def __init__(self, label_embedding: Embeddings, label_dictionary: Dictionary):
+        super().__init__()
+        self.label_embedding = label_embedding
+        self.verbalized_labels: List[Sentence] = self.verbalize_labels(label_dictionary)
+        self.to(flair.device)
+
+    @staticmethod
+    def verbalize_labels(label_dictionary: Dictionary) -> List[Sentence]:
+        """Takes a label dictionary and returns a list of sentences with verbalized labels.
+
+        Args:
+            label_dictionary (flair.data.Dictionary): The label dictionary to verbalize.
+
+        Returns:
+            A list of sentences with verbalized labels.
+
+        Examples:
+            label_dictionary = corpus.make_label_dictionary("ner")
+            verbalized_labels = LabelVerbalizerDecoder.verbalize_labels(label_dictionary)
+            print(verbalized_labels)
+            [Sentence: "begin person", Sentence: "inside person", Sentence: "end person", Sentence: "single org", ...]
+        """
+        verbalized_labels = []
+        for byte_label, idx in label_dictionary.item2idx.items():
+            str_label = byte_label.decode("utf-8")
+            if label_dictionary.span_labels:
+                # verbalize BIOES labels
+                if str_label == "O":
+                    verbalized_labels.append("outside")
+                elif str_label.startswith("B-"):
+                    verbalized_labels.append("begin " + str_label.split("-")[1])
+                elif str_label.startswith("I-"):
+                    verbalized_labels.append("inside " + str_label.split("-")[1])
+                elif str_label.startswith("E-"):
+                    verbalized_labels.append("ending " + str_label.split("-")[1])
+                elif str_label.startswith("S-"):
+                    verbalized_labels.append("single " + str_label.split("-")[1])
+                # if label is not BIOES, use label itself
+                else:
+                    verbalized_labels.append(str_label)
+            else:
+                verbalized_labels.append(str_label)
+        return list(map(Sentence, verbalized_labels))
+
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+        """Forward pass of the label verbalizer decoder.
+
+        Args:
+            inputs (torch.Tensor): The input tensor.
+
+        Returns:
+            The scores of the decoder.
+
+        Raises:
+            RuntimeError: If an unknown decoding type is specified.
+        """
+        if self.training or not self.label_embedding._everything_embedded(self.verbalized_labels):
+            self.label_embedding.embed(self.verbalized_labels)
+
+        label_tensor = torch.stack([label.get_embedding() for label in self.verbalized_labels])
+
+        if self.training:
+            store_embeddings(self.verbalized_labels, "none")
+
+        scores = torch.mm(inputs, label_tensor.T)
 
         return scores

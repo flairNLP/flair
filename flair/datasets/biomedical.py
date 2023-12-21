@@ -22,6 +22,7 @@ from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
+from deprecated.sphinx import deprecated
 from lxml import etree
 from lxml.etree import XMLSyntaxError
 
@@ -52,34 +53,32 @@ logger = logging.getLogger("flair")
 
 
 class Entity:
-    """
-    Internal class to represent entities while converting biomedical NER corpora to a standardized format
-    (only used for pre-processing purposes!). Each entity consists of the char span it addresses in
-    the original text as well as the type of entity (e.g. Chemical, Gene, and so on).
+    """Internal class to represent entities while converting biomedical NER corpora to a standardized format.
+
+    Each entity consists of the char span it addresses in the original
+    text as well as the type of entity (e.g. Chemical, Gene, and so on).
     """
 
-    def __init__(self, char_span: Tuple[int, int], entity_type: str):
+    def __init__(self, char_span: Tuple[int, int], entity_type: str) -> None:
         assert char_span[0] < char_span[1]
         self.char_span = range(*char_span)
         self.type = entity_type
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.type + "(" + str(self.char_span.start) + "," + str(self.char_span.stop) + ")"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return str(self)
 
     def is_before(self, other_entity) -> bool:
-        """
-        Checks whether this entity is located before the given one
+        """Checks whether this entity is located before the given one.
 
         :param other_entity: Entity to check
         """
         return self.char_span.stop <= other_entity.char_span.start
 
     def contains(self, other_entity) -> bool:
-        """
-        Checks whether the given entity is fully contained in this entity
+        """Checks whether the given entity is fully contained in this entity.
 
         :param other_entity: Entity to check
         """
@@ -88,8 +87,7 @@ class Entity:
         )
 
     def overlaps(self, other_entity) -> bool:
-        """
-        Checks whether this and the given entity overlap
+        """Checks whether this and the given entity overlap.
 
         :param other_entity: Entity to check
         """
@@ -99,9 +97,7 @@ class Entity:
 
 
 class InternalBioNerDataset:
-    """
-    Internal class to represent a corpus and it's entities.
-    """
+    """Internal class to represent a corpus and it's entities."""
 
     def __init__(
         self,
@@ -143,10 +139,6 @@ def merge_datasets(data_sets: Iterable[InternalBioNerDataset]):
 def filter_and_map_entities(
     dataset: InternalBioNerDataset, entity_type_to_canonical: Dict[str, str]
 ) -> InternalBioNerDataset:
-    """
-    :param entity_type_to_canonical: Maps entity type in dataset to canonical type
-                                     if entity type is not present in map it is discarded
-    """
     mapped_entities_per_document = {}
     entity_types = list(entity_type_to_canonical.values())
     for id, entities in dataset.entities_per_document.items():
@@ -162,7 +154,6 @@ def filter_and_map_entities(
                 new_entities.append(new_entity)
             else:
                 logging.debug(f"Skip entity type {entity.type}")
-                pass
         mapped_entities_per_document[id] = new_entities
 
     return InternalBioNerDataset(
@@ -219,10 +210,9 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
 
 
 def bioc_to_internal(bioc_file: Path):
-    """
-    Helper function to parse corpora that are given in BIOC format. See
+    """Helper function to parse corpora that are given in BIOC format. See.
 
-        http://bioc.sourceforge.net/
+    http://bioc.sourceforge.net/
 
     for details.
     """
@@ -287,7 +277,7 @@ def bioc_to_internal(bioc_file: Path):
                             break
 
                 annotated_entity = " ".join(texts)[start:end]
-                if not annotated_entity.lower() == true_entity.lower():
+                if annotated_entity.lower() != true_entity.lower():
                     non_matching += 1
 
                 all_entities += 1
@@ -306,13 +296,11 @@ def bioc_to_internal(bioc_file: Path):
 
 
 def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNerDataset:
-    """
-    Helper function to parse corpora that are annotated using BRAT. See
+    """Helper function to parse corpora that are annotated using BRAT. See.
 
-        https://brat.nlplab.org/
+    https://brat.nlplab.org/
 
     for details.
-
     """
     if ann_file_suffixes is None:
         ann_file_suffixes = [".ann"]
@@ -321,11 +309,12 @@ def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNer
     documents = {}
     entities_per_document = defaultdict(list)
     for text_file in text_files:
-        document_text = open(str(text_file), encoding="utf8").read().strip()
+        with Path(text_file).open(encoding="utf-8") as fin:
+            document_text = fin.read().strip()
         document_id = text_file.stem
 
         for suffix in ann_file_suffixes:
-            with open(str(text_file.with_suffix(suffix)), "r", encoding="utf8") as ann_file:
+            with open(str(text_file.with_suffix(suffix)), encoding="utf8") as ann_file:
                 for line in ann_file:
                     fields = line.strip().split("\t")
 
@@ -359,18 +348,16 @@ def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNer
 
 
 class CoNLLWriter:
-    """
-    Class which implements the output CONLL file generation of corpora given as instances of
-    :class:`InternalBioNerDataset`.
-    """
+    """Utility class for writing `InternalBioNerDataset` to CoNLL files."""
 
     def __init__(
         self,
         sentence_splitter: SentenceSplitter,
-    ):
-        """
-        :param sentence_splitter: Implementation of :class:`SentenceSplitter` which
-        segments the text into sentences and tokens
+    ) -> None:
+        """Initialize CoNLLWriter.
+
+        Args:
+            sentence_splitter: Sentence splitter which segments the text into sentences and tokens.
         """
         self.sentence_splitter = sentence_splitter
 
@@ -486,24 +473,20 @@ class CoNLLWriter:
 
 
 class HunerDataset(ColumnCorpus, ABC):
-    """
-    Base class for HUNER datasets.
+    """Base class for HUNER datasets.
 
     Every subclass has to implement the following methods:
-      - `to_internal', which reads the complete data set (incl. train, dev, test) and returns the corpus
-        as InternalBioNerDataset
-      - `split_url', which returns the base url (i.e. without '.train', '.dev', '.test') to the HUNER split files
+      - "to_internal", which reads the complete data set (incl. train, dev, test) and returns the corpus as InternalBioNerDataset
+      - "split_url", which returns the base url (i.e. without '.train', '.dev', '.test') to the HUNER split files
 
     For further information see:
-      - Weber et al.: 'HUNER: improving biomedical NER with pretraining'
-        https://academic.oup.com/bioinformatics/article-abstract/36/1/295/5523847?redirectedFrom=fulltext
-      - HUNER github repository:
-        https://github.com/hu-ner/huner
+      - Weber et al.: 'HUNER: improving biomedical NER with pretraining' https://academic.oup.com/bioinformatics/article-abstract/36/1/295/5523847?redirectedFrom=fulltext
+      - HUNER github repository: https://github.com/hu-ner/huner
     """
 
     @abstractmethod
     def to_internal(self, data_folder: Path) -> InternalBioNerDataset:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
@@ -511,30 +494,23 @@ class HunerDataset(ColumnCorpus, ABC):
         raise NotImplementedError()
 
     def get_corpus_sentence_splitter(self) -> Optional[SentenceSplitter]:
-        """
-        If the corpus has a pre-defined sentence splitting, then this method returns
-        the sentence splitter to be used to reconstruct the original splitting.
-        If the corpus has no pre-defined sentence splitting None will be returned.
-        """
+        """Return the pre-defined sentence splitter if defined, otherwise return None."""
         return None
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the HUNER corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which
             segments the text into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -577,7 +553,7 @@ class HunerDataset(ColumnCorpus, ABC):
             test_data = self.get_subset(internal_dataset, "test", splits_dir)
             writer.write_to_conll(test_data, test_file)
 
-        super(HunerDataset, self).__init__(
+        super().__init__(
             data_folder=data_folder,
             train_file=train_file.name,
             dev_file=dev_file.name,
@@ -607,8 +583,7 @@ class HunerDataset(ColumnCorpus, ABC):
 
 
 class BIO_INFER(ColumnCorpus):
-    """
-    Original BioInfer corpus
+    """Original BioInfer corpus.
 
     For further information see Pyysalo et al.:
        BioInfer: a corpus for information extraction in the biomedical domain
@@ -617,18 +592,15 @@ class BIO_INFER(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-    ):
-        """
+    ) -> None:
+        """Initialize the BioInfer corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -652,7 +624,7 @@ class BIO_INFER(ColumnCorpus):
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(BIO_INFER, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
@@ -689,11 +661,9 @@ class BIO_INFER(ColumnCorpus):
 
 
 class HUNER_GENE_BIO_INFER(HunerDataset):
-    """
-    HUNER version of the BioInfer corpus containing only gene/protein annotations
-    """
+    """HUNER version of the BioInfer corpus containing only gene/protein annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -719,25 +689,22 @@ class HUNER_GENE_BIO_INFER(HunerDataset):
         return merge_datasets([train_data, test_data])
 
 
+@deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class JNLPBA(ColumnCorpus):
-    """
-    Original corpus of the JNLPBA shared task.
+    """Original corpus of the JNLPBA shared task.
 
-    For further information see Kim et al.:
-      Introduction to the Bio-Entity Recognition Task at JNLPBA
-      https://www.aclweb.org/anthology/W04-1213.pdf
+    For further information see Kim et al.:   Introduction to the Bio-
+    Entity Recognition Task at JNLPBA
+    https://www.aclweb.org/anthology/W04-1213.pdf
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
-        """
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
+        """Initialize the JNLPBA corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -768,7 +735,7 @@ class JNLPBA(ColumnCorpus):
             test_file = download_dir / "Genia4EReval2.iob2"
             shutil.copy(test_file, data_folder / "test.conll")
 
-        super(JNLPBA, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -776,7 +743,7 @@ class JNLPBA(ColumnCorpus):
         )
 
 
-class HunerJNLPBA(object):
+class HunerJNLPBA:
     @classmethod
     def download_and_prepare_train(cls, data_folder: Path, sentence_tag: str) -> InternalBioNerDataset:
         train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz"
@@ -800,7 +767,7 @@ class HunerJNLPBA(object):
         documents: Dict[str, str] = {}
         entities_per_document: Dict[str, List[Entity]] = defaultdict(list)
 
-        with open(str(input_iob_file), "r", encoding="utf8") as file_reader:
+        with open(str(input_iob_file), encoding="utf8") as file_reader:
             document_id: Optional[str] = None
             document_text: Optional[str] = None
 
@@ -926,30 +893,27 @@ class HUNER_ALL_JNLPBA(HUNER_JNLPBA):
 
 
 class CELL_FINDER(ColumnCorpus):
-    """
-    Original CellFinder corpus containing cell line, species and gene annotations.
+    """Original CellFinder corpus containing cell line, species and gene annotations.
 
-    For futher information see Neves et al.:
-        Annotating and evaluating text for stem cell research
-        https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf
+    For futher information see Neves et al.:     Annotating and
+    evaluating text for stem cell research
+    https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the CellFinder corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which segments
             the text into sentences and tokens.
         """
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -969,7 +933,7 @@ class CELL_FINDER(ColumnCorpus):
             writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             writer.write_to_conll(train_corpus, train_file)
 
-        super(CELL_FINDER, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_and_prepare(cls, data_folder: Path) -> InternalBioNerDataset:
@@ -1011,11 +975,9 @@ class CELL_FINDER(ColumnCorpus):
 
 
 class HUNER_CELL_LINE_CELL_FINDER(HunerDataset):
-    """
-    HUNER version of the CellFinder corpus containing only cell line annotations.
-    """
+    """HUNER version of the CellFinder corpus containing only cell line annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1030,11 +992,9 @@ class HUNER_CELL_LINE_CELL_FINDER(HunerDataset):
 
 
 class HUNER_SPECIES_CELL_FINDER(HunerDataset):
-    """
-    HUNER version of the CellFinder corpus containing only species annotations.
-    """
+    """HUNER version of the CellFinder corpus containing only species annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1049,11 +1009,9 @@ class HUNER_SPECIES_CELL_FINDER(HunerDataset):
 
 
 class HUNER_GENE_CELL_FINDER(HunerDataset):
-    """
-    HUNER version of the CellFinder corpus containing only gene annotations.
-    """
+    """HUNER version of the CellFinder corpus containing only gene annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1097,21 +1055,21 @@ class HUNER_ALL_CELL_FINDER(HunerDataset):
 
 
 class MIRNA(ColumnCorpus):
-    """
-    Original miRNA corpus.
+    """Original miRNA corpus.
 
-    For further information see Bagewadi et al.:
-        Detecting miRNA Mentions and Relations in Biomedical Literature
-        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4602280/
+    For further information see Bagewadi et al.:     Detecting miRNA
+    Mentions and Relations in Biomedical Literature
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4602280/
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the miRNA corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param tokenizer: Callable that segments a sentence into words,
@@ -1119,10 +1077,7 @@ class MIRNA(ColumnCorpus):
         :param sentence_splitter: Callable that segments a document into sentences,
                                   defaults to scispacy
         """
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -1152,7 +1107,7 @@ class MIRNA(ColumnCorpus):
             test_corpus = self.download_and_prepare_test(download_folder, sentence_separator)
             writer.write_to_conll(test_corpus, test_file)
 
-        super(MIRNA, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_and_prepare_train(cls, data_folder: Path, sentence_separator: str):
@@ -1209,7 +1164,7 @@ class MIRNA(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
-class HunerMiRNAHelper(object):
+class HunerMiRNAHelper:
     @staticmethod
     def get_mirna_subset(dataset: InternalBioNerDataset, split_url: str, split_dir: Path):
         split_file = cached_path(split_url, split_dir)
@@ -1310,7 +1265,7 @@ class HUNER_ALL_MIRNA(HUNER_MIRNA):
 
 
 class KaewphanCorpusHelper:
-    """Helper class for the corpora from Kaewphan et al., i.e. CLL and Gellus"""
+    """Helper class for the corpora from Kaewphan et al., i.e. CLL and Gellus."""
 
     @staticmethod
     def download_cll_dataset(data_folder: Path):
@@ -1320,44 +1275,42 @@ class KaewphanCorpusHelper:
 
     @staticmethod
     def prepare_and_save_dataset(nersuite_folder: Path, output_file: Path):
-        writer = open(str(output_file), "w", encoding="utf8")
-        out_newline = False
+        with output_file.open("w", encoding="utf-8") as writer:
+            out_newline = False
 
-        for file in os.listdir(str(nersuite_folder)):
-            if not file.endswith(".nersuite"):
-                continue
-
-            annotations = []
-            with open(os.path.join(str(nersuite_folder), file), "r", encoding="utf8") as reader:
-                for line in reader.readlines():
-                    columns = line.split("\t")
-                    annotations.append(columns[:4])
-
-            num_annotations = len(annotations)
-            for i, annotation in enumerate(annotations):
-                if len(annotation) == 1:
-                    assert annotation[0] == "\n"
-                    if not out_newline:
-                        writer.write("\n")
-                    out_newline = True
+            for file in os.listdir(str(nersuite_folder)):
+                if not file.endswith(".nersuite"):
                     continue
 
-                has_whitespace = "+"
+                annotations = []
+                with open(os.path.join(str(nersuite_folder), file), encoding="utf8") as reader:
+                    for line in reader.readlines():
+                        columns = line.split("\t")
+                        annotations.append(columns[:4])
 
-                next_annotation = (
-                    annotations[i + 1] if (i + 1) < num_annotations and len(annotations[i + 1]) > 1 else None
-                )
-                if next_annotation and next_annotation[1] == annotation[2]:
-                    has_whitespace = "-"
+                num_annotations = len(annotations)
+                for i, annotation in enumerate(annotations):
+                    if len(annotation) == 1:
+                        assert annotation[0] == "\n"
+                        if not out_newline:
+                            writer.write("\n")
+                        out_newline = True
+                        continue
 
-                writer.write(" ".join([annotation[3], annotation[0], has_whitespace]) + "\n")
-                out_newline = False
+                    has_whitespace = "+"
 
-            if not out_newline:
-                writer.write("\n")
-                out_newline = True
+                    next_annotation = (
+                        annotations[i + 1] if (i + 1) < num_annotations and len(annotations[i + 1]) > 1 else None
+                    )
+                    if next_annotation and next_annotation[1] == annotation[2]:
+                        has_whitespace = "-"
 
-        writer.close()
+                    writer.write(" ".join([annotation[3], annotation[0], has_whitespace]) + "\n")
+                    out_newline = False
+
+                if not out_newline:
+                    writer.write("\n")
+                    out_newline = True
 
     @staticmethod
     def download_gellus_dataset(data_folder: Path):
@@ -1375,7 +1328,7 @@ class KaewphanCorpusHelper:
 
             document_id = file.replace(".nersuite", "")
 
-            with open(os.path.join(str(nersuite_folder), file), "r", encoding="utf8") as reader:
+            with open(os.path.join(str(nersuite_folder), file), encoding="utf8") as reader:
                 document_text = ""
                 entities = []
 
@@ -1419,23 +1372,21 @@ class KaewphanCorpusHelper:
 
 
 class CLL(ColumnCorpus):
-    """
-    Original CLL corpus containing cell line annotations.
+    """Original CLL corpus containing cell line annotations.
 
-    For further information, see Kaewphan et al.:
-        Cell line name recognition in support of the identification of synthetic lethality in cancer from text
-        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/
+    For further information, see Kaewphan et al.:     Cell line name
+    recognition in support of the identification of synthetic lethality
+    in cancer from text
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
-        """
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
+        """Initialize the CLL corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training
         """
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1453,15 +1404,13 @@ class CLL(ColumnCorpus):
             nersuite_folder = data_folder / "CLL-1.0.2" / "nersuite"
             KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_folder, train_file)
 
-        super(CLL, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
 
 class HUNER_CELL_LINE_CLL(HunerDataset):
-    """
-    HUNER version of the CLL corpus containing cell line annotations.
-    """
+    """HUNER version of the CLL corpus containing cell line annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1485,23 +1434,21 @@ class HUNER_CELL_LINE_CLL(HunerDataset):
 
 
 class GELLUS(ColumnCorpus):
-    """
-    Original Gellus corpus containing cell line annotations.
+    """Original Gellus corpus containing cell line annotations.
 
-    For further information, see Kaewphan et al.:
-        Cell line name recognition in support of the identification of synthetic lethality in cancer from text
-        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/
+    For further information, see Kaewphan et al.:     Cell line name
+    recognition in support of the identification of synthetic lethality
+    in cancer from text
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
-        """
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
+        """Initialize the GELLUS corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training
         """
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -1527,15 +1474,13 @@ class GELLUS(ColumnCorpus):
             nersuite_test = data_folder / "GELLUS-1.0.3" / "nersuite" / "test"
             KaewphanCorpusHelper.prepare_and_save_dataset(nersuite_test, test_file)
 
-        super(GELLUS, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
 
 class HUNER_CELL_LINE_GELLUS(HunerDataset):
-    """
-    HUNER version of the Gellus corpus containing cell line annotations.
-    """
+    """HUNER version of the Gellus corpus containing cell line annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1562,8 +1507,7 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
 
 
 class LOCTEXT(ColumnCorpus):
-    """
-    Original LOCTEXT corpus containing species annotations.
+    """Original LOCTEXT corpus containing species annotations.
 
     For further information see Cejuela et al.:
         LocText: relation extraction of protein localizations to assist database curation
@@ -1572,20 +1516,18 @@ class LOCTEXT(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the LOCTEXT corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Custom implementation of :class:`SentenceSplitter`
             that segments a document into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -1607,7 +1549,7 @@ class LOCTEXT(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(full_dataset, train_file)
 
-        super(LOCTEXT, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -1632,12 +1574,12 @@ class LOCTEXT(ColumnCorpus):
             document_id = file.strip(".json")
             entities = []
 
-            with open(os.path.join(str(loctext_json_folder), file), "r", encoding="utf8") as f_in:
+            with open(os.path.join(str(loctext_json_folder), file), encoding="utf8") as f_in:
                 data = json.load(f_in)
                 document_text = data["text"].strip()
                 document_text = document_text.replace("\n", " ")
 
-                if "denotations" in data.keys():
+                if "denotations" in data:
                     for ann in data["denotations"]:
                         start = int(ann["span"]["begin"])
                         end = int(ann["span"]["end"])
@@ -1705,32 +1647,29 @@ class HUNER_ALL_LOCTEXT(HUNER_LOCTEXT):
         super().__init__(entity_type_mapping, *args, **kwargs)
 
 
+@deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class CHEMDNER(ColumnCorpus):
-    """
-    Original corpus of the CHEMDNER shared task.
+    """Original corpus of the CHEMDNER shared task.
 
-    For further information see Krallinger et al.:
-      The CHEMDNER corpus of chemicals and drugs and its annotation principles
-      https://jcheminf.biomedcentral.com/articles/10.1186/1758-2946-7-S1-S2
+    For further information see Krallinger et al.:   The CHEMDNER corpus
+    of chemicals and drugs and its annotation principles
+    https://jcheminf.biomedcentral.com/articles/10.1186/1758-2946-7-S1-S2
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the CHEMDNER corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which
             segements documents into sentences and tokens
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -1763,7 +1702,7 @@ class CHEMDNER(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(CHEMDNER, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -1773,11 +1712,9 @@ class CHEMDNER(ColumnCorpus):
 
 
 class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
-    """
-    HUNER version of the CHEMDNER corpus containing chemical annotations.
-    """
+    """HUNER version of the CHEMDNER corpus containing chemical annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1808,30 +1745,26 @@ class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
         return all_data
 
 
+@deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class IEPA(ColumnCorpus):
-    """
-    IEPA corpus as provided by http://corpora.informatik.hu-berlin.de/
-    (Original corpus is 404)
+    """IEPA corpus as provided by http://corpora.informatik.hu-berlin.de/.
 
     For further information see Ding, Berleant, Nettleton, Wurtele:
-      Mining MEDLINE: abstracts, sentences, or phrases?
-      https://www.ncbi.nlm.nih.gov/pubmed/11928487
+    Mining MEDLINE: abstracts, sentences, or phrases?
+    https://www.ncbi.nlm.nih.gov/pubmed/11928487
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-    ):
-        """
+    ) -> None:
+        """Initialize the IEPA corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -1855,7 +1788,7 @@ class IEPA(ColumnCorpus):
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(IEPA, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -1899,11 +1832,9 @@ class IEPA(ColumnCorpus):
 
 
 class HUNER_GENE_IEPA(HunerDataset):
-    """
-    HUNER version of the IEPA corpus containing gene annotations.
-    """
+    """HUNER version of the IEPA corpus containing gene annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1923,9 +1854,9 @@ class HUNER_GENE_IEPA(HunerDataset):
         return merge_datasets([train_data, test_data])
 
 
+@deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class LINNEAUS(ColumnCorpus):
-    """
-    Original LINNEAUS corpus containing species annotations.
+    """Original LINNEAUS corpus containing species annotations.
 
     For further information see Gerner et al.:
          LINNAEUS: a species name identification system for biomedical literature
@@ -1934,21 +1865,18 @@ class LINNEAUS(ColumnCorpus):
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        tokenizer: Tokenizer = None,
-    ):
-        """
+        tokenizer: Optional[Tokenizer] = None,
+    ) -> None:
+        """Initialize the LINNEAUS corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param tokenizer: Custom implementation of :class:`Tokenizer` which segments
              sentence into tokens (default :class:`SciSpacyTokenizer`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -1971,7 +1899,7 @@ class LINNEAUS(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(dataset, train_file)
 
-        super(LINNEAUS, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_and_parse_dataset(data_dir: Path):
@@ -1987,12 +1915,12 @@ class LINNEAUS(ColumnCorpus):
         for filename in os.listdir(str(texts_directory)):
             document_id = filename.strip(".txt")
 
-            with open(os.path.join(str(texts_directory), filename), "r", encoding="utf8") as file:
+            with open(os.path.join(str(texts_directory), filename), encoding="utf8") as file:
                 documents[document_id] = file.read().strip()
 
         # Read annotations
         tag_file = data_dir / "manual-corpus-species-1.0" / "filtered_tags.tsv"
-        with open(str(tag_file), "r", encoding="utf8") as file:
+        with open(str(tag_file), encoding="utf8") as file:
             next(file)  # Ignore header row
 
             for line in file:
@@ -2006,7 +1934,7 @@ class LINNEAUS(ColumnCorpus):
 
                 document_text = documents[document_id]
                 if document_text[start:end] != text:
-                    raise AssertionError()
+                    raise AssertionError
 
         entity_types = [SPECIES_TAG]
         return InternalBioNerDataset(
@@ -2017,11 +1945,9 @@ class LINNEAUS(ColumnCorpus):
 
 
 class HUNER_SPECIES_LINNEAUS(HunerDataset):
-    """
-    HUNER version of the LINNEAUS corpus containing species annotations.
-    """
+    """HUNER version of the LINNEAUS corpus containing species annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2032,32 +1958,29 @@ class HUNER_SPECIES_LINNEAUS(HunerDataset):
         return LINNEAUS.download_and_parse_dataset(data_dir)
 
 
+@deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class CDR(ColumnCorpus):
-    """
-    CDR corpus as provided by https://github.com/JHnlp/BioCreative-V-CDR-Corpus
+    """CDR corpus as provided by https://github.com/JHnlp/BioCreative-V-CDR-Corpus.
 
-    For further information see Li et al.:
-      BioCreative V CDR task corpus: a resource for chemical disease relation extraction
-      https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4860626/
+    For further information see Li et al.:   BioCreative V CDR task
+    corpus: a resource for chemical disease relation extraction
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4860626/
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the CDR corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
             documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2090,7 +2013,7 @@ class CDR(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(CDR, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -2100,11 +2023,9 @@ class CDR(ColumnCorpus):
 
 
 class HUNER_DISEASE_CDR(HunerDataset):
-    """
-    HUNER version of the IEPA corpus containing disease annotations.
-    """
+    """HUNER version of the IEPA corpus containing disease annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2124,11 +2045,9 @@ class HUNER_DISEASE_CDR(HunerDataset):
 
 
 class HUNER_CHEMICAL_CDR(HunerDataset):
-    """
-    HUNER version of the IEPA corpus containing chemical annotations.
-    """
+    """HUNER version of the IEPA corpus containing chemical annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2177,31 +2096,27 @@ class HUNER_ALL_CDR(HunerDataset):
 
 
 class VARIOME(ColumnCorpus):
-    """
-    Variome corpus as provided by http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/hvp_bioc.xml.zip
+    """Variome corpus as provided by http://corpora.informatik.hu-berlin.de/corpora/brat2bioc/hvp_bioc.xml.zip.
 
-    For further information see Verspoor et al.:
-      Annotating the biomedical literature for the human variome
-      https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3676157/
+    For further information see Verspoor et al.:   Annotating the
+    biomedical literature for the human variome
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3676157/
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the Variome corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
              documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2226,7 +2141,7 @@ class VARIOME(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(all_data, train_file)
 
-        super(VARIOME, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -2273,11 +2188,9 @@ class VARIOME(ColumnCorpus):
 
 
 class HUNER_GENE_VARIOME(HunerDataset):
-    """
-    HUNER version of the Variome corpus containing gene annotations.
-    """
+    """HUNER version of the Variome corpus containing gene annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2294,11 +2207,9 @@ class HUNER_GENE_VARIOME(HunerDataset):
 
 
 class HUNER_DISEASE_VARIOME(HunerDataset):
-    """
-    HUNER version of the Variome corpus containing disease annotations.
-    """
+    """HUNER version of the Variome corpus containing disease annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2315,11 +2226,9 @@ class HUNER_DISEASE_VARIOME(HunerDataset):
 
 
 class HUNER_SPECIES_VARIOME(HunerDataset):
-    """
-    HUNER version of the Variome corpus containing species annotations.
-    """
+    """HUNER version of the Variome corpus containing species annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2368,31 +2277,28 @@ class HUNER_ALL_VARIOME(HunerDataset):
 
 
 class NCBI_DISEASE(ColumnCorpus):
-    """
-    Original NCBI disease corpus containing disease annotations.
+    """Original NCBI disease corpus containing disease annotations.
 
-    For further information see Dogan et al.:
-       NCBI disease corpus: a resource for disease name recognition and concept normalization
-       https://www.ncbi.nlm.nih.gov/pubmed/24393765
+    For further information see
+    Dogan et al.:
+    NCBI disease corpus: a resource for disease name recognition and concept normalization
+    https://www.ncbi.nlm.nih.gov/pubmed/24393765
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the NCBI disease corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
              documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2421,7 +2327,7 @@ class NCBI_DISEASE(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(NCBI_DISEASE, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -2450,20 +2356,19 @@ class NCBI_DISEASE(ColumnCorpus):
         patch_lines = {
             3249: '10923035\t711\t761\tgeneralized epilepsy and febrile seizures " plus "\tSpecificDisease\tD004829+D003294\n'
         }
-        with open(str(orig_train_file), "r", encoding="utf8") as input:
-            with open(str(patched_file), "w", encoding="utf8") as output:
-                line_no = 1
+        with orig_train_file.open(encoding="utf-8") as input, patched_file.open("w", encoding="utf-8") as output:
+            line_no = 1
 
-                for line in input:
-                    output.write(patch_lines[line_no] if line_no in patch_lines else line)
-                    line_no += 1
+            for line in input:
+                output.write(patch_lines[line_no] if line_no in patch_lines else line)
+                line_no += 1
 
     @staticmethod
     def parse_input_file(input_file: Path):
         documents = {}
         entities_per_document = {}
 
-        with open(str(input_file), "r", encoding="utf8") as file:
+        with open(str(input_file), encoding="utf8") as file:
             document_id = ""
             document_text = ""
             entities: List[Entity] = []
@@ -2510,11 +2415,9 @@ class NCBI_DISEASE(ColumnCorpus):
 
 
 class HUNER_DISEASE_NCBI(HunerDataset):
-    """
-    HUNER version of the NCBI corpus containing disease annotations.
-    """
+    """HUNER version of the NCBI corpus containing disease annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2532,25 +2435,22 @@ class HUNER_DISEASE_NCBI(HunerDataset):
 
 
 class ScaiCorpus(ColumnCorpus):
-    """Base class to support the SCAI chemicals and disease corpora"""
+    """Base class to support the SCAI chemicals and disease corpora."""
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the SCAU corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter:  Implementation of :class:`SentenceSplitter` which segments
              documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2572,17 +2472,17 @@ class ScaiCorpus(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
 
-        super(ScaiCorpus, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     def download_corpus(self, data_folder: Path) -> Path:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @staticmethod
     def parse_input_file(input_file: Path):
         documents: Dict[str, str] = {}
         entities_per_document: Dict[str, List[Entity]] = {}
 
-        with open(str(input_file), "r", encoding="iso-8859-1") as file:
+        with open(str(input_file), encoding="iso-8859-1") as file:
             document_id = None
             document_text = ""
             entities: List[Entity] = []
@@ -2627,16 +2527,16 @@ class ScaiCorpus(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class SCAI_CHEMICALS(ScaiCorpus):
-    """
-    Original SCAI chemicals corpus containing chemical annotations.
+    """Original SCAI chemicals corpus containing chemical annotations.
 
-    For further information see Kolářik et al.:
-         Chemical Names: Terminological Resources and Corpora Annotation
-         https://pub.uni-bielefeld.de/record/2603498
+    For further information see Kolářik et al.:      Chemical Names:
+    Terminological Resources and Corpora Annotation
+    https://pub.uni-bielefeld.de/record/2603498
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     def download_corpus(self, data_dir: Path) -> Path:
@@ -2655,16 +2555,17 @@ class SCAI_CHEMICALS(ScaiCorpus):
         return corpus_file
 
 
+@deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class SCAI_DISEASE(ScaiCorpus):
-    """
-    Original SCAI disease corpus containing disease annotations.
+    """Original SCAI disease corpus containing disease annotations.
 
-    For further information see Gurulingappa et al.:
-     An Empirical Evaluation of Resources for the Identification of Diseases and Adverse Effects in Biomedical Literature
-     https://pub.uni-bielefeld.de/record/2603398
+    For further information see Gurulingappa et al.:  An Empirical
+    Evaluation of Resources for the Identification of Diseases and
+    Adverse Effects in Biomedical Literature
+    https://pub.uni-bielefeld.de/record/2603398
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     def download_corpus(self, data_dir: Path) -> Path:
@@ -2682,11 +2583,9 @@ class SCAI_DISEASE(ScaiCorpus):
 
 
 class HUNER_CHEMICAL_SCAI(HunerDataset):
-    """
-    HUNER version of the SCAI chemicals corpus containing chemical annotations.
-    """
+    """HUNER version of the SCAI chemicals corpus containing chemical annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2717,7 +2616,7 @@ class HUNER_DISEASE_SCAI(HunerDataset):
     HUNER version of the SCAI chemicals corpus containing disease annotations.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2770,23 +2669,25 @@ class HUNER_ALL_SCAI(HunerDataset):
         return filter_and_map_entities(corpus, entity_type_mapping)
 
 
+@deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class OSIRIS(ColumnCorpus):
-    """
-    Original OSIRIS corpus containing variation and gene annotations.
+    """Original OSIRIS corpus containing variation and gene annotations.
 
-    For further information see Furlong et al.:
-       Osiris v1.2: a named entity recognition system for sequence variants of genes in biomedical literature
-       https://www.ncbi.nlm.nih.gov/pubmed/18251998
+    For further information see Furlong et al.:    Osiris v1.2: a named
+    entity recognition system for sequence variants of genes in
+    biomedical literature
+    https://www.ncbi.nlm.nih.gov/pubmed/18251998
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
         load_original_unfixed_annotation=False,
-    ):
-        """
+    ) -> None:
+        """Initialize the OSIRIS corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which
@@ -2795,11 +2696,7 @@ class OSIRIS(ColumnCorpus):
              erroneously annotates two sentences as a protein. Set to True if you don't
              want the fixed version.
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2821,7 +2718,7 @@ class OSIRIS(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(OSIRIS, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
@@ -2874,12 +2771,9 @@ class OSIRIS(ColumnCorpus):
 
 
 class HUNER_GENE_OSIRIS(HunerDataset):
-    """
-    HUNER version of the OSIRIS corpus containing (only) gene annotations.
+    """HUNER version of the OSIRIS corpus containing (only) gene annotations."""
 
-    """
-
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2895,30 +2789,27 @@ class HUNER_GENE_OSIRIS(HunerDataset):
 
 
 class S800(ColumnCorpus):
-    """
-    S800 corpus
-    For further information see Pafilis et al.:
-      The SPECIES and ORGANISMS Resources for Fast and Accurate Identification of Taxonomic Names in Text
-      http://www.plosone.org/article/info:doi%2F10.1371%2Fjournal.pone.0065390
+    """S800 corpus.
+
+    For further information see
+    Pafilis et al.: The SPECIES and ORGANISMS Resources for Fast and Accurate Identification of Taxonomic Names in Text
+    http://www.plosone.org/article/info:doi%2F10.1371%2Fjournal.pone.0065390.
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the S800 corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
              into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -2943,7 +2834,7 @@ class S800(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(all_data, train_file)
 
-        super(S800, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path):
@@ -2964,7 +2855,7 @@ class S800(ColumnCorpus):
                 start, end = int(fields[2]), int(fields[3])
 
                 if start == end:
-                    continue
+                    continue  # Illegal annotation
 
                 entities_per_document[fname].append(Entity((start, end), "Species"))
 
@@ -2976,11 +2867,9 @@ class S800(ColumnCorpus):
 
 
 class HUNER_SPECIES_S800(HunerDataset):
-    """
-    HUNER version of the S800 corpus containing species annotations.
-    """
+    """HUNER version of the S800 corpus containing species annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2996,30 +2885,26 @@ class HUNER_SPECIES_S800(HunerDataset):
 
 
 class GPRO(ColumnCorpus):
-    """
-    Original GPRO corpus containing gene annotations.
+    """Original GPRO corpus containing gene annotations.
 
     For further information see:
-         https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/gpro-detailed-task-description/
+    https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/gpro-detailed-task-description/
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the GPRO corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
              into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3050,7 +2935,7 @@ class GPRO(ColumnCorpus):
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
 
-        super(GPRO, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_train_corpus(cls, data_dir: Path) -> Path:
@@ -3081,7 +2966,7 @@ class GPRO(ColumnCorpus):
 
         document_title_length = {}
 
-        with open(str(text_file), "r", encoding="utf8") as text_reader:
+        with open(str(text_file), encoding="utf8") as text_reader:
             for line in text_reader:
                 if not line:
                     continue
@@ -3092,7 +2977,7 @@ class GPRO(ColumnCorpus):
 
                 entities_per_document[document_id] = []
 
-        with open(str(ann_file), "r", encoding="utf8") as ann_reader:
+        with open(str(ann_file), encoding="utf8") as ann_reader:
             for line in ann_reader:
                 if not line:
                     continue
@@ -3119,11 +3004,9 @@ class GPRO(ColumnCorpus):
 
 
 class HUNER_GENE_GPRO(HunerDataset):
-    """
-    HUNER version of the GPRO corpus containing gene annotations.
-    """
+    """HUNER version of the GPRO corpus containing gene annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -3145,31 +3028,27 @@ class HUNER_GENE_GPRO(HunerDataset):
 
 
 class DECA(ColumnCorpus):
-    """
-    Original DECA corpus containing gene annotations.
+    """Original DECA corpus containing gene annotations.
 
-    For further information see Wang et al.:
-       Disambiguating the species of biomedical named entities using natural language parsers
-       https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2828111/
+    For further information see Wang et al.:    Disambiguating the
+    species of biomedical named entities using natural language parsers
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2828111/
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the DECA corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
              documents into sentences and tokens (default BioSpacySentenceSpliiter)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3193,7 +3072,7 @@ class DECA(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(DECA, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -3212,11 +3091,11 @@ class DECA(ColumnCorpus):
 
         for file in text_files:
             document_id = file.strip(".txt")
-            with open(os.path.join(str(text_dir), file), "r", encoding="utf8") as text_file:
+            with open(os.path.join(str(text_dir), file), encoding="utf8") as text_file:
                 documents[document_id] = text_file.read().strip()
                 entities_per_document[document_id] = []
 
-        with open(str(gold_file), "r", encoding="utf8") as gold_reader:
+        with open(str(gold_file), encoding="utf8") as gold_reader:
             for line in gold_reader:
                 if not line:
                     continue
@@ -3239,11 +3118,9 @@ class DECA(ColumnCorpus):
 
 
 class HUNER_GENE_DECA(HunerDataset):
-    """
-    HUNER version of the DECA corpus containing gene annotations.
-    """
+    """HUNER version of the DECA corpus containing gene annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -3259,24 +3136,20 @@ class HUNER_GENE_DECA(HunerDataset):
 
 
 class FSU(ColumnCorpus):
-    """
-    Original FSU corpus containing protein and derived annotations.
+    """Original FSU corpus containing protein and derived annotations.
 
-    For further information see Hahn et al.:
-      A proposal for a configurable silver standard
-      https://www.aclweb.org/anthology/W10-1838/
+    For further information see
+    Hahn et al.:   A proposal for a configurable silver standard
+    https://www.aclweb.org/anthology/W10-1838/
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
-        """
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
+        """Initialize the FSU corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3296,7 +3169,7 @@ class FSU(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(FSU, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -3319,13 +3192,13 @@ class FSU(ColumnCorpus):
                 if not doc.is_dir():
                     continue
                 try:
-                    with open(doc / "Basedata" / "Basedata.xml", "r", encoding="utf8") as word_f:
+                    with open(doc / "Basedata" / "Basedata.xml", encoding="utf8") as word_f:
                         word_tree = etree.parse(word_f)
-                    with open(doc / "Markables" / "sentence.xml", "r", encoding="utf8") as sentence_f:
+                    with open(doc / "Markables" / "sentence.xml", encoding="utf8") as sentence_f:
                         sentence_tree = etree.parse(sentence_f).getroot()
-                    with open(doc / "Markables" / "proteins.xml", "r", encoding="utf8") as protein_f:
+                    with open(doc / "Markables" / "proteins.xml", encoding="utf8") as protein_f:
                         protein_tree = etree.parse(protein_f).getroot()
-                    with open(doc / "Basedata.uri", "r", encoding="utf8") as id_f:
+                    with open(doc / "Basedata.uri", encoding="utf8") as id_f:
                         document_id = id_f.read().strip()
                 except FileNotFoundError:
                     # Incomplete article
@@ -3393,11 +3266,9 @@ class FSU(ColumnCorpus):
 
 
 class HUNER_GENE_FSU(HunerDataset):
-    """
-    HUNER version of the FSU corpus containing (only) gene annotations.
-    """
+    """HUNER version of the FSU corpus containing (only) gene annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -3427,31 +3298,27 @@ class HUNER_GENE_FSU(HunerDataset):
 
 
 class CRAFT(ColumnCorpus):
-    """
-    Original CRAFT corpus (version 2.0) containing all but the coreference and sections/typography annotations.
+    """Original CRAFT corpus (version 2.0) containing all but the coreference and sections/typography annotations.
 
-    For further information see Bada et al.:
-      Concept annotation in the craft corpus
-      https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-161
+    For further information see Bada et al.:   Concept annotation in the
+    craft corpus
+    https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-161
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the CRAFT corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
              into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3473,7 +3340,7 @@ class CRAFT(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(CRAFT, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -3499,7 +3366,7 @@ class CRAFT(ColumnCorpus):
         for doc in Tqdm.tqdm(document_texts, desc="Converting to internal"):
             document_id = doc.name.split(".")[0]
 
-            with open(doc, "r", encoding="utf8") as f_txt:
+            with open(doc, encoding="utf8") as f_txt:
                 documents[document_id] = f_txt.read()
 
             entities = []
@@ -3507,7 +3374,6 @@ class CRAFT(ColumnCorpus):
             for annotation_dir in annotation_dirs:
                 with open(
                     annotation_dir / (doc.name + ".annotations.xml"),
-                    "r",
                     encoding="utf8",
                 ) as f_ann:
                     ann_tree = etree.parse(f_ann)
@@ -3523,30 +3389,27 @@ class CRAFT(ColumnCorpus):
 
 
 class BIOSEMANTICS(ColumnCorpus):
-    """
-    Original Biosemantics corpus.
+    """Original Biosemantics corpus.
 
-    For further information see Akhondi et al.:
-      Annotated chemical patent corpus: a gold standard for text mining
-      https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4182036/
+    For further information see Akhondi et al.:   Annotated chemical
+    patent corpus: a gold standard for text mining
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4182036/
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the Biosemantics corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
             into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3568,7 +3431,7 @@ class BIOSEMANTICS(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(full_dataset, train_file)
 
-        super(BIOSEMANTICS, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path) -> Path:
@@ -3598,7 +3461,7 @@ class BIOSEMANTICS(ColumnCorpus):
 
         for text_file in sorted(text_files):
             document_id = os.path.basename(text_file).split("_")[0]
-            with open(text_file, "r", encoding="utf8") as file_reader:
+            with open(text_file, encoding="utf8") as file_reader:
                 file_text = file_reader.read().replace("\n", " ")
 
             offset = 0
@@ -3655,31 +3518,29 @@ class BIOSEMANTICS(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class BC2GM(ColumnCorpus):
-    """
-    Original BioCreative-II-GM corpus containing gene annotations.
+    """Original BioCreative-II-GM corpus containing gene annotations.
 
-    For further information see Smith et al.:
-        Overview of BioCreative II gene mention recognition
-        https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2559986/
+    For further information see Smith et al.:     Overview of
+    BioCreative II gene mention recognition
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2559986/
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the BioCreative-II-GM corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
             into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3704,7 +3565,7 @@ class BC2GM(ColumnCorpus):
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(BC2GM, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path) -> Path:
@@ -3737,7 +3598,7 @@ class BC2GM(ColumnCorpus):
         documents = {}
         entities_per_document: Dict[str, List[Entity]] = {}
 
-        with open(str(text_file), "r", encoding="utf8") as text_file_reader:
+        with open(str(text_file), encoding="utf8") as text_file_reader:
             for line in text_file_reader:
                 line = line.strip()
                 offset = line.find(" ")
@@ -3746,13 +3607,13 @@ class BC2GM(ColumnCorpus):
                 documents[document_id] = document_text
                 entities_per_document[document_id] = []
 
-        with open(str(ann_file), "r", encoding="utf8") as ann_file_reader:
+        with open(str(ann_file), encoding="utf8") as ann_file_reader:
             for line in ann_file_reader:
                 columns = line.strip().split("|")
                 document_id = columns[0]
                 document_text = documents[document_id]
 
-                start_idx, end_idx = [int(i) for i in columns[1].split()]
+                start_idx, end_idx = (int(i) for i in columns[1].split())
 
                 non_whitespaces_chars = 0
                 new_start_idx = None
@@ -3780,11 +3641,9 @@ class BC2GM(ColumnCorpus):
 
 
 class HUNER_GENE_BC2GM(HunerDataset):
-    """
-    HUNER version of the BioCreative-II-GM corpus containing gene annotations.
-    """
+    """HUNER version of the BioCreative-II-GM corpus containing gene annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(
             *args,
             **kwargs,
@@ -3803,30 +3662,26 @@ class HUNER_GENE_BC2GM(HunerDataset):
 
 
 class CEMP(ColumnCorpus):
-    """
-    Original CEMP corpus containing chemical annotations.
+    """Original CEMP corpus containing chemical annotations.
 
     For further information see:
-         https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/cemp-detailed-task-description/
+    https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/cemp-detailed-task-description/
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the CEMP corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
              documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -3857,7 +3712,7 @@ class CEMP(ColumnCorpus):
             conll_writer.write_to_conll(train_data, train_file)
             conll_writer.write_to_conll(dev_data, dev_file)
 
-        super(CEMP, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_train_corpus(cls, data_dir: Path) -> Path:
@@ -3887,7 +3742,7 @@ class CEMP(ColumnCorpus):
         entities_per_document: Dict[str, List[Entity]] = {}
         document_abstract_length = {}
 
-        with open(str(text_file), "r", encoding="utf8") as text_reader:
+        with open(str(text_file), encoding="utf8") as text_reader:
             for line in text_reader:
                 if not line:
                     continue
@@ -3900,7 +3755,7 @@ class CEMP(ColumnCorpus):
 
                 entities_per_document[document_id] = []
 
-        with open(str(ann_file), "r", encoding="utf8") as ann_reader:
+        with open(str(ann_file), encoding="utf8") as ann_reader:
             for line in ann_reader:
                 if not line:
                     continue
@@ -3922,11 +3777,9 @@ class CEMP(ColumnCorpus):
 
 
 class HUNER_CHEMICAL_CEMP(HunerDataset):
-    """
-    HUNER version of the CEMP corpus containing chemical annotations.
-    """
+    """HUNER version of the CEMP corpus containing chemical annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -3960,23 +3813,25 @@ class HUNER_CHEMICAL_CEMP(HunerDataset):
         return filter_and_map_entities(dataset, entity_type_mapping)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class CHEBI(ColumnCorpus):
-    """
-    Original CHEBI corpus containing all annotations.
+    """Original CHEBI corpus containing all annotations.
 
-    For further information see Shardlow et al.:
-         A New Corpus to Support Text Mining for the Curation of Metabolites in the ChEBI Database
-         http://www.lrec-conf.org/proceedings/lrec2018/pdf/229.pdf
+    For further information see Shardlow et al.:      A New Corpus to
+    Support Text Mining for the Curation of Metabolites in the ChEBI
+    Database
+    http://www.lrec-conf.org/proceedings/lrec2018/pdf/229.pdf
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
+        sentence_splitter: Optional[SentenceSplitter] = None,
         annotator: int = 0,
-    ):
-        """
+    ) -> None:
+        """Initialize the CHEBI corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
@@ -3984,10 +3839,7 @@ class CHEBI(ColumnCorpus):
         :param annotator: The abstracts have been annotated by two annotators, which can be
                 selected by choosing annotator 1 or 2. If annotator is 0, the union of both annotations is used.
         """
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -4009,7 +3861,7 @@ class CHEBI(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(full_dataset, train_file)
 
-        super(CHEBI, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     def download_dataset(data_dir: Path) -> Path:
@@ -4041,7 +3893,6 @@ class CHEBI(ColumnCorpus):
             abstract_id_output = abstract_id + "_A"
             with open(
                 abstract_folder / annotation_dirs[0] / f"{abstract_id}.txt",
-                "r",
                 encoding="utf8",
             ) as f:
                 documents[abstract_id_output] = f.read()
@@ -4049,7 +3900,6 @@ class CHEBI(ColumnCorpus):
             for annotation_dir in annotation_dirs:
                 with open(
                     abstract_folder / annotation_dir / f"{abstract_id}.ann",
-                    "r",
                     encoding="utf8",
                 ) as f:
                     entities = CHEBI.get_entities(f)
@@ -4057,10 +3907,10 @@ class CHEBI(ColumnCorpus):
 
         for fulltext_id in fulltext_ids:
             fulltext_id_output = fulltext_id + "_F"
-            with open(fulltext_folder / f"{fulltext_id}.txt", "r", encoding="utf8") as f:
+            with open(fulltext_folder / f"{fulltext_id}.txt", encoding="utf8") as f:
                 documents[fulltext_id_output] = f.read()
 
-            with open(fulltext_folder / f"{fulltext_id}.ann", "r", encoding="utf8") as f:
+            with open(fulltext_folder / f"{fulltext_id}.ann", encoding="utf8") as f:
                 entities = CHEBI.get_entities(f)
             entities_per_document[fulltext_id_output] = entities
 
@@ -4146,30 +3996,26 @@ class HUNER_ALL_CHEBI(HUNER_CHEBI):
 
 
 class BioNLPCorpus(ColumnCorpus):
-    """
-    Base class for corpora from BioNLP event extraction shared tasks
+    """Base class for corpora from BioNLP event extraction shared tasks.
 
     For further information see:
-         http://2013.bionlp-st.org/Intro
+    http://2013.bionlp-st.org/Intro
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the BioNLP Corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments documents
              into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -4198,7 +4044,7 @@ class BioNLPCorpus(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(BioNLPCorpus, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     @abstractmethod
@@ -4237,13 +4083,13 @@ class BioNLPCorpus(ColumnCorpus):
         )
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class BIONLP2013_PC(BioNLPCorpus):
-    """
-    Corpus of the BioNLP'2013 Pathway Curation shared task
+    """Corpus of the BioNLP'2013 Pathway Curation shared task.
 
-    For further information see Ohta et al.
-        Overview of the pathway curation (PC) task of bioNLP shared task 2013.
-        https://www.aclweb.org/anthology/W13-2009/
+    For further information see Ohta et al.     Overview of the pathway
+    curation (PC) task of bioNLP shared task 2013.
+    https://www.aclweb.org/anthology/W13-2009/
     """
 
     @staticmethod
@@ -4279,13 +4125,13 @@ class BIONLP2013_PC(BioNLPCorpus):
         return train_folder, dev_folder, test_folder
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class BIONLP2013_CG(BioNLPCorpus):
-    """
-    Corpus of the BioNLP'2013 Cancer Genetics shared task
+    """Corpus of the BioNLP'2013 Cancer Genetics shared task.
 
     For further information see Pyysalo, Ohta & Ananiadou 2013
-        Overview of the Cancer Genetics (CG) task of BioNLP Shared Task 2013
-        https://www.aclweb.org/anthology/W13-2008/
+    Overview of the Cancer Genetics (CG) task of BioNLP Shared Task 2013
+    https://www.aclweb.org/anthology/W13-2008/
     """
 
     @staticmethod
@@ -4307,32 +4153,30 @@ class BIONLP2013_CG(BioNLPCorpus):
         return train_folder, dev_folder, test_folder
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class ANAT_EM(ColumnCorpus):
-    """
-    Corpus for anatomical named entity mention recognition.
+    """Corpus for anatomical named entity mention recognition.
 
-    For further information see Pyysalo and Ananiadou:
-      Anatomical entity mention recognition at literature scale
-      https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3957068/
-      http://nactem.ac.uk/anatomytagger/#AnatEM
+    For further information see Pyysalo and Ananiadou:   Anatomical
+    entity mention recognition at literature scale
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3957068/
+    http://nactem.ac.uk/anatomytagger/#AnatEM
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        tokenizer: Tokenizer = None,
-    ):
-        """
+        tokenizer: Optional[Tokenizer] = None,
+    ) -> None:
+        """Initialize the anatomical named entity mention recognition Corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`Tokenizer` which segments
              sentences into tokens (default :class:`SciSpacyTokenizer`)
         """
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -4363,7 +4207,7 @@ class ANAT_EM(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(ANAT_EM, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @staticmethod
     @abstractmethod
@@ -4400,7 +4244,7 @@ class ANAT_EM(ColumnCorpus):
             sent_offset = 0
             last_offset = 0
 
-            with open(input_dir / input_file, "r", encoding="utf8") as f:
+            with open(input_dir / input_file, encoding="utf8") as f:
                 for line in f.readlines():
                     line = line.strip()
                     if not line:
@@ -4438,13 +4282,11 @@ class ANAT_EM(ColumnCorpus):
 
 
 class BioBertHelper(ColumnCorpus):
-    """
-    Helper class to convert corpora and the respective train, dev and test split
-    used by BioBERT.
+    """Helper class to convert corpora and the respective train, dev and test split used by BioBERT.
 
     For further details see Lee et al.:
-        https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
-        https://github.com/dmis-lab/biobert
+    https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+    https://github.com/dmis-lab/biobert
     """
 
     @staticmethod
@@ -4499,24 +4341,20 @@ class BioBertHelper(ColumnCorpus):
 
 
 class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
-    """
-    BC4CHEMD corpus with chemical annotations as used in the evaluation
-    of BioBERT.
+    """BC4CHEMD corpus with chemical annotations as used in the evaluation of BioBERT.
 
-    For further details regarding BioBERT and it's evaluation, see Lee et al.:
-        https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
-        https://github.com/dmis-lab/biobert
+    For further details regarding BioBERT and it's evaluation, see Lee
+    et al.:
+    https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+    https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4530,28 +4368,24 @@ class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
                 BioBertHelper.download_corpora(common_path)
 
             BioBertHelper.convert_and_write(common_path / "BC4CHEMD", data_folder, tag_type=CHEMICAL_TAG)
-        super(BIOBERT_CHEMICAL_BC4CHEMD, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_GENE_BC2GM(ColumnCorpus):
-    """
-    BC4CHEMD corpus with gene annotations as used in the evaluation
-    of BioBERT.
+    """BC4CHEMD corpus with gene annotations as used in the evaluation of BioBERT.
 
-    For further details regarding BioBERT and it's evaluation, see Lee et al.:
-        https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
-        https://github.com/dmis-lab/biobert
+    For further details regarding BioBERT and it's evaluation, see Lee
+    et al.:
+    https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+    https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4564,28 +4398,24 @@ class BIOBERT_GENE_BC2GM(ColumnCorpus):
             if not (common_path / "BC2GM").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "BC2GM", data_folder, tag_type=GENE_TAG)
-        super(BIOBERT_GENE_BC2GM, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_GENE_JNLPBA(ColumnCorpus):
-    """
-    JNLPBA corpus with gene annotations as used in the evaluation
-    of BioBERT.
+    """JNLPBA corpus with gene annotations as used in the evaluation of BioBERT.
 
-    For further details regarding BioBERT and it's evaluation, see Lee et al.:
-        https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
-        https://github.com/dmis-lab/biobert
+    For further details regarding BioBERT and it's evaluation, see Lee
+    et al.:
+    https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+    https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4598,28 +4428,24 @@ class BIOBERT_GENE_JNLPBA(ColumnCorpus):
             if not (common_path / "JNLPBA").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "JNLPBA", data_folder, tag_type=GENE_TAG)
-        super(BIOBERT_GENE_JNLPBA, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
-    """
-    BC5CDR corpus with chemical annotations as used in the evaluation
-    of BioBERT.
+    """BC5CDR corpus with chemical annotations as used in the evaluation of BioBERT.
 
-    For further details regarding BioBERT and it's evaluation, see Lee et al.:
-        https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
-        https://github.com/dmis-lab/biobert
+    For further details regarding BioBERT and it's evaluation, see Lee
+    et al.:
+    https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+    https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4632,28 +4458,24 @@ class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
             if not (common_path / "BC5CDR-chem").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "BC5CDR-chem", data_folder, tag_type=CHEMICAL_TAG)
-        super(BIOBERT_CHEMICAL_BC5CDR, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
-    """
-    BC5CDR corpus with disease annotations as used in the evaluation
-    of BioBERT.
+    """BC5CDR corpus with disease annotations as used in the evaluation of BioBERT.
 
-    For further details regarding BioBERT and it's evaluation, see Lee et al.:
-        https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
-        https://github.com/dmis-lab/biobert
+    For further details regarding BioBERT and it's evaluation, see Lee
+    et al.:
+    https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+    https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4666,27 +4488,24 @@ class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
             if not (common_path / "BC5CDR-disease").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "BC5CDR-disease", data_folder, tag_type=DISEASE_TAG)
-        super(BIOBERT_DISEASE_BC5CDR, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_DISEASE_NCBI(ColumnCorpus):
-    """
-    NCBI disease corpus as used in the evaluation of BioBERT.
+    """NCBI disease corpus as used in the evaluation of BioBERT.
 
-    For further details regarding BioBERT and it's evaluation, see Lee et al.:
-        https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
-        https://github.com/dmis-lab/biobert
+    For further details regarding BioBERT and it's evaluation, see Lee
+    et al.:
+    https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+    https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4699,28 +4518,24 @@ class BIOBERT_DISEASE_NCBI(ColumnCorpus):
             if not (common_path / "NCBI-disease").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "NCBI-disease", data_folder, tag_type=DISEASE_TAG)
-        super(BIOBERT_DISEASE_NCBI, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
-    """
-    Linneaeus corpus with species annotations as used in the evaluation
-    of BioBERT.
+    """Linneaeus corpus with species annotations as used in the evaluation of BioBERT.
 
-    For further details regarding BioBERT and it's evaluation, see Lee et al.:
-        https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
-        https://github.com/dmis-lab/biobert
+    For further details regarding BioBERT and it's evaluation, see Lee
+    et al.:
+    https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+    https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4733,28 +4548,24 @@ class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
             if not (common_path / "linnaeus").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "linnaeus", data_folder, tag_type=SPECIES_TAG)
-        super(BIOBERT_SPECIES_LINNAEUS, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_SPECIES_S800(ColumnCorpus):
-    """
-    S800 corpus with species annotations as used in the evaluation
-    of BioBERT.
+    """S800 corpus with species annotations as used in the evaluation of BioBERT.
 
-    For further details regarding BioBERT and it's evaluation, see Lee et al.:
-        https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
-        https://github.com/dmis-lab/biobert
+    For further details regarding BioBERT and it's evaluation, see Lee
+    et al.:
+    https://academic.oup.com/bioinformatics/article/36/4/1234/5566506
+    https://github.com/dmis-lab/biobert
     """
 
-    def __init__(self, base_path: Union[str, Path] = None, in_memory: bool = True):
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True) -> None:
         columns = {0: "text", 1: "ner"}
         # this dataset name
         dataset_name = self.__class__.__name__.lower()
 
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         data_folder = base_path / dataset_name
 
@@ -4767,34 +4578,30 @@ class BIOBERT_SPECIES_S800(ColumnCorpus):
             if not (common_path / "s800").exists():
                 BioBertHelper.download_corpora(common_path)
             BioBertHelper.convert_and_write(common_path / "s800", data_folder, tag_type=SPECIES_TAG)
-        super(BIOBERT_SPECIES_S800, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
 
 class CRAFT_V4(ColumnCorpus):
-    """
-    Version 4.0.1 of the CRAFT corpus containing all but the co-reference and structural annotations.
+    """Version 4.0.1 of the CRAFT corpus containing all but the co-reference and structural annotations.
 
     For further information see:
-      https://github.com/UCDenver-ccp/CRAFT
+    https://github.com/UCDenver-ccp/CRAFT
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initializes version 4.0.1 of the CRAFT corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which segments
              documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -4825,7 +4632,7 @@ class CRAFT_V4(ColumnCorpus):
             conll_writer.write_to_conll(dev_data, dev_file)
             conll_writer.write_to_conll(test_data, test_file)
 
-        super(CRAFT_V4, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     def filter_entities(self, corpus: InternalBioNerDataset) -> InternalBioNerDataset:
         return corpus
@@ -4855,7 +4662,7 @@ class CRAFT_V4(ColumnCorpus):
         splits = {}
         for url in split_urls:
             split_file = cached_path(url, splits_dir)
-            with open(str(split_file), "r", encoding="utf8") as split_reader:
+            with open(str(split_file), encoding="utf8") as split_reader:
                 splits[url.split(".")[-1]] = [line.strip() for line in split_reader if line.strip()]
 
         train_documents, train_entities = {}, {}
@@ -4898,7 +4705,7 @@ class CRAFT_V4(ColumnCorpus):
         for doc in Tqdm.tqdm(document_texts, desc="Converting to internal"):
             document_id = doc.name.split(".")[0]
 
-            with open(doc, "r", encoding="utf8") as f_txt:
+            with open(doc, encoding="utf8") as f_txt:
                 documents[document_id] = f_txt.read()
 
             entities = []
@@ -4906,7 +4713,6 @@ class CRAFT_V4(ColumnCorpus):
             for annotation_dir in annotation_dirs:
                 with open(
                     annotation_dir / annotation_dir.parts[-1] / "knowtator" / (doc.name + ".knowtator.xml"),
-                    "r",
                     encoding="utf8",
                 ) as f_ann:
                     ann_tree = etree.parse(f_ann)
@@ -5043,30 +4849,26 @@ class HUNER_ALL_BIONLP2013_CG(HUNER_BIONLP2013_CG):
 
 
 class AZDZ(ColumnCorpus):
-    """
-    Arizona Disease Corpus from the Biomedical Informatics Lab at Arizona State University.
+    """Arizona Disease Corpus from the Biomedical Informatics Lab at Arizona State University.
 
-     For further information see:
-       http://diego.asu.edu/index.php
+    For further information see:
+    http://diego.asu.edu/index.php
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        tokenizer: Tokenizer = None,
-    ):
-        """
+        tokenizer: Optional[Tokenizer] = None,
+    ) -> None:
+        """Initializes the Arizona Disease Corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param tokenizer: Implementation of :class:`Tokenizer` which segments sentences
              into tokens (default :class:`SciSpacyTokenizer`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -5089,7 +4891,7 @@ class AZDZ(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(AZDZ, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -5103,7 +4905,7 @@ class AZDZ(ColumnCorpus):
         documents = {}
         entities_per_document = {}
 
-        with open(str(input_file), "r", encoding="iso-8859-1") as azdz_reader:
+        with open(str(input_file), encoding="iso-8859-1") as azdz_reader:
             prev_document_id: Optional[str] = None
             prev_sentence_id: Optional[str] = None
 
@@ -5150,34 +4952,30 @@ class AZDZ(ColumnCorpus):
         return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
+@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
 class PDR(ColumnCorpus):
-    """
-    Corpus of plant-disease relations from Kim et al., consisting of named entity annotations
-    for plants and disease.
+    """Corpus of plant-disease relations.
 
-      For further information see Kim et al.:
-        A corpus of plant-disease relations in the biomedical domain
-        https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0221582
-        http://gcancer.org/pdr/
+    For further information see Kim et al.:   A corpus of plant-disease
+    relations in the biomedical domain
+    https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0221582
+    http://gcancer.org/pdr/
     """
 
     def __init__(
         self,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+    ) -> None:
+        """Initialize the plant-disease relations Corpus.
+
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Implementation of :class:`SentenceSplitter` which
              segments documents into sentences and tokens (default :class:`SciSpacySentenceSplitter`)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
@@ -5201,7 +4999,7 @@ class PDR(ColumnCorpus):
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
 
-        super(PDR, self).__init__(data_folder, columns, in_memory=in_memory)
+        super().__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_corpus(cls, data_dir: Path) -> Path:
@@ -5213,11 +5011,9 @@ class PDR(ColumnCorpus):
 
 
 class HUNER_DISEASE_PDR(HunerDataset):
-    """
-    PDR Dataset with only Disease annotations
-    """
+    """PDR Dataset with only Disease annotations."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -5233,11 +5029,9 @@ class HUNER_DISEASE_PDR(HunerDataset):
 
 
 class HunerMultiCorpus(MultiCorpus):
-    """
-    Base class to build the union of all HUNER data sets considering a particular entity type.
-    """
+    """Base class to build the union of all HUNER data sets considering a particular entity type."""
 
-    def __init__(self, entity_type: str, sentence_splitter: SentenceSplitter = None):
+    def __init__(self, entity_type: str, sentence_splitter: Optional[SentenceSplitter] = None) -> None:
         self.entity_type = entity_type
 
         def entity_type_predicate(member):
@@ -5270,7 +5064,7 @@ class HunerMultiCorpus(MultiCorpus):
                     f"Error while processing Zip file from corpus {name}:\n{sys.exc_info()[1]}\n\n",
                     exc_info=False,
                 )
-            except IOError:
+            except OSError:
                 logger.exception(
                     f"Error while downloading data for corpus {name}:\n{sys.exc_info()[1]}\n\n",
                     exc_info=False,
@@ -5296,59 +5090,48 @@ class HunerMultiCorpus(MultiCorpus):
                     exc_info=False,
                 )
 
-        super(HunerMultiCorpus, self).__init__(corpora=self.huner_corpora, name=f"HUNER-{entity_type}")
+        super().__init__(corpora=self.huner_corpora, name=f"HUNER-{entity_type}")
 
 
 class HUNER_CELL_LINE(HunerMultiCorpus):
-    """
-    Union of all HUNER cell line data sets.
-    """
+    """Union of all HUNER cell line data sets."""
 
-    def __init__(self, sentence_splitter: SentenceSplitter = None):
-        super(HUNER_CELL_LINE, self).__init__(entity_type="CELL_LINE", sentence_splitter=sentence_splitter)
+    def __init__(self, sentence_splitter: Optional[SentenceSplitter] = None) -> None:
+        super().__init__(entity_type="CELL_LINE", sentence_splitter=sentence_splitter)
 
 
 class HUNER_CHEMICAL(HunerMultiCorpus):
-    """
-    Union of all HUNER chemical data sets.
-    """
+    """Union of all HUNER chemical data sets."""
 
-    def __init__(self, sentence_splitter: SentenceSplitter = None):
-        super(HUNER_CHEMICAL, self).__init__(entity_type="CHEMICAL", sentence_splitter=sentence_splitter)
+    def __init__(self, sentence_splitter: Optional[SentenceSplitter] = None) -> None:
+        super().__init__(entity_type="CHEMICAL", sentence_splitter=sentence_splitter)
 
 
 class HUNER_DISEASE(HunerMultiCorpus):
-    """
-    Union of all HUNER disease data sets.
-    """
+    """Union of all HUNER disease data sets."""
 
-    def __init__(self, sentence_splitter: SentenceSplitter = None):
-        super(HUNER_DISEASE, self).__init__(entity_type="DISEASE", sentence_splitter=sentence_splitter)
+    def __init__(self, sentence_splitter: Optional[SentenceSplitter] = None) -> None:
+        super().__init__(entity_type="DISEASE", sentence_splitter=sentence_splitter)
 
 
 class HUNER_GENE(HunerMultiCorpus):
-    """
-    Union of all HUNER gene data sets.
-    """
+    """Union of all HUNER gene data sets."""
 
-    def __init__(self, sentence_splitter: SentenceSplitter = None):
-        super(HUNER_GENE, self).__init__(entity_type="GENE", sentence_splitter=sentence_splitter)
+    def __init__(self, sentence_splitter: Optional[SentenceSplitter] = None) -> None:
+        super().__init__(entity_type="GENE", sentence_splitter=sentence_splitter)
 
 
 class HUNER_SPECIES(HunerMultiCorpus):
-    """
-    Union of all HUNER species data sets.
-    """
+    """Union of all HUNER species data sets."""
 
-    def __init__(self, sentence_splitter: SentenceSplitter = None):
-        super(HUNER_SPECIES, self).__init__(entity_type="SPECIES", sentence_splitter=sentence_splitter)
+    def __init__(self, sentence_splitter: Optional[SentenceSplitter] = None) -> None:
+        super().__init__(entity_type="SPECIES", sentence_splitter=sentence_splitter)
 
 
 class BIGBIO_NER_CORPUS(ColumnCorpus):
-    """
-    This class implements an adapter to data sets implemented in the BigBio framework:
+    """This class implements an adapter to data sets implemented in the BigBio framework.
 
-        https://github.com/bigscience-workshop/biomedical
+    see https://github.com/bigscience-workshop/biomedical
 
     The BigBio framework harmonizes over 120 biomedical data sets and provides a uniform
     programming api to access them. This adapter allows to use all named entity recognition
@@ -5358,14 +5141,15 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
     def __init__(
         self,
         dataset_name: str,
-        base_path: Union[str, Path] = None,
+        base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
-        sentence_splitter: SentenceSplitter = None,
-        train_split_name: Union[str, bool] = None,
-        dev_split_name: Union[str, bool] = None,
-        test_split_name: Union[str, bool] = None,
-    ):
-        """
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        """Initialize the BigBio Corpus.
+
         :param dataset_name: Name of the dataset in the huggingface hub (e.g. nlmchem or bigbio/nlmchem)
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
@@ -5375,11 +5159,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         :param dev_split_name: Name of the development split in bigbio, usually validation (default: None)
         :param test_split_name: Name of the test split in bigbio, usually test (default: None)
         """
-
-        if base_path is None:
-            base_path = flair.cache_root / "datasets"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
         # column format
         columns = {0: "text", 1: "ner"}
@@ -5390,16 +5170,17 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
             dataset_name = dataset_name.split("/")[-1]
             dataset_name = dataset_name.split(".")[0]
         elif not dataset_name.startswith("bigbio/"):
-            full_dataset_name = "bigbio" + "/" + dataset_name
+            full_dataset_name = "bigbio/" + dataset_name
         else:
             full_dataset_name = dataset_name
             dataset_name = dataset_name.replace("bigbio/", "")
 
+        self.sentence_splitter = sentence_splitter if sentence_splitter else SciSpacySentenceSplitter()
+
         dataset_dir_name = self.build_corpus_directory_name(dataset_name)
-        data_folder = base_path / dataset_dir_name
+        data_folder = base_path / dataset_dir_name / self.sentence_splitter.name
 
         train_file = data_folder / "train.conll"
-        # test_file = data_folder / "test.conll"
 
         # Download data if necessary
         # Some datasets in BigBio only have train or test splits, not both
@@ -5439,10 +5220,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
                     "No entity type mapping found for {}. Check CONLL files for task descriptions.".format(dataset_name)
                 )
 
-            if sentence_splitter is None:
-                sentence_splitter = SciSpacySentenceSplitter()
-
-            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
+            conll_writer = CoNLLWriter(sentence_splitter=self.sentence_splitter)
             conll_writer.process_dataset(splits, data_folder)
 
         super(BIGBIO_NER_CORPUS, self).__init__(
@@ -5454,9 +5232,9 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
-        """
-        Return the mapping of entity type given in the dataset to canonical types. Note, if
-        a entity type is not present in the map it is discarded.
+        """Return the mapping of entity type given in the dataset to canonical types.
+
+        Note, if a entity type is not present in the map it is discarded.
         """
         # return None
         # TODO: Add entity type mapping for all remaining bigbio datasets not in HunFlair?
@@ -5506,15 +5284,11 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         }
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
-        """
-        Builds the directory name for the given data set.
-        """
+        """Builds the directory name for the given data set."""
         return "bigbio-" + dataset_name.lower()
 
     def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
-        """
-        Converts a dataset given in hugging datasets format to our internal corpus representation.
-        """
+        """Converts a dataset given in hugging datasets format to our internal corpus representation."""
         id_to_text = {}
         id_to_entities = {}
         entity_type_set = set()
@@ -5552,11 +5326,11 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
                 entity_type_set.add(entity["type"])
 
                 # FIXME: This is just for debugging purposes
-                passage_text = id_to_text[passage_id]
-                doc_text = passage_text[entity_offset[0] : entity_offset[1]]
-                mention_text = entity["text"][0]
-                if doc_text != mention_text:
-                    print(f"Annotation error ({document['document_id']}) - Doc: {doc_text} vs. Mention: {mention_text}")
+                # passage_text = id_to_text[passage_id]
+                # doc_text = passage_text[entity_offset[0] : entity_offset[1]]
+                # mention_text = entity["text"][0]
+                # if doc_text != mention_text:
+                #     print(f"Annotation error ({document['document_id']}) - Doc: {doc_text} vs. Mention: {mention_text}")
 
         entity_types = list(entity_type_set)
         return InternalBioNerDataset(
@@ -5577,32 +5351,46 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         uses binary search to find the passage in the ordered sequence passages.
         """
         # Check base case
-        if high >= low:
-            # Get element in the middle
-            mid = (high + low) // 2
-            first_text_offset = passages[mid][1][0]
-            first_mention_offset = entity["offsets"][0]
+        if low > high:
+            raise NotImplementedError("There was a mistake concerning the lower and upper bound.")
 
-            # Is the mention with the passage offsets?
-            if first_mention_offset[0] >= first_text_offset[0] and first_mention_offset[1] <= first_text_offset[1]:
-                return passages[mid][0], first_text_offset
+        # Get element in the middle
+        mid = (high + low) // 2
+        first_text_offset = passages[mid][1][0]
+        first_mention_offset = entity["offsets"][0]
 
-            # If element is smaller than mid, then it can only
-            # be present in left subarray
-            elif first_text_offset[0] > first_mention_offset[0]:
-                return self.bin_search_passage(passages, low, mid - 1, entity)
-            else:
-                # Else the element can only be present in right subarray
-                return self.bin_search_passage(passages, mid + 1, high, entity)
+        # Is the mention with the passage offsets?
+        if first_mention_offset[0] >= first_text_offset[0] and first_mention_offset[1] <= first_text_offset[1]:
+            return passages[mid][0], first_text_offset
 
+        # If element is smaller than mid, then it can only
+        # be present in left subarray
+        elif first_text_offset[0] > first_mention_offset[0]:
+            return self.bin_search_passage(passages, low, mid - 1, entity)
         else:
-            # This should never happen :-D
-            return -1, -1
+            # Else the element can only be present in right subarray
+            return self.bin_search_passage(passages, mid + 1, high, entity)
 
 
 class HUNER_GENE_NLM_GENE(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_NLM_GENE, self).__init__(*args, dataset_name="nlm_gene", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="nlm_gene",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {
@@ -5618,8 +5406,24 @@ class HUNER_GENE_NLM_GENE(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_DRUGPROT(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_DRUGPROT, self).__init__(*args, dataset_name="drugprot", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="drugprot",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"GENE-N": GENE_TAG, "GENE-Y": GENE_TAG}
@@ -5629,8 +5433,24 @@ class HUNER_GENE_DRUGPROT(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_DRUGPROT(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_DRUGPROT, self).__init__(*args, dataset_name="drugprot", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="drugprot",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"CHEMICAL": CHEMICAL_TAG}
@@ -5651,8 +5471,24 @@ class HUNER_ALL_DRUGPROT(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIORED(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="biored",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"GeneOrGeneProduct": GENE_TAG}
@@ -5662,8 +5498,24 @@ class HUNER_GENE_BIORED(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_BIORED(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="biored",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"ChemicalEntity": CHEMICAL_TAG}
@@ -5673,8 +5525,24 @@ class HUNER_CHEMICAL_BIORED(BIGBIO_NER_CORPUS):
 
 
 class HUNER_DISEASE_BIORED(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_DISEASE_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="biored",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"DiseaseOrPhenotypicFeature": DISEASE_TAG}
@@ -5684,8 +5552,24 @@ class HUNER_DISEASE_BIORED(BIGBIO_NER_CORPUS):
 
 
 class HUNER_SPECIES_BIORED(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_SPECIES_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="biored",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"OrganismTaxon": SPECIES_TAG}
@@ -5695,8 +5579,24 @@ class HUNER_SPECIES_BIORED(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CELL_LINE_BIORED(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_CELL_LINE_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="biored",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"CellLine": CELL_LINE_TAG}
@@ -5723,8 +5623,24 @@ class HUNER_ALL_BIORED(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_CPI(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_CPI, self).__init__(*args, dataset_name="cpi", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="cpi",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"protein": GENE_TAG}
@@ -5734,8 +5650,24 @@ class HUNER_GENE_CPI(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_CPI(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_CPI, self).__init__(*args, dataset_name="cpi", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="cpi",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"compound": CHEMICAL_TAG}
@@ -5756,8 +5688,24 @@ class HUNER_ALL_CPI(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2013_PC, self).__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2013_pc",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Gene_or_gene_product": GENE_TAG, "Complex": GENE_TAG}
@@ -5767,8 +5715,24 @@ class HUNER_GENE_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_BIONLP_ST_2013_PC, self).__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2013_pc",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Simple_chemical": CHEMICAL_TAG}
@@ -5793,8 +5757,24 @@ class HUNER_ALL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2013_GE(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2013_GE, self).__init__(*args, dataset_name="bionlp_st_2013_ge", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2013_ge",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"protein": GENE_TAG}
@@ -5804,8 +5784,24 @@ class HUNER_GENE_BIONLP_ST_2013_GE(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2011_GE(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2011_GE, self).__init__(*args, dataset_name="bionlp_st_2011_ge", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_ge",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -5815,8 +5811,24 @@ class HUNER_GENE_BIONLP_ST_2011_GE(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_id",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -5826,8 +5838,24 @@ class HUNER_GENE_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_id",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Chemical": CHEMICAL_TAG}
@@ -5837,8 +5865,24 @@ class HUNER_CHEMICAL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_SPECIES_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_SPECIES_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_id",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Organism": SPECIES_TAG}
@@ -5863,8 +5907,24 @@ class HUNER_ALL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2011_REL(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2011_REL, self).__init__(*args, dataset_name="bionlp_st_2011_rel", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_rel",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -5874,8 +5934,24 @@ class HUNER_GENE_BIONLP_ST_2011_REL(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIONLP_ST_2011_EPI(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2011_EPI, self).__init__(*args, dataset_name="bionlp_st_2011_epi", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2011_epi",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -5885,8 +5961,24 @@ class HUNER_GENE_BIONLP_ST_2011_EPI(BIGBIO_NER_CORPUS):
 
 
 class HUNER_SPECIES_BIONLP_ST_2019_BB(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_SPECIES_BIONLP_ST_2019_BB, self).__init__(*args, dataset_name="bionlp_st_2019_bb", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bionlp_st_2019_bb",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Microorganism": SPECIES_TAG}
@@ -5896,8 +5988,24 @@ class HUNER_SPECIES_BIONLP_ST_2019_BB(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_BIOID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bioid",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"gene": GENE_TAG, "protein": GENE_TAG}
@@ -5907,8 +6015,24 @@ class HUNER_GENE_BIOID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_BIOID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bioid",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"chemical": CHEMICAL_TAG}
@@ -5918,8 +6042,24 @@ class HUNER_CHEMICAL_BIOID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_SPECIES_BIOID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_SPECIES_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bioid",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"species": SPECIES_TAG}
@@ -5929,8 +6069,24 @@ class HUNER_SPECIES_BIOID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CELL_LINE_BIOID(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_CELL_LINE_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="bioid",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         # TODO whether cell or cell line is the correct tag
@@ -5959,8 +6115,24 @@ class HUNER_ALL_BIOID(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_GNORMPLUS(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_GNORMPLUS, self).__init__(*args, dataset_name="gnormplus", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="gnormplus",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Gene": GENE_TAG, "FamilyName": GENE_TAG}
@@ -5970,16 +6142,25 @@ class HUNER_GENE_GNORMPLUS(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_PROGENE(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
         # Special case for ProGene: We need to use the split_0_train and split_0_test splits
         # as they are currently provided in BigBio
         train_split_name = "split_0_train"
         dev_split_name = "split_0_validation"
         test_split_name = "split_0_test"
-        super(HUNER_GENE_PROGENE, self).__init__(
-            *args,
+        super().__init__(
             dataset_name="progene",
-            **kwargs,
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
             train_split_name=train_split_name,
             dev_split_name=dev_split_name,
             test_split_name=test_split_name,
@@ -5993,8 +6174,24 @@ class HUNER_GENE_PROGENE(BIGBIO_NER_CORPUS):
 
 
 class HUNER_CHEMICAL_NLM_CHEM(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_NLM_CHEM, self).__init__(*args, dataset_name="nlmchem", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="nlmchem",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Chemical": CHEMICAL_TAG}
@@ -6004,8 +6201,24 @@ class HUNER_CHEMICAL_NLM_CHEM(BIGBIO_NER_CORPUS):
 
 
 class HUNER_GENE_SETH_CORPUS(BIGBIO_NER_CORPUS):
-    def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_SETH_CORPUS, self).__init__(*args, dataset_name="seth_corpus", **kwargs)
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        sentence_splitter: Optional[SentenceSplitter] = None,
+        train_split_name: Optional[str] = None,
+        dev_split_name: Optional[str] = None,
+        test_split_name: Optional[str] = None,
+    ) -> None:
+        super().__init__(
+            dataset_name="seth_corpus",
+            base_path=base_path,
+            in_memory=in_memory,
+            sentence_splitter=sentence_splitter,
+            train_split_name=train_split_name,
+            dev_split_name=dev_split_name,
+            test_split_name=test_split_name,
+        )
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Gene": GENE_TAG}
@@ -6027,14 +6240,6 @@ class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
         return self.__class__.__name__.lower()
-
-    # Some offsets are broken in tmvar_v3, we need to fix them
-    def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
-        """
-        Converts a dataset given in hugging datasets format to our internal corpus representation.
-        """
-        # dataset = dataset.map(map_fn, batched=True)
-        return super(HUNER_GENE_TMVAR_V3, self).to_internal_dataset(dataset, split)
 
 
 # Deprecated, is fixed in BigBio but useful code for debugging future issues

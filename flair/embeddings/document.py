@@ -34,15 +34,17 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
         layer_mean: bool = False,
         is_token_embedding: bool = False,
         **kwargs,
-    ):
-        """
-        Bidirectional transformer embeddings of words from various transformer architectures.
-        :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
-        options)
-        :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
-        :param cls_pooling: Pooling strategy for combining token level embeddings. options are 'cls', 'max', 'mean'.
-        :param layer_mean: If True, uses a scalar mix of layers as embedding
-        :param fine_tune: If True, allows transformers to be fine-tuned during training
+    ) -> None:
+        """Bidirectional transformer embeddings of words from various transformer architectures.
+
+        Args:
+            model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for options)
+            layers: string indicating which layers to take for embedding (-1 is topmost layer)
+            cls_pooling: Pooling strategy for combining token level embeddings. options are 'cls', 'max', 'mean'.
+            layer_mean: If True, uses a scalar mix of layers as embedding
+            fine_tune: If True, allows transformers to be fine-tuned during training
+            is_token_embedding: If True, the embedding can be used as TokenEmbedding too.
+            **kwargs: Arguments propagated to :meth:`flair.embeddings.transformer.TransformerEmbeddings.__init__`
         """
         TransformerEmbeddings.__init__(
             self,
@@ -68,12 +70,13 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         embeddings: Union[TokenEmbeddings, List[TokenEmbeddings]],
         fine_tune_mode: str = "none",
         pooling: str = "mean",
-    ):
+    ) -> None:
         """The constructor takes a list of embeddings to be combined.
-        :param embeddings: a list of token embeddings
-        :param fine_tune_mode: if set to "linear" a trainable layer is added, if set to
-        "nonlinear", a nonlinearity is added as well. Set this to make the pooling trainable.
-        :param pooling: a string which can any value from ['mean', 'max', 'min']
+
+        Args:
+            embeddings: a list of token embeddings
+            fine_tune_mode: if set to "linear" a trainable layer is added, if set to "nonlinear", a nonlinearity is added as well. Set this to make the pooling trainable.
+            pooling: a string which can any value from ['mean', 'max', 'min']
         """
         super().__init__()
 
@@ -112,9 +115,10 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
         return self.__embedding_length
 
     def embed(self, sentences: Union[List[Sentence], Sentence]):
-        """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
-        only if embeddings are non-static."""
+        """Add embeddings to every sentence in the given list of sentences.
 
+        If embeddings are already added, updates only if embeddings are non-static.
+        """
         # if only one sentence is passed, convert to list of sentence
         if isinstance(sentences, Sentence):
             sentences = [sentences]
@@ -168,10 +172,13 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
         train_dataset: List[Sentence],
         vectorizer: Optional[TfidfVectorizer] = None,
         **vectorizer_params,
-    ):
+    ) -> None:
         """The constructor for DocumentTFIDFEmbeddings.
-        :param train_dataset: the train dataset which will be used to construct vectorizer
-        :param vectorizer_params: parameters given to Scikit-learn's TfidfVectorizer constructor
+
+        Args:
+            train_dataset: the train dataset which will be used to construct a vectorizer
+            vectorizer: a precalculated vectorizer. If provided, requires the train_dataset to be an empty list.
+            vectorizer_params: parameters given to Scikit-learn's TfidfVectorizer constructor
         """
         super().__init__()
 
@@ -198,7 +205,6 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
 
     def embed(self, sentences: Union[List[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences."""
-
         # if only one sentence is passed, convert to list of sentence
         if isinstance(sentences, Sentence):
             sentences = [sentences]
@@ -230,27 +236,28 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         hidden_size=128,
         rnn_layers=1,
         reproject_words: bool = True,
-        reproject_words_dimension: int = None,
+        reproject_words_dimension: Optional[int] = None,
         bidirectional: bool = False,
         dropout: float = 0.5,
         word_dropout: float = 0.0,
         locked_dropout: float = 0.0,
-        rnn_type="GRU",
+        rnn_type: str = "GRU",
         fine_tune: bool = True,
-    ):
-        """The constructor takes a list of embeddings to be combined.
-        :param embeddings: a list of token embeddings
-        :param hidden_size: the number of hidden states in the rnn
-        :param rnn_layers: the number of layers for the rnn
-        :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
-        layer before putting them into the rnn or not
-        :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
-        dimension as before will be taken.
-        :param bidirectional: boolean value, indicating whether to use a bidirectional rnn or not
-        :param dropout: the dropout value to be used
-        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
-        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
-        :param rnn_type: 'GRU' or 'LSTM'
+    ) -> None:
+        """Instantiates an RNN that works upon some token embeddings.
+
+        Args:
+            embeddings: a list of token embeddings
+            hidden_size: the number of hidden states in the rnn
+            rnn_layers: the number of layers for the rnn
+            reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not
+            reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.
+            bidirectional: boolean value, indicating whether to use a bidirectional rnn or not
+            dropout: the dropout value to be used
+            word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+            locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+            rnn_type: 'GRU' or 'LSTM'
+            fine_tune: if True, allow to finetune the embeddings.
         """
         super().__init__()
 
@@ -263,7 +270,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         self.length_of_all_token_embeddings: int = self.embeddings.embedding_length
 
-        self.static_embeddings = False if fine_tune else True
+        self.static_embeddings = not fine_tune
 
         self.__embedding_length: int = hidden_size
         if self.bidirectional:
@@ -311,9 +318,10 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
-        """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
-        only if embeddings are non-static."""
+        """Add embeddings to all sentences in the given list of sentences.
 
+        If embeddings are already added, update only if embeddings are non-static.
+        """
         # TODO: remove in future versions
         if not hasattr(self, "locked_dropout"):
             self.locked_dropout = None
@@ -329,11 +337,11 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
         pre_allocated_zero_tensor = torch.zeros(
             self.embeddings.embedding_length * longest_token_sequence_in_batch,
-            dtype=torch.float,
+            dtype=self.rnn.all_weights[0][0].dtype,
             device=flair.device,
         )
 
-        all_embs: List[torch.Tensor] = list()
+        all_embs: List[torch.Tensor] = []
         for sentence in sentences:
             all_embs += [emb for token in sentence for emb in token.get_each_embedding()]
             nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
@@ -363,7 +371,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
         # push through RNN
-        packed = pack_padded_sequence(sentence_tensor, lengths, enforce_sorted=False, batch_first=True)  # type: ignore
+        packed = pack_padded_sequence(sentence_tensor, lengths, enforce_sorted=False, batch_first=True)  # type: ignore[arg-type]
         rnn_out, hidden = self.rnn(packed)
         outputs, output_lengths = pad_packed_sequence(rnn_out, batch_first=True)
 
@@ -395,10 +403,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             if isinstance(child_module, torch.nn.RNNBase) and not hasattr(child_module, "_flat_weights_names"):
                 _flat_weights_names = []
 
-                if child_module.__dict__["bidirectional"]:
-                    num_direction = 2
-                else:
-                    num_direction = 1
+                num_direction = 2 if child_module.__dict__["bidirectional"] else 1
                 for layer in range(child_module.__dict__["num_layers"]):
                     for direction in range(num_direction):
                         suffix = "_reverse" if direction == 1 else ""
@@ -408,7 +413,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
                         param_names = [x.format(layer, suffix) for x in param_names]
                         _flat_weights_names.extend(param_names)
 
-                setattr(child_module, "_flat_weights_names", _flat_weights_names)
+                child_module._flat_weights_names = _flat_weights_names
 
             child_module._apply(fn)
 
@@ -469,7 +474,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             language_model.load_state_dict(d["state_dict"])
 
         # copy over state dictionary to self
-        for key in language_model.__dict__.keys():
+        for key in language_model.__dict__:
             self.__dict__[key] = language_model.__dict__[key]
 
         # set the language model to eval() by default (this is necessary since FlairEmbeddings "protect" the LM
@@ -479,7 +484,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
 @register_embeddings
 class DocumentLMEmbeddings(DocumentEmbeddings):
-    def __init__(self, flair_embeddings: List[FlairEmbeddings]):
+    def __init__(self, flair_embeddings: List[FlairEmbeddings]) -> None:
         super().__init__()
 
         self.embeddings = flair_embeddings
@@ -487,7 +492,7 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
 
         # IMPORTANT: add embeddings as torch modules
         for i, embedding in enumerate(flair_embeddings):
-            self.add_module("lm_embedding_{}".format(i), embedding)
+            self.add_module(f"lm_embedding_{i}", embedding)
             if not embedding.static_embeddings:
                 self.static_embeddings = False
 
@@ -535,11 +540,12 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         self,
         model: str = "bert-base-nli-mean-tokens",
         batch_size: int = 1,
-    ):
-        """
-        :param model: string name of models from SentencesTransformer Class
-        :param name: string name of embedding type which will be set to Sentence object
-        :param batch_size: int number of sentences to processed in one batch
+    ) -> None:
+        """Instantiates a document embedding using the SentenceTransformer Embeddings.
+
+        Args:
+            model: string name of models from SentencesTransformer Class
+            batch_size: int number of sentences to processed in one batch
         """
         super().__init__()
 
@@ -550,7 +556,6 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
             log.warning('ATTENTION! The library "sentence-transformers" is not installed!')
             log.warning('To use Sentence Transformers, please first install with "pip install sentence-transformers"')
             log.warning("-" * 100)
-            pass
 
         self.model_name = model
         self.model = SentenceTransformer(
@@ -603,22 +608,23 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         embeddings: List[TokenEmbeddings],
         kernels=((100, 3), (100, 4), (100, 5)),
         reproject_words: bool = True,
-        reproject_words_dimension: int = None,
+        reproject_words_dimension: Optional[int] = None,
         dropout: float = 0.5,
         word_dropout: float = 0.0,
         locked_dropout: float = 0.0,
         fine_tune: bool = True,
-    ):
-        """The constructor takes a list of embeddings to be combined.
-        :param embeddings: a list of token embeddings
-        :param kernels: list of (number of kernels, kernel size)
-        :param reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear
-        layer before putting them into the rnn or not
-        :param reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output
-        dimension as before will be taken.
-        :param dropout: the dropout value to be used
-        :param word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
-        :param locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+    ) -> None:
+        """Instantiates a CNN that works upon some token embeddings.
+
+        Args:
+            embeddings: a list of token embeddings
+            kernels: list of (number of kernels, kernel size)
+            reproject_words: boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not
+            reproject_words_dimension: output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.
+            dropout: the dropout value to be used
+            word_dropout: the word dropout value to be used, if 0.0 word dropout is not used
+            locked_dropout: the locked dropout value to be used, if 0.0 locked dropout is not used
+            fine_tune: if True, allow to finetune the embeddings.
         """
         super().__init__()
 
@@ -628,7 +634,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         self.kernels = kernels
         self.reproject_words = reproject_words
 
-        self.static_embeddings = False if fine_tune else True
+        self.static_embeddings = not fine_tune
 
         self.embeddings_dimension: int = self.length_of_all_token_embeddings
         if self.reproject_words and reproject_words_dimension is not None:
@@ -668,9 +674,10 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
-        """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
-        only if embeddings are non-static."""
+        """Add embeddings to all sentences in the given list of sentences.
 
+        If embeddings are already added, update only if embeddings are non-static.
+        """
         # TODO: remove in future versions
         if not hasattr(self, "locked_dropout"):
             self.locked_dropout = None
@@ -687,11 +694,11 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
 
         pre_allocated_zero_tensor = torch.zeros(
             self.embeddings.embedding_length * padding_length,
-            dtype=torch.float,
+            dtype=self.convs[0].weight.dtype,
             device=flair.device,
         )
 
-        all_embs: List[torch.Tensor] = list()
+        all_embs: List[torch.Tensor] = []
         for sentence in sentences:
             all_embs += [emb for token in sentence for emb in token.get_each_embedding()]
             nb_padding_tokens = padding_length - len(sentence)
@@ -736,7 +743,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
             outputs = self.locked_dropout(outputs)
 
         # extract embeddings from CNN
-        for sentence_no, length in enumerate(lengths):
+        for sentence_no, _length in enumerate(lengths):
             embedding = outputs[sentence_no]
 
             if self.static_embeddings:

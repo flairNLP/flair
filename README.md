@@ -1,4 +1,5 @@
-![alt text](resources/docs/flair_logo_2020.png)
+![alt text](resources/docs/flair_logo_2020_FINAL_day_dpi72.png#gh-light-mode-only)
+![alt text](resources/docs/flair_logo_2020_FINAL_night_dpi72.png#gh-dark-mode-only)
 
 [![PyPI version](https://badge.fury.io/py/flair.svg)](https://badge.fury.io/py/flair)
 [![GitHub Issues](https://img.shields.io/github/issues/flairNLP/flair.svg)](https://github.com/flairNLP/flair/issues)
@@ -12,17 +13,17 @@ A very simple framework for **state-of-the-art NLP**. Developed by [Humboldt Uni
 Flair is:
 
 * **A powerful NLP library.** Flair allows you to apply our state-of-the-art natural language processing (NLP)
-models to your text, such as named entity recognition (NER), part-of-speech tagging (PoS),
+models to your text, such as named entity recognition (NER), sentiment analysis, part-of-speech tagging (PoS),
   special support for [biomedical data](/resources/docs/HUNFLAIR.md),
  sense disambiguation and classification, with support for a rapidly growing number of languages.
 
 * **A text embedding library.** Flair has simple interfaces that allow you to use and combine different word and
-document embeddings, including our proposed **[Flair embeddings](https://www.aclweb.org/anthology/C18-1139/)**, BERT embeddings and ELMo embeddings.
+document embeddings, including our proposed [Flair embeddings](https://www.aclweb.org/anthology/C18-1139/) and various transformers.
 
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.11](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.13.1(https://github.com/flairNLP/flair/releases)!
 
 
 ## State-of-the-Art Models
@@ -37,90 +38,105 @@ Flair ships with state-of-the-art models for a range of NLP tasks. For instance,
 | Dutch  | Conll-03  (4-class)  |  **95.25**  | *93.7 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Dutch 4-class NER demo](https://huggingface.co/flair/ner-dutch-large)  |
 | Spanish  | Conll-03 (4-class)   |  **90.54** | *90.3 [(Yu et al., 2020)](https://www.aclweb.org/anthology/2020.acl-main.577.pdf)* | [Flair Spanish 4-class NER demo](https://huggingface.co/flair/ner-spanish-large)  |
 
-**New:** Most Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are now hosted
-on the [__🤗 HuggingFace model hub__](https://huggingface.co/models?library=flair&sort=downloads)! You can browse models, check detailed information on how they were trained, and even try each model out online!
+Many Flair sequence tagging models (named entity recognition, part-of-speech tagging etc.) are also hosted
+on the [__🤗 Hugging Face model hub__](https://huggingface.co/models?library=flair&sort=downloads)! You can browse models, check detailed information on how they were trained, and even try each model out online!
 
 
 ## Quick Start
 
 ### Requirements and Installation
 
-The project is based on PyTorch 1.5+ and Python 3.6+, because method signatures and type hints are beautiful.
-If you do not have Python 3.6, install it first. [Here is how for Ubuntu 16.04](https://vsupalov.com/developing-with-python3-6-on-ubuntu-16-04/).
-Then, in your favorite virtual environment, simply do:
+In your favorite virtual environment, simply do:
 
 ```
 pip install flair
 ```
 
-### Example Usage
+Flair requires Python 3.8+. 
 
-Let's run named entity recognition (NER) over an example sentence. All you need to do is make a `Sentence`, load
+### Example 1: Tag Entities in Text
+
+Let's run **named entity recognition** (NER) over an example sentence. All you need to do is make a `Sentence`, load
 a pre-trained model and use it to predict tags for the sentence:
 
 ```python
 from flair.data import Sentence
-from flair.models import SequenceTagger
+from flair.nn import Classifier
 
 # make a sentence
 sentence = Sentence('I love Berlin .')
 
 # load the NER tagger
-tagger = SequenceTagger.load('ner')
+tagger = Classifier.load('ner')
 
 # run NER over sentence
 tagger.predict(sentence)
-```
 
-Done! The `Sentence` now has entity annotations. Print the sentence to see what the tagger found.
-
-```python
 # print the sentence with all annotations
 print(sentence)
-
-print('The following NER tags are found:')
-
-# iterate over entities and print each
-for entity in sentence.get_spans('ner'):
-    print(entity)
 ```
 
 This should print:
 
 ```console
 Sentence: "I love Berlin ." → ["Berlin"/LOC]
-
-The following NER tags are found:
-
-Span[2:3]: "Berlin" → LOC (0.999)
 ```
+
+This means that "Berlin" was tagged as a **location entity** in this sentence. 
+
+   * *to learn more about NER tagging in Flair, check out our [NER tutorial](https://flairnlp.github.io/docs/tutorial-basics/tagging-entities)!*
+
+
+### Example 2: Detect Sentiment 
+
+Let's run **sentiment analysis** over an example sentence to determine whether it is POSITIVE or NEGATIVE.
+Same code as above, just a different model: 
+
+```python
+from flair.data import Sentence
+from flair.nn import Classifier
+
+# make a sentence
+sentence = Sentence('I love Berlin .')
+
+# load the NER tagger
+tagger = Classifier.load('sentiment')
+
+# run NER over sentence
+tagger.predict(sentence)
+
+# print the sentence with all annotations
+print(sentence)
+```
+
+This should print:
+
+```console
+Sentence[4]: "I love Berlin ." → POSITIVE (0.9983)
+```
+
+This means that the sentence "I love Berlin" was tagged as having **POSITIVE** sentiment. 
+
+   * *to learn more about sentiment analysis in Flair, check out our [sentiment analysis tutorial](https://flairnlp.github.io/docs/tutorial-basics/tagging-sentiment)!*
 
 ## Tutorials
 
-We provide a set of **quick tutorials** to get you started with the library:
+On our new :fire: [**Flair documentation page**](https://flairnlp.github.io/docs/intro) you will find many tutorials to get you started!
 
-* [Tutorial 1: Basics](/resources/docs/TUTORIAL_1_BASICS.md)
-* [Tutorial 2: Tagging your Text](/resources/docs/TUTORIAL_2_TAGGING.md)
-* [Tutorial 3: Embedding Words](/resources/docs/TUTORIAL_3_WORD_EMBEDDING.md)
-* [Tutorial 4: List of All Word Embeddings](/resources/docs/TUTORIAL_4_ELMO_BERT_FLAIR_EMBEDDING.md)
-* [Tutorial 5: Embedding Documents](/resources/docs/TUTORIAL_5_DOCUMENT_EMBEDDINGS.md)
-* [Tutorial 6: Loading a Dataset](/resources/docs/TUTORIAL_6_CORPUS.md)
-* [Tutorial 7: Training a Model](/resources/docs/TUTORIAL_7_TRAINING_A_MODEL.md)
-* [Tutorial 8: Training your own Flair Embeddings](/resources/docs/TUTORIAL_9_TRAINING_LM_EMBEDDINGS.md)
-* [Tutorial 9: Training a Zero Shot Text Classifier (TARS)](/resources/docs/TUTORIAL_10_TRAINING_ZERO_SHOT_MODEL.md)
+In particular: 
+- [Tutorial 1: Basic tagging](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) → how to tag your text 
+- [Tutorial 2: Training models](https://flairnlp.github.io/docs/category/tutorial-2-training-models) → how to train your own state-of-the-art NLP models 
+- [Tutorial 3: Embeddings](https://flairnlp.github.io/docs/category/tutorial-3-embeddings) → how to produce embeddings for words and documents
 
-The tutorials explain how the base NLP classes work, how you can load pre-trained models to tag your
-text, how you can embed your text with different word or document embeddings, and how you can train your own
-language models, sequence labeling models, and text classification models. Let us know if anything is unclear.
-
-There is also a dedicated landing page for our **[biomedical NER and datasets](/resources/docs/HUNFLAIR.md)** with
+There is also a dedicated landing page for our [biomedical NER and datasets](/resources/docs/HUNFLAIR.md) with
 installation instructions and tutorials.
 
 
 ## More Documentation
 
-Another great place to start is the recent book [Natural Language Processing with Flair](https://www.amazon.com/Natural-Language-Processing-Flair-understanding/dp/1801072310)
-and its accompanying [code repository](https://github.com/PacktPublishing/Natural-Language-Processing-with-Flair).
+Another great place to start is the book [Natural Language Processing with Flair](https://www.amazon.com/Natural-Language-Processing-Flair-understanding/dp/1801072310)
+and its accompanying [code repository](https://github.com/PacktPublishing/Natural-Language-Processing-with-Flair), though it was
+written for an older version of Flair and some examples may no longer work.
 
 There are also good third-party articles and posts that illustrate how to use Flair:
 * [Training an NER model with Flair](https://medium.com/thecyphy/training-custom-ner-model-using-flair-df1f9ea9c762)

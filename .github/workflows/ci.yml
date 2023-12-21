@@ -1,21 +1,24 @@
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      TRANSFORMERS_CACHE: ./cache/transformers
+      HF_HOME: ./cache/transformers
       FLAIR_CACHE_ROOT: ./cache/flair
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        id: setup-python
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
+      - name: Install Torch cpu
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Install Flair dependencies
         run: pip install -e .
       - name: Install unittest dependencies
@@ -28,4 +31,6 @@ jobs:
           path: ./cache
           key: cache-v1.1
       - name: Run tests
-        run: pytest --runintegration -vv
+        run: |
+          python -c 'import flair'
+          pytest --runintegration -vv

@@ -23,19 +23,50 @@ Then, in your favorite virtual environment, simply do:
 ```
 pip install flair
 ```
-Furthermore, we recommend to install [SciSpaCy](https://allenai.github.io/scispacy/) for improved pre-processing
-and tokenization of scientific / biomedical texts:
- ```
-pip install scispacy==0.2.5
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz
-```
 
-#### Example Usage
+#### Example 1: Biomedical NER 
 Let's run named entity recognition (NER) over an example sentence. All you need to do is
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:
 ```python
 from flair.data import Sentence
-from flair.models import MultiTagger
+from flair.nn import Classifier
+
+# make a sentence 
+sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome")
+
+# load biomedical tagger
+tagger = Classifier.load("hunflair")
+
+# tag sentence
+tagger.predict(sentence)
+```
+Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
+```python
+for entity in sentence.get_labels():
+    print(entity)
+```
+This should print:
+```console
+Span[0:2]: "Behavioral abnormalities" → Disease (0.6736)
+Span[9:12]: "Fragile X Syndrome" → Disease (0.99)
+Span[4:5]: "Fmr1" → Gene (0.838)
+Span[6:7]: "Mouse" → Species (0.9979)
+```
+
+
+#### Example 2: Biomedical NER with Better Tokenization
+
+Scientific texts are difficult to tokenize. For this reason, we recommend to install [SciSpaCy](https://allenai.github.io/scispacy/) for improved pre-processing and tokenization of scientific / biomedical texts:
+ ```
+pip install scispacy==0.5.1
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_sm-0.5.1.tar.gz
+```
+
+Use this code to apply scientific tokenization: 
+
+```python
+from flair.data import Sentence
+from flair.nn import Classifier
 from flair.tokenization import SciSpacyTokenizer
 
 # make a sentence and tokenize with SciSpaCy
@@ -43,24 +74,12 @@ sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fra
                     use_tokenizer=SciSpacyTokenizer())
 
 # load biomedical tagger
-tagger = MultiTagger.load("hunflair")
+tagger = Classifier.load("hunflair")
 
 # tag sentence
 tagger.predict(sentence)
 ```
-Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
-```python
-for annotation_layer in sentence.annotation_layers.keys():
-    for entity in sentence.get_spans(annotation_layer):
-        print(entity)
-```
-This should print:
-~~~
-Span[0:2]: "Behavioral abnormalities" → Disease (0.6736)
-Span[9:12]: "Fragile X Syndrome" → Disease (0.99)
-Span[4:5]: "Fmr1" → Gene (0.838)
-Span[6:7]: "Mouse" → Species (0.9979)
-~~~
+
 
 ## Comparison to other biomedical NER tools
 Tools for biomedical NER are typically trained and evaluated on rather small gold standard data sets.
@@ -102,10 +121,14 @@ We provide a set of quick tutorials to get you started with *HunFlair*:
 ## Citing HunFlair
 Please cite the following paper when using *HunFlair*:
 ~~~
-@article{weber2020hunflair,
-    title={HunFlair: An Easy-to-Use Tool for State-of-the-Art Biomedical Named Entity Recognition},
-    author={Weber, Leon and S{\"a}nger, Mario and M{\"u}nchmeyer, Jannes  and Habibi, Maryam and Leser, Ulf and Akbik, Alan},
-    journal={arXiv preprint arXiv:2008.07347},
-    year={2020}
+@article{weber2021hunflair,
+  title={HunFlair: an easy-to-use tool for state-of-the-art biomedical named entity recognition},
+  author={Weber, Leon and S{\"a}nger, Mario and M{\"u}nchmeyer, Jannes and Habibi, Maryam and Leser, Ulf and Akbik, Alan},
+  journal={Bioinformatics},
+  volume={37},
+  number={17},
+  pages={2792--2794},
+  year={2021},
+  publisher={Oxford University Press}
 }
 ~~~

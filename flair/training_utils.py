@@ -1,5 +1,6 @@
 import logging
 import random
+import sys
 from collections import defaultdict
 from enum import Enum
 from functools import reduce
@@ -13,38 +14,40 @@ from torch.optim import Optimizer
 from torch.utils.data import Dataset
 
 import flair
-from flair.data import DT, DataPoint, Dictionary, Sentence, _iter_dataset
+from flair.data import DT, Dictionary, Sentence, _iter_dataset
 
 log = logging.getLogger("flair")
 
 
-class Result(object):
+class Result:
     def __init__(
         self,
         main_score: float,
-        log_header: str,
-        log_line: str,
         detailed_results: str,
-        loss: float,
         classification_report: dict = {},
-    ):
+        scores: dict = {},
+    ) -> None:
+        assert "loss" in scores, "No loss provided."
+
         self.main_score: float = main_score
-        self.log_header: str = log_header
-        self.log_line: str = log_line
+        self.scores = scores
         self.detailed_results: str = detailed_results
         self.classification_report = classification_report
-        self.loss: float = loss
 
-    def __str__(self):
-        return f"{str(self.detailed_results)}\nLoss: {self.loss}'"
+    @property
+    def loss(self):
+        return self.scores["loss"]
+
+    def __str__(self) -> str:
+        return f"{self.detailed_results!s}\nLoss: {self.loss}'"
 
 
-class MetricRegression(object):
-    def __init__(self, name):
+class MetricRegression:
+    def __init__(self, name) -> None:
         self.name = name
 
-        self.true = []
-        self.pred = []
+        self.true: List[float] = []
+        self.pred: List[float] = []
 
     def mean_squared_error(self):
         return mean_squared_error(self.true, self.pred)
@@ -63,17 +66,12 @@ class MetricRegression(object):
         return self.mean_squared_error()
 
     def to_tsv(self):
-        return "{}\t{}\t{}\t{}".format(
-            self.mean_squared_error(),
-            self.mean_absolute_error(),
-            self.pearsonr(),
-            self.spearmanr(),
-        )
+        return f"{self.mean_squared_error()}\t{self.mean_absolute_error()}\t{self.pearsonr()}\t{self.spearmanr()}"
 
     @staticmethod
     def tsv_header(prefix=None):
         if prefix:
-            return "{0}_MEAN_SQUARED_ERROR\t{0}_MEAN_ABSOLUTE_ERROR\t{0}_PEARSON\t{0}_SPEARMAN".format(prefix)
+            return f"{prefix}_MEAN_SQUARED_ERROR\t{prefix}_MEAN_ABSOLUTE_ERROR\t{prefix}_PEARSON\t{prefix}_SPEARMAN"
 
         return "MEAN_SQUARED_ERROR\tMEAN_ABSOLUTE_ERROR\tPEARSON\tSPEARMAN"
 
@@ -81,14 +79,12 @@ class MetricRegression(object):
     def to_empty_tsv():
         return "\t_\t_\t_\t_"
 
-    def __str__(self):
-        line = (
-            "mean squared error: {0:.4f} - mean absolute error: {1:.4f} - pearson: {2:.4f} - spearman: {3:.4f}".format(
-                self.mean_squared_error(),
-                self.mean_absolute_error(),
-                self.pearsonr(),
-                self.spearmanr(),
-            )
+    def __str__(self) -> str:
+        line = "mean squared error: {:.4f} - mean absolute error: {:.4f} - pearson: {:.4f} - spearman: {:.4f}".format(
+            self.mean_squared_error(),
+            self.mean_absolute_error(),
+            self.pearsonr(),
+            self.spearmanr(),
         )
         return line
 
@@ -101,16 +97,16 @@ class EvaluationMetric(Enum):
     MEAN_SQUARED_ERROR = "mean squared error"
 
 
-class WeightExtractor(object):
-    def __init__(self, directory: Union[str, Path], number_of_weights: int = 10):
-        if type(directory) is str:
+class WeightExtractor:
+    def __init__(self, directory: Union[str, Path], number_of_weights: int = 10) -> None:
+        if isinstance(directory, str):
             directory = Path(directory)
         self.weights_file = init_output_file(directory, "weights.txt")
-        self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
+        self.weights_dict: Dict[str, Dict[int, List[float]]] = defaultdict(lambda: defaultdict(list))
         self.number_of_weights = number_of_weights
 
     def extract_weights(self, state_dict, iteration):
-        for key in state_dict.keys():
+        for key in state_dict:
             vec = state_dict[key]
             # print(vec)
             try:
@@ -129,7 +125,7 @@ class WeightExtractor(object):
                 value = vec.item()
 
                 with open(self.weights_file, "a") as f:
-                    f.write("{}\t{}\t{}\t{}\n".format(iteration, key, i, float(value)))
+                    f.write(f"{iteration}\t{key}\t{i}\t{float(value)}\n")
 
     def _init_weights_index(self, key, state_dict, weights_to_watch):
         indices = {}
@@ -139,7 +135,7 @@ class WeightExtractor(object):
             vec = state_dict[key]
             cur_indices = []
 
-            for x in range(len(vec.size())):
+            for _x in range(len(vec.size())):
                 index = random.randint(0, len(vec) - 1)
                 vec = vec[index]
                 cur_indices.append(index)
@@ -151,11 +147,12 @@ class WeightExtractor(object):
         self.weights_dict[key] = indices
 
 
-class AnnealOnPlateau(object):
-    """This class is a modification of
+class AnnealOnPlateau:
+    """A learningrate sheduler for annealing on plateau.
+
+    This class is a modification of
     torch.optim.lr_scheduler.ReduceLROnPlateau that enables
     setting an "auxiliary metric" to break ties.
-
     Reduce learning rate when a metric has stopped improving.
     Models often benefit from reducing the learning rate by a factor
     of 2-10 once learning stagnates. This scheduler reads a metrics
@@ -163,6 +160,7 @@ class AnnealOnPlateau(object):
     of epochs, the learning rate is reduced.
 
     Args:
+    ----
         optimizer (Optimizer): Wrapped optimizer.
         mode (str): One of `min`, `max`. In `min` mode, lr will
             be reduced when the quantity monitored has stopped
@@ -188,6 +186,7 @@ class AnnealOnPlateau(object):
             ignored. Default: 1e-8.
 
     Example:
+    -------
         >>> optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
         >>> scheduler = ReduceLROnPlateau(optimizer, 'min')
         >>> for epoch in range(10):
@@ -209,19 +208,19 @@ class AnnealOnPlateau(object):
         cooldown=0,
         min_lr=0,
         eps=1e-8,
-    ):
+    ) -> None:
         if factor >= 1.0:
             raise ValueError("Factor should be < 1.0.")
         self.factor = factor
 
         # Attach optimizer
         if not isinstance(optimizer, Optimizer):
-            raise TypeError("{} is not an Optimizer".format(type(optimizer).__name__))
+            raise TypeError(f"{type(optimizer).__name__} is not an Optimizer")
         self.optimizer = optimizer
 
-        if isinstance(min_lr, list) or isinstance(min_lr, tuple):
+        if isinstance(min_lr, (list, tuple)):
             if len(min_lr) != len(optimizer.param_groups):
-                raise ValueError("expected {} min_lrs, got {}".format(len(optimizer.param_groups), len(min_lr)))
+                raise ValueError(f"expected {len(optimizer.param_groups)} min_lrs, got {len(min_lr)}")
             self.min_lrs = list(min_lr)
         else:
             self.min_lrs = [min_lr] * len(optimizer.param_groups)
@@ -248,31 +247,28 @@ class AnnealOnPlateau(object):
         self.cooldown_counter = 0
         self.num_bad_epochs = 0
 
-    def step(self, metric, auxiliary_metric=None):
+    def step(self, metric, auxiliary_metric=None) -> bool:
         # convert `metrics` to float, in case it's a zero-dim Tensor
         current = float(metric)
         epoch = self.last_epoch + 1
         self.last_epoch = epoch
 
         is_better = False
+        assert self.best is not None
 
-        if self.mode == "min":
-            if current < self.best:
-                is_better = True
+        if self.mode == "min" and current < self.best:
+            is_better = True
 
-        if self.mode == "max":
-            if current > self.best:
-                is_better = True
+        if self.mode == "max" and current > self.best:
+            is_better = True
 
         if current == self.best and auxiliary_metric:
             current_aux = float(auxiliary_metric)
-            if self.aux_mode == "min":
-                if current_aux < self.best_aux:
-                    is_better = True
+            if self.aux_mode == "min" and current_aux < self.best_aux:
+                is_better = True
 
-            if self.aux_mode == "max":
-                if current_aux > self.best_aux:
-                    is_better = True
+            if self.aux_mode == "max" and current_aux > self.best_aux:
+                is_better = True
 
         if is_better:
             self.best = current
@@ -286,13 +282,16 @@ class AnnealOnPlateau(object):
             self.cooldown_counter -= 1
             self.num_bad_epochs = 0  # ignore any bad epochs in cooldown
 
-        if self.num_bad_epochs > self.effective_patience:
+        reduce_learning_rate = self.num_bad_epochs > self.effective_patience
+        if reduce_learning_rate:
             self._reduce_lr(epoch)
             self.cooldown_counter = self.cooldown
             self.num_bad_epochs = 0
             self.effective_patience = self.default_patience
 
         self._last_lr = [group["lr"] for group in self.optimizer.param_groups]
+
+        return reduce_learning_rate
 
     def _reduce_lr(self, epoch):
         for i, param_group in enumerate(self.optimizer.param_groups):
@@ -301,7 +300,7 @@ class AnnealOnPlateau(object):
             if old_lr - new_lr > self.eps:
                 param_group["lr"] = new_lr
                 if self.verbose:
-                    log.info("Epoch {:5d}: reducing learning rate" " of group {} to {:.4e}.".format(epoch, i, new_lr))
+                    log.info(f" - reducing learning rate of group {epoch} to {new_lr}")
 
     @property
     def in_cooldown(self):
@@ -327,32 +326,39 @@ class AnnealOnPlateau(object):
 
 
 def init_output_file(base_path: Union[str, Path], file_name: str) -> Path:
-    """
-    Creates a local file.
-    :param base_path: the path to the directory
-    :param file_name: the file name
-    :return: the created file
+    """Creates a local file which can be appended to.
+
+    Args:
+        base_path: the path to the directory
+        file_name: the file name
+
+    Returns: the created file
     """
     base_path = Path(base_path)
     base_path.mkdir(parents=True, exist_ok=True)
 
     file = base_path / file_name
-    open(file, "w", encoding="utf-8").close()
+    file.touch(exist_ok=True)
     return file
 
 
 def convert_labels_to_one_hot(label_list: List[List[str]], label_dict: Dictionary) -> List[List[int]]:
-    """
-    Convert list of labels (strings) to a one hot list.
-    :param label_list: list of labels
-    :param label_dict: label dictionary
-    :return: converted label list
+    """Convert list of labels to a one hot list.
+
+    Args:
+        label_list: list of labels
+        label_dict: label dictionary
+
+    Returns: converted label list
     """
     return [[1 if label in labels else 0 for label in label_dict.get_items()] for labels in label_list]
 
 
 def log_line(log):
-    log.info("-" * 100)
+    if sys.version_info >= (3, 8):
+        log.info("-" * 100, stacklevel=3)
+    else:
+        log.info("-" * 100)
 
 
 def add_file_handler(log, output_file):
@@ -376,8 +382,8 @@ def store_embeddings(
         dynamic_embeddings = None
 
     # if dynamic embedding keys not passed, identify them automatically
-    elif not dynamic_embeddings:
-        dynamic_embeddings = identify_dynamic_embeddings(data_points[0])
+    elif dynamic_embeddings is None:
+        dynamic_embeddings = identify_dynamic_embeddings(data_points)
 
     # always delete dynamic embeddings
     for data_point in data_points:
@@ -390,15 +396,23 @@ def store_embeddings(
             data_point.to("cpu", pin_memory=pin_memory)
 
 
-def identify_dynamic_embeddings(data_point: DataPoint):
+def identify_dynamic_embeddings(data_points: List[DT]):
     dynamic_embeddings = []
-    if isinstance(data_point, Sentence):
-        first_token = data_point[0]
-        for name, vector in first_token._embeddings.items():
+    all_embeddings = []
+    for data_point in data_points:
+        if isinstance(data_point, Sentence):
+            first_token = data_point[0]
+            for name, vector in first_token._embeddings.items():
+                if vector.requires_grad:
+                    dynamic_embeddings.append(name)
+                all_embeddings.append(name)
+
+        for name, vector in data_point._embeddings.items():
             if vector.requires_grad:
                 dynamic_embeddings.append(name)
-
-    for name, vector in data_point._embeddings.items():
-        if vector.requires_grad:
-            dynamic_embeddings.append(name)
-    return dynamic_embeddings
+            all_embeddings.append(name)
+        if dynamic_embeddings:
+            return dynamic_embeddings
+    if not all_embeddings:
+        return None
+    return list(set(dynamic_embeddings))

@@ -1,4 +1,5 @@
-"""
+"""Hyperbolic distances implemented in pytorch.
+
 This module was copied from the repository the following repository:
 https://github.com/asappresearch/dynamic-classification
 
@@ -17,8 +18,7 @@ Source: https://github.com/asappresearch/dynamic-classification/blob/55beb5a4840
 """
 
 import torch
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn
 
 EPSILON = 1e-5
 
@@ -55,7 +55,7 @@ def log_map(x, y):
 
 
 def norm(x):
-    """Compute the norm"""
+    """Compute the norm."""
     n = torch.sqrt(torch.abs(mdot(x, x)))
     return n
 
@@ -74,9 +74,8 @@ def loss(x, y):
 class HyperbolicDistance(nn.Module):
     """Implement a HyperbolicDistance object."""
 
-    def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:  # type: ignore
-        """Returns the squared euclidean distance between each
-        element in mat_1 and each element in mat_2.
+    def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:
+        """Returns the squared euclidean distance between each element in mat_1 and each element in mat_2.
 
         Parameters
         ----------
@@ -85,7 +84,7 @@ class HyperbolicDistance(nn.Module):
         mat_2: torch.Tensor
             matrix of shape (n_2, n_features)
 
-        Returns
+        Returns:
         -------
         dist: torch.Tensor
             distance matrix of shape (n_1, n_2)
@@ -106,7 +105,7 @@ class HyperbolicDistance(nn.Module):
 class HyperbolicMean(nn.Module):
     """Compute the mean point in the hyperboloid model."""
 
-    def forward(self, data: Tensor) -> Tensor:  # type: ignore
+    def forward(self, data: Tensor) -> Tensor:
         """Performs a forward pass through the network.
 
         Parameters
@@ -114,7 +113,7 @@ class HyperbolicMean(nn.Module):
         data : torch.Tensor
             The input data, as a float tensor
 
-        Returns
+        Returns:
         -------
         torch.Tensor
             The encoded output, as a float tensor
@@ -129,7 +128,7 @@ class HyperbolicMean(nn.Module):
         mean = mean / norm(mean)
 
         r = 1e-2
-        for i in range(n_iter):
+        for _i in range(n_iter):
             g = -2 * torch.mean(log_map(mean, projected), 0, keepdim=True)
             mean = exp_map(mean, -r * g)
             mean = mean / norm(mean)

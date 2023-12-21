@@ -3,8 +3,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
 import torch
-import torch.nn as nn
-from torch import logsumexp
+from torch import logsumexp, nn
 from torch.optim import Optimizer
 
 import flair
@@ -27,8 +26,8 @@ class LanguageModel(nn.Module):
         dropout=0.1,
         recurrent_type="LSTM",
         has_decoder=True,
-    ):
-        super(LanguageModel, self).__init__()
+    ) -> None:
+        super().__init__()
 
         self.dictionary = dictionary
         self.document_delimiter = document_delimiter
@@ -324,7 +323,7 @@ class LanguageModel(nn.Module):
 
             log_prob = torch.zeros(1, device=flair.device)
 
-            for i in range(number_of_characters):
+            for _i in range(number_of_characters):
                 input = input.to(flair.device)
 
                 # get predicted weights
@@ -357,9 +356,8 @@ class LanguageModel(nn.Module):
                 word = idx2item[word_idx].decode("UTF-8")
                 characters.append(word)
 
-                if break_on_suffix is not None:
-                    if "".join(characters).endswith(break_on_suffix):
-                        break
+                if break_on_suffix is not None and "".join(characters).endswith(break_on_suffix):
+                    break
 
             text = prefix + "".join(characters)
 
@@ -437,7 +435,7 @@ class LanguageModel(nn.Module):
             language_model.load_state_dict(d["state_dict"], strict=d.get("has_decoder", True))
 
             # copy over state dictionary to self
-            for key in language_model.__dict__.keys():
+            for key in language_model.__dict__:
                 self.__dict__[key] = language_model.__dict__[key]
 
             # set the language model to eval() by default (this is necessary since FlairEmbeddings "protect" the LM
@@ -458,10 +456,7 @@ class LanguageModel(nn.Module):
             if isinstance(child_module, torch.nn.RNNBase) and not hasattr(child_module, "_flat_weights_names"):
                 _flat_weights_names = []
 
-                if child_module.__dict__["bidirectional"]:
-                    num_direction = 2
-                else:
-                    num_direction = 1
+                num_direction = 2 if child_module.__dict__["bidirectional"] else 1
                 for layer in range(child_module.__dict__["num_layers"]):
                     for direction in range(num_direction):
                         suffix = "_reverse" if direction == 1 else ""
@@ -471,6 +466,6 @@ class LanguageModel(nn.Module):
                         param_names = [x.format(layer, suffix) for x in param_names]
                         _flat_weights_names.extend(param_names)
 
-                setattr(child_module, "_flat_weights_names", _flat_weights_names)
+                child_module._flat_weights_names = _flat_weights_names
 
             child_module._apply(fn)

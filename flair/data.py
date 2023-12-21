@@ -3,14 +3,13 @@ import logging
 import re
 import typing
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict, namedtuple
-from functools import lru_cache
+from collections import Counter, defaultdict
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Union, cast
+from typing import Dict, Iterable, List, NamedTuple, Optional, Union, cast
 
 import torch
-from deprecated import deprecated
+from deprecated.sphinx import deprecated
 from torch.utils.data import Dataset, IterableDataset
 from torch.utils.data.dataset import ConcatDataset, Subset
 
@@ -28,7 +27,7 @@ def _iter_dataset(dataset: Optional[Dataset]) -> typing.Iterable:
         return []
     from flair.datasets import DataLoader
 
-    return map(lambda x: x[0], DataLoader(dataset, batch_size=1, num_workers=0))
+    return (x[0] for x in DataLoader(dataset, batch_size=1))
 
 
 def _len_dataset(dataset: Optional[Dataset]) -> int:
@@ -36,19 +35,21 @@ def _len_dataset(dataset: Optional[Dataset]) -> int:
         return 0
     from flair.datasets import DataLoader
 
-    loader = DataLoader(dataset, batch_size=1, num_workers=0)
+    loader = DataLoader(dataset, batch_size=1)
     return len(loader)
 
 
-BoundingBox = namedtuple("BoundingBox", ["left", "top", "right", "bottom"])
+class BoundingBox(NamedTuple):
+    left: str
+    top: int
+    right: int
+    bottom: int
 
 
 class Dictionary:
-    """
-    This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings.
-    """
+    """This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings."""
 
-    def __init__(self, add_unk=True):
+    def __init__(self, add_unk=True) -> None:
         # init dictionaries
         self.item2idx: Dict[bytes, int] = {}
         self.idx2item: List[bytes] = []
@@ -66,10 +67,12 @@ class Dictionary:
             del self.item2idx[bytes_item]
 
     def add_item(self, item: str) -> int:
-        """
-        add string - if already in dictionary returns its ID. if not in dictionary, it will get a new ID.
-        :param item: a string for which to assign an id.
-        :return: ID of string
+        """Add string - if already in dictionary returns its ID. if not in dictionary, it will get a new ID.
+
+        Args:
+            item: a string for which to assign an id.
+
+        Returns: ID of string
         """
         bytes_item = item.encode("utf-8")
         if bytes_item not in self.item2idx:
@@ -78,13 +81,15 @@ class Dictionary:
         return self.item2idx[bytes_item]
 
     def get_idx_for_item(self, item: str) -> int:
-        """
-        returns the ID of the string, otherwise 0
-        :param item: string for which ID is requested
-        :return: ID of string, otherwise 0
+        """Returns the ID of the string, otherwise 0.
+
+        Args:
+            item: string for which ID is requested
+
+        Returns: ID of string, otherwise 0
         """
         item_encoded = item.encode("utf-8")
-        if item_encoded in self.item2idx.keys():
+        if item_encoded in self.item2idx:
             return self.item2idx[item_encoded]
         elif self.add_unk:
             return 0
@@ -96,13 +101,15 @@ class Dictionary:
             raise IndexError
 
     def get_idx_for_items(self, items: List[str]) -> List[int]:
-        """
-        returns the IDs for each item of the list of string, otherwise 0 if not found
-        :param items: List of string for which IDs are requested
-        :return: List of ID of strings
+        """Returns the IDs for each item of the list of string, otherwise 0 if not found.
+
+        Args:
+            items: List of string for which IDs are requested
+
+        Returns: List of ID of strings
         """
         if not hasattr(self, "item2idx_not_encoded"):
-            d = dict([(key.decode("UTF-8"), value) for key, value in self.item2idx.items()])
+            d = {key.decode("UTF-8"): value for key, value in self.item2idx.items()}
             self.item2idx_not_encoded = defaultdict(int, d)
 
         if not items:
@@ -128,11 +135,13 @@ class Dictionary:
         self.add_item("<START>")
         self.add_item("<STOP>")
 
-    def start_stop_tags_are_set(self):
-        if {"<START>".encode(), "<STOP>".encode()}.issubset(self.item2idx.keys()):
+    def is_span_prediction_problem(self) -> bool:
+        if self.span_labels:
             return True
-        else:
-            return False
+        return any(item.startswith(("B-", "S-", "I-")) for item in self.get_items())
+
+    def start_stop_tags_are_set(self) -> bool:
+        return {b"<START>", b"<STOP>"}.issubset(self.item2idx.keys())
 
     def save(self, savefile):
         import pickle
@@ -144,21 +153,20 @@ class Dictionary:
     def __setstate__(self, d):
         self.__dict__ = d
         # set 'add_unk' if the dictionary was created with a version of Flair older than 0.9
-        if "add_unk" not in self.__dict__.keys():
-            self.__dict__["add_unk"] = True if b"<unk>" in self.__dict__["idx2item"] else False
+        if "add_unk" not in self.__dict__:
+            self.__dict__["add_unk"] = b"<unk>" in self.__dict__["idx2item"]
 
     @classmethod
     def load_from_file(cls, filename: Union[str, Path]):
         import pickle
 
-        f = open(filename, "rb")
-        mappings = pickle.load(f, encoding="latin1")
-        idx2item = mappings["idx2item"]
-        item2idx = mappings["item2idx"]
-        f.close()
+        with Path(filename).open("rb") as f:
+            mappings = pickle.load(f, encoding="latin1")
+            idx2item = mappings["idx2item"]
+            item2idx = mappings["item2idx"]
 
         # set 'add_unk' depending on whether <unk> is a key
-        add_unk = True if b"<unk>" in idx2item else False
+        add_unk = b"<unk>" in idx2item
 
         dictionary: Dictionary = Dictionary(add_unk=add_unk)
         dictionary.item2idx = item2idx
@@ -193,57 +201,47 @@ class Dictionary:
             return False
         return self.item2idx == o.item2idx and self.idx2item == o.idx2item and self.add_unk == o.add_unk
 
-    def __str__(self):
+    def __str__(self) -> str:
         tags = ", ".join(self.get_item_for_index(i) for i in range(min(len(self), 50)))
         return f"Dictionary with {len(self)} tags: {tags}"
 
 
 class Label:
-    """
-    This class represents a label. Each label has a value and optionally a confidence score. The
-    score needs to be between 0.0 and 1.0. Default value for the score is 1.0.
+    """This class represents a label.
+
+    Each label has a value and optionally a confidence score. The score needs to be between 0.0 and 1.0.
+    Default value for the score is 1.0.
     """
 
-    def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0):
+    def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0) -> None:
         self._value = value
         self._score = score
         self.data_point: DataPoint = data_point
         super().__init__()
 
     def set_value(self, value: str, score: float = 1.0):
-        self.value = value
-        self.score = score
+        self._value = value
+        self._score = score
 
     @property
     def value(self) -> str:
         return self._value
 
-    @value.setter
-    def value(self, value):
-        if not value and value != "":
-            raise ValueError("Incorrect label value provided. Label value needs to be set.")
-        else:
-            self._value = value
-
     @property
     def score(self) -> float:
         return self._score
 
-    @score.setter
-    def score(self, score):
-        self._score = score
-
     def to_dict(self):
         return {"value": self.value, "confidence": self.score}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.data_point.unlabeled_identifier}{flair._arrow}{self._value} ({round(self._score, 4)})"
 
     @property
     def shortstring(self):
         return f'"{self.data_point.text}"/{self._value}'
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"'{self.data_point.unlabeled_identifier}'/'{self._value}' ({round(self._score, 4)})"
 
     def __eq__(self, other):
@@ -265,15 +263,16 @@ class Label:
 
 
 class DataPoint:
-    """
-    This is the parent class of all data points in Flair (including Token, Sentence, Image, etc.). Each DataPoint
-    must be embeddable (hence the abstract property embedding() and methods to() and clear_embeddings()). Also,
-    each DataPoint may have Labels in several layers of annotation (hence the functions add_label(), get_labels()
+    """This is the parent class of all data points in Flair.
+
+    Examples for data points are Token, Sentence, Image, etc.
+    Each DataPoint must be embeddable (hence the abstract property embedding() and methods to() and clear_embeddings()).
+    Also, each DataPoint may have Labels in several layers of annotation (hence the functions add_label(), get_labels()
     and the property 'label')
     """
 
-    def __init__(self):
-        self.annotation_layers = {}
+    def __init__(self) -> None:
+        self.annotation_layers: Dict[str, List[Label]] = {}
         self._embeddings: Dict[str, torch.Tensor] = {}
         self._metadata: Dict[str, typing.Any] = {}
 
@@ -317,19 +316,16 @@ class DataPoint:
                 else:
                     self._embeddings[name] = vector.to(device, non_blocking=True)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         if embedding_names is None:
             self._embeddings = {}
         else:
             for name in embedding_names:
-                if name in self._embeddings.keys():
+                if name in self._embeddings:
                     del self._embeddings[name]
 
     def has_label(self, type) -> bool:
-        if type in self.annotation_layers:
-            return True
-        else:
-            return False
+        return type in self.annotation_layers
 
     def add_metadata(self, key: str, value: typing.Any) -> None:
         self._metadata[key] = value
@@ -353,15 +349,15 @@ class DataPoint:
         return self
 
     def remove_labels(self, typename: str):
-        if typename in self.annotation_layers.keys():
+        if typename in self.annotation_layers:
             del self.annotation_layers[typename]
 
-    def get_label(self, label_type: str = None, zero_tag_value="O"):
+    def get_label(self, label_type: Optional[str] = None, zero_tag_value="O"):
         if len(self.get_labels(label_type)) == 0:
             return Label(self, zero_tag_value)
         return self.get_labels(label_type)[0]
 
-    def get_labels(self, typename: str = None):
+    def get_labels(self, typename: Optional[str] = None):
         if typename is None:
             return self.labels
 
@@ -370,7 +366,7 @@ class DataPoint:
     @property
     def labels(self) -> List[Label]:
         all_labels = []
-        for key in self.annotation_layers.keys():
+        for key in self.annotation_layers:
             all_labels.extend(self.annotation_layers[key])
         return all_labels
 
@@ -431,15 +427,7 @@ class DataPoint:
     def __lt__(self, other):
         return self.start_position < other.start_position
 
-    def __eq__(self, other):
-        # TODO: does it make sense to exclude labels? Two data points of identical text (but different labels)
-        #  would be equal now.
-        return self.unlabeled_identifier == other.unlabeled_identifier
-
-    def __hash__(self):
-        return hash(self.unlabeled_identifier)
-
-    def __len__(self):
+    def __len__(self) -> int:
         raise NotImplementedError
 
 
@@ -448,15 +436,9 @@ DT2 = typing.TypeVar("DT2", bound=DataPoint)
 
 
 class _PartOfSentence(DataPoint, ABC):
-    def __init__(self, sentence):
+    def __init__(self, sentence) -> None:
         super().__init__()
         self.sentence: Sentence = sentence
-
-    def _init_labels(self):
-        if self.unlabeled_identifier in self.sentence._known_spans:
-            self.annotation_layers = self.sentence._known_spans[self.unlabeled_identifier].annotation_layers
-            del self.sentence._known_spans[self.unlabeled_identifier]
-        self.sentence._known_spans[self.unlabeled_identifier] = self
 
     def add_label(self, typename: str, value: str, score: float = 1.0):
         super().add_label(typename, value, score)
@@ -478,23 +460,23 @@ class _PartOfSentence(DataPoint, ABC):
             self.sentence.annotation_layers[typename].remove(label)
 
         # delete labels at object itself
-        super(_PartOfSentence, self).remove_labels(typename)
+        super().remove_labels(typename)
 
 
 class Token(_PartOfSentence):
-    """
-    This class represents one word in a tokenized sentence. Each token may have any number of tags. It may also point
-    to its head in a dependency tree.
+    """This class represents one word in a tokenized sentence.
+
+    Each token may have any number of tags. It may also point to its head in a dependency tree.
     """
 
     def __init__(
         self,
         text: str,
-        head_id: int = None,
+        head_id: Optional[int] = None,
         whitespace_after: int = 1,
         start_position: int = 0,
         sentence=None,
-    ):
+    ) -> None:
         super().__init__(sentence=sentence)
 
         self.form: str = text
@@ -509,7 +491,7 @@ class Token(_PartOfSentence):
 
     @property
     def idx(self) -> int:
-        if isinstance(self._internal_index, int):
+        if self._internal_index is not None:
             return self._internal_index
         else:
             return -1
@@ -549,42 +531,59 @@ class Token(_PartOfSentence):
     def embedding(self):
         return self.get_embedding()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return 1
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
     def add_label(self, typename: str, value: str, score: float = 1.0):
-        """
-        The Token is a special _PartOfSentence in that it may be initialized without a Sentence.
-        Therefore, labels get added only to the Sentence if it exists
-        """
+        # The Token is a special _PartOfSentence in that it may be initialized without a Sentence.
+        # therefore, labels get added only to the Sentence if it exists
         if self.sentence:
             super().add_label(typename=typename, value=value, score=score)
         else:
             DataPoint.add_label(self, typename=typename, value=value, score=score)
 
     def set_label(self, typename: str, value: str, score: float = 1.0):
-        """
-        The Token is a special _PartOfSentence in that it may be initialized without a Sentence.
-        Therefore, labels get set only to the Sentence if it exists
-        """
+        # The Token is a special _PartOfSentence in that it may be initialized without a Sentence.
+        # Therefore, labels get set only to the Sentence if it exists
         if self.sentence:
             super().set_label(typename=typename, value=value, score=score)
         else:
             DataPoint.set_label(self, typename=typename, value=value, score=score)
 
+    def to_dict(self, tag_type: Optional[str] = None):
+        return {
+            "text": self.text,
+            "start_pos": self.start_position,
+            "end_pos": self.end_position,
+            "labels": [label.to_dict() for label in self.get_labels(tag_type)],
+        }
+
 
 class Span(_PartOfSentence):
-    """
-    This class represents one textual span consisting of Tokens.
-    """
+    """This class represents one textual span consisting of Tokens."""
 
-    def __init__(self, tokens: List[Token]):
-        super().__init__(tokens[0].sentence)
-        self.tokens = tokens
-        super()._init_labels()
+    def __new__(self, tokens: List[Token]):
+        # check if the span already exists. If so, return it
+        unlabeled_identifier = self._make_unlabeled_identifier(tokens)
+        if unlabeled_identifier in tokens[0].sentence._known_spans:
+            span = tokens[0].sentence._known_spans[unlabeled_identifier]
+            return span
+
+        # else make a new span
+        else:
+            span = super().__new__(self)
+            span.initialized = False
+            tokens[0].sentence._known_spans[unlabeled_identifier] = span
+            return span
+
+    def __init__(self, tokens: List[Token]) -> None:
+        if not self.initialized:
+            super().__init__(tokens[0].sentence)
+            self.tokens = tokens
+            self.initialized: bool = True
 
     @property
     def start_position(self) -> int:
@@ -598,11 +597,16 @@ class Span(_PartOfSentence):
     def text(self) -> str:
         return "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
 
+    @staticmethod
+    def _make_unlabeled_identifier(tokens: List[Token]):
+        text = "".join([t.text + t.whitespace_after * " " for t in tokens]).strip()
+        return f'Span[{tokens[0].idx - 1}:{tokens[-1].idx}]: "{text}"'
+
     @property
     def unlabeled_identifier(self) -> str:
-        return f'Span[{self.tokens[0].idx - 1}:{self.tokens[-1].idx}]: "{self.text}"'
+        return self._make_unlabeled_identifier(self.tokens)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
     def __getitem__(self, idx: int) -> Token:
@@ -618,15 +622,38 @@ class Span(_PartOfSentence):
     def embedding(self):
         return self.get_embedding()
 
+    def to_dict(self, tag_type: Optional[str] = None):
+        return {
+            "text": self.text,
+            "start_pos": self.start_position,
+            "end_pos": self.end_position,
+            "labels": [label.to_dict() for label in self.get_labels(tag_type)],
+        }
+
 
 class Relation(_PartOfSentence):
-    def __init__(self, first: Span, second: Span):
-        super().__init__(sentence=first.sentence)
-        self.first: Span = first
-        self.second: Span = second
-        super()._init_labels()
+    def __new__(self, first: Span, second: Span):
+        # check if the relation already exists. If so, return it
+        unlabeled_identifier = self._make_unlabeled_identifier(first, second)
+        if unlabeled_identifier in first.sentence._known_spans:
+            span = first.sentence._known_spans[unlabeled_identifier]
+            return span
 
-    def __repr__(self):
+        # else make a new relation
+        else:
+            span = super().__new__(self)
+            span.initialized = False
+            first.sentence._known_spans[unlabeled_identifier] = span
+            return span
+
+    def __init__(self, first: Span, second: Span) -> None:
+        if not self.initialized:
+            super().__init__(sentence=first.sentence)
+            self.first: Span = first
+            self.second: Span = second
+            self.initialized: bool = True
+
+    def __repr__(self) -> str:
         return str(self)
 
     @property
@@ -637,14 +664,19 @@ class Relation(_PartOfSentence):
     def text(self):
         return f"{self.first.text} -> {self.second.text}"
 
-    @property
-    def unlabeled_identifier(self) -> str:
+    @staticmethod
+    def _make_unlabeled_identifier(first, second):
+        text = f"{first.text} -> {second.text}"
         return (
             f"Relation"
-            f"[{self.first.tokens[0].idx - 1}:{self.first.tokens[-1].idx}]"
-            f"[{self.second.tokens[0].idx - 1}:{self.second.tokens[-1].idx}]"
-            f': "{self.text}"'
+            f"[{first.tokens[0].idx - 1}:{first.tokens[-1].idx}]"
+            f"[{second.tokens[0].idx - 1}:{second.tokens[-1].idx}]"
+            f': "{text}"'
         )
+
+    @property
+    def unlabeled_identifier(self) -> str:
+        return self._make_unlabeled_identifier(self.first, self.second)
 
     @property
     def start_position(self) -> int:
@@ -658,29 +690,39 @@ class Relation(_PartOfSentence):
     def embedding(self):
         pass
 
+    def to_dict(self, tag_type: Optional[str] = None):
+        return {
+            "from_text": self.first.text,
+            "to_text": self.second.text,
+            "from_idx": self.first.tokens[0].idx - 1,
+            "to_idx": self.second.tokens[0].idx - 1,
+            "labels": [label.to_dict() for label in self.get_labels(tag_type)],
+        }
+
 
 class Sentence(DataPoint):
-    """
-    A Sentence is a list of tokens and is used to represent a sentence or text fragment.
-    """
+    """A Sentence is a list of tokens and is used to represent a sentence or text fragment."""
 
     def __init__(
         self,
         text: Union[str, List[str], List[Token]],
         use_tokenizer: Union[bool, Tokenizer] = True,
-        language_code: str = None,
+        language_code: Optional[str] = None,
         start_position: int = 0,
-    ):
-        """
-        Class to hold all meta related to a text (tokens, predictions, language code, ...)
-        :param text: original string (sentence), or a list of string tokens (words)
-        :param use_tokenizer: a custom tokenizer (default is :class:`SpaceTokenizer`)
-            more advanced options are :class:`SegTokTokenizer` to use segtok or :class:`SpacyTokenizer`
-            to use Spacy library if available). Check the implementations of abstract class Tokenizer or
-            implement your own subclass (if you need it). If instead of providing a Tokenizer, this parameter
-            is just set to True (deprecated), :class:`SegtokTokenizer` will be used.
-        :param language_code: Language of the sentence
-        :param start_position: Start char offset of the sentence in the superordinate document
+    ) -> None:
+        """Class to hold all metadata related to a text.
+
+        Metadata can be tokens, labels, predictions, language code, etc.
+
+        Args:
+            text: original string (sentence), or a pre tokenized list of tokens.
+            use_tokenizer: Specify a custom tokenizer to split the text into tokens. The Default is
+                :class:`flair.tokenization.SegTokTokenizer`. If `use_tokenizer` is set to False,
+                :class:`flair.tokenization.SpaceTokenizer` will be used instead. The tokenizer will be ignored,
+                if `text` refers to pretokenized tokens.
+            language_code: Language of the sentence. If not provided, `langdetect <https://pypi.org/project/langdetect/>`_
+                will be called when the language_code is accessed for the first time.
+            start_position: Start char offset of the sentence in the superordinate document.
         """
         super().__init__()
 
@@ -697,7 +739,7 @@ class Sentence(DataPoint):
         if isinstance(use_tokenizer, Tokenizer):
             tokenizer = use_tokenizer
 
-        elif type(use_tokenizer) == bool:
+        elif isinstance(use_tokenizer, bool):
             tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
 
         else:
@@ -755,17 +797,17 @@ class Sentence(DataPoint):
     def unlabeled_identifier(self):
         return f'Sentence[{len(self)}]: "{self.text}"'
 
-    def get_relations(self, type: str) -> List[Relation]:
+    def get_relations(self, label_type: Optional[str] = None) -> List[Relation]:
         relations: List[Relation] = []
-        for label in self.get_labels(type):
+        for label in self.get_labels(label_type):
             if isinstance(label.data_point, Relation):
                 relations.append(label.data_point)
         return relations
 
-    def get_spans(self, type: str) -> List[Span]:
+    def get_spans(self, label_type: Optional[str] = None) -> List[Span]:
         spans: List[Span] = []
         for potential_span in self._known_spans.values():
-            if isinstance(potential_span, Span) and potential_span.has_label(type):
+            if isinstance(potential_span, Span) and (label_type is None or potential_span.has_label(label_type)):
                 spans.append(potential_span)
         return sorted(spans)
 
@@ -779,7 +821,7 @@ class Sentence(DataPoint):
         if isinstance(token, Token):
             assert token.sentence is None
 
-        if type(token) is str:
+        if isinstance(token, str):
             token = Token(token)
         token = cast(Token, token)
 
@@ -790,14 +832,14 @@ class Sentence(DataPoint):
         # set token idx and sentence
         token.sentence = self
         token._internal_index = len(self.tokens) + 1
-        if token.start_position == 0 and len(self) > 0:
+        if token.start_position == 0 and token._internal_index > 1:
             token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
 
         # append token to sentence
         self.tokens.append(token)
 
         # register token annotations on sentence
-        for typename in token.annotation_layers.keys():
+        for typename in token.annotation_layers:
             for label in token.get_labels(typename):
                 if typename not in token.sentence.annotation_layers:
                     token.sentence.annotation_layers[typename] = [Label(token, label.value, label.score)]
@@ -816,14 +858,13 @@ class Sentence(DataPoint):
         for token in self:
             token.to(device, pin_memory)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         super().clear_embeddings(embedding_names)
 
         # clear token embeddings
         for token in self:
             token.clear_embeddings(embedding_names)
 
-    @lru_cache(maxsize=1)  # cache last context, as training repeats calls
     def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
         left_context: List[Token] = []
@@ -838,7 +879,6 @@ class Sentence(DataPoint):
             left_context = sentence.tokens + left_context
         return left_context[-context_length:]
 
-    @lru_cache(maxsize=1)  # cache last context, as training repeats calls
     def right_context(self, context_length: int, respect_document_boundaries: bool = True) -> List[Token]:
         sentence = self
         right_context: List[Token] = []
@@ -852,7 +892,7 @@ class Sentence(DataPoint):
             right_context += sentence.tokens
         return right_context[:context_length]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.to_tagged_string()
 
     def to_tagged_string(self, main_label=None) -> str:
@@ -893,9 +933,10 @@ class Sentence(DataPoint):
         return plain.rstrip()
 
     def infer_space_after(self):
-        """
-        Heuristics in case you wish to infer whitespace_after values for tokenized text. This is useful for some old NLP
-        tasks (such as CoNLL-03 and CoNLL-2000) that provide only tokenized data with no info of original whitespacing.
+        """Heuristics in case you wish to infer whitespace_after values for tokenized text.
+
+        This is useful for some old NLP tasks (such as CoNLL-03 and CoNLL-2000) that provide only tokenized data with
+        no info of original whitespacing.
         :return:
         """
         last_token = None
@@ -928,19 +969,18 @@ class Sentence(DataPoint):
         if len(self) == 0:
             return ""
         # otherwise, return concatenation of tokens with the correct offsets
-        return self[0].start_position * " " + "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
+        return (self[0].start_position - self.start_position) * " " + "".join(
+            [t.text + t.whitespace_after * " " for t in self.tokens]
+        ).strip()
 
-    def to_dict(self, tag_type: str = None):
-        labels = []
-
-        if tag_type:
-            labels = [label.to_dict() for label in self.get_labels(tag_type)]
-            return {"text": self.to_original_text(), tag_type: labels}
-
-        if self.labels:
-            labels = [label.to_dict() for label in self.labels]
-
-        return {"text": self.to_original_text(), "all labels": labels}
+    def to_dict(self, tag_type: Optional[str] = None):
+        return {
+            "text": self.to_original_text(),
+            "labels": [label.to_dict() for label in self.get_labels(tag_type) if label.data_point is self],
+            "entities": [span.to_dict(tag_type) for span in self.get_spans(tag_type)],
+            "relations": [relation.to_dict(tag_type) for relation in self.get_relations(tag_type)],
+            "tokens": [token.to_dict(tag_type) for token in self.tokens],
+        }
 
     def get_span(self, start: int, stop: int):
         span_slice = slice(start, stop)
@@ -966,7 +1006,7 @@ class Sentence(DataPoint):
     def __len__(self) -> int:
         return len(self.tokens)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
     @property
@@ -1020,8 +1060,9 @@ class Sentence(DataPoint):
         return re.sub(r"[\u0080-\u0099]", to_windows_1252, text)
 
     def next_sentence(self):
-        """
-        Get the next sentence in the document (works only if context is set through dataloader or elsewhere)
+        """Get the next sentence in the document.
+
+        This only works if context is set through dataloader or elsewhere
         :return: next Sentence in document if set, otherwise None
         """
         if self._next_sentence is not None:
@@ -1036,8 +1077,9 @@ class Sentence(DataPoint):
         return None
 
     def previous_sentence(self):
-        """
-        Get the previous sentence in the document (works only if context is set through dataloader or elsewhere)
+        """Get the previous sentence in the document.
+
+        works only if context is set through dataloader or elsewhere
         :return: previous Sentence in document if set, otherwise None
         """
         if self._previous_sentence is not None:
@@ -1052,7 +1094,8 @@ class Sentence(DataPoint):
         return None
 
     def is_context_set(self) -> bool:
-        """
+        """Determines if this sentence has a context of sentences before or after set.
+
         Return True or False depending on whether context is set (for instance in dataloader or elsewhere)
         :return: True if context is set, else False
         """
@@ -1081,7 +1124,7 @@ class Sentence(DataPoint):
                 previous_sentence._next_sentence = sentence
             previous_sentence = sentence
 
-    def get_labels(self, label_type: str = None):
+    def get_labels(self, label_type: Optional[str] = None):
         # if no label if specified, return all labels
         if label_type is None:
             return sorted(self.labels)
@@ -1110,7 +1153,7 @@ class Sentence(DataPoint):
 
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):
-    def __init__(self, first: DT, second: DT2):
+    def __init__(self, first: DT, second: DT2) -> None:
         super().__init__()
         self.first = first
         self.second = second
@@ -1119,7 +1162,7 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
         self.first.to(device, pin_memory)
         self.second.to(device, pin_memory)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         self.first.clear_embeddings(embedding_names)
         self.second.clear_embeddings(embedding_names)
 
@@ -1127,7 +1170,7 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
     def embedding(self):
         return torch.cat([self.first.embedding, self.second.embedding])
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.first) + len(self.second)
 
     @property
@@ -1151,7 +1194,7 @@ TextPair = DataPair[Sentence, Sentence]
 
 
 class Image(DataPoint):
-    def __init__(self, data=None, imageURL=None):
+    def __init__(self, data=None, imageURL=None) -> None:
         super().__init__()
 
         self.data = data
@@ -1162,7 +1205,7 @@ class Image(DataPoint):
     def embedding(self):
         return self.get_embedding()
 
-    def __str__(self):
+    def __str__(self) -> str:
         image_repr = self.data.size() if self.data else ""
         image_url = self.imageURL if self.imageURL else ""
 
@@ -1170,19 +1213,19 @@ class Image(DataPoint):
 
     @property
     def start_position(self) -> int:
-        pass
+        raise NotImplementedError
 
     @property
     def end_position(self) -> int:
-        pass
+        raise NotImplementedError
 
     @property
-    def text(self):
-        pass
+    def text(self) -> str:
+        raise NotImplementedError
 
     @property
-    def unlabeled_identifier(self):
-        pass
+    def unlabeled_identifier(self) -> str:
+        raise NotImplementedError
 
 
 class Corpus(typing.Generic[T_co]):
@@ -1193,7 +1236,7 @@ class Corpus(typing.Generic[T_co]):
         test: Optional[Dataset[T_co]] = None,
         name: str = "corpus",
         sample_missing_splits: Union[bool, str] = True,
-    ):
+    ) -> None:
         # set name
         self.name: str = name
 
@@ -1202,16 +1245,28 @@ class Corpus(typing.Generic[T_co]):
             raise RuntimeError("No data provided when initializing corpus object.")
 
         # sample test data from train if none is provided
-        if test is None and sample_missing_splits and train and not sample_missing_splits == "only_dev":
+        if test is None and sample_missing_splits and train and sample_missing_splits != "only_dev":
+            test_portion = 0.1
             train_length = _len_dataset(train)
-            test_size: int = round(train_length / 10)
+            test_size: int = round(train_length * test_portion)
             test, train = randomly_split_into_two_datasets(train, test_size)
+            log.warning(
+                "No test split found. Using %.0f%% (i.e. %d samples) of the train split as test data",
+                test_portion,
+                test_size,
+            )
 
         # sample dev data from train if none is provided
-        if dev is None and sample_missing_splits and train and not sample_missing_splits == "only_test":
+        if dev is None and sample_missing_splits and train and sample_missing_splits != "only_test":
+            dev_portion = 0.1
             train_length = _len_dataset(train)
-            dev_size: int = round(train_length / 10)
+            dev_size: int = round(train_length * dev_portion)
             dev, train = randomly_split_into_two_datasets(train, dev_size)
+            log.warning(
+                "No dev split found. Using %.0f%% (i.e. %d samples) of the train split as dev data",
+                dev_portion,
+                dev_size,
+            )
 
         # set train dev and test data
         self._train: Optional[Dataset[T_co]] = train
@@ -1303,15 +1358,18 @@ class Corpus(typing.Generic[T_co]):
         return subset
 
     def make_vocab_dictionary(self, max_tokens=-1, min_freq=1) -> Dictionary:
-        """
-        Creates a dictionary of all tokens contained in the corpus.
+        """Creates a dictionary of all tokens contained in the corpus.
+
         By defining `max_tokens` you can set the maximum number of tokens that should be contained in the dictionary.
         If there are more than `max_tokens` tokens in the corpus, the most frequent tokens are added first.
-        If `min_freq` is set the a value greater than 1 only tokens occurring more than `min_freq` times are considered
+        If `min_freq` is set to a value greater than 1 only tokens occurring more than `min_freq` times are considered
         to be added to the dictionary.
-        :param max_tokens: the maximum number of tokens that should be added to the dictionary (-1 = take all tokens)
-        :param min_freq: a token needs to occur at least `min_freq` times to be added to the dictionary (-1 = there is no limitation)
-        :return: dictionary of tokens
+
+        Args:
+            max_tokens: the maximum number of tokens that should be added to the dictionary (-1 = take all tokens)
+            min_freq: a token needs to occur at least `min_freq` times to be added to the dictionary (-1 = there is no limitation)
+
+        Returns: dictionary of tokens
         """
         tokens = self._get_most_common_tokens(max_tokens, min_freq)
 
@@ -1333,9 +1391,9 @@ class Corpus(typing.Generic[T_co]):
 
     def _get_all_tokens(self) -> List[str]:
         assert self.train
-        tokens = list(map((lambda s: s.tokens), _iter_dataset(self.train)))
+        tokens = [s.tokens for s in _iter_dataset(self.train)]
         tokens = [token for sublist in tokens for token in sublist]
-        return list(map((lambda t: t.text), tokens))
+        return [t.text for t in tokens]
 
     @staticmethod
     def _downsample_to_proportion(dataset: Dataset, proportion: float):
@@ -1343,10 +1401,10 @@ class Corpus(typing.Generic[T_co]):
         splits = randomly_split_into_two_datasets(dataset, sampled_size)
         return splits[0]
 
-    def obtain_statistics(self, label_type: str = None, pretty_print: bool = True) -> Union[dict, str]:
-        """
-        Print statistics about the class distribution (only labels of sentences are taken into account) and sentence
-        sizes.
+    def obtain_statistics(self, label_type: Optional[str] = None, pretty_print: bool = True) -> Union[dict, str]:
+        """Print statistics about the class distribution and sentence sizes.
+
+        only labels of sentences are taken into account
         """
         json_data = {
             "TRAIN": self._obtain_statistics_for(self.train, "TRAIN", label_type),
@@ -1391,7 +1449,7 @@ class Corpus(typing.Generic[T_co]):
 
     @staticmethod
     def _get_tokens_per_sentence(sentences):
-        return list(map(lambda x: len(x.tokens), sentences))
+        return [len(x.tokens) for x in sentences]
 
     @staticmethod
     def _count_sentence_labels(sentences):
@@ -1406,7 +1464,7 @@ class Corpus(typing.Generic[T_co]):
         label_count = defaultdict(lambda: 0)
         for sent in sentences:
             for token in sent.tokens:
-                if label_type in token.annotation_layers.keys():
+                if label_type in token.annotation_layers:
                     label = token.get_label(label_type)
                     label_count[label.value] += 1
         return label_count
@@ -1418,19 +1476,28 @@ class Corpus(typing.Generic[T_co]):
             _len_dataset(self.test) if self.test else 0,
         )
 
-    def make_label_dictionary(self, label_type: str, min_count: int = -1, add_unk: bool = True) -> Dictionary:
-        """
-        Creates a dictionary of all labels assigned to the sentences in the corpus.
+    def make_label_dictionary(
+        self, label_type: str, min_count: int = -1, add_unk: bool = False, add_dev_test: bool = False
+    ) -> Dictionary:
+        """Creates a dictionary of all labels assigned to the sentences in the corpus.
+
         :return: dictionary of labels
         """
         if min_count > 0 and not add_unk:
-            raise ValueError("Cannot require a minimum count if no unk-token is created.")
+            add_unk = True
+            log.info("Adding <unk>-token to dictionary since min_count is set.")
 
         label_dictionary: Dictionary = Dictionary(add_unk=add_unk)
         label_dictionary.span_labels = False
 
         assert self.train
         datasets = [self.train]
+
+        if add_dev_test and self.dev is not None:
+            datasets.append(self.dev)
+
+        if add_dev_test and self.test is not None:
+            datasets.append(self.test)
 
         data: ConcatDataset = ConcatDataset(datasets)
 
@@ -1439,31 +1506,41 @@ class Corpus(typing.Generic[T_co]):
         sentence_label_type_counter: typing.Counter[str] = Counter()
         label_value_counter: typing.Counter[str] = Counter()
         all_sentence_labels: List[str] = []
+
+        # first, determine the datapoint type by going through dataset until first label is found
+        datapoint_type = None
+        for sentence in Tqdm.tqdm(_iter_dataset(data)):
+            labels = sentence.get_labels(label_type)
+            for label in labels:
+                datapoint_type = type(label.data_point)
+            if datapoint_type:
+                break
+
+        if datapoint_type == Span:
+            label_dictionary.span_labels = True
+
         for sentence in Tqdm.tqdm(_iter_dataset(data)):
             # count all label types per sentence
             sentence_label_type_counter.update(sentence.annotation_layers.keys())
 
             # go through all labels of label_type and count values
             labels = sentence.get_labels(label_type)
-            for label in labels:
-                if label.value not in all_sentence_labels:
-                    label_value_counter[label.value] += 1
+            label_value_counter.update(label.value for label in labels if label.value not in all_sentence_labels)
 
-                # check if there are any span labels
-                if type(label.data_point) == Span and len(label.data_point) > 1:
-                    label_dictionary.span_labels = True
+            # special handling for Token-level annotations. Add all untagged as 'O' label
+            if datapoint_type == Token and len(sentence) > len(labels):
+                label_value_counter["O"] += len(sentence) - len(labels)
 
-            if not label_dictionary.multi_label:
-                if len(labels) > 1:
-                    label_dictionary.multi_label = True
+            if not label_dictionary.multi_label and len(labels) > 1:
+                label_dictionary.multi_label = True
 
         # if an unk threshold is set, UNK all label values below this threshold
-        erfasst_count = 0
+        total_count = 0
         unked_count = 0
         for label, count in label_value_counter.most_common():
             if count >= min_count:
                 label_dictionary.add_item(label)
-                erfasst_count += count
+                total_count += count
             else:
                 unked_count += count
 
@@ -1483,9 +1560,102 @@ class Corpus(typing.Generic[T_co]):
         )
 
         if unked_count > 0:
-            log.info(f" - at UNK threshold {min_count}, {unked_count} instances are UNK'ed and {erfasst_count} remain")
+            log.info(f" - at UNK threshold {min_count}, {unked_count} instances are UNK'ed and {total_count} remain")
 
         return label_dictionary
+
+    def add_label_noise(
+        self,
+        label_type: str,
+        labels: List[str],
+        noise_share: float = 0.2,
+        split: str = "train",
+        noise_transition_matrix: Optional[Dict[str, List[float]]] = None,
+    ):
+        """Generates uniform label noise distribution in the chosen dataset split.
+
+        Args:
+            label_type: the type of labels for which the noise should be simulated.
+            labels: an array with unique labels of said type (retrievable from label dictionary).
+            noise_share: the desired share of noise in the train split.
+            split: in which dataset split the noise is to be simulated.
+            noise_transition_matrix: provides pre-defined probabilities for label flipping based on the initial
+                label value (relevant for class-dependent label noise simulation).
+        """
+        import numpy as np
+
+        if split == "train":
+            assert self.train
+            datasets = [self.train]
+        elif split == "dev":
+            assert self.dev
+            datasets = [self.dev]
+        elif split == "test":
+            assert self.test
+            datasets = [self.test]
+        else:
+            raise ValueError("split must be either train, dev or test.")
+
+        data: ConcatDataset = ConcatDataset(datasets)
+
+        corrupted_count = 0
+        total_label_count = 0
+
+        if noise_transition_matrix:
+            ntm_labels = noise_transition_matrix.keys()
+
+            if set(ntm_labels) != set(labels):
+                raise AssertionError(
+                    "Label values in the noise transition matrix have to coincide with label values in the dataset"
+                )
+
+            log.info("Generating noisy labels. Progress:")
+
+            for data_point in Tqdm.tqdm(_iter_dataset(data)):
+                for label in data_point.get_labels(label_type):
+                    total_label_count += 1
+                    orig_label = label.value
+                    # sample randomly from a label distribution according to the probabilities defined by the noise transition matrix
+                    new_label = np.random.default_rng().choice(
+                        a=list(ntm_labels),
+                        p=noise_transition_matrix[orig_label],
+                    )
+                    # replace the old label with the new one
+                    label.data_point.set_label(label_type, new_label)
+                    # keep track of the old (clean) label using another label type category
+                    label.data_point.add_label(label_type + "_clean", orig_label)
+                    # keep track of how many labels in total are flipped
+                    if new_label != orig_label:
+                        corrupted_count += 1
+
+        else:
+            if noise_share < 0 or noise_share > 1:
+                raise ValueError("noise_share must be between 0 and 1.")
+
+            orig_label_p = 1 - noise_share
+            other_label_p = noise_share / (len(labels) - 1)
+
+            log.info("Generating noisy labels. Progress:")
+
+            for data_point in Tqdm.tqdm(_iter_dataset(data)):
+                for label in data_point.get_labels(label_type):
+                    total_label_count += 1
+                    orig_label = label.value
+                    prob_dist = [other_label_p] * len(labels)
+                    prob_dist[labels.index(orig_label)] = orig_label_p
+                    # sample randomly from a label distribution according to the probabilities defined by the desired noise share
+                    new_label = np.random.default_rng().choice(a=labels, p=prob_dist)
+                    # replace the old label with the new one
+                    label.data_point.set_label(label_type, new_label)
+                    # keep track of the old (clean) label using another label type category
+                    label.data_point.add_label(label_type + "_clean", orig_label)
+                    # keep track of how many labels in total are flipped
+                    if new_label != orig_label:
+                        corrupted_count += 1
+
+        log.info(
+            f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count / total_label_count) * 100, 2)}%."
+        )
 
     def get_label_distribution(self):
         class_to_count = defaultdict(lambda: 0)
@@ -1506,7 +1676,14 @@ class Corpus(typing.Generic[T_co]):
 
     @deprecated(version="0.8", reason="Use 'make_label_dictionary' instead.")
     def make_tag_dictionary(self, tag_type: str) -> Dictionary:
-        # Make the tag dictionary
+        """Create a tag dictionary of a given label type.
+
+        Args:
+            tag_type: the label type to gather the tag labels
+
+        Returns: A Dictionary containing the labeled tags, including "O" and "<START>" and "<STOP>"
+
+        """
         tag_dictionary: Dictionary = Dictionary(add_unk=False)
         tag_dictionary.add_item("O")
         for sentence in _iter_dataset(self.get_all_sentences()):
@@ -1524,7 +1701,7 @@ class MultiCorpus(Corpus):
         task_ids: Optional[List[str]] = None,
         name: str = "multicorpus",
         **corpusargs,
-    ):
+    ) -> None:
         self.corpora: List[Corpus] = corpora
 
         ids = task_ids if task_ids else [f"Task_{i}" for i in range(len(corpora))]
@@ -1532,7 +1709,6 @@ class MultiCorpus(Corpus):
         train_parts = []
         dev_parts = []
         test_parts = []
-        print(self.corpora)
         for corpus in self.corpora:
             if corpus.train:
                 train_parts.append(corpus.train)
@@ -1541,7 +1717,7 @@ class MultiCorpus(Corpus):
             if corpus.test:
                 test_parts.append(corpus.test)
 
-        super(MultiCorpus, self).__init__(
+        super().__init__(
             ConcatFlairDataset(train_parts, ids) if len(train_parts) > 0 else None,
             ConcatFlairDataset(dev_parts, ids) if len(dev_parts) > 0 else None,
             ConcatFlairDataset(test_parts, ids) if len(test_parts) > 0 else None,
@@ -1549,14 +1725,14 @@ class MultiCorpus(Corpus):
             **corpusargs,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         output = (
-            f"MultiCorpus: "
+            f"MultiCorpus: "  # type: ignore[arg-type]
             f"{len(self.train) if self.train else 0} train + "
             f"{len(self.dev) if self.dev else 0} dev + "
             f"{len(self.test) if self.test else 0} test sentences\n - "
         )
-        output += "\n - ".join([f"{type(corpus).__name__} {str(corpus)} - {corpus.name}" for corpus in self.corpora])
+        output += "\n - ".join([f"{type(corpus).__name__} {corpus!s} - {corpus.name}" for corpus in self.corpora])
         return output
 
 
@@ -1574,6 +1750,7 @@ class ConcatFlairDataset(Dataset):
     Args:
         datasets (sequence): List of datasets to be concatenated
     """
+
     datasets: List[Dataset]
     cumulative_sizes: List[int]
 
@@ -1587,15 +1764,15 @@ class ConcatFlairDataset(Dataset):
         return r
 
     def __init__(self, datasets: Iterable[Dataset], ids: Iterable[str]) -> None:
-        super(ConcatFlairDataset, self).__init__()
+        super().__init__()
         self.datasets = list(datasets)
         self.ids = list(ids)
-        assert len(self.datasets) > 0, "datasets should not be an empty iterable"  # type: ignore[arg-type]
+        assert len(self.datasets) > 0, "datasets should not be an empty iterable"
         for d in self.datasets:
             assert not isinstance(d, IterableDataset), "ConcatSentenceDataset does not support IterableDataset"
         self.cumulative_sizes = self.cumsum(self.datasets)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.cumulative_sizes[-1]
 
     def __getitem__(self, idx):
@@ -1604,10 +1781,7 @@ class ConcatFlairDataset(Dataset):
                 raise ValueError("absolute value of index should not exceed dataset length")
             idx = len(self) + idx
         dataset_idx = bisect.bisect_right(self.cumulative_sizes, idx)
-        if dataset_idx == 0:
-            sample_idx = idx
-        else:
-            sample_idx = idx - self.cumulative_sizes[dataset_idx - 1]
+        sample_idx = idx if dataset_idx == 0 else idx - self.cumulative_sizes[dataset_idx - 1]
         sentence = self.datasets[dataset_idx][sample_idx]
         sentence.set_label("multitask_id", self.ids[dataset_idx])
         return sentence
@@ -1618,7 +1792,8 @@ class ConcatFlairDataset(Dataset):
 
 
 def iob2(tags):
-    """
+    """Converts the tags to the IOB2 format.
+
     Check that tags have a valid IOB format.
     Tags in IOB1 format are converted to IOB2.
     """
@@ -1639,34 +1814,10 @@ def iob2(tags):
     return True
 
 
-def iob_iobes(tags):
-    """
-    IOB -> IOBES
-    """
-    for i, tag in enumerate(tags):
-        if tag.value == "O" or tag.value == "":
-            tag.value = "O"
-            continue
-        t, label = tag.value.split("-", 1)
-        if len(tags) == i + 1 or tags[i + 1].value == "O":
-            next_same = False
-        else:
-            nt, next_label = tags[i + 1].value.split("-", 1)
-            next_same = nt == "I" and next_label == label
-        if t == "B":
-            if not next_same:
-                tag.value = tag.value.replace("B-", "S-")
-        elif t == "I":
-            if not next_same:
-                tag.value = tag.value.replace("I-", "E-")
-        else:
-            raise Exception("Invalid IOB format!")
-
-
 def randomly_split_into_two_datasets(dataset, length_of_first):
     import random
 
-    indices = [i for i in range(len(dataset))]
+    indices = list(range(len(dataset)))
     random.shuffle(indices)
 
     first_dataset = indices[:length_of_first]
@@ -1683,7 +1834,7 @@ def get_spans_from_bio(bioes_tags: List[str], bioes_scores=None) -> List[typing.
     # return complex list
     found_spans = []
     # internal variables
-    current_tag_weights: Dict[str, float] = defaultdict(lambda: 0.0)
+    current_tag_weights: Dict[str, float] = {}
     previous_tag = "O-"
     current_span: List[int] = []
     current_span_scores: List[float] = []
@@ -1693,21 +1844,17 @@ def get_spans_from_bio(bioes_tags: List[str], bioes_scores=None) -> List[typing.
             bioes_tag = "O-"
 
         # anything that is not OUT is IN
-        in_span = False if bioes_tag == "O-" else True
+        in_span = bioes_tag != "O-"
 
         # does this prediction start a new span?
         starts_new_span = False
 
-        # begin and single tags start new spans
-        if bioes_tag[0:2] in ["B-", "S-"]:
-            starts_new_span = True
-
-        # in IOB format, an I tag starts a span if it follows an O or is a different span
-        if bioes_tag[0:2] == "I-" and previous_tag[2:] != bioes_tag[2:]:
-            starts_new_span = True
-
-        # single tags that change prediction start new spans
-        if bioes_tag[0:2] in ["S-"] and previous_tag[2:] != bioes_tag[2:]:
+        if bioes_tag[:2] in {"B-", "S-"} or (
+            in_span and previous_tag[2:] != bioes_tag[2:] and (bioes_tag[:2] == "I-" or previous_tag[2:] == "S-")
+        ):
+            # B- and S- always start new spans
+            # if the predicted class changes, I- starts a new span
+            # if the predicted class changes and S- was previous tag, start a new span
             starts_new_span = True
 
         # if an existing span is ended (either by reaching O or starting a new span)
@@ -1722,13 +1869,13 @@ def get_spans_from_bio(bioes_tags: List[str], bioes_scores=None) -> List[typing.
             # reset for-loop variables for new span
             current_span = []
             current_span_scores = []
-            current_tag_weights = defaultdict(lambda: 0.0)
+            current_tag_weights = {}
 
         if in_span:
             current_span.append(idx)
             current_span_scores.append(bioes_scores[idx] if bioes_scores else 1.0)
             weight = 1.1 if starts_new_span else 1.0
-            current_tag_weights[bioes_tag[2:]] += weight
+            current_tag_weights[bioes_tag[2:]] = current_tag_weights.setdefault(bioes_tag[2:], 0.0) + weight
 
         # remember previous tag
         previous_tag = bioes_tag

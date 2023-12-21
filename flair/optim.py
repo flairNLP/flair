@@ -3,19 +3,20 @@ import logging
 import torch
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LambdaLR, ReduceLROnPlateau, _LRScheduler
-from torch.optim.optimizer import required  # type: ignore
+from torch.optim.optimizer import required
 
 log = logging.getLogger("flair")
 
 
 class SGDW(Optimizer):
-    r"""Implements stochastic gradient descent (optionally with momentum) with
-    weight decay from the paper `Fixing Weight Decay Regularization in Adam`_.
+    r"""Implements stochastic gradient descent (optionally with momentum) with weight decay.
 
+    Implementation from the paper `Fixing Weight Decay Regularization in Adam`_.
     Nesterov momentum is based on the formula from
     `On the importance of initialization and momentum in deep learning`__.
 
     Args:
+    ----
         params (iterable): iterable of parameters to optimize or dicts defining
             parameter groups
         lr (float): learning rate
@@ -28,6 +29,7 @@ class SGDW(Optimizer):
         https://arxiv.org/abs/1711.05101
 
     Example:
+    -------
         >>> optimizer = torch.optim.SGDW(model.parameters(), lr=0.1, momentum=0.9,
                                          weight_decay=1e-5)
         >>> optimizer.zero_grad()
@@ -67,36 +69,41 @@ class SGDW(Optimizer):
         dampening=0,
         weight_decay=0,
         nesterov=False,
-    ):
+    ) -> None:
         if lr is not required and lr < 0.0:
-            raise ValueError("Invalid learning rate: {}".format(lr))
+            raise ValueError(f"Invalid learning rate: {lr}")
         if momentum < 0.0:
-            raise ValueError("Invalid momentum value: {}".format(momentum))
+            raise ValueError(f"Invalid momentum value: {momentum}")
         if weight_decay < 0.0:
-            raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
+            raise ValueError(f"Invalid weight_decay value: {weight_decay}")
 
-        defaults = dict(
-            lr=lr,
-            momentum=momentum,
-            dampening=dampening,
-            weight_decay=weight_decay,
-            nesterov=nesterov,
-        )
+        defaults = {
+            "lr": lr,
+            "momentum": momentum,
+            "dampening": dampening,
+            "weight_decay": weight_decay,
+            "nesterov": nesterov,
+        }
         if nesterov and (momentum <= 0 or dampening != 0):
             raise ValueError("Nesterov momentum requires a momentum and zero dampening")
-        super(SGDW, self).__init__(params, defaults)
+        super().__init__(params, defaults)
 
     def __setstate__(self, state):
-        super(SGDW, self).__setstate__(state)
+        super().__setstate__(state)
         for group in self.param_groups:
             group.setdefault("nesterov", False)
 
     def step(self, closure=None):
         """Performs a single optimization step.
 
-        Arguments:
-            closure (callable, optional): A closure that reevaluates the model
-                and returns the loss.
+        Parameters
+        ----------
+        closure (callable, optional): A closure that reevaluates the model
+               and returns the loss.
+
+        Returns:
+        -------
+        loss (float, optional): The loss if closure was set
         """
         loss = None
         if closure is not None:
@@ -121,10 +128,7 @@ class SGDW(Optimizer):
                     else:
                         buf = param_state["momentum_buffer"]
                         buf.mul_(momentum).add_(1 - dampening, d_p)
-                    if nesterov:
-                        d_p = d_p.add(momentum, buf)
-                    else:
-                        d_p = buf
+                    d_p = d_p.add(momentum, buf) if nesterov else buf
 
                 if weight_decay != 0:
                     p.data.add_(-weight_decay, p.data)
@@ -135,10 +139,10 @@ class SGDW(Optimizer):
 
 
 class ExpAnnealLR(_LRScheduler):
-    """Exponentially anneal the learning rate of each parameter group
-    from the initial lr to end_lr over a number of iterations.
+    """Exponentially anneal the lr of each parameter group from the initial lr to end_lr over a number of iterations.
 
     Args:
+    ----
         optimizer (Optimizer): Wrapped optimizer.
         end_lr (float): The final learning rate.
         iterations (int): The number of iterations over which to increase the
@@ -146,10 +150,10 @@ class ExpAnnealLR(_LRScheduler):
         last_epoch (int): The index of the last iteration. Default: -1.
     """
 
-    def __init__(self, optimizer, end_lr, iterations, last_epoch=-1):
+    def __init__(self, optimizer, end_lr, iterations, last_epoch=-1) -> None:
         self.end_lr = end_lr
         self.iterations = iterations
-        super(ExpAnnealLR, self).__init__(optimizer, last_epoch=last_epoch)
+        super().__init__(optimizer, last_epoch=last_epoch)
 
     def get_lr(self):
         iteration = self.last_epoch + 1
@@ -158,11 +162,12 @@ class ExpAnnealLR(_LRScheduler):
 
 
 class LinearSchedulerWithWarmup(LambdaLR):
-    """Linearly increase the learning from 0 to initial learning rate during warmup
-    and decrease the learning rate to 0 after the warmup. Uses LambaLR scheduler
-    where the learning rate is multiplied by a lambda factor after calling scheduler.step().
+    """Linearly increase the lr from 0 to initial lr during warmup and decrease the lr to 0 after the warmup.
+
+    Uses LambaLR scheduler where the learning rate is multiplied by a lambda factor after calling scheduler.step().
 
     Args:
+    ----
         optimizer (Optimizer): Wrapped optimizer.
         num_train_steps (int): total number of training steps (number of batches * epochs).
         num_warmup_steps (int): number of training steps for learning rate warmup.
@@ -170,7 +175,7 @@ class LinearSchedulerWithWarmup(LambdaLR):
             will simply restart when resuming training from a checkpoint.
     """
 
-    def __init__(self, optimizer, num_train_steps, num_warmup_steps, last_epoch=-1):
+    def __init__(self, optimizer, num_train_steps, num_warmup_steps, last_epoch=-1) -> None:
         def linear_lr_lambda(current_step: int):
             lambda_during_warmup = float(current_step) / float(max(1, num_warmup_steps))
             lambda_after_warmup = max(
@@ -181,12 +186,13 @@ class LinearSchedulerWithWarmup(LambdaLR):
                 return lambda_during_warmup
             return lambda_after_warmup
 
-        super(LinearSchedulerWithWarmup, self).__init__(optimizer, lr_lambda=linear_lr_lambda, last_epoch=last_epoch)
+        super().__init__(optimizer, lr_lambda=linear_lr_lambda, last_epoch=last_epoch)
 
 
 class ReduceLRWDOnPlateau(ReduceLROnPlateau):
-    """Reduce learning rate and weight decay when a metric has stopped
-    improving. Models often benefit from reducing the learning rate by
+    """Reduce learning rate and weight decay when a metric has stopped improving.
+
+    Models often benefit from reducing the learning rate by
     a factor of 2-10 once learning stagnates. This scheduler reads a metric
     quantity and if no improvement is seen for a 'patience' number
     of epochs, the learning rate and weight decay factor is reduced for
@@ -197,6 +203,7 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
         https://arxiv.org/abs/1711.05101
 
     Args:
+    ----
         optimizer (Optimizer): Wrapped optimizer.
         mode (str): One of `min`, `max`. In `min` mode, lr will
             be reduced when the quantity monitored has stopped
@@ -229,6 +236,7 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
             ignored. Default: 1e-8.
 
     Example:
+    -------
         >>> optimizer = AdamW(model.parameters(), lr=0.1, weight_decay=1e-3)
         >>> scheduler = ReduceLRWDOnPlateau(optimizer, 'min')
         >>> for epoch in range(10):
