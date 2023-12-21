@@ -491,7 +491,7 @@ class HunerDataset(ColumnCorpus, ABC):
     @staticmethod
     @abstractmethod
     def split_url() -> Union[str, List[str]]:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def get_corpus_sentence_splitter(self) -> Optional[SentenceSplitter]:
         """Return the pre-defined sentence splitter if defined, otherwise return None."""
@@ -827,9 +827,7 @@ class HunerJNLPBA:
 
 
 class HUNER_JNLPBA(HunerDataset):
-    """
-    HUNER version of the JNLPBA corpus.
-    """
+    """HUNER version of the JNLPBA corpus."""
 
     def __init__(self, entity_type_mapping, *args, **kwargs):
         self.entity_type_mapping = entity_type_mapping
@@ -860,9 +858,7 @@ class HUNER_JNLPBA(HunerDataset):
 
 
 class HUNER_GENE_JNLPBA(HUNER_JNLPBA):
-    """
-    HUNER version of the JNLPBA corpus containing gene annotations.
-    """
+    """HUNER version of the JNLPBA corpus containing gene annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"protein": GENE_TAG}
@@ -870,9 +866,7 @@ class HUNER_GENE_JNLPBA(HUNER_JNLPBA):
 
 
 class HUNER_CELL_LINE_JNLPBA(HUNER_JNLPBA):
-    """
-    HUNER version of the JNLPBA corpus containing cell line annotations.
-    """
+    """HUNER version of the JNLPBA corpus containing cell line annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"cell_line": CELL_LINE_TAG}
@@ -880,9 +874,7 @@ class HUNER_CELL_LINE_JNLPBA(HUNER_JNLPBA):
 
 
 class HUNER_ALL_JNLPBA(HUNER_JNLPBA):
-    """
-    HUNER version of the JNLPBA corpus containing gene and cell line annotations.
-    """
+    """HUNER version of the JNLPBA corpus containing gene and cell line annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {
@@ -1026,9 +1018,7 @@ class HUNER_GENE_CELL_FINDER(HunerDataset):
 
 
 class HUNER_ALL_CELL_FINDER(HunerDataset):
-    """
-    HUNER version of the CellFinder corpus containing only gene annotations.
-    """
+    """HUNER version of the CellFinder corpus containing only gene annotations."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1182,9 +1172,7 @@ class HunerMiRNAHelper:
 
 
 class HUNER_MIRNA(HunerDataset):
-    """
-    HUNER version of the miRNA corpus.
-    """
+    """HUNER version of the miRNA corpus."""
 
     def __init__(self, entity_type_mapping, *args, **kwargs):
         self.entity_type_mapping = entity_type_mapping
@@ -1221,9 +1209,7 @@ class HUNER_MIRNA(HunerDataset):
 
 
 class HUNER_GENE_MIRNA(HUNER_MIRNA):
-    """
-    HUNER version of the miRNA corpus containing protein / gene annotations.
-    """
+    """HUNER version of the miRNA corpus containing protein / gene annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"Genes/Proteins": GENE_TAG}
@@ -1231,9 +1217,7 @@ class HUNER_GENE_MIRNA(HUNER_MIRNA):
 
 
 class HUNER_SPECIES_MIRNA(HUNER_MIRNA):
-    """
-    HUNER version of the miRNA corpus containing species annotations.
-    """
+    """HUNER version of the miRNA corpus containing species annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"Species": SPECIES_TAG}
@@ -1241,9 +1225,7 @@ class HUNER_SPECIES_MIRNA(HUNER_MIRNA):
 
 
 class HUNER_DISEASE_MIRNA(HUNER_MIRNA):
-    """
-    HUNER version of the miRNA corpus containing disease annotations.
-    """
+    """HUNER version of the miRNA corpus containing disease annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"Diseases": DISEASE_TAG}
@@ -1251,9 +1233,7 @@ class HUNER_DISEASE_MIRNA(HUNER_MIRNA):
 
 
 class HUNER_ALL_MIRNA(HUNER_MIRNA):
-    """
-    HUNER version of the miRNA corpus containing gene, species and disease annotations.
-    """
+    """HUNER version of the miRNA corpus containing gene, species and disease annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {
@@ -1598,9 +1578,7 @@ class LOCTEXT(ColumnCorpus):
 
 
 class HUNER_LOCTEXT(HunerDataset):
-    """
-    HUNER version of the Loctext corpus.
-    """
+    """HUNER version of the Loctext corpus."""
 
     def __init__(self, entity_type_mapping, *args, **kwargs):
         self.entity_type_mapping = entity_type_mapping
@@ -1618,9 +1596,7 @@ class HUNER_LOCTEXT(HunerDataset):
 
 
 class HUNER_SPECIES_LOCTEXT(HUNER_LOCTEXT):
-    """
-    HUNER version of the Loctext corpus containing species annotations.
-    """
+    """HUNER version of the Loctext corpus containing species annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"species": SPECIES_TAG}
@@ -1628,9 +1604,7 @@ class HUNER_SPECIES_LOCTEXT(HUNER_LOCTEXT):
 
 
 class HUNER_GENE_LOCTEXT(HUNER_LOCTEXT):
-    """
-    HUNER version of the Loctext corpus containing protein annotations.
-    """
+    """HUNER version of the Loctext corpus containing protein annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"protein": GENE_TAG}
@@ -1638,9 +1612,7 @@ class HUNER_GENE_LOCTEXT(HUNER_LOCTEXT):
 
 
 class HUNER_ALL_LOCTEXT(HUNER_LOCTEXT):
-    """
-    HUNER version of the Loctext corpus containing species and protein annotations.
-    """
+    """HUNER version of the Loctext corpus containing species and protein annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"species": SPECIES_TAG, "protein": GENE_TAG}
@@ -2067,9 +2039,7 @@ class HUNER_CHEMICAL_CDR(HunerDataset):
 
 
 class HUNER_ALL_CDR(HunerDataset):
-    """
-    HUNER version of the IEPA corpus containing disease and chemical annotations.
-    """
+    """HUNER version of the IEPA corpus containing disease and chemical annotations."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -2245,9 +2215,7 @@ class HUNER_SPECIES_VARIOME(HunerDataset):
 
 
 class HUNER_ALL_VARIOME(HunerDataset):
-    """
-    HUNER version of the Variome corpus containing gene, disease and species annotations.
-    """
+    """HUNER version of the Variome corpus containing gene, disease and species annotations."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -2612,9 +2580,7 @@ class HUNER_CHEMICAL_SCAI(HunerDataset):
 
 
 class HUNER_DISEASE_SCAI(HunerDataset):
-    """
-    HUNER version of the SCAI chemicals corpus containing disease annotations.
-    """
+    """HUNER version of the SCAI chemicals corpus containing disease annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -2634,9 +2600,7 @@ class HUNER_DISEASE_SCAI(HunerDataset):
 
 
 class HUNER_ALL_SCAI(HunerDataset):
-    """
-    HUNER version of the SCAI chemicals corpus containing chemical and disease annotations.
-    """
+    """HUNER version of the SCAI chemicals corpus containing chemical and disease annotations."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -3933,9 +3897,7 @@ class CHEBI(ColumnCorpus):
 
 
 class HUNER_CHEBI(HunerDataset):
-    """
-    HUNER version of the CHEBI corpus.
-    """
+    """HUNER version of the CHEBI corpus."""
 
     def __init__(self, entity_type_mapping, *args, **kwargs):
         self.entity_type_mapping = entity_type_mapping
@@ -3952,9 +3914,7 @@ class HUNER_CHEBI(HunerDataset):
 
 
 class HUNER_CHEMICAL_CHEBI(HUNER_CHEBI):
-    """
-    HUNER version of the CHEBI corpus containing chemical annotations.
-    """
+    """HUNER version of the CHEBI corpus containing chemical annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"Chemical": CHEMICAL_TAG}
@@ -3962,9 +3922,7 @@ class HUNER_CHEMICAL_CHEBI(HUNER_CHEBI):
 
 
 class HUNER_GENE_CHEBI(HUNER_CHEBI):
-    """
-    HUNER version of the CHEBI corpus containing gene annotations.
-    """
+    """HUNER version of the CHEBI corpus containing gene annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"Protein": GENE_TAG}
@@ -3972,9 +3930,7 @@ class HUNER_GENE_CHEBI(HUNER_CHEBI):
 
 
 class HUNER_SPECIES_CHEBI(HUNER_CHEBI):
-    """
-    HUNER version of the CHEBI corpus containing species annotations.
-    """
+    """HUNER version of the CHEBI corpus containing species annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"Species": SPECIES_TAG}
@@ -3982,9 +3938,7 @@ class HUNER_SPECIES_CHEBI(HUNER_CHEBI):
 
 
 class HUNER_ALL_CHEBI(HUNER_CHEBI):
-    """
-    HUNER version of the CHEBI corpus containing chemical, gene and species annotations.
-    """
+    """HUNER version of the CHEBI corpus containing chemical, gene and species annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {
@@ -4728,9 +4682,7 @@ class CRAFT_V4(ColumnCorpus):
 
 
 class HUNER_CRAFT_V4(HunerDataset):
-    """
-    HUNER version of the CRAFT corpus containing (only) chemical annotations.
-    """
+    """HUNER version of the CRAFT corpus containing (only) chemical annotations."""
 
     def __init__(self, entity_type_mapping, *args, **kwargs):
         self.entity_type_mapping = entity_type_mapping
@@ -4748,9 +4700,7 @@ class HUNER_CRAFT_V4(HunerDataset):
 
 
 class HUNER_CHEMICAL_CRAFT_V4(HUNER_CRAFT_V4):
-    """
-    HUNER version of the CRAFT corpus containing (only) chemical annotations.
-    """
+    """HUNER version of the CRAFT corpus containing (only) chemical annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"chebi": CHEMICAL_TAG}
@@ -4758,9 +4708,7 @@ class HUNER_CHEMICAL_CRAFT_V4(HUNER_CRAFT_V4):
 
 
 class HUNER_GENE_CRAFT_V4(HUNER_CRAFT_V4):
-    """
-    HUNER version of the CRAFT corpus containing (only) gene annotations.
-    """
+    """HUNER version of the CRAFT corpus containing (only) gene annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"pr": GENE_TAG}
@@ -4768,9 +4716,7 @@ class HUNER_GENE_CRAFT_V4(HUNER_CRAFT_V4):
 
 
 class HUNER_SPECIES_CRAFT_V4(HUNER_CRAFT_V4):
-    """
-    HUNER version of the CRAFT corpus containing (only) species annotations.
-    """
+    """HUNER version of the CRAFT corpus containing (only) species annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {"ncbitaxon": SPECIES_TAG}
@@ -4778,9 +4724,7 @@ class HUNER_SPECIES_CRAFT_V4(HUNER_CRAFT_V4):
 
 
 class HUNER_ALL_CRAFT_V4(HUNER_CRAFT_V4):
-    """
-    HUNER version of the CRAFT corpus containing chemical, gene and species annotations.
-    """
+    """HUNER version of the CRAFT corpus containing chemical, gene and species annotations."""
 
     def __init__(self, *args, **kwargs):
         entity_type_mapping = {
@@ -5217,13 +5161,13 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
                 splits = {split: filter_and_map_entities(dataset, type_mapping) for split, dataset in splits.items()}
             else:
                 logger.warning(
-                    "No entity type mapping found for {}. Check CONLL files for task descriptions.".format(dataset_name)
+                    f"No entity type mapping found for {dataset_name}. Check CONLL files for task descriptions."
                 )
 
             conll_writer = CoNLLWriter(sentence_splitter=self.sentence_splitter)
             conll_writer.process_dataset(splits, data_folder)
 
-        super(BIGBIO_NER_CORPUS, self).__init__(
+        super().__init__(
             data_folder,
             columns,
             in_memory=in_memory,
@@ -5289,8 +5233,8 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
 
     def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
         """Converts a dataset given in hugging datasets format to our internal corpus representation."""
-        id_to_text = {}
-        id_to_entities = {}
+        id_to_text: Dict[str, str] = {}
+        id_to_entities: Dict[str, list] = {}
         entity_type_set = set()
         for document in dataset[split]:
             document_id = document["document_id"]
@@ -5346,12 +5290,11 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         high: int,
         entity: Dict,
     ):
+        """Helper methods to find the passage to a given entity mention (incl. offset).
+
+        The implementation uses binary search to find the passage in the ordered sequence passages.
         """
-        Helper methods to find the passage to a given entity mention (incl. offset). The implementation
-        uses binary search to find the passage in the ordered sequence passages.
-        """
-        # Check base case
-        if low > high:
+        if low > high:  # Check base case
             raise NotImplementedError("There was a mistake concerning the lower and upper bound.")
 
         # Get element in the middle
@@ -5461,7 +5404,7 @@ class HUNER_CHEMICAL_DRUGPROT(BIGBIO_NER_CORPUS):
 
 class HUNER_ALL_DRUGPROT(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_ALL_DRUGPROT, self).__init__(*args, dataset_name="drugprot", **kwargs)
+        super().__init__(*args, dataset_name="drugprot", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"GENE-N": GENE_TAG, "GENE-Y": GENE_TAG, "CHEMICAL": CHEMICAL_TAG}
@@ -5607,7 +5550,7 @@ class HUNER_CELL_LINE_BIORED(BIGBIO_NER_CORPUS):
 
 class HUNER_ALL_BIORED(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_ALL_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
+        super().__init__(*args, dataset_name="biored", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {
@@ -5678,7 +5621,7 @@ class HUNER_CHEMICAL_CPI(BIGBIO_NER_CORPUS):
 
 class HUNER_ALL_CPI(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_ALL_CPI, self).__init__(*args, dataset_name="cpi", **kwargs)
+        super().__init__(*args, dataset_name="cpi", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"protein": GENE_TAG, "compound": CHEMICAL_TAG}
@@ -5743,7 +5686,7 @@ class HUNER_CHEMICAL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
 
 class HUNER_ALL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_ALL_BIONLP_ST_2013_PC, self).__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
+        super().__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {
@@ -5893,7 +5836,7 @@ class HUNER_SPECIES_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 class HUNER_ALL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_ALL_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
+        super().__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {
@@ -6098,7 +6041,7 @@ class HUNER_CELL_LINE_BIOID(BIGBIO_NER_CORPUS):
 
 class HUNER_ALL_BIOID(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_ALL_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
+        super().__init__(*args, dataset_name="bioid", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         # TODO whether cell or cell line is the correct tag
@@ -6229,7 +6172,7 @@ class HUNER_GENE_SETH_CORPUS(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_TMVAR_V3, self).__init__(
+        super().__init__(
             *args,
             dataset_name="tmvar_v3",
             **kwargs,
@@ -6240,80 +6183,6 @@ class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
         return self.__class__.__name__.lower()
-
-
-# Deprecated, is fixed in BigBio but useful code for debugging future issues
-# FIXME: Annotation missmatch from the source PubTator files
-# EXAMPLE: Annotation error (21904390) - Doc: p686k1684gene  vs. Mention: DKFZ p686k1684
-def map_fn(example):
-    example["entities"] = [
-        repair_doc_offsets(passages, entities)
-        if passages[0]
-        == "Two novel mutations of the PAX6 gene causing different phenotype in a cohort of Chinese patients."
-        else entities
-        for passages, entities in zip(example["passages"], example["entities"])
-    ]
-    return example
-
-
-def repair_doc_offsets(passages, entities):
-    """
-    Some offsets are broken in tmvar_v3, we need to fix them. Replace doc in-place.
-    """
-
-    text = " ".join([passage["text"][0] for passage in passages])
-
-    sentences = text.split(". ")
-
-    sentence_indexes = [m.start() + 2 for m in re.finditer("\. ", text)]  # because the suffix is ". "
-    sentence_indexes = [0] + sentence_indexes
-
-    doc_entities = entities
-
-    if len(doc_entities) == 0:
-        return
-
-    # doc_entities = dataset[split].filter(lambda x: x["document_id"] == "21904390")[:]["entities"][0]
-
-    # print(sentence_indexes)
-    # print(len(sentences))
-    # print(text)
-    # print(doc_entities)
-
-    sentence_index = 0
-    entity_index = 0
-    current_offset = 0
-    next_sentence_offset = 0
-    next_entity_offset = text[current_offset:].find(doc_entities[entity_index]["text"][0])
-    while True:
-        if sentence_index >= len(sentence_indexes) and entity_index >= len(doc_entities):
-            break
-        if next_sentence_offset <= next_entity_offset:
-            sentence_index += 1
-            if sentence_index >= len(sentence_indexes):
-                next_sentence_offset = len(text)
-            else:
-                next_sentence_offset = sentence_indexes[sentence_index]
-            # print(f"DEBUG next_sentence_offset: {next_sentence_offset}")
-        else:  # next_entity_offset < next_sentence_offset
-            entity = doc_entities[entity_index]
-            entity_name = entity["text"][0]
-            given_offset_start = entity["offsets"][0][0]
-            # print(f"  {entity_name} @ offsets (real) {next_entity_offset} to {next_entity_offset + len(entity_name)}")
-            # print(f"  {text[given_offset_start:given_offset_end]} @ offset (given) {given_offset_start} to {given_offset_end}")
-            if given_offset_start != next_entity_offset:  # Mismatched entities
-                # print(doc_entities)
-                entity["offsets"][0][0] = next_entity_offset
-                entity["offsets"][0][1] = next_entity_offset + len(entity_name)
-                # print(doc_entities)
-            current_offset = next_entity_offset + len(entity_name)
-            entity_index += 1
-            if entity_index >= len(doc_entities):
-                next_entity_offset = len(text)
-            else:
-                next_entity_offset = current_offset + text[current_offset:].find(doc_entities[entity_index]["text"][0])
-
-    return doc_entities
 
 
 if __name__ == "__main__":

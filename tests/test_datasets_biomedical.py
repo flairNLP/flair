@@ -117,6 +117,7 @@ def test_write_to_conll():
                 ),
             ]
         },
+        entity_types=["E"],
     )
     expected_labeling = [
         "This O +",
@@ -142,6 +143,7 @@ def test_conll_writer_one_token_multiple_entities1():
                 Entity((text.find("entity2"), text.find("entity2") + len("entity2")), "E"),
             ]
         },
+        entity_types=["E"],
     )
 
     assert_conll_writer_output(dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 B-E -"])
@@ -157,6 +159,7 @@ def test_conll_writer_one_token_multiple_entities2():
                 Entity((text.find("tity1"), text.find("tity1") + 5), "E"),
             ]
         },
+        entity_types=["E"],
     )
 
     assert_conll_writer_output(dataset, ["This O +", "is O +", "entity1 B-E +", "entity2 O -"])

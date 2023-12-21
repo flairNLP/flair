@@ -1727,7 +1727,7 @@ class MultiCorpus(Corpus):
 
     def __str__(self) -> str:
         output = (
-            f"MultiCorpus: "  # type: ignore[arg-type]
+            f"MultiCorpus: "
             f"{len(self.train) if self.train else 0} train + "
             f"{len(self.dev) if self.dev else 0} dev + "
             f"{len(self.test) if self.test else 0} test sentences\n - "
