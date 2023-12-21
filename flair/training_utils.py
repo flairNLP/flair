@@ -111,7 +111,6 @@ class WeightExtractor(object):
 
     def extract_weights(self, state_dict, iteration):
         for key in state_dict.keys():
-
             vec = state_dict[key]
             # print(vec)
             try:
@@ -211,7 +210,6 @@ class AnnealOnPlateau(object):
         min_lr=0,
         eps=1e-8,
     ):
-
         if factor >= 1.0:
             raise ValueError("Factor should be < 1.0.")
         self.factor = factor
@@ -370,7 +368,6 @@ def add_file_handler(log, output_file):
 def store_embeddings(
     data_points: Union[List[DT], Dataset], storage_mode: str, dynamic_embeddings: Optional[List[str]] = None
 ):
-
     if isinstance(data_points, Dataset):
         data_points = list(_iter_dataset(data_points))
 

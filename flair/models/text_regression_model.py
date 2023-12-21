@@ -23,7 +23,6 @@ class TextRegressor(flair.nn.Model[Sentence]):
         document_embeddings: flair.embeddings.DocumentEmbeddings,
         label_name: str = "label",
     ):
-
         super().__init__()
         log.info("Using REGRESSION - experimental")
 
@@ -56,7 +55,6 @@ class TextRegressor(flair.nn.Model[Sentence]):
         return label_scores
 
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
-
         labels = self._labels_to_tensor(sentences)
         text_embedding_tensor = self._prepare_tensors(sentences)
         scores = self.forward(*text_embedding_tensor)
@@ -80,7 +78,6 @@ class TextRegressor(flair.nn.Model[Sentence]):
         label_name: Optional[str] = None,
         embedding_storage_mode="none",
     ) -> List[Sentence]:
-
         if label_name is None:
             label_name = self.label_name if self.label_name is not None else "label"
 
@@ -116,7 +113,7 @@ class TextRegressor(flair.nn.Model[Sentence]):
                 (sentence_tensor,) = self._prepare_tensors(batch)
                 scores = self.forward(sentence_tensor)
 
-                for (sentence, score) in zip(batch, scores.tolist()):
+                for sentence, score in zip(batch, scores.tolist()):
                     sentence.set_label(label_name, value=str(score[0]))
 
                 # clearing token embeddings to save memory
@@ -145,7 +142,6 @@ class TextRegressor(flair.nn.Model[Sentence]):
         return_loss: bool = True,
         **kwargs,
     ) -> Result:
-
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
@@ -159,7 +155,6 @@ class TextRegressor(flair.nn.Model[Sentence]):
             lines: List[str] = []
             total_count = 0
             for batch in data_loader:
-
                 if isinstance(batch, Sentence):
                     batch = [batch]
 

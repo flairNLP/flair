@@ -64,14 +64,7 @@ class Entity:
         self.type = entity_type
 
     def __str__(self):
-        return (
-            self.type
-            + "("
-            + str(self.char_span.start)
-            + ","
-            + str(self.char_span.stop)
-            + ")"
-        )
+        return self.type + "(" + str(self.char_span.start) + "," + str(self.char_span.stop) + ")"
 
     def __repr__(self):
         return str(self)
@@ -91,8 +84,7 @@ class Entity:
         :param other_entity: Entity to check
         """
         return (
-            other_entity.char_span.start >= self.char_span.start
-            and other_entity.char_span.stop <= self.char_span.stop
+            other_entity.char_span.start >= self.char_span.start and other_entity.char_span.stop <= self.char_span.stop
         )
 
     def overlaps(self, other_entity) -> bool:
@@ -101,9 +93,9 @@ class Entity:
 
         :param other_entity: Entity to check
         """
-        return (
-            self.char_span.start <= other_entity.char_span.start < self.char_span.stop
-        ) or (self.char_span.start < other_entity.char_span.stop <= self.char_span.stop)
+        return (self.char_span.start <= other_entity.char_span.start < self.char_span.stop) or (
+            self.char_span.start < other_entity.char_span.stop <= self.char_span.stop
+        )
 
 
 class InternalBioNerDataset:
@@ -186,19 +178,14 @@ def filter_nested_entities(dataset: InternalBioNerDataset) -> None:
     for document_id, entities in dataset.entities_per_document.items():
         # Uses dynamic programming approach to calculate maximum independent set in interval graph
         # with sum of all entity lengths as secondary key
-        dp_array = [
-            DpEntry(
-                position_end=0, entity_count=0, entity_lengths_sum=0, last_entity=None
-            )
-        ]
+        dp_array = [DpEntry(position_end=0, entity_count=0, entity_lengths_sum=0, last_entity=None)]
         for entity in sorted(entities, key=lambda x: x.char_span.stop):
             i = len(dp_array) - 1
             while dp_array[i].position_end > entity.char_span.start:
                 i -= 1
             if dp_array[i].entity_count + 1 > dp_array[-1].entity_count or (
                 dp_array[i].entity_count + 1 == dp_array[-1].entity_count
-                and dp_array[i].entity_lengths_sum + len(entity.char_span)
-                > dp_array[-1].entity_lengths_sum
+                and dp_array[i].entity_lengths_sum + len(entity.char_span) > dp_array[-1].entity_lengths_sum
             ):
                 dp_array += [
                     DpEntry(
@@ -258,9 +245,7 @@ def bioc_to_internal(bioc_file: Path):
                 continue
             text = passage_texts[0]
 
-            passage_offset = int(
-                passage.xpath("./offset/text()")[0]
-            )  # from BioC annotation
+            passage_offset = int(passage.xpath("./offset/text()")[0])  # from BioC annotation
 
             # calculate offset without current text
             # because we stick all passages of a document together
@@ -277,16 +262,10 @@ def bioc_to_internal(bioc_file: Path):
                     if i.attrib["key"] in {"type", "class"}
                 ]
 
-                start = (
-                    int(annotation.xpath("./location")[0].get("offset"))
-                    - passage_offset
-                )
+                start = int(annotation.xpath("./location")[0].get("offset")) - passage_offset
                 # TODO For split entities we also annotate everything inbetween which might be a bad idea?
                 final_length = int(annotation.xpath("./location")[-1].get("length"))
-                final_offset = (
-                    int(annotation.xpath("./location")[-1].get("offset"))
-                    - passage_offset
-                )
+                final_offset = int(annotation.xpath("./location")[-1].get("offset")) - passage_offset
                 if final_length <= 0:
                     continue
                 end = final_offset + final_length
@@ -301,9 +280,7 @@ def bioc_to_internal(bioc_file: Path):
                 if annotated_entity.lower() != true_entity.lower():
                     max_shift = min(3, len(true_entity))
                     for i in range(max_shift):
-                        index = annotated_entity.lower().find(
-                            true_entity[0 : max_shift - i].lower()
-                        )
+                        index = annotated_entity.lower().find(true_entity[0 : max_shift - i].lower())
                         if index != -1:
                             start += index
                             end += index
@@ -325,9 +302,7 @@ def bioc_to_internal(bioc_file: Path):
     #     f"Found {non_matching} non-matching entities ({non_matching/all_entities}%) in {bioc_file}"
     # )
 
-    return InternalBioNerDataset(
-        documents=texts_per_document, entities_per_document=entities_per_document
-    )
+    return InternalBioNerDataset(documents=texts_per_document, entities_per_document=entities_per_document)
 
 
 def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNerDataset:
@@ -350,9 +325,7 @@ def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNer
         document_id = text_file.stem
 
         for suffix in ann_file_suffixes:
-            with open(
-                str(text_file.with_suffix(suffix)), "r", encoding="utf8"
-            ) as ann_file:
+            with open(str(text_file.with_suffix(suffix)), "r", encoding="utf8") as ann_file:
                 for line in ann_file:
                     fields = line.strip().split("\t")
 
@@ -382,9 +355,7 @@ def brat_to_internal(corpus_dir: Path, ann_file_suffixes=None) -> InternalBioNer
 
         documents[document_id] = document_text
 
-    return InternalBioNerDataset(
-        documents=documents, entities_per_document=dict(entities_per_document)
-    )
+    return InternalBioNerDataset(documents=documents, entities_per_document=dict(entities_per_document))
 
 
 class CoNLLWriter:
@@ -403,9 +374,7 @@ class CoNLLWriter:
         """
         self.sentence_splitter = sentence_splitter
 
-    def process_dataset(
-        self, datasets: Dict[str, InternalBioNerDataset], out_dir: Path
-    ):
+    def process_dataset(self, datasets: Dict[str, InternalBioNerDataset], out_dir: Path):
         if "train" in datasets:
             self.write_to_conll(datasets["train"], out_dir / "train.conll")
         if "dev" in datasets:
@@ -448,12 +417,8 @@ class CoNLLWriter:
                 desc="Converting to CoNLL",
             ):
                 document_text = ftfy.fix_text(dataset.documents[document_id])
-                document_text = re.sub(
-                    r"[\u2000-\u200B]", " ", document_text
-                )  # replace unicode space characters!
-                document_text = document_text.replace(
-                    "\xa0", " "
-                )  # replace non-break space
+                document_text = re.sub(r"[\u2000-\u200B]", " ", document_text)  # replace unicode space characters!
+                document_text = document_text.replace("\xa0", " ")  # replace non-break space
                 document_buffer = ""
                 document_had_tags = not IGNORE_NEGATIVE_SAMPLES
 
@@ -475,18 +440,13 @@ class CoNLLWriter:
                     if MULTI_TASK_LEARNING:
                         for i, flair_token in enumerate(task_sentence[0].tokens):
                             token = flair_token.text.strip()
-                            if (
-                                flair_token.whitespace_after > 0
-                                or i == len(task_sentence[0].tokens) - 1
-                            ):
+                            if flair_token.whitespace_after > 0 or i == len(task_sentence[0].tokens) - 1:
                                 whitespace_after = "+"
                             else:
                                 whitespace_after = "-"
                             if len(token) > 0:
                                 tag = "O"
-                                document_buffer += (
-                                    " ".join([token, tag, whitespace_after]) + "\n"
-                                )
+                                document_buffer += " ".join([token, tag, whitespace_after]) + "\n"
 
                     for flair_token in sentence.tokens:
                         token = flair_token.text.strip()
@@ -498,13 +458,8 @@ class CoNLLWriter:
                             in_entity = False
 
                             # One token may contain multiple entities -> deque all of them
-                            while (
-                                current_entity
-                                and offset >= current_entity.char_span.stop
-                            ):
-                                current_entity = (
-                                    entities.popleft() if entities else None
-                                )
+                            while current_entity and offset >= current_entity.char_span.stop:
+                                current_entity = entities.popleft() if entities else None
 
                         if current_entity and offset in current_entity.char_span:
                             if not in_entity:
@@ -516,13 +471,9 @@ class CoNLLWriter:
                             tag = "O"
                             in_entity = False
 
-                        whitespace_after = (
-                            "+" if flair_token.whitespace_after > 0 else "-"
-                        )
+                        whitespace_after = "+" if flair_token.whitespace_after > 0 else "-"
                         if len(token) > 0:
-                            document_buffer += (
-                                " ".join([token, tag, whitespace_after]) + "\n"
-                            )
+                            document_buffer += " ".join([token, tag, whitespace_after]) + "\n"
                             sentence_had_tokens = True
                         if not tag.startswith("O"):
                             document_had_tags = True
@@ -595,9 +546,7 @@ class HunerDataset(ColumnCorpus, ABC):
 
         self.sentence_splitter = self.get_corpus_sentence_splitter()
         if not self.sentence_splitter:
-            self.sentence_splitter = (
-                sentence_splitter if sentence_splitter else SciSpacySentenceSplitter()
-            )
+            self.sentence_splitter = sentence_splitter if sentence_splitter else SciSpacySentenceSplitter()
         else:
             if sentence_splitter:
                 logger.warning(
@@ -652,9 +601,7 @@ class HunerDataset(ColumnCorpus, ABC):
 
         return InternalBioNerDataset(
             documents={k: dataset.documents[k] for k in ids},
-            entities_per_document={
-                k: dataset.entities_per_document[k] for k in split_ids
-            },
+            entities_per_document={k: dataset.entities_per_document[k] for k in split_ids},
             entity_types=dataset.entity_types,
         )
 
@@ -709,9 +656,7 @@ class BIO_INFER(ColumnCorpus):
 
     @classmethod
     def download_dataset(cls, data_dir: Path) -> Path:
-        data_url = (
-            "https://github.com/metalrt/ppi-dataset/archive/refs/heads/master.zip"
-        )
+        data_url = "https://github.com/metalrt/ppi-dataset/archive/refs/heads/master.zip"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, data_dir)
 
@@ -740,9 +685,7 @@ class BIO_INFER(ColumnCorpus):
                     )
                 )
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class HUNER_GENE_BIO_INFER(HunerDataset):
@@ -835,9 +778,7 @@ class JNLPBA(ColumnCorpus):
 
 class HunerJNLPBA(object):
     @classmethod
-    def download_and_prepare_train(
-        cls, data_folder: Path, sentence_tag: str
-    ) -> InternalBioNerDataset:
+    def download_and_prepare_train(cls, data_folder: Path, sentence_tag: str) -> InternalBioNerDataset:
         train_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Train/Genia4ERtraining.tar.gz"
         train_data_path = cached_path(train_data_url, data_folder)
         unpack_file(train_data_path, data_folder)
@@ -846,9 +787,7 @@ class HunerJNLPBA(object):
         return cls.read_file(train_input_file, sentence_tag)
 
     @classmethod
-    def download_and_prepare_test(
-        cls, data_folder: Path, sentence_tag: str
-    ) -> InternalBioNerDataset:
+    def download_and_prepare_test(cls, data_folder: Path, sentence_tag: str) -> InternalBioNerDataset:
         test_data_url = "http://www.nactem.ac.uk/GENIA/current/Shared-tasks/JNLPBA/Evaluation/Genia4ERtest.tar.gz"
         test_data_path = cached_path(test_data_url, data_folder)
         unpack_file(test_data_path, data_folder)
@@ -857,9 +796,7 @@ class HunerJNLPBA(object):
         return cls.read_file(test_input_file, sentence_tag)
 
     @classmethod
-    def read_file(
-        cls, input_iob_file: Path, sentence_tag: str
-    ) -> InternalBioNerDataset:
+    def read_file(cls, input_iob_file: Path, sentence_tag: str) -> InternalBioNerDataset:
         documents: Dict[str, str] = {}
         entities_per_document: Dict[str, List[Entity]] = defaultdict(list)
 
@@ -895,28 +832,16 @@ class HunerJNLPBA(object):
 
                     if tag.startswith("B-"):
                         if entity_type is not None and document_text is not None:
-                            entities.append(
-                                Entity((entity_start, len(document_text)), entity_type)
-                            )
+                            entities.append(Entity((entity_start, len(document_text)), entity_type))
 
                         entity_start = len(document_text) + 1 if document_text else 0
                         entity_type = tag[2:]
 
-                    elif (
-                        tag == "O"
-                        and entity_type is not None
-                        and document_text is not None
-                    ):
-                        entities.append(
-                            Entity((entity_start, len(document_text)), entity_type)
-                        )
+                    elif tag == "O" and entity_type is not None and document_text is not None:
+                        entities.append(Entity((entity_start, len(document_text)), entity_type))
                         entity_type = None
 
-                    document_text = (
-                        (document_text + " " + token)
-                        if document_text is not None
-                        else token
-                    )
+                    document_text = (document_text + " " + token) if document_text is not None else token
 
                 else:
                     if document_text is not None:
@@ -924,18 +849,14 @@ class HunerJNLPBA(object):
 
                         # Edge case: last token starts a new entity
                         if entity_type is not None:
-                            entities.append(
-                                Entity((entity_start, len(document_text)), entity_type)
-                            )
+                            entities.append(Entity((entity_start, len(document_text)), entity_type))
 
             # Last document in file
             if not (document_id is None or document_text is None):
                 documents[document_id] = document_text
                 entities_per_document[document_id] = entities
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class HUNER_JNLPBA(HunerDataset):
@@ -962,14 +883,10 @@ class HUNER_JNLPBA(HunerDataset):
         if isinstance(self.sentence_splitter, TagSentenceSplitter):
             sentence_separator = self.sentence_splitter.tag
 
-        train_data = HunerJNLPBA.download_and_prepare_train(
-            orig_folder, sentence_separator
-        )
+        train_data = HunerJNLPBA.download_and_prepare_train(orig_folder, sentence_separator)
         train_data = filter_and_map_entities(train_data, self.entity_type_mapping)
 
-        test_data = HunerJNLPBA.download_and_prepare_test(
-            orig_folder, sentence_separator
-        )
+        test_data = HunerJNLPBA.download_and_prepare_test(orig_folder, sentence_separator)
         test_data = filter_and_map_entities(test_data, self.entity_type_mapping)
 
         return merge_datasets([train_data, test_data])
@@ -1056,7 +973,9 @@ class CELL_FINDER(ColumnCorpus):
 
     @classmethod
     def download_and_prepare(cls, data_folder: Path) -> InternalBioNerDataset:
-        data_url = "https://www.informatik.hu-berlin.de/de/forschung/gebiete/wbi/resources/cellfinder/cellfinder1_brat.tar.gz"
+        data_url = (
+            "https://www.informatik.hu-berlin.de/de/forschung/gebiete/wbi/resources/cellfinder/cellfinder1_brat.tar.gz"
+        )
         data_path = cached_path(data_url, data_folder)
         unpack_file(data_path, data_folder)
 
@@ -1068,9 +987,7 @@ class CELL_FINDER(ColumnCorpus):
         documents = {}
         entities_per_document = defaultdict(list)
         for ann_file in ann_files:
-            with ann_file.open(encoding="utf8") as f_ann, ann_file.with_suffix(
-                ".txt"
-            ).open(encoding="utf8") as f_txt:
+            with ann_file.open(encoding="utf8") as f_ann, ann_file.with_suffix(".txt").open(encoding="utf8") as f_txt:
                 document_text = f_txt.read().strip()
 
                 document_id = ann_file.stem
@@ -1090,9 +1007,7 @@ class CELL_FINDER(ColumnCorpus):
 
                     assert document_text[int(char_start) : int(char_end)] == fields[2]
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=dict(entities_per_document)
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=dict(entities_per_document))
 
 
 class HUNER_CELL_LINE_CELL_FINDER(HunerDataset):
@@ -1220,9 +1135,7 @@ class MIRNA(ColumnCorpus):
         sentence_separator = " "
         if sentence_splitter is None:
             sentence_separator = SENTENCE_TAG
-            sentence_splitter = TagSentenceSplitter(
-                tag=sentence_separator, tokenizer=SciSpacyTokenizer()
-            )
+            sentence_splitter = TagSentenceSplitter(tag=sentence_separator, tokenizer=SciSpacyTokenizer())
 
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
         test_file = data_folder / f"{sentence_splitter.name}_test.conll"
@@ -1233,36 +1146,34 @@ class MIRNA(ColumnCorpus):
 
             writer = CoNLLWriter(sentence_splitter=sentence_splitter)
 
-            train_corpus = self.download_and_prepare_train(
-                download_folder, sentence_separator
-            )
+            train_corpus = self.download_and_prepare_train(download_folder, sentence_separator)
             writer.write_to_conll(train_corpus, train_file)
 
-            test_corpus = self.download_and_prepare_test(
-                download_folder, sentence_separator
-            )
+            test_corpus = self.download_and_prepare_test(download_folder, sentence_separator)
             writer.write_to_conll(test_corpus, test_file)
 
         super(MIRNA, self).__init__(data_folder, columns, in_memory=in_memory)
 
     @classmethod
     def download_and_prepare_train(cls, data_folder: Path, sentence_separator: str):
-        data_url = "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/miRNA/miRNA-Train-Corpus.xml"
+        data_url = (
+            "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/miRNA/miRNA-Train-Corpus.xml"
+        )
         data_path = cached_path(data_url, data_folder)
 
         return cls.parse_file(data_path, "train", sentence_separator)
 
     @classmethod
     def download_and_prepare_test(cls, data_folder: Path, sentence_separator):
-        data_url = "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/miRNA/miRNA-Test-Corpus.xml"
+        data_url = (
+            "https://www.scai.fraunhofer.de/content/dam/scai/de/downloads/bioinformatik/miRNA/miRNA-Test-Corpus.xml"
+        )
         data_path = cached_path(data_url, data_folder)
 
         return cls.parse_file(data_path, "test", sentence_separator)
 
     @classmethod
-    def parse_file(
-        cls, input_file: Path, split: str, sentence_separator: str
-    ) -> InternalBioNerDataset:
+    def parse_file(cls, input_file: Path, split: str, sentence_separator: str) -> InternalBioNerDataset:
         tree = etree.parse(str(input_file))
 
         documents = {}
@@ -1278,9 +1189,7 @@ class MIRNA(ColumnCorpus):
                     document_text += sentence_separator
 
                 sentence_offset = len(document_text)
-                document_text += (
-                    sentence.get("text") if document_text else sentence.get("text")
-                )
+                document_text += sentence.get("text") if document_text else sentence.get("text")
 
                 for entity in sentence.xpath(".//entity"):
                     start, end = entity.get("charOffset").split("-")
@@ -1297,16 +1206,12 @@ class MIRNA(ColumnCorpus):
             documents[document_id] = document_text
             entities_per_document[document_id] = entities
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class HunerMiRNAHelper(object):
     @staticmethod
-    def get_mirna_subset(
-        dataset: InternalBioNerDataset, split_url: str, split_dir: Path
-    ):
+    def get_mirna_subset(dataset: InternalBioNerDataset, split_url: str, split_dir: Path):
         split_file = cached_path(split_url, split_dir)
 
         with split_file.open(encoding="utf8") as f:
@@ -1338,9 +1243,7 @@ class HUNER_MIRNA(HunerDataset):
         # In the huner split files there is no information whether a given id originates
         # from the train or test file of the original corpus - so we have to adapt corpus
         # splitting here
-        return HunerMiRNAHelper.get_mirna_subset(
-            dataset, f"{self.split_url()}.{split}", split_dir
-        )
+        return HunerMiRNAHelper.get_mirna_subset(dataset, f"{self.split_url()}.{split}", split_dir)
 
     def get_corpus_sentence_splitter(self):
         return TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SciSpacyTokenizer())
@@ -1353,9 +1256,7 @@ class HUNER_MIRNA(HunerDataset):
         if isinstance(self.sentence_splitter, TagSentenceSplitter):
             sentence_separator = self.sentence_splitter.tag
 
-        train_data = MIRNA.download_and_prepare_train(
-            download_folder, sentence_separator
-        )
+        train_data = MIRNA.download_and_prepare_train(download_folder, sentence_separator)
         train_data = filter_and_map_entities(train_data, self.entity_type_mapping)
 
         test_data = MIRNA.download_and_prepare_test(download_folder, sentence_separator)
@@ -1413,9 +1314,7 @@ class KaewphanCorpusHelper:
 
     @staticmethod
     def download_cll_dataset(data_folder: Path):
-        data_url = (
-            "https://github.com/hu-ner/hunflair-corpora/raw/main/cll/CLL_corpus.tar.gz"
-        )
+        data_url = "https://github.com/hu-ner/hunflair-corpora/raw/main/cll/CLL_corpus.tar.gz"
         data_path = cached_path(data_url, data_folder)
         unpack_file(data_path, data_folder)
 
@@ -1429,9 +1328,7 @@ class KaewphanCorpusHelper:
                 continue
 
             annotations = []
-            with open(
-                os.path.join(str(nersuite_folder), file), "r", encoding="utf8"
-            ) as reader:
+            with open(os.path.join(str(nersuite_folder), file), "r", encoding="utf8") as reader:
                 for line in reader.readlines():
                     columns = line.split("\t")
                     annotations.append(columns[:4])
@@ -1448,16 +1345,12 @@ class KaewphanCorpusHelper:
                 has_whitespace = "+"
 
                 next_annotation = (
-                    annotations[i + 1]
-                    if (i + 1) < num_annotations and len(annotations[i + 1]) > 1
-                    else None
+                    annotations[i + 1] if (i + 1) < num_annotations and len(annotations[i + 1]) > 1 else None
                 )
                 if next_annotation and next_annotation[1] == annotation[2]:
                     has_whitespace = "-"
 
-                writer.write(
-                    " ".join([annotation[3], annotation[0], has_whitespace]) + "\n"
-                )
+                writer.write(" ".join([annotation[3], annotation[0], has_whitespace]) + "\n")
                 out_newline = False
 
             if not out_newline:
@@ -1473,9 +1366,7 @@ class KaewphanCorpusHelper:
         unpack_file(data_path, data_folder)
 
     @staticmethod
-    def read_dataset(
-        nersuite_folder: Path, sentence_separator: str
-    ) -> InternalBioNerDataset:
+    def read_dataset(nersuite_folder: Path, sentence_separator: str) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = {}
         for file in os.listdir(str(nersuite_folder)):
@@ -1484,9 +1375,7 @@ class KaewphanCorpusHelper:
 
             document_id = file.replace(".nersuite", "")
 
-            with open(
-                os.path.join(str(nersuite_folder), file), "r", encoding="utf8"
-            ) as reader:
+            with open(os.path.join(str(nersuite_folder), file), "r", encoding="utf8") as reader:
                 document_text = ""
                 entities = []
 
@@ -1499,22 +1388,12 @@ class KaewphanCorpusHelper:
                         tag, _, _, _, token = line.split("\t")[:5]
                         if tag.startswith("B-"):
                             if entity_type is not None and entity_start is not None:
-                                entities.append(
-                                    Entity(
-                                        (entity_start, len(document_text)), entity_type
-                                    )
-                                )
+                                entities.append(Entity((entity_start, len(document_text)), entity_type))
 
-                            entity_start = (
-                                len(document_text) + 1 if document_text else 0
-                            )
+                            entity_start = len(document_text) + 1 if document_text else 0
                             entity_type = tag[2:]
 
-                        elif (
-                            tag == "O"
-                            and entity_type is not None
-                            and entity_start is not None
-                        ):
+                        elif tag == "O" and entity_type is not None and entity_start is not None:
                             entities.append(
                                 Entity(
                                     (entity_start, len(document_text)),
@@ -1523,15 +1402,11 @@ class KaewphanCorpusHelper:
                             )
                             entity_type = None
 
-                        document_text = (
-                            document_text + " " + token if document_text else token
-                        )
+                        document_text = document_text + " " + token if document_text else token
                     else:
                         # Edge case: last token starts a new entity
                         if entity_type is not None and entity_start is not None:
-                            entities.append(
-                                Entity((entity_start, len(document_text)), entity_type)
-                            )
+                            entities.append(Entity((entity_start, len(document_text)), entity_type))
                         document_text += sentence_separator
 
                 if document_text.endswith(sentence_separator):
@@ -1540,9 +1415,7 @@ class KaewphanCorpusHelper:
                 documents[document_id] = document_text
                 entities_per_document[document_id] = entities
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class CLL(ColumnCorpus):
@@ -1606,9 +1479,7 @@ class HUNER_CELL_LINE_CLL(HunerDataset):
             sentence_separator = self.sentence_splitter.tag
 
         nersuite_folder = data_dir / "CLL-1.0.2" / "nersuite"
-        orig_dataset = KaewphanCorpusHelper.read_dataset(
-            nersuite_folder, sentence_separator
-        )
+        orig_dataset = KaewphanCorpusHelper.read_dataset(nersuite_folder, sentence_separator)
 
         return filter_and_map_entities(orig_dataset, {"CL": CELL_LINE_TAG})
 
@@ -1684,9 +1555,7 @@ class HUNER_CELL_LINE_GELLUS(HunerDataset):
         splits = []
         for folder in ["train", "devel", "test"]:
             nersuite_folder = data_dir / "GELLUS-1.0.3" / "nersuite" / folder
-            splits.append(
-                KaewphanCorpusHelper.read_dataset(nersuite_folder, sentence_separator)
-            )
+            splits.append(KaewphanCorpusHelper.read_dataset(nersuite_folder, sentence_separator))
 
         full_dataset = merge_datasets(splits)
         return filter_and_map_entities(full_dataset, {"Cell-line-name": CELL_LINE_TAG})
@@ -1763,9 +1632,7 @@ class LOCTEXT(ColumnCorpus):
             document_id = file.strip(".json")
             entities = []
 
-            with open(
-                os.path.join(str(loctext_json_folder), file), "r", encoding="utf8"
-            ) as f_in:
+            with open(os.path.join(str(loctext_json_folder), file), "r", encoding="utf8") as f_in:
                 data = json.load(f_in)
                 document_text = data["text"].strip()
                 document_text = document_text.replace("\n", " ")
@@ -1785,9 +1652,7 @@ class LOCTEXT(ColumnCorpus):
                 documents[document_id] = document_text
                 entities_per_document[document_id] = entities
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class HUNER_LOCTEXT(HunerDataset):
@@ -1888,15 +1753,9 @@ class CHEMDNER(ColumnCorpus):
             os.makedirs(download_dir, exist_ok=True)
             self.download_dataset(download_dir)
 
-            train_data = bioc_to_internal(
-                download_dir / "chemdner_corpus" / "training.bioc.xml"
-            )
-            dev_data = bioc_to_internal(
-                download_dir / "chemdner_corpus" / "development.bioc.xml"
-            )
-            test_data = bioc_to_internal(
-                download_dir / "chemdner_corpus" / "evaluation.bioc.xml"
-            )
+            train_data = bioc_to_internal(download_dir / "chemdner_corpus" / "training.bioc.xml")
+            dev_data = bioc_to_internal(download_dir / "chemdner_corpus" / "development.bioc.xml")
+            test_data = bioc_to_internal(download_dir / "chemdner_corpus" / "evaluation.bioc.xml")
 
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
 
@@ -1928,15 +1787,9 @@ class HUNER_CHEMICAL_CHEMDNER(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
         CHEMDNER.download_dataset(data_dir)
-        train_data = bioc_to_internal(
-            data_dir / "chemdner_corpus" / "training.bioc.xml"
-        )
-        dev_data = bioc_to_internal(
-            data_dir / "chemdner_corpus" / "development.bioc.xml"
-        )
-        test_data = bioc_to_internal(
-            data_dir / "chemdner_corpus" / "evaluation.bioc.xml"
-        )
+        train_data = bioc_to_internal(data_dir / "chemdner_corpus" / "training.bioc.xml")
+        dev_data = bioc_to_internal(data_dir / "chemdner_corpus" / "development.bioc.xml")
+        test_data = bioc_to_internal(data_dir / "chemdner_corpus" / "evaluation.bioc.xml")
         all_data = merge_datasets([train_data, dev_data, test_data])
         all_data = filter_and_map_entities(
             all_data,
@@ -2006,9 +1859,7 @@ class IEPA(ColumnCorpus):
 
     @staticmethod
     def download_dataset(data_dir: Path):
-        data_url = (
-            "https://github.com/metalrt/ppi-dataset/archive/refs/heads/master.zip"
-        )
+        data_url = "https://github.com/metalrt/ppi-dataset/archive/refs/heads/master.zip"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, data_dir)
 
@@ -2044,9 +1895,7 @@ class IEPA(ColumnCorpus):
                     )
             documents[document_id] = document_text
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class HUNER_GENE_IEPA(HunerDataset):
@@ -2138,9 +1987,7 @@ class LINNEAUS(ColumnCorpus):
         for filename in os.listdir(str(texts_directory)):
             document_id = filename.strip(".txt")
 
-            with open(
-                os.path.join(str(texts_directory), filename), "r", encoding="utf8"
-            ) as file:
+            with open(os.path.join(str(texts_directory), filename), "r", encoding="utf8") as file:
                 documents[document_id] = file.read().strip()
 
         # Read annotations
@@ -2155,9 +2002,7 @@ class LINNEAUS(ColumnCorpus):
                 document_id, _start, _end, text = line.strip().split("\t")[1:5]
                 start, end = int(_start), int(_end)
 
-                entities_per_document[document_id].append(
-                    Entity((start, end), SPECIES_TAG)
-                )
+                entities_per_document[document_id].append(Entity((start, end), SPECIES_TAG))
 
                 document_text = documents[document_id]
                 if document_text[start:end] != text:
@@ -2234,24 +2079,11 @@ class CDR(ColumnCorpus):
             os.makedirs(download_dir, exist_ok=True)
             self.download_dataset(download_dir)
 
-            train_data = bioc_to_internal(
-                download_dir
-                / "CDR_Data"
-                / "CDR.Corpus.v010516"
-                / "CDR_TrainingSet.BioC.xml"
-            )
+            train_data = bioc_to_internal(download_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TrainingSet.BioC.xml")
             dev_data = bioc_to_internal(
-                download_dir
-                / "CDR_Data"
-                / "CDR.Corpus.v010516"
-                / "CDR_DevelopmentSet.BioC.xml"
+                download_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml"
             )
-            test_data = bioc_to_internal(
-                download_dir
-                / "CDR_Data"
-                / "CDR.Corpus.v010516"
-                / "CDR_TestSet.BioC.xml"
-            )
+            test_data = bioc_to_internal(download_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml")
 
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
@@ -2262,9 +2094,7 @@ class CDR(ColumnCorpus):
 
     @staticmethod
     def download_dataset(data_dir: Path):
-        data_url = (
-            "https://github.com/JHnlp/BioCreative-V-CDR-Corpus/raw/master/CDR_Data.zip"
-        )
+        data_url = "https://github.com/JHnlp/BioCreative-V-CDR-Corpus/raw/master/CDR_Data.zip"
         data_path = cached_path(data_url, data_dir)
         unpack_file(data_path, data_dir)
 
@@ -2284,15 +2114,9 @@ class HUNER_DISEASE_CDR(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
         CDR.download_dataset(data_dir)
-        train_data = bioc_to_internal(
-            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TrainingSet.BioC.xml"
-        )
-        dev_data = bioc_to_internal(
-            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml"
-        )
-        test_data = bioc_to_internal(
-            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml"
-        )
+        train_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TrainingSet.BioC.xml")
+        dev_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml")
+        test_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml")
         all_data = merge_datasets([train_data, dev_data, test_data])
         all_data = filter_and_map_entities(all_data, {"Disease": DISEASE_TAG})
 
@@ -2314,15 +2138,9 @@ class HUNER_CHEMICAL_CDR(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
         CDR.download_dataset(data_dir)
-        train_data = bioc_to_internal(
-            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TrainingSet.BioC.xml"
-        )
-        dev_data = bioc_to_internal(
-            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml"
-        )
-        test_data = bioc_to_internal(
-            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml"
-        )
+        train_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TrainingSet.BioC.xml")
+        dev_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml")
+        test_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml")
         all_data = merge_datasets([train_data, dev_data, test_data])
         all_data = filter_and_map_entities(all_data, {"Chemical": CHEMICAL_TAG})
 
@@ -2348,15 +2166,9 @@ class HUNER_ALL_CDR(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         os.makedirs(str(data_dir), exist_ok=True)
         CDR.download_dataset(data_dir)
-        train_data = bioc_to_internal(
-            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TrainingSet.BioC.xml"
-        )
-        dev_data = bioc_to_internal(
-            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml"
-        )
-        test_data = bioc_to_internal(
-            data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml"
-        )
+        train_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TrainingSet.BioC.xml")
+        dev_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml")
+        test_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml")
         all_data = merge_datasets([train_data, dev_data, test_data])
         entity_type_mapping = {"Disease": DISEASE_TAG, "Chemical": CHEMICAL_TAG}
         all_data = filter_and_map_entities(all_data, entity_type_mapping)
@@ -2444,9 +2256,7 @@ class VARIOME(ColumnCorpus):
 
                     new_entities.append(Entity((new_start, new_end), entity.type))
 
-                    orig_text = document_text[
-                        entity.char_span.start : entity.char_span.stop
-                    ]
+                    orig_text = document_text[entity.char_span.start : entity.char_span.stop]
                     new_text = text_cleaned[new_start:new_end]
                     assert orig_text == new_text
 
@@ -2499,9 +2309,7 @@ class HUNER_DISEASE_VARIOME(HunerDataset):
         os.makedirs(str(data_dir), exist_ok=True)
         VARIOME.download_dataset(data_dir)
         all_data = VARIOME.parse_corpus(data_dir / "hvp_bioc.xml")
-        all_data = filter_and_map_entities(
-            all_data, {"Disorder": DISEASE_TAG, "disease": DISEASE_TAG}
-        )
+        all_data = filter_and_map_entities(all_data, {"Disorder": DISEASE_TAG, "disease": DISEASE_TAG})
 
         return all_data
 
@@ -2647,9 +2455,7 @@ class NCBI_DISEASE(ColumnCorpus):
                 line_no = 1
 
                 for line in input:
-                    output.write(
-                        patch_lines[line_no] if line_no in patch_lines else line
-                    )
+                    output.write(patch_lines[line_no] if line_no in patch_lines else line)
                     line_no += 1
 
     @staticmethod
@@ -2718,15 +2524,9 @@ class HUNER_DISEASE_NCBI(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         orig_folder = NCBI_DISEASE.download_corpus(data_dir)
 
-        train_data = NCBI_DISEASE.parse_input_file(
-            orig_folder / "NCBItrainset_patched.txt"
-        )
-        dev_data = NCBI_DISEASE.parse_input_file(
-            orig_folder / "NCBIdevelopset_corpus.txt"
-        )
-        test_data = NCBI_DISEASE.parse_input_file(
-            orig_folder / "NCBItestset_corpus.txt"
-        )
+        train_data = NCBI_DISEASE.parse_input_file(orig_folder / "NCBItrainset_patched.txt")
+        dev_data = NCBI_DISEASE.parse_input_file(orig_folder / "NCBIdevelopset_corpus.txt")
+        test_data = NCBI_DISEASE.parse_input_file(orig_folder / "NCBItestset_corpus.txt")
 
         return merge_datasets([train_data, dev_data, test_data])
 
@@ -2797,9 +2597,7 @@ class ScaiCorpus(ColumnCorpus):
                 if line[:3] == "###":
                     # Edge case: last token starts a new entity
                     if entity_type is not None:
-                        entities.append(
-                            Entity((entity_start, len(document_text)), entity_type)
-                        )
+                        entities.append(Entity((entity_start, len(document_text)), entity_type))
 
                     if not (document_id is None or document_text is None):
                         documents[document_id] = document_text
@@ -2815,28 +2613,18 @@ class ScaiCorpus(ColumnCorpus):
 
                     if tag.startswith("B-"):
                         if entity_type is not None:
-                            entities.append(
-                                Entity((entity_start, len(document_text)), entity_type)
-                            )
+                            entities.append(Entity((entity_start, len(document_text)), entity_type))
 
                         entity_start = len(document_text) + 1 if document_text else 0
                         entity_type = tag[2:]
 
                     elif tag == "O" and entity_type is not None:
-                        entities.append(
-                            Entity((entity_start, len(document_text)), entity_type)
-                        )
+                        entities.append(Entity((entity_start, len(document_text)), entity_type))
                         entity_type = None
 
-                    document_text = (
-                        document_text + " " + token
-                        if document_text is not None
-                        else token
-                    )
+                    document_text = document_text + " " + token if document_text is not None else token
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class SCAI_CHEMICALS(ScaiCorpus):
@@ -3028,9 +2816,7 @@ class OSIRIS(ColumnCorpus):
 
         if not (train_file.exists()):
             corpus_folder = self.download_dataset(data_folder)
-            corpus_data = self.parse_dataset(
-                corpus_folder, fix_annotation=not load_original_unfixed_annotation
-            )
+            corpus_data = self.parse_dataset(corpus_folder, fix_annotation=not load_original_unfixed_annotation)
 
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
@@ -3051,14 +2837,10 @@ class OSIRIS(ColumnCorpus):
         entities_per_document = {}
 
         input_files = [
-            file
-            for file in os.listdir(str(corpus_folder))
-            if file.endswith(".txt") and not file.startswith("README")
+            file for file in os.listdir(str(corpus_folder)) if file.endswith(".txt") and not file.startswith("README")
         ]
         for text_file in input_files:
-            with open(
-                os.path.join(str(corpus_folder), text_file), encoding="utf8"
-            ) as text_reader:
+            with open(os.path.join(str(corpus_folder), text_file), encoding="utf8") as text_reader:
                 document_text = text_reader.read()
                 if not document_text:
                     continue
@@ -3068,9 +2850,7 @@ class OSIRIS(ColumnCorpus):
                 text_offset = document_text.find(article_parts[1])
                 document_text = (article_parts[1] + "  " + article_parts[2]).strip()
 
-            with open(
-                os.path.join(str(corpus_folder), text_file + ".ann"), encoding="utf8"
-            ) as ann_file:
+            with open(os.path.join(str(corpus_folder), text_file + ".ann"), encoding="utf8") as ann_file:
                 entities = []
 
                 tree = etree.parse(ann_file)
@@ -3082,24 +2862,15 @@ class OSIRIS(ColumnCorpus):
                     start, end = annotation.get("span").split("..")
                     start, end = int(start), int(end)
 
-                    if (
-                        fix_annotation
-                        and text_file == "article46.txt"
-                        and start == 289
-                        and end == 644
-                    ):
+                    if fix_annotation and text_file == "article46.txt" and start == 289 and end == 644:
                         end = 295
 
-                    entities.append(
-                        Entity((start - text_offset, end - text_offset), entity_type)
-                    )
+                    entities.append(Entity((start - text_offset, end - text_offset), entity_type))
 
             documents[document_id] = document_text
             entities_per_document[document_id] = entities
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class HUNER_GENE_OSIRIS(HunerDataset):
@@ -3198,14 +2969,10 @@ class S800(ColumnCorpus):
                 entities_per_document[fname].append(Entity((start, end), "Species"))
 
         for fname in entities_per_document:
-            with (data_dir / "abstracts" / fname).with_suffix(".txt").open(
-                encoding="utf8"
-            ) as f:
+            with (data_dir / "abstracts" / fname).with_suffix(".txt").open(encoding="utf8") as f:
                 texts_per_document[fname] = f.read()
 
-        return InternalBioNerDataset(
-            documents=texts_per_document, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=texts_per_document, entities_per_document=entities_per_document)
 
 
 class HUNER_SPECIES_S800(HunerDataset):
@@ -3338,9 +3105,7 @@ class GPRO(ColumnCorpus):
                     start = start + document_title_length[document_id]
                     end = end + document_title_length[document_id]
 
-                entities_per_document[document_id].append(
-                    Entity((start, end), GENE_TAG)
-                )
+                entities_per_document[document_id].append(Entity((start, end), GENE_TAG))
 
                 document_text = documents[document_id]
                 assert columns[4] == document_text[start:end]
@@ -3443,15 +3208,11 @@ class DECA(ColumnCorpus):
         documents: Dict[str, str] = {}
         entities_per_document: Dict[str, List[Entity]] = {}
 
-        text_files = [
-            file for file in os.listdir(str(text_dir)) if not file.startswith(".")
-        ]
+        text_files = [file for file in os.listdir(str(text_dir)) if not file.startswith(".")]
 
         for file in text_files:
             document_id = file.strip(".txt")
-            with open(
-                os.path.join(str(text_dir), file), "r", encoding="utf8"
-            ) as text_file:
+            with open(os.path.join(str(text_dir), file), "r", encoding="utf8") as text_file:
                 documents[document_id] = text_file.read().strip()
                 entities_per_document[document_id] = []
 
@@ -3464,9 +3225,7 @@ class DECA(ColumnCorpus):
                 document_id = columns[0].strip(".txt")
                 start, end = int(columns[1]), int(columns[2])
 
-                entities_per_document[document_id].append(
-                    Entity((start, end), GENE_TAG)
-                )
+                entities_per_document[document_id].append(Entity((start, end), GENE_TAG))
 
                 document_text = documents[document_id]
                 assert document_text[start:end] == columns[3]
@@ -3527,9 +3286,7 @@ class FSU(ColumnCorpus):
 
         data_folder = base_path / dataset_name
 
-        sentence_splitter = TagSentenceSplitter(
-            tag=SENTENCE_TAG, tokenizer=SpaceTokenizer()
-        )
+        sentence_splitter = TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=SpaceTokenizer())
         train_file = data_folder / f"{sentence_splitter.name}_train.conll"
 
         if not train_file.exists():
@@ -3550,9 +3307,7 @@ class FSU(ColumnCorpus):
         return data_dir / "fsu-prge-release-v1.0"
 
     @staticmethod
-    def parse_corpus(
-        corpus_dir: Path, sentence_separator: str
-    ) -> InternalBioNerDataset:
+    def parse_corpus(corpus_dir: Path, sentence_separator: str) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = {}
         entity_types_set = set()
@@ -3564,17 +3319,11 @@ class FSU(ColumnCorpus):
                 if not doc.is_dir():
                     continue
                 try:
-                    with open(
-                        doc / "Basedata" / "Basedata.xml", "r", encoding="utf8"
-                    ) as word_f:
+                    with open(doc / "Basedata" / "Basedata.xml", "r", encoding="utf8") as word_f:
                         word_tree = etree.parse(word_f)
-                    with open(
-                        doc / "Markables" / "sentence.xml", "r", encoding="utf8"
-                    ) as sentence_f:
+                    with open(doc / "Markables" / "sentence.xml", "r", encoding="utf8") as sentence_f:
                         sentence_tree = etree.parse(sentence_f).getroot()
-                    with open(
-                        doc / "Markables" / "proteins.xml", "r", encoding="utf8"
-                    ) as protein_f:
+                    with open(doc / "Markables" / "proteins.xml", "r", encoding="utf8") as protein_f:
                         protein_tree = etree.parse(protein_f).getroot()
                     with open(doc / "Basedata.uri", "r", encoding="utf8") as id_f:
                         document_id = id_f.read().strip()
@@ -3593,10 +3342,7 @@ class FSU(ColumnCorpus):
                 word_pos = [(0, 0) for _ in words]
 
                 sentences_id_span = sorted(
-                    [
-                        (int(sentence.get("id").split("_")[-1]), sentence.get("span"))
-                        for sentence in sentence_tree
-                    ]
+                    [(int(sentence.get("id").split("_")[-1]), sentence.get("span")) for sentence in sentence_tree]
                 )
 
                 sentences = []
@@ -3631,9 +3377,7 @@ class FSU(ColumnCorpus):
                 sent_offset = 0
                 for sent, sent_entities in zip(sentence_texts, pre_entities):
                     for start, end, ent_type in sent_entities:
-                        entities.append(
-                            Entity((start + sent_offset, end + sent_offset), ent_type)
-                        )
+                        entities.append(Entity((start + sent_offset, end + sent_offset), ent_type))
                         entity_types_set.add(ent_type)
                     sent_offset += len(sent) + len(sentence_separator)
 
@@ -3775,9 +3519,7 @@ class CRAFT(ColumnCorpus):
 
             entities_per_document[document_id] = entities
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class BIOSEMANTICS(ColumnCorpus):
@@ -3840,11 +3582,7 @@ class BIOSEMANTICS(ColumnCorpus):
     def parse_dataset(data_dir: Path) -> InternalBioNerDataset:
         base_folder = data_dir / "Full_set"
 
-        dirs = [
-            file
-            for file in os.listdir(str(base_folder))
-            if os.path.isdir(os.path.join(str(base_folder), file))
-        ]
+        dirs = [file for file in os.listdir(str(base_folder)) if os.path.isdir(os.path.join(str(base_folder), file))]
 
         text_files = []
         for directory in dirs:
@@ -3893,9 +3631,7 @@ class BIOSEMANTICS(ColumnCorpus):
 
                     # Try to fix entity offsets
                     if tmp_document_text[offset + start : offset + end] != columns[2]:
-                        alt_text = tmp_document_text[
-                            offset + start : offset + start + len(columns[2])
-                        ]
+                        alt_text = tmp_document_text[offset + start : offset + start + len(columns[2])]
                         if alt_text == columns[2]:
                             end = start + len(columns[2])
 
@@ -3916,9 +3652,7 @@ class BIOSEMANTICS(ColumnCorpus):
                 else:
                     entities_per_document[document_id] = entities
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class BC2GM(ColumnCorpus):
@@ -4038,15 +3772,11 @@ class BC2GM(ColumnCorpus):
                     # There is still one illegal annotation in the file ..
                     new_start_idx += 1
 
-                entities_per_document[document_id].append(
-                    Entity((new_start_idx, new_end_idx), GENE_TAG)
-                )
+                entities_per_document[document_id].append(Entity((new_start_idx, new_end_idx), GENE_TAG))
 
                 assert document_text[new_start_idx:new_end_idx] == columns[2]
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class HUNER_GENE_BC2GM(HunerDataset):
@@ -4120,9 +3850,7 @@ class CEMP(ColumnCorpus):
 
             dev_folder = self.download_dev_corpus(data_folder)
             dev_text_file = dev_folder / "chemdner_patents_development_text.txt"
-            dev_ann_file = (
-                dev_folder / "chemdner_cemp_gold_standard_development_v03.tsv"
-            )
+            dev_ann_file = dev_folder / "chemdner_cemp_gold_standard_development_v03.tsv"
             dev_data = self.parse_input_file(dev_text_file, dev_ann_file)
 
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
@@ -4185,16 +3913,12 @@ class CEMP(ColumnCorpus):
                     start = start + document_abstract_length[document_id]
                     end = end + document_abstract_length[document_id]
 
-                entities_per_document[document_id].append(
-                    Entity((start, end), columns[5].strip())
-                )
+                entities_per_document[document_id].append(Entity((start, end), columns[5].strip()))
 
                 document_text = documents[document_id]
                 assert columns[4] == document_text[start:end]
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class HUNER_CHEMICAL_CEMP(HunerDataset):
@@ -4310,14 +4034,8 @@ class CHEBI(ColumnCorpus):
         documents = {}
         entities_per_document = {}
 
-        abstract_ids = [
-            x.name[:-4]
-            for x in (abstract_folder / annotation_dirs[0]).iterdir()
-            if x.name[-4:] == ".txt"
-        ]
-        fulltext_ids = [
-            x.name[:-4] for x in fulltext_folder.iterdir() if x.name[-4:] == ".txt"
-        ]
+        abstract_ids = [x.name[:-4] for x in (abstract_folder / annotation_dirs[0]).iterdir() if x.name[-4:] == ".txt"]
+        fulltext_ids = [x.name[:-4] for x in fulltext_folder.iterdir() if x.name[-4:] == ".txt"]
 
         for abstract_id in abstract_ids:
             abstract_id_output = abstract_id + "_A"
@@ -4339,20 +4057,14 @@ class CHEBI(ColumnCorpus):
 
         for fulltext_id in fulltext_ids:
             fulltext_id_output = fulltext_id + "_F"
-            with open(
-                fulltext_folder / f"{fulltext_id}.txt", "r", encoding="utf8"
-            ) as f:
+            with open(fulltext_folder / f"{fulltext_id}.txt", "r", encoding="utf8") as f:
                 documents[fulltext_id_output] = f.read()
 
-            with open(
-                fulltext_folder / f"{fulltext_id}.ann", "r", encoding="utf8"
-            ) as f:
+            with open(fulltext_folder / f"{fulltext_id}.ann", "r", encoding="utf8") as f:
                 entities = CHEBI.get_entities(f)
             entities_per_document[fulltext_id_output] = entities
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
     @staticmethod
     def get_entities(f):
@@ -4475,9 +4187,7 @@ class BioNLPCorpus(ColumnCorpus):
         test_file = data_folder / f"{sentence_splitter.name}_test.conll"
 
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
-            train_folder, dev_folder, test_folder = self.download_corpus(
-                data_folder / "original"
-            )
+            train_folder, dev_folder, test_folder = self.download_corpus(data_folder / "original")
 
             train_data = self.parse_input_files(train_folder)
             dev_data = self.parse_input_files(dev_folder)
@@ -4515,11 +4225,7 @@ class BioNLPCorpus(ColumnCorpus):
                     fields = line.strip().split("\t")
                     if fields[0].startswith("T"):
                         ann_type, start, end = fields[1].split()
-                        entities.append(
-                            Entity(
-                                char_span=(int(start), int(end)), entity_type=ann_type
-                            )
-                        )
+                        entities.append(Entity(char_span=(int(start), int(end)), entity_type=ann_type))
                         entity_types_set.add(ann_type)
                 entities_per_document[name] = entities
         entity_types = list(entity_types_set)
@@ -4542,12 +4248,8 @@ class BIONLP2013_PC(BioNLPCorpus):
 
     @staticmethod
     def download_corpus(download_folder: Path) -> Tuple[Path, Path, Path]:
-        train_url = (
-            "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_training_data.tar.gz"
-        )
-        dev_url = (
-            "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_development_data.tar.gz"
-        )
+        train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_training_data.tar.gz"
+        dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_development_data.tar.gz"
         test_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_test_data.tar.gz"
 
         cached_path(train_url, download_folder)
@@ -4652,15 +4354,9 @@ class ANAT_EM(ColumnCorpus):
         if not (train_file.exists() and dev_file.exists() and test_file.exists()):
             corpus_folder = self.download_corpus(data_folder)
 
-            train_data = self.parse_input_files(
-                corpus_folder / "nersuite" / "train", SENTENCE_TAG
-            )
-            dev_data = self.parse_input_files(
-                corpus_folder / "nersuite" / "devel", SENTENCE_TAG
-            )
-            test_data = self.parse_input_files(
-                corpus_folder / "nersuite" / "test", SENTENCE_TAG
-            )
+            train_data = self.parse_input_files(corpus_folder / "nersuite" / "train", SENTENCE_TAG)
+            dev_data = self.parse_input_files(corpus_folder / "nersuite" / "devel", SENTENCE_TAG)
+            test_data = self.parse_input_files(corpus_folder / "nersuite" / "test", SENTENCE_TAG)
 
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
@@ -4685,16 +4381,12 @@ class ANAT_EM(ColumnCorpus):
         return data_folder / "AnatEM-1.0.2"
 
     @staticmethod
-    def parse_input_files(
-        input_dir: Path, sentence_separator: str
-    ) -> InternalBioNerDataset:
+    def parse_input_files(input_dir: Path, sentence_separator: str) -> InternalBioNerDataset:
         documents = {}
         entities_per_document = {}
 
         input_files = [
-            file
-            for file in os.listdir(str(input_dir))
-            if file.endswith(".nersuite") and not file.startswith("._")
+            file for file in os.listdir(str(input_dir)) if file.endswith(".nersuite") and not file.startswith("._")
         ]
 
         for input_file in input_files:
@@ -4726,21 +4418,13 @@ class ANAT_EM(ColumnCorpus):
 
                     if tag.startswith("B-"):
                         if entity_type is not None:
-                            entities.append(
-                                Entity((entity_start, last_offset), entity_type)
-                            )
+                            entities.append(Entity((entity_start, last_offset), entity_type))
 
                         entity_start = start
                         entity_type = tag[2:]
 
-                    elif (
-                        tag == "O"
-                        and entity_type is not None
-                        and entity_start is not None
-                    ):
-                        entities.append(
-                            Entity((entity_start, last_offset), entity_type)
-                        )
+                    elif tag == "O" and entity_type is not None and entity_start is not None:
+                        entities.append(Entity((entity_start, last_offset), entity_type))
                         entity_type = None
 
                     last_offset = end
@@ -4750,9 +4434,7 @@ class ANAT_EM(ColumnCorpus):
             documents[document_id] = document_text
             entities_per_document[document_id] = entities
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class BioBertHelper(ColumnCorpus):
@@ -4778,9 +4460,9 @@ class BioBertHelper(ColumnCorpus):
     @staticmethod
     def convert_and_write(download_folder, data_folder, tag_type):
         data_folder.mkdir(parents=True, exist_ok=True)
-        with (download_folder / "train.tsv").open(encoding="utf8") as f_in, (
-            data_folder / "train.conll"
-        ).open("w", encoding="utf8") as f_out:
+        with (download_folder / "train.tsv").open(encoding="utf8") as f_in, (data_folder / "train.conll").open(
+            "w", encoding="utf8"
+        ) as f_out:
             for line in f_in:
                 if not line.strip():
                     f_out.write("\n")
@@ -4791,9 +4473,9 @@ class BioBertHelper(ColumnCorpus):
                     tag = tag + "-" + tag_type
                 f_out.write(f"{token} {tag}\n")
 
-        with (download_folder / "devel.tsv").open(encoding="utf8") as f_in, (
-            data_folder / "dev.conll"
-        ).open("w", encoding="utf8") as f_out:
+        with (download_folder / "devel.tsv").open(encoding="utf8") as f_in, (data_folder / "dev.conll").open(
+            "w", encoding="utf8"
+        ) as f_out:
             for line in f_in:
                 if not line.strip():
                     f_out.write("\n")
@@ -4803,9 +4485,9 @@ class BioBertHelper(ColumnCorpus):
                     tag = tag + "-" + tag_type
                 f_out.write(f"{token} {tag}\n")
 
-        with (download_folder / "test.tsv").open(encoding="utf8") as f_in, (
-            data_folder / "test.conll"
-        ).open("w", encoding="utf8") as f_out:
+        with (download_folder / "test.tsv").open(encoding="utf8") as f_in, (data_folder / "test.conll").open(
+            "w", encoding="utf8"
+        ) as f_out:
             for line in f_in:
                 if not line.strip():
                     f_out.write("\n")
@@ -4847,12 +4529,8 @@ class BIOBERT_CHEMICAL_BC4CHEMD(ColumnCorpus):
             if not (common_path / "BC4CHEMD").exists():
                 BioBertHelper.download_corpora(common_path)
 
-            BioBertHelper.convert_and_write(
-                common_path / "BC4CHEMD", data_folder, tag_type=CHEMICAL_TAG
-            )
-        super(BIOBERT_CHEMICAL_BC4CHEMD, self).__init__(
-            data_folder, columns, in_memory=in_memory
-        )
+            BioBertHelper.convert_and_write(common_path / "BC4CHEMD", data_folder, tag_type=CHEMICAL_TAG)
+        super(BIOBERT_CHEMICAL_BC4CHEMD, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_GENE_BC2GM(ColumnCorpus):
@@ -4885,12 +4563,8 @@ class BIOBERT_GENE_BC2GM(ColumnCorpus):
             common_path = base_path / "biobert_common"
             if not (common_path / "BC2GM").exists():
                 BioBertHelper.download_corpora(common_path)
-            BioBertHelper.convert_and_write(
-                common_path / "BC2GM", data_folder, tag_type=GENE_TAG
-            )
-        super(BIOBERT_GENE_BC2GM, self).__init__(
-            data_folder, columns, in_memory=in_memory
-        )
+            BioBertHelper.convert_and_write(common_path / "BC2GM", data_folder, tag_type=GENE_TAG)
+        super(BIOBERT_GENE_BC2GM, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_GENE_JNLPBA(ColumnCorpus):
@@ -4923,12 +4597,8 @@ class BIOBERT_GENE_JNLPBA(ColumnCorpus):
             common_path = base_path / "biobert_common"
             if not (common_path / "JNLPBA").exists():
                 BioBertHelper.download_corpora(common_path)
-            BioBertHelper.convert_and_write(
-                common_path / "JNLPBA", data_folder, tag_type=GENE_TAG
-            )
-        super(BIOBERT_GENE_JNLPBA, self).__init__(
-            data_folder, columns, in_memory=in_memory
-        )
+            BioBertHelper.convert_and_write(common_path / "JNLPBA", data_folder, tag_type=GENE_TAG)
+        super(BIOBERT_GENE_JNLPBA, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
@@ -4961,12 +4631,8 @@ class BIOBERT_CHEMICAL_BC5CDR(ColumnCorpus):
             common_path = base_path / "biobert_common"
             if not (common_path / "BC5CDR-chem").exists():
                 BioBertHelper.download_corpora(common_path)
-            BioBertHelper.convert_and_write(
-                common_path / "BC5CDR-chem", data_folder, tag_type=CHEMICAL_TAG
-            )
-        super(BIOBERT_CHEMICAL_BC5CDR, self).__init__(
-            data_folder, columns, in_memory=in_memory
-        )
+            BioBertHelper.convert_and_write(common_path / "BC5CDR-chem", data_folder, tag_type=CHEMICAL_TAG)
+        super(BIOBERT_CHEMICAL_BC5CDR, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
@@ -4999,12 +4665,8 @@ class BIOBERT_DISEASE_BC5CDR(ColumnCorpus):
             common_path = base_path / "biobert_common"
             if not (common_path / "BC5CDR-disease").exists():
                 BioBertHelper.download_corpora(common_path)
-            BioBertHelper.convert_and_write(
-                common_path / "BC5CDR-disease", data_folder, tag_type=DISEASE_TAG
-            )
-        super(BIOBERT_DISEASE_BC5CDR, self).__init__(
-            data_folder, columns, in_memory=in_memory
-        )
+            BioBertHelper.convert_and_write(common_path / "BC5CDR-disease", data_folder, tag_type=DISEASE_TAG)
+        super(BIOBERT_DISEASE_BC5CDR, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_DISEASE_NCBI(ColumnCorpus):
@@ -5036,12 +4698,8 @@ class BIOBERT_DISEASE_NCBI(ColumnCorpus):
             common_path = base_path / "biobert_common"
             if not (common_path / "NCBI-disease").exists():
                 BioBertHelper.download_corpora(common_path)
-            BioBertHelper.convert_and_write(
-                common_path / "NCBI-disease", data_folder, tag_type=DISEASE_TAG
-            )
-        super(BIOBERT_DISEASE_NCBI, self).__init__(
-            data_folder, columns, in_memory=in_memory
-        )
+            BioBertHelper.convert_and_write(common_path / "NCBI-disease", data_folder, tag_type=DISEASE_TAG)
+        super(BIOBERT_DISEASE_NCBI, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
@@ -5074,12 +4732,8 @@ class BIOBERT_SPECIES_LINNAEUS(ColumnCorpus):
             common_path = base_path / "biobert_common"
             if not (common_path / "linnaeus").exists():
                 BioBertHelper.download_corpora(common_path)
-            BioBertHelper.convert_and_write(
-                common_path / "linnaeus", data_folder, tag_type=SPECIES_TAG
-            )
-        super(BIOBERT_SPECIES_LINNAEUS, self).__init__(
-            data_folder, columns, in_memory=in_memory
-        )
+            BioBertHelper.convert_and_write(common_path / "linnaeus", data_folder, tag_type=SPECIES_TAG)
+        super(BIOBERT_SPECIES_LINNAEUS, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class BIOBERT_SPECIES_S800(ColumnCorpus):
@@ -5112,12 +4766,8 @@ class BIOBERT_SPECIES_S800(ColumnCorpus):
             common_path = base_path / "biobert_common"
             if not (common_path / "s800").exists():
                 BioBertHelper.download_corpora(common_path)
-            BioBertHelper.convert_and_write(
-                common_path / "s800", data_folder, tag_type=SPECIES_TAG
-            )
-        super(BIOBERT_SPECIES_S800, self).__init__(
-            data_folder, columns, in_memory=in_memory
-        )
+            BioBertHelper.convert_and_write(common_path / "s800", data_folder, tag_type=SPECIES_TAG)
+        super(BIOBERT_SPECIES_S800, self).__init__(data_folder, columns, in_memory=in_memory)
 
 
 class CRAFT_V4(ColumnCorpus):
@@ -5168,9 +4818,7 @@ class CRAFT_V4(ColumnCorpus):
             # Filter for specific entity types, by default no entities will be filtered
             corpus_data = self.filter_entities(corpus_data)
 
-            train_data, dev_data, test_data = self.prepare_splits(
-                data_folder, corpus_data
-            )
+            train_data, dev_data, test_data = self.prepare_splits(data_folder, corpus_data)
 
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(train_data, train_file)
@@ -5208,9 +4856,7 @@ class CRAFT_V4(ColumnCorpus):
         for url in split_urls:
             split_file = cached_path(url, splits_dir)
             with open(str(split_file), "r", encoding="utf8") as split_reader:
-                splits[url.split(".")[-1]] = [
-                    line.strip() for line in split_reader if line.strip()
-                ]
+                splits[url.split(".")[-1]] = [line.strip() for line in split_reader if line.strip()]
 
         train_documents, train_entities = {}, {}
         dev_documents, dev_entities = {}, {}
@@ -5230,15 +4876,9 @@ class CRAFT_V4(ColumnCorpus):
                 test_documents[document_id] = document_text
                 test_entities[document_id] = corpus.entities_per_document[document_id]
 
-        train_corpus = InternalBioNerDataset(
-            documents=train_documents, entities_per_document=train_entities
-        )
-        dev_corpus = InternalBioNerDataset(
-            documents=dev_documents, entities_per_document=dev_entities
-        )
-        test_corpus = InternalBioNerDataset(
-            documents=test_documents, entities_per_document=test_entities
-        )
+        train_corpus = InternalBioNerDataset(documents=train_documents, entities_per_document=train_entities)
+        dev_corpus = InternalBioNerDataset(documents=dev_documents, entities_per_document=dev_entities)
+        test_corpus = InternalBioNerDataset(documents=test_documents, entities_per_document=test_entities)
 
         return train_corpus, dev_corpus, test_corpus
 
@@ -5252,8 +4892,7 @@ class CRAFT_V4(ColumnCorpus):
         annotation_dirs = [
             path
             for path in (corpus_dir / "concept-annotation").iterdir()
-            if path.name not in ["sections-and-typography", "coreference"]
-            and path.is_dir()
+            if path.name not in ["sections-and-typography", "coreference"] and path.is_dir()
         ]
 
         for doc in Tqdm.tqdm(document_texts, desc="Converting to internal"):
@@ -5266,10 +4905,7 @@ class CRAFT_V4(ColumnCorpus):
 
             for annotation_dir in annotation_dirs:
                 with open(
-                    annotation_dir
-                    / annotation_dir.parts[-1]
-                    / "knowtator"
-                    / (doc.name + ".knowtator.xml"),
+                    annotation_dir / annotation_dir.parts[-1] / "knowtator" / (doc.name + ".knowtator.xml"),
                     "r",
                     encoding="utf8",
                 ) as f_ann:
@@ -5282,9 +4918,7 @@ class CRAFT_V4(ColumnCorpus):
 
             entities_per_document[document_id] = entities
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class HUNER_CRAFT_V4(HunerDataset):
@@ -5497,11 +5131,7 @@ class AZDZ(ColumnCorpus):
 
                 if sentence_id != prev_sentence_id:
                     offset = offset + len(SENTENCE_TAG) if offset is not None else 0
-                    document_text = (
-                        document_text + SENTENCE_TAG + text.strip()
-                        if document_text is not None
-                        else text
-                    )
+                    document_text = document_text + SENTENCE_TAG + text.strip() if document_text is not None else text
 
                 if offset is None:
                     continue
@@ -5517,9 +5147,7 @@ class AZDZ(ColumnCorpus):
 
                 entities.append(Entity((start, end), DISEASE_TAG))
 
-        return InternalBioNerDataset(
-            documents=documents, entities_per_document=entities_per_document
-        )
+        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
 
 
 class PDR(ColumnCorpus):
@@ -5568,9 +5196,7 @@ class PDR(ColumnCorpus):
 
         if not train_file.exists():
             corpus_folder = self.download_corpus(data_folder)
-            corpus_data = brat_to_internal(
-                corpus_folder, ann_file_suffixes=[".ann", ".ann2"]
-            )
+            corpus_data = brat_to_internal(corpus_folder, ann_file_suffixes=[".ann", ".ann2"])
 
             conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
             conll_writer.write_to_conll(corpus_data, train_file)
@@ -5600,9 +5226,7 @@ class HUNER_DISEASE_PDR(HunerDataset):
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         corpus_folder = PDR.download_corpus(data_dir)
-        corpus_data = brat_to_internal(
-            corpus_folder, ann_file_suffixes=[".ann", ".ann2"]
-        )
+        corpus_data = brat_to_internal(corpus_folder, ann_file_suffixes=[".ann", ".ann2"])
         corpus_data = filter_and_map_entities(corpus_data, {"Disease": DISEASE_TAG})
 
         return corpus_data
@@ -5619,9 +5243,7 @@ class HunerMultiCorpus(MultiCorpus):
         def entity_type_predicate(member):
             return f"HUNER_{entity_type}_" in str(member) and inspect.isclass(member)
 
-        self.huner_corpora_classes = inspect.getmembers(
-            sys.modules[__name__], predicate=entity_type_predicate
-        )
+        self.huner_corpora_classes = inspect.getmembers(sys.modules[__name__], predicate=entity_type_predicate)
         self.huner_corpora = []
         for name, constructor_func in self.huner_corpora_classes:
             try:
@@ -5674,9 +5296,7 @@ class HunerMultiCorpus(MultiCorpus):
                     exc_info=False,
                 )
 
-        super(HunerMultiCorpus, self).__init__(
-            corpora=self.huner_corpora, name=f"HUNER-{entity_type}"
-        )
+        super(HunerMultiCorpus, self).__init__(corpora=self.huner_corpora, name=f"HUNER-{entity_type}")
 
 
 class HUNER_CELL_LINE(HunerMultiCorpus):
@@ -5685,9 +5305,7 @@ class HUNER_CELL_LINE(HunerMultiCorpus):
     """
 
     def __init__(self, sentence_splitter: SentenceSplitter = None):
-        super(HUNER_CELL_LINE, self).__init__(
-            entity_type="CELL_LINE", sentence_splitter=sentence_splitter
-        )
+        super(HUNER_CELL_LINE, self).__init__(entity_type="CELL_LINE", sentence_splitter=sentence_splitter)
 
 
 class HUNER_CHEMICAL(HunerMultiCorpus):
@@ -5696,9 +5314,7 @@ class HUNER_CHEMICAL(HunerMultiCorpus):
     """
 
     def __init__(self, sentence_splitter: SentenceSplitter = None):
-        super(HUNER_CHEMICAL, self).__init__(
-            entity_type="CHEMICAL", sentence_splitter=sentence_splitter
-        )
+        super(HUNER_CHEMICAL, self).__init__(entity_type="CHEMICAL", sentence_splitter=sentence_splitter)
 
 
 class HUNER_DISEASE(HunerMultiCorpus):
@@ -5707,9 +5323,7 @@ class HUNER_DISEASE(HunerMultiCorpus):
     """
 
     def __init__(self, sentence_splitter: SentenceSplitter = None):
-        super(HUNER_DISEASE, self).__init__(
-            entity_type="DISEASE", sentence_splitter=sentence_splitter
-        )
+        super(HUNER_DISEASE, self).__init__(entity_type="DISEASE", sentence_splitter=sentence_splitter)
 
 
 class HUNER_GENE(HunerMultiCorpus):
@@ -5718,9 +5332,7 @@ class HUNER_GENE(HunerMultiCorpus):
     """
 
     def __init__(self, sentence_splitter: SentenceSplitter = None):
-        super(HUNER_GENE, self).__init__(
-            entity_type="GENE", sentence_splitter=sentence_splitter
-        )
+        super(HUNER_GENE, self).__init__(entity_type="GENE", sentence_splitter=sentence_splitter)
 
 
 class HUNER_SPECIES(HunerMultiCorpus):
@@ -5729,9 +5341,7 @@ class HUNER_SPECIES(HunerMultiCorpus):
     """
 
     def __init__(self, sentence_splitter: SentenceSplitter = None):
-        super(HUNER_SPECIES, self).__init__(
-            entity_type="SPECIES", sentence_splitter=sentence_splitter
-        )
+        super(HUNER_SPECIES, self).__init__(entity_type="SPECIES", sentence_splitter=sentence_splitter)
 
 
 class BIGBIO_NER_CORPUS(ColumnCorpus):
@@ -5823,15 +5433,10 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
             # Perform type mapping if necessary
             type_mapping = self.get_entity_type_mapping()
             if type_mapping:
-                splits = {
-                    split: filter_and_map_entities(dataset, type_mapping)
-                    for split, dataset in splits.items()
-                }
+                splits = {split: filter_and_map_entities(dataset, type_mapping) for split, dataset in splits.items()}
             else:
                 logger.warning(
-                    "No entity type mapping found for {}. Check CONLL files for task descriptions.".format(
-                        dataset_name
-                    )
+                    "No entity type mapping found for {}. Check CONLL files for task descriptions.".format(dataset_name)
                 )
 
             if sentence_splitter is None:
@@ -5943,9 +5548,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
                     entity_offset[1] - passage_offset[0],
                 )
 
-                id_to_entities[passage_id].append(
-                    Entity(char_span=entity_offset, entity_type=entity["type"])
-                )
+                id_to_entities[passage_id].append(Entity(char_span=entity_offset, entity_type=entity["type"]))
                 entity_type_set.add(entity["type"])
 
                 # FIXME: This is just for debugging purposes
@@ -5953,9 +5556,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
                 doc_text = passage_text[entity_offset[0] : entity_offset[1]]
                 mention_text = entity["text"][0]
                 if doc_text != mention_text:
-                    print(
-                        f"Annotation error ({document['document_id']}) - Doc: {doc_text} vs. Mention: {mention_text}"
-                    )
+                    print(f"Annotation error ({document['document_id']}) - Doc: {doc_text} vs. Mention: {mention_text}")
 
         entity_types = list(entity_type_set)
         return InternalBioNerDataset(
@@ -5983,10 +5584,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
             first_mention_offset = entity["offsets"][0]
 
             # Is the mention with the passage offsets?
-            if (
-                first_mention_offset[0] >= first_text_offset[0]
-                and first_mention_offset[1] <= first_text_offset[1]
-            ):
+            if first_mention_offset[0] >= first_text_offset[0] and first_mention_offset[1] <= first_text_offset[1]:
                 return passages[mid][0], first_text_offset
 
             # If element is smaller than mid, then it can only
@@ -6004,9 +5602,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
 
 class HUNER_GENE_NLM_GENE(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_NLM_GENE, self).__init__(
-            *args, dataset_name="nlm_gene", **kwargs
-        )
+        super(HUNER_GENE_NLM_GENE, self).__init__(*args, dataset_name="nlm_gene", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {
@@ -6023,9 +5619,7 @@ class HUNER_GENE_NLM_GENE(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_DRUGPROT(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_DRUGPROT, self).__init__(
-            *args, dataset_name="drugprot", **kwargs
-        )
+        super(HUNER_GENE_DRUGPROT, self).__init__(*args, dataset_name="drugprot", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"GENE-N": GENE_TAG, "GENE-Y": GENE_TAG}
@@ -6036,9 +5630,7 @@ class HUNER_GENE_DRUGPROT(BIGBIO_NER_CORPUS):
 
 class HUNER_CHEMICAL_DRUGPROT(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_DRUGPROT, self).__init__(
-            *args, dataset_name="drugprot", **kwargs
-        )
+        super(HUNER_CHEMICAL_DRUGPROT, self).__init__(*args, dataset_name="drugprot", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"CHEMICAL": CHEMICAL_TAG}
@@ -6049,9 +5641,7 @@ class HUNER_CHEMICAL_DRUGPROT(BIGBIO_NER_CORPUS):
 
 class HUNER_ALL_DRUGPROT(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_ALL_DRUGPROT, self).__init__(
-            *args, dataset_name="drugprot", **kwargs
-        )
+        super(HUNER_ALL_DRUGPROT, self).__init__(*args, dataset_name="drugprot", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"GENE-N": GENE_TAG, "GENE-Y": GENE_TAG, "CHEMICAL": CHEMICAL_TAG}
@@ -6073,9 +5663,7 @@ class HUNER_GENE_BIORED(BIGBIO_NER_CORPUS):
 
 class HUNER_CHEMICAL_BIORED(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_BIORED, self).__init__(
-            *args, dataset_name="biored", **kwargs
-        )
+        super(HUNER_CHEMICAL_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"ChemicalEntity": CHEMICAL_TAG}
@@ -6086,9 +5674,7 @@ class HUNER_CHEMICAL_BIORED(BIGBIO_NER_CORPUS):
 
 class HUNER_DISEASE_BIORED(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_DISEASE_BIORED, self).__init__(
-            *args, dataset_name="biored", **kwargs
-        )
+        super(HUNER_DISEASE_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"DiseaseOrPhenotypicFeature": DISEASE_TAG}
@@ -6099,9 +5685,7 @@ class HUNER_DISEASE_BIORED(BIGBIO_NER_CORPUS):
 
 class HUNER_SPECIES_BIORED(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_SPECIES_BIORED, self).__init__(
-            *args, dataset_name="biored", **kwargs
-        )
+        super(HUNER_SPECIES_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"OrganismTaxon": SPECIES_TAG}
@@ -6112,9 +5696,7 @@ class HUNER_SPECIES_BIORED(BIGBIO_NER_CORPUS):
 
 class HUNER_CELL_LINE_BIORED(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_CELL_LINE_BIORED, self).__init__(
-            *args, dataset_name="biored", **kwargs
-        )
+        super(HUNER_CELL_LINE_BIORED, self).__init__(*args, dataset_name="biored", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"CellLine": CELL_LINE_TAG}
@@ -6175,9 +5757,7 @@ class HUNER_ALL_CPI(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2013_PC, self).__init__(
-            *args, dataset_name="bionlp_st_2013_pc", **kwargs
-        )
+        super(HUNER_GENE_BIONLP_ST_2013_PC, self).__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Gene_or_gene_product": GENE_TAG, "Complex": GENE_TAG}
@@ -6188,9 +5768,7 @@ class HUNER_GENE_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
 
 class HUNER_CHEMICAL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_BIONLP_ST_2013_PC, self).__init__(
-            *args, dataset_name="bionlp_st_2013_pc", **kwargs
-        )
+        super(HUNER_CHEMICAL_BIONLP_ST_2013_PC, self).__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Simple_chemical": CHEMICAL_TAG}
@@ -6201,9 +5779,7 @@ class HUNER_CHEMICAL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
 
 class HUNER_ALL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_ALL_BIONLP_ST_2013_PC, self).__init__(
-            *args, dataset_name="bionlp_st_2013_pc", **kwargs
-        )
+        super(HUNER_ALL_BIONLP_ST_2013_PC, self).__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {
@@ -6218,9 +5794,7 @@ class HUNER_ALL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_BIONLP_ST_2013_GE(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2013_GE, self).__init__(
-            *args, dataset_name="bionlp_st_2013_ge", **kwargs
-        )
+        super(HUNER_GENE_BIONLP_ST_2013_GE, self).__init__(*args, dataset_name="bionlp_st_2013_ge", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"protein": GENE_TAG}
@@ -6231,9 +5805,7 @@ class HUNER_GENE_BIONLP_ST_2013_GE(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_BIONLP_ST_2011_GE(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2011_GE, self).__init__(
-            *args, dataset_name="bionlp_st_2011_ge", **kwargs
-        )
+        super(HUNER_GENE_BIONLP_ST_2011_GE, self).__init__(*args, dataset_name="bionlp_st_2011_ge", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -6244,9 +5816,7 @@ class HUNER_GENE_BIONLP_ST_2011_GE(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2011_ID, self).__init__(
-            *args, dataset_name="bionlp_st_2011_id", **kwargs
-        )
+        super(HUNER_GENE_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -6257,9 +5827,7 @@ class HUNER_GENE_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 class HUNER_CHEMICAL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_BIONLP_ST_2011_ID, self).__init__(
-            *args, dataset_name="bionlp_st_2011_id", **kwargs
-        )
+        super(HUNER_CHEMICAL_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Chemical": CHEMICAL_TAG}
@@ -6270,9 +5838,7 @@ class HUNER_CHEMICAL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 class HUNER_SPECIES_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_SPECIES_BIONLP_ST_2011_ID, self).__init__(
-            *args, dataset_name="bionlp_st_2011_id", **kwargs
-        )
+        super(HUNER_SPECIES_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Organism": SPECIES_TAG}
@@ -6283,9 +5849,7 @@ class HUNER_SPECIES_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 class HUNER_ALL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_ALL_BIONLP_ST_2011_ID, self).__init__(
-            *args, dataset_name="bionlp_st_2011_id", **kwargs
-        )
+        super(HUNER_ALL_BIONLP_ST_2011_ID, self).__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {
@@ -6300,9 +5864,7 @@ class HUNER_ALL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_BIONLP_ST_2011_REL(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2011_REL, self).__init__(
-            *args, dataset_name="bionlp_st_2011_rel", **kwargs
-        )
+        super(HUNER_GENE_BIONLP_ST_2011_REL, self).__init__(*args, dataset_name="bionlp_st_2011_rel", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -6313,9 +5875,7 @@ class HUNER_GENE_BIONLP_ST_2011_REL(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_BIONLP_ST_2011_EPI(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_BIONLP_ST_2011_EPI, self).__init__(
-            *args, dataset_name="bionlp_st_2011_epi", **kwargs
-        )
+        super(HUNER_GENE_BIONLP_ST_2011_EPI, self).__init__(*args, dataset_name="bionlp_st_2011_epi", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Protein": GENE_TAG}
@@ -6326,9 +5886,7 @@ class HUNER_GENE_BIONLP_ST_2011_EPI(BIGBIO_NER_CORPUS):
 
 class HUNER_SPECIES_BIONLP_ST_2019_BB(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_SPECIES_BIONLP_ST_2019_BB, self).__init__(
-            *args, dataset_name="bionlp_st_2019_bb", **kwargs
-        )
+        super(HUNER_SPECIES_BIONLP_ST_2019_BB, self).__init__(*args, dataset_name="bionlp_st_2019_bb", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Microorganism": SPECIES_TAG}
@@ -6350,9 +5908,7 @@ class HUNER_GENE_BIOID(BIGBIO_NER_CORPUS):
 
 class HUNER_CHEMICAL_BIOID(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_BIOID, self).__init__(
-            *args, dataset_name="bioid", **kwargs
-        )
+        super(HUNER_CHEMICAL_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"chemical": CHEMICAL_TAG}
@@ -6374,9 +5930,7 @@ class HUNER_SPECIES_BIOID(BIGBIO_NER_CORPUS):
 
 class HUNER_CELL_LINE_BIOID(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_CELL_LINE_BIOID, self).__init__(
-            *args, dataset_name="bioid", **kwargs
-        )
+        super(HUNER_CELL_LINE_BIOID, self).__init__(*args, dataset_name="bioid", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         # TODO whether cell or cell line is the correct tag
@@ -6406,9 +5960,7 @@ class HUNER_ALL_BIOID(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_GNORMPLUS(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_GNORMPLUS, self).__init__(
-            *args, dataset_name="gnormplus", **kwargs
-        )
+        super(HUNER_GENE_GNORMPLUS, self).__init__(*args, dataset_name="gnormplus", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Gene": GENE_TAG, "FamilyName": GENE_TAG}
@@ -6442,9 +5994,7 @@ class HUNER_GENE_PROGENE(BIGBIO_NER_CORPUS):
 
 class HUNER_CHEMICAL_NLM_CHEM(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_CHEMICAL_NLM_CHEM, self).__init__(
-            *args, dataset_name="nlmchem", **kwargs
-        )
+        super(HUNER_CHEMICAL_NLM_CHEM, self).__init__(*args, dataset_name="nlmchem", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Chemical": CHEMICAL_TAG}
@@ -6455,9 +6005,7 @@ class HUNER_CHEMICAL_NLM_CHEM(BIGBIO_NER_CORPUS):
 
 class HUNER_GENE_SETH_CORPUS(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
-        super(HUNER_GENE_SETH_CORPUS, self).__init__(
-            *args, dataset_name="seth_corpus", **kwargs
-        )
+        super(HUNER_GENE_SETH_CORPUS, self).__init__(*args, dataset_name="seth_corpus", **kwargs)
 
     def get_entity_type_mapping(self) -> Optional[Dict]:
         return {"Gene": GENE_TAG}
@@ -6512,9 +6060,7 @@ def repair_doc_offsets(passages, entities):
 
     sentences = text.split(". ")
 
-    sentence_indexes = [
-        m.start() + 2 for m in re.finditer("\. ", text)
-    ]  # because the suffix is ". "
+    sentence_indexes = [m.start() + 2 for m in re.finditer("\. ", text)]  # because the suffix is ". "
     sentence_indexes = [0] + sentence_indexes
 
     doc_entities = entities
@@ -6533,20 +6079,11 @@ def repair_doc_offsets(passages, entities):
     entity_index = 0
     current_offset = 0
     next_sentence_offset = 0
-    next_entity_offset = text[current_offset:].find(
-        doc_entities[entity_index]["text"][0]
-    )
+    next_entity_offset = text[current_offset:].find(doc_entities[entity_index]["text"][0])
     while True:
-        if sentence_index >= len(sentence_indexes) and entity_index >= len(
-            doc_entities
-        ):
+        if sentence_index >= len(sentence_indexes) and entity_index >= len(doc_entities):
             break
         if next_sentence_offset <= next_entity_offset:
-            sentence_end = (
-                sentence_indexes[sentence_index] + len(sentences[sentence_index]) + 2
-            )
-            # print(f"Sentence {sentence_index} @ offsets {sentence_indexes[sentence_index]} to {sentence_end}")
-            # print(sentences[sentence_index] + ". ")
             sentence_index += 1
             if sentence_index >= len(sentence_indexes):
                 next_sentence_offset = len(text)
@@ -6557,7 +6094,6 @@ def repair_doc_offsets(passages, entities):
             entity = doc_entities[entity_index]
             entity_name = entity["text"][0]
             given_offset_start = entity["offsets"][0][0]
-            given_offset_end = entity["offsets"][0][1]
             # print(f"  {entity_name} @ offsets (real) {next_entity_offset} to {next_entity_offset + len(entity_name)}")
             # print(f"  {text[given_offset_start:given_offset_end]} @ offset (given) {given_offset_start} to {given_offset_end}")
             if given_offset_start != next_entity_offset:  # Mismatched entities
@@ -6570,9 +6106,7 @@ def repair_doc_offsets(passages, entities):
             if entity_index >= len(doc_entities):
                 next_entity_offset = len(text)
             else:
-                next_entity_offset = current_offset + text[current_offset:].find(
-                    doc_entities[entity_index]["text"][0]
-                )
+                next_entity_offset = current_offset + text[current_offset:].find(doc_entities[entity_index]["text"][0])
 
     return doc_entities
 

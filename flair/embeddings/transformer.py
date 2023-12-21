@@ -236,7 +236,6 @@ def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens
 
     # iterate over subtokens and reconstruct tokens
     for subtoken_id, subtoken in enumerate(subtokens):
-
         # remove special markup
         subtoken = remove_special_markup(subtoken)
 

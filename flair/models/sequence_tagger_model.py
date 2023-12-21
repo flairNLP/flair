@@ -267,7 +267,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return RNN
 
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
-
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
@@ -334,7 +333,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return scores
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.LongTensor) -> Tuple[torch.Tensor, int]:
-
         if labels.size(0) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
@@ -478,7 +476,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             overall_loss = torch.zeros(1, device=flair.device)
             label_count = 0
             for batch in dataloader:
-
                 # stop if all sentences are empty
                 if not batch:
                     continue
@@ -510,7 +507,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
                 # add predictions to Sentence
                 for sentence, sentence_predictions in zip(batch, predictions):
-
                     # BIOES-labels need to be converted to spans
                     if self.predict_spans and not force_token_predictions:
                         sentence_tags = [label[0] for label in sentence_predictions]
@@ -528,8 +524,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                             token.add_label(typename=label_name, value=label[0], score=label[1])
 
                 # all_tags will be empty if all_tag_prob is set to False, so the for loop will be avoided
-                for (sentence, sent_all_tags) in zip(batch, all_tags):
-                    for (token, token_all_tags) in zip(sentence.tokens, sent_all_tags):
+                for sentence, sent_all_tags in zip(batch, all_tags):
+                    for token, token_all_tags in zip(sentence.tokens, sent_all_tags):
                         token.add_tags_proba_dist(label_name, token_all_tags)
 
                 store_embeddings(sentences, storage_mode=embedding_storage_mode)
@@ -614,7 +610,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-
         if state["use_crf"]:
             if "transitions" in state["state_dict"]:
                 state["state_dict"]["crf.transitions"] = state["state_dict"]["transitions"]
@@ -643,7 +638,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     @staticmethod
     def _fetch_model(model_name) -> str:
-
         # core Flair models on Huggingface ModelHub
         huggingface_model_map = {
             "ner": "flair/ner-english",
@@ -834,7 +828,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # check if model key is remapped to HF key - if so, print out information
         elif model_name in huggingface_model_map:
-
             # get mapped name
             hf_model_name = huggingface_model_map[model_name]
 
@@ -1049,7 +1042,6 @@ for entity in sentence.get_spans('ner'):
         return False
 
     def _print_predictions(self, batch, gold_label_type):
-
         lines = []
         if self.predict_spans:
             for datapoint in batch:
@@ -1169,13 +1161,11 @@ class MultiTagger:
 
         # load each model
         for model_name in model_names:
-
             model = SequenceTagger.load(model_name)
 
             # check if the same embeddings were already loaded previously
             # if the model uses StackedEmbedding, make a new stack with previous objects
             if type(model.embeddings) == StackedEmbeddings:
-
                 # sort embeddings by key alphabetically
                 new_stack = []
                 d = model.embeddings.get_named_embeddings_dict()
@@ -1184,11 +1174,9 @@ class MultiTagger:
                 od = collections.OrderedDict(sorted(d.items()))
 
                 for k, embedding in od.items():
-
                     # check previous embeddings and add if found
                     embedding_found = False
                     for previous_model in models:
-
                         # only re-use static embeddings
                         if not embedding.static_embeddings:
                             continue
@@ -1212,7 +1200,6 @@ class MultiTagger:
             else:
                 # of the model uses regular embedding, re-load if previous version found
                 if not model.embeddings.static_embeddings:
-
                     for previous_model in models:
                         if model.embeddings.name in previous_model.embeddings.get_named_embeddings_dict():
                             previous_embedding = previous_model.embeddings.get_named_embeddings_dict()[
