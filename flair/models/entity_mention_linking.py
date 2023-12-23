@@ -14,22 +14,25 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import numpy as np
 import torch
+from torch.utils.data import Dataset
 from tqdm import tqdm
 
 import flair
 from flair.class_utils import get_state_subclass_by_name
-from flair.data import Label, Sentence, Span
+from flair.data import DT, Dictionary, Label, Sentence, Span
 from flair.datasets import (
     CTD_CHEMICALS_DICTIONARY,
     CTD_DISEASES_DICTIONARY,
     NCBI_GENE_HUMAN_DICTIONARY,
     NCBI_TAXONOMY_DICTIONARY,
+    EntityLinkingDictionary,
     HunerEntityLinkingDictionary,
-    KnowledgebaseLinkingDictionary,
 )
-from flair.datasets.knowledgebase import InMemoryEntityLinkingDictionary
+from flair.datasets.entity_linking import InMemoryEntityLinkingDictionary
 from flair.embeddings import DocumentEmbeddings, DocumentTFIDFEmbeddings, TransformerDocumentEmbeddings
-from flair.file_utils import cached_path, load_torch_state
+from flair.embeddings.base import load_embeddings
+from flair.file_utils import cached_path
+from flair.training_utils import Result
 
 logger = logging.getLogger("flair")
 
@@ -88,11 +91,12 @@ MODEL_NAME_TO_DICTIONARY = {
     "dmis-lab/biosyn-sapbert-bc5cdr-disease": "ctd-disease",
     "dmis-lab/biosyn-sapbert-ncbi-disease": "ctd-disease",
     "dmis-lab/biosyn-sapbert-bc5cdr-chemical": "ctd-chemical",
+    "dmis-lab/biosyn-sapbert-bc2gn": "ncbi-gene",
+
     "dmis-lab/biosyn-biobert-bc5cdr-disease": "ctd-chemical",
     "dmis-lab/biosyn-biobert-ncbi-disease": "ctd-disease",
     "dmis-lab/biosyn-biobert-bc5cdr-chemical": "ctd-chemical",
     "dmis-lab/biosyn-biobert-bc2gn": "ncbi-gene",
-    "dmis-lab/biosyn-sapbert-bc2gn": "ncbi-gene",
 }
 
 DEFAULT_SPARSE_WEIGHT = 0.5
@@ -100,7 +104,7 @@ DEFAULT_SPARSE_WEIGHT = 0.5
 
 def load_dictionary(
     dictionary_name_or_path: Union[Path, str], dataset_name: Optional[str] = None
-) -> KnowledgebaseLinkingDictionary:
+) -> EntityLinkingDictionary:
     """Load dictionary: either pre-defined or from path."""
     if isinstance(dictionary_name_or_path, str) and (
         dictionary_name_or_path in ENTITY_TYPE_TO_DICTIONARY or dictionary_name_or_path in BIOMEDICAL_DICTIONARIES
@@ -414,9 +418,7 @@ class CandidateSearchIndex(ABC):
     """
 
     @abstractmethod
-    def index(
-        self, dictionary: KnowledgebaseLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None
-    ) -> None:
+    def index(self, dictionary: EntityLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None) -> None:
         """Index a dictionary to prepare for search.
 
         Args:
@@ -459,9 +461,7 @@ class ExactMatchCandidateSearchIndex(CandidateSearchIndex):
         """
         self.name_to_id_index: Dict[str, str] = {}
 
-    def index(
-        self, dictionary: KnowledgebaseLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None
-    ) -> None:
+    def index(self, dictionary: EntityLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None) -> None:
         def p(text: str) -> str:
             return preprocessor.process_entity_name(text) if preprocessor is not None else text
 
@@ -538,7 +538,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         show_progress: bool = True,
         sparse_weight: float = 0.5,
         preprocessor: Optional[EntityPreprocessor] = None,
-        dictionary: Optional[KnowledgebaseLinkingDictionary] = None,
+        dictionary: Optional[EntityLinkingDictionary] = None,
     ) -> "SemanticCandidateSearchIndex":
         embeddings: List[DocumentEmbeddings] = [TransformerDocumentEmbeddings(model_name_or_path)]
         weights = [1.0]
@@ -571,9 +571,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
             show_progress=show_progress,
         )
 
-    def index(
-        self, dictionary: KnowledgebaseLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None
-    ) -> None:
+    def index(self, dictionary: EntityLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None) -> None:
         def p(text: str) -> str:
             return preprocessor.process_entity_name(text) if preprocessor is not None else text
 
@@ -671,7 +669,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
     @classmethod
     def _from_state(cls, state_dict: Dict[str, Any]) -> "CandidateSearchIndex":
         index = cls(
-            embeddings=[DocumentEmbeddings.load_embedding(emb) for emb in state_dict["embeddings"]],
+            embeddings=[load_embeddings(emb) for emb in state_dict["embeddings"]],
             similarity_metric=SimilarityMetric(state_dict["similarity_metric"]),
             weights=state_dict["weights"],
             batch_size=state_dict["batch_size"],
@@ -694,7 +692,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         }
 
 
-class EntityMentionLinker:
+class EntityMentionLinker(flair.nn.Model):
     """Entity linking model for the biomedical domain."""
 
     def __init__(
@@ -703,20 +701,21 @@ class EntityMentionLinker:
         preprocessor: EntityPreprocessor,
         entity_label_type: str,
         label_type: str,
-        dictionary: KnowledgebaseLinkingDictionary,
+        dictionary: EntityLinkingDictionary,
     ):
         self.preprocessor = preprocessor
         self.candidate_generator = candidate_generator
         self.entity_label_type = entity_label_type
         self._label_type = label_type
         self._dictionary = dictionary
+        super().__init__()
 
     @property
     def label_type(self):
         return self._label_type
 
     @property
-    def dictionary(self) -> KnowledgebaseLinkingDictionary:
+    def dictionary(self) -> EntityLinkingDictionary:
         return self._dictionary
 
     def extract_mentions(
@@ -773,28 +772,28 @@ class EntityMentionLinker:
         if Path(model_name).exists():
             return model_name
 
-        raise NotImplementedError()
-
-    def save(self, model_path: Union[str, Path]) -> None:
-        pass
+        raise NotImplementedError
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "EntityMentionLinker":
-        if isinstance(model_path, str):
-            model_path = cls._fetch_model(model_path)
-
-        if isinstance(model_path, dict):
-            state = model_path
-        else:
-            state = load_torch_state(str(model_path))
-
+    def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs) -> "EntityMentionLinker":
         candidate_generator = CandidateSearchIndex._from_state(state["candidate_search_index"])
-        preprocessor = EntityPreprocessor._from_state("entity_preprocessor")
+        preprocessor = EntityPreprocessor._from_state(state["entity_preprocessor"])
         entity_label_type = state["entity_label_type"]
         label_type = state["label_type"]
         dictionary = InMemoryEntityLinkingDictionary.from_state(state["dictionary"])
 
         return cls(candidate_generator, preprocessor, entity_label_type, label_type, dictionary)
+
+    def _get_state_dict(self):
+        """Returns the state dictionary for this model."""
+        return {
+            **super()._get_state_dict(),
+            "label_type": self.label_type,
+            "entity_label_type": self.entity_label_type,
+            "entity_preprocessor": self.preprocessor._get_state(),
+            "candidate_search_index": self.candidate_generator._get_state(),
+            "dictionary": self.dictionary.to_in_memory_dictionary().to_state(),
+        }
 
     @classmethod
     def build(
@@ -809,15 +808,14 @@ class EntityMentionLinker:
         force_hybrid_search: bool = False,
         sparse_weight: float = DEFAULT_SPARSE_WEIGHT,
         entity_type: Optional[str] = None,
-        dictionary: Optional[KnowledgebaseLinkingDictionary] = None,
+        dictionary: Optional[EntityLinkingDictionary] = None,
         dataset_name: Optional[str] = None,
     ) -> "EntityMentionLinker":
         """Loads a model for biomedical named entity normalization.
 
-        See __init__ method for detailed docstring on arguments.
         """
         if not isinstance(model_name_or_path, str):
-            raise AssertionError(f"String matching model name has to be an string (and not {type(model_name_or_path)}")
+            raise ValueError(f"String matching model name has to be an string (and not {type(model_name_or_path)}")
         model_name_or_path = cast(str, model_name_or_path)
 
         if dictionary is None:
@@ -956,3 +954,21 @@ class EntityMentionLinker:
                 )
 
         return dictionary_name_or_path
+
+    def forward_loss(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
+        raise NotImplementedError("The EntityLinker cannot be trained")
+
+    def evaluate(
+        self,
+        data_points: Union[List[DT], Dataset],
+        gold_label_type: str,
+        out_path: Optional[Union[str, Path]] = None,
+        embedding_storage_mode: str = "none",
+        mini_batch_size: int = 32,
+        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: List[str] = [],
+        gold_label_dictionary: Optional[Dictionary] = None,
+        return_loss: bool = True,
+        **kwargs,
+    ) -> Result:
+        raise NotImplementedError("Evaluation is currently not implemented for EntityLinking")

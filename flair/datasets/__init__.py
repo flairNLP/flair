@@ -133,6 +133,10 @@ from .document_classification import (
 # word sense disambiguation
 # Expose all entity linking datasets
 from .entity_linking import (
+    CTD_CHEMICALS_DICTIONARY,
+    CTD_DISEASES_DICTIONARY,
+    NCBI_GENE_HUMAN_DICTIONARY,
+    NCBI_TAXONOMY_DICTIONARY,
     NEL_ENGLISH_AIDA,
     NEL_ENGLISH_AQUAINT,
     NEL_ENGLISH_IITB,
@@ -147,14 +151,8 @@ from .entity_linking import (
     WSD_UFSAC,
     WSD_WORDNET_GLOSS_TAGGED,
     ZELDA,
-)
-from .knowledgebase import (
-    CTD_CHEMICALS_DICTIONARY,
-    CTD_DISEASES_DICTIONARY,
-    NCBI_GENE_HUMAN_DICTIONARY,
-    NCBI_TAXONOMY_DICTIONARY,
+    EntityLinkingDictionary,
     HunerEntityLinkingDictionary,
-    KnowledgebaseLinkingDictionary,
 )
 
 # Expose all relation extraction datasets
@@ -323,7 +321,7 @@ __all__ = [
     "SentenceDataset",
     "MongoDataset",
     "StringDataset",
-    "KnowledgebaseLinkingDictionary",
+    "EntityLinkingDictionary",
     "AGNEWS",
     "ANAT_EM",
     "AZDZ",

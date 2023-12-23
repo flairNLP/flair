@@ -433,7 +433,7 @@ class DataPoint:
         raise NotImplementedError
 
 
-class Concept:
+class EntityCandidate:
     """A Concept as part of a knowledgebase or ontology."""
 
     def __init__(
@@ -477,7 +477,7 @@ class Concept:
     def __repr__(self) -> str:
         return str(self)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> Dict[str, typing.Any]:
         return {
             "concept_id": self.concept_id,
             "concept_name": self.concept_name,

@@ -1,4 +1,5 @@
 from .clustering import ClusteringModel
+from .entity_mention_linking import EntityMentionLinker
 from .entity_linker_model import SpanClassifier
 from .language_model import LanguageModel
 from .lemmatizer_model import Lemmatizer
@@ -15,6 +16,7 @@ from .text_regression_model import TextRegressor
 from .word_tagger_model import TokenClassifier, WordTagger
 
 __all__ = [
+    "EntityMentionLinker",
     "SpanClassifier",
     "LanguageModel",
     "Lemmatizer",
