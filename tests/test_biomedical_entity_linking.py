@@ -1,5 +1,5 @@
 from flair.data import Sentence
-from flair.models.biomedical_entity_linking import (
+from flair.models.entity_mention_linking import (
     EntityMentionLinker,
     load_dictionary,
 )
@@ -51,11 +51,11 @@ def test_biomedical_entity_linking():
     tagger = Classifier.load("hunflair")
     tagger.predict(sentence)
 
-    disease_linker = EntityMentionLinker.build("diseases", "diseases-nel", hybrid_search=True)
+    disease_linker = EntityMentionLinker.load("bio-disease")
     disease_dictionary = disease_linker.dictionary
     disease_linker.predict(sentence)
 
-    gene_linker = EntityMentionLinker.build("genes", "genes-nel", hybrid_search=False, entity_type="genes")
+    gene_linker = EntityMentionLinker.load("bio-genes")
     gene_dictionary = gene_linker.dictionary
 
     gene_linker.predict(sentence)
@@ -73,5 +73,3 @@ def test_biomedical_entity_linking():
         for candidate_label in span.get_labels(gene_linker.label_type):
             candidate = gene_dictionary[candidate_label.value]
             print(f"Candidate: {candidate.concept_name}")
-
-    breakpoint()  # noqa: T100

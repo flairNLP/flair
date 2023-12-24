@@ -31,7 +31,7 @@ from flair.datasets import (
 from flair.datasets.entity_linking import InMemoryEntityLinkingDictionary
 from flair.embeddings import DocumentEmbeddings, DocumentTFIDFEmbeddings, TransformerDocumentEmbeddings
 from flair.embeddings.base import load_embeddings
-from flair.file_utils import cached_path
+from flair.file_utils import cached_path, hf_download
 from flair.training_utils import Result
 
 logger = logging.getLogger("flair")
@@ -772,7 +772,24 @@ class EntityMentionLinker(flair.nn.Model):
         if Path(model_name).exists():
             return model_name
 
-        raise NotImplementedError
+        bio_base_repo = "helpmefindaname"
+
+        hf_model_map = {
+            "bio-gene": f"{bio_base_repo}/flair-eml-sapbert-bc2gn-gene",
+            "bio-disease": f"{bio_base_repo}/flair-eml-sapbert-bc5cdr-disease",
+            "bio-chemical": f"{bio_base_repo}/flair-eml-sapbert-bc5cdr-chemical",
+            "bio-species": f"{bio_base_repo}/flair-eml-species-exact-match",
+            "bio-gene-exact-match": f"{bio_base_repo}/flair-eml-gene-exact-match",
+            "bio-disease-exact-match": f"{bio_base_repo}/flair-eml-disease-exact-match",
+            "bio-chemical-exact-match": f"{bio_base_repo}/flair-eml-chemical-exact-match",
+            "bio-species-exact-match": f"{bio_base_repo}/flair-eml-species-exact-match",
+        }
+
+        if model_name in hf_model_map:
+            model_name = hf_model_map[model_name]
+
+        return hf_download(model_name)
+
 
     @classmethod
     def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs) -> "EntityMentionLinker":
