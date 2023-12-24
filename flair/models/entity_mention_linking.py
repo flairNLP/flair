@@ -92,7 +92,6 @@ MODEL_NAME_TO_DICTIONARY = {
     "dmis-lab/biosyn-sapbert-ncbi-disease": "ctd-disease",
     "dmis-lab/biosyn-sapbert-bc5cdr-chemical": "ctd-chemical",
     "dmis-lab/biosyn-sapbert-bc2gn": "ncbi-gene",
-
     "dmis-lab/biosyn-biobert-bc5cdr-disease": "ctd-chemical",
     "dmis-lab/biosyn-biobert-ncbi-disease": "ctd-disease",
     "dmis-lab/biosyn-biobert-bc5cdr-chemical": "ctd-chemical",
@@ -669,7 +668,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
     @classmethod
     def _from_state(cls, state_dict: Dict[str, Any]) -> "CandidateSearchIndex":
         index = cls(
-            embeddings=[load_embeddings(emb) for emb in state_dict["embeddings"]],
+            embeddings=cast(List[DocumentEmbeddings], [load_embeddings(emb) for emb in state_dict["embeddings"]]),
             similarity_metric=SimilarityMetric(state_dict["similarity_metric"]),
             weights=state_dict["weights"],
             batch_size=state_dict["batch_size"],
@@ -790,7 +789,6 @@ class EntityMentionLinker(flair.nn.Model):
 
         return hf_download(model_name)
 
-
     @classmethod
     def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs) -> "EntityMentionLinker":
         candidate_generator = CandidateSearchIndex._from_state(state["candidate_search_index"])
@@ -828,9 +826,7 @@ class EntityMentionLinker(flair.nn.Model):
         dictionary: Optional[EntityLinkingDictionary] = None,
         dataset_name: Optional[str] = None,
     ) -> "EntityMentionLinker":
-        """Loads a model for biomedical named entity normalization.
-
-        """
+        """Loads a model for biomedical named entity normalization."""
         if not isinstance(model_name_or_path, str):
             raise ValueError(f"String matching model name has to be an string (and not {type(model_name_or_path)}")
         model_name_or_path = cast(str, model_name_or_path)

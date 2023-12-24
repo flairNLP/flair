@@ -1,6 +1,6 @@
 from .clustering import ClusteringModel
-from .entity_mention_linking import EntityMentionLinker
 from .entity_linker_model import SpanClassifier
+from .entity_mention_linking import EntityMentionLinker
 from .language_model import LanguageModel
 from .lemmatizer_model import Lemmatizer
 from .multitask_model import MultitaskModel

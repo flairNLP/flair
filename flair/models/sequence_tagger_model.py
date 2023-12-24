@@ -2,7 +2,6 @@ import logging
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
-from urllib.error import HTTPError
 
 import torch
 import torch.nn
@@ -14,7 +13,7 @@ import flair.nn
 from flair.data import Dictionary, Label, Sentence, Span, get_spans_from_bio
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
-from flair.file_utils import cached_path, unzip_file, hf_download
+from flair.file_utils import cached_path, hf_download, unzip_file
 from flair.models.sequence_tagger_utils.crf import CRF
 from flair.models.sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 from flair.training_utils import store_embeddings
@@ -763,8 +762,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         }
 
         cache_dir = Path("models")
-
-        get_from_model_hub = False
 
         # check if model name is a valid local file
         if Path(model_name).exists():
