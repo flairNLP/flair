@@ -55,7 +55,7 @@ def test_biomedical_entity_linking():
     disease_dictionary = disease_linker.dictionary
     disease_linker.predict(sentence)
 
-    gene_linker = EntityMentionLinker.load("bio-genes")
+    gene_linker = EntityMentionLinker.load("bio-gene")
     gene_dictionary = gene_linker.dictionary
 
     gene_linker.predict(sentence)
