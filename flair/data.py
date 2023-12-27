@@ -1580,7 +1580,8 @@ class Corpus(typing.Generic[T_co]):
             noise_share: the desired share of noise in the train split.
             split: in which dataset split the noise is to be simulated.
             noise_transition_matrix: provides pre-defined probabilities for label flipping based on the initial
-                label value (relevant for class-dependent label noise simulation).
+                label value (relevant for class-dependent label noise simulation). 
+                If noise_transition_matrix is given, the noise_share argument is ignored.
         """
         import numpy as np
 
@@ -1602,6 +1603,10 @@ class Corpus(typing.Generic[T_co]):
         total_label_count = 0
 
         if noise_transition_matrix:
+
+            # with a given NTM (or confusion matrix), generate a NTM
+            new_noise_share, noise_transition_matrix = self.generate_NTM(noise_transition_matrix)
+
             ntm_labels = noise_transition_matrix.keys()
 
             if set(ntm_labels) != set(labels):
@@ -1656,6 +1661,39 @@ class Corpus(typing.Generic[T_co]):
         log.info(
             f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count / total_label_count) * 100, 2)}%."
         )
+
+
+    def generate_NTM(self, noise_transition_matrix):
+        """Generates a noise transition matrix if a confusion matrix is passed as an argument. Returns resulting overall noise share.
+
+        Args:
+            noise_transition_matrix: Can be both a predefined noise transition matrix (containing label flip probabilities) 
+                                    and a confusion matrix (containing sample counts).
+        """
+        
+        import numpy as np
+
+        labels = list(noise_transition_matrix.keys())
+        ntm_numpy = np.array(list(noise_transition_matrix.values()))
+
+        if sum(ntm_numpy[0,:]) == 1:
+            # this must be a probability matrix
+            if ntm_numpy.sum() == len(labels):
+                original_ntm = ntm_numpy
+            else:
+                log.info('Error: Provided NTM not valid. Per-class probabilities must sum up to 1 for each class.')
+        else:
+            # this must be a confusion matrix
+            log.info('Warning: provided matrix is a non-normalized confusion matrix. Rescaling it to create a noise transition matrix.')
+            original_ntm = ntm_numpy/ntm_numpy.sum(axis=1, keepdims=True)
+        
+        #calculate noise share 
+        train_class_distribution  = self.get_label_distribution()
+        posterior_class_probs = np.array([train_class_distribution[x] for x in labels])
+        share = np.sum((1 - original_ntm.diagonal())*posterior_class_probs)/posterior_class_probs.sum()
+
+        # return both resulting noise share and noise transition matrix (with label flip probabilities)
+        return share, dict(zip(labels,original_ntm))
 
     def print_noisy_dataset(self, label_type, path, split='train'):
         """Saves dataset with both gold (clean) and noisy labels to a file.
