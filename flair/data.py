@@ -1568,20 +1568,20 @@ class Corpus(typing.Generic[T_co]):
         self,
         label_type: str,
         labels: List[str],
-        noise_share: float = 0.2,
+        noise_share: float = None,
         split: str = "train",
-        noise_transition_matrix: Optional[Dict[str, List[float]]] = None,
+        noise_transition_matrix: Optional[Dict[str, List[float]]] = None
     ):
         """Generates uniform label noise distribution in the chosen dataset split.
 
         Args:
             label_type: the type of labels for which the noise should be simulated.
             labels: an array with unique labels of said type (retrievable from label dictionary).
-            noise_share: the desired share of noise in the train split.
+            noise_share: the desired share of noise in the train split. If None, noise_transition_matrix must be passed as an argument.
             split: in which dataset split the noise is to be simulated.
             noise_transition_matrix: provides pre-defined probabilities for label flipping based on the initial
-                label value (relevant for class-dependent label noise simulation). 
-                If noise_transition_matrix is given, the noise_share argument is ignored.
+                label value (relevant for class-dependent label noise simulation). If None, noise_share must be passed as an argument.
+                If both noise_transition_matrix and noise_share arguments are given, the noise transition matrix will be rescaled for the target noise share.
         """
         import numpy as np
 
@@ -1606,6 +1606,9 @@ class Corpus(typing.Generic[T_co]):
 
             # with a given NTM (or confusion matrix), generate a NTM
             new_noise_share, noise_transition_matrix = self.generate_NTM(noise_transition_matrix)
+
+            if noise_share:
+                new_noise_share, noise_transition_matrix = self.scale_for_target_noise_share(noise_transition_matrix, noise_share)
 
             ntm_labels = noise_transition_matrix.keys()
 
@@ -1634,6 +1637,9 @@ class Corpus(typing.Generic[T_co]):
                         corrupted_count += 1
 
         else:
+            if noise_share is None:
+                raise ValueError("noise_share must be passed as an argument to add_label_noise().")
+
             if noise_share < 0 or noise_share > 1:
                 raise ValueError("noise_share must be between 0 and 1.")
 
@@ -1694,6 +1700,44 @@ class Corpus(typing.Generic[T_co]):
 
         # return both resulting noise share and noise transition matrix (with label flip probabilities)
         return share, dict(zip(labels,original_ntm))
+
+    def scale_for_target_noise_share(self, ntm, noise_share):
+        """Adjusts a given noise transition matrix to match a target noise share. 
+
+        Args:
+            noise_transition_matrix: a predefined noise transition matrix containing label flip probabilities
+            noise_share: target noise share
+        Returns: updated noise transition matrix (as a dictionary) and resulting noise share.
+        """
+
+        import numpy as np
+
+
+        labels = list(ntm.keys())
+        original_ntm = np.array(list(ntm.values()))
+
+        train_class_distribution  = self.get_label_distribution()
+        posterior_class_probs = np.array([train_class_distribution[x] for x in labels])
+
+        #calculate original noise share 
+        old_noise_share = np.sum((1 - original_ntm.diagonal())*posterior_class_probs)/posterior_class_probs.sum()
+
+        if noise_share is None:
+            return old_noise_share, ntm
+
+        factor = old_noise_share/noise_share
+
+        if factor > 1.02 or factor < 0.98:
+            log.info('Warning: provided noise transition matrix does not match the target noise share. It will be rescaled to target noise share.')
+
+        new_ntm = original_ntm/factor
+        new_ntm_offdiagonals = new_ntm.sum(axis=1) - new_ntm.diagonal()
+        np.fill_diagonal(new_ntm, 1 - new_ntm_offdiagonals)
+
+        
+        share = np.sum((1 - new_ntm.diagonal())*posterior_class_probs)/posterior_class_probs.sum()
+        
+        return share, dict(zip(labels,new_ntm))
 
     def print_noisy_dataset(self, label_type, path, split='train'):
         """Saves dataset with both gold (clean) and noisy labels to a file.
