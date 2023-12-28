@@ -11,23 +11,23 @@ class TestRelationExtractor(BaseModelTest):
     model_cls = RelationExtractor
     train_label_type = "relation"
     pretrained_model = "relations"
-    model_args = dict(
-        entity_label_type="ner",
-        train_on_gold_pairs_only=True,
-        entity_pair_filters={  # Define valid entity pair combinations, used as relation candidates
+    model_args = {
+        "entity_label_type": "ner",
+        "train_on_gold_pairs_only": True,
+        "entity_pair_filters": {  # Define valid entity pair combinations, used as relation candidates
             ("ORG", "PER"),  # founded_by
             ("LOC", "PER"),  # place_of_birth
         },
-    )
-    training_args = dict(
-        max_epochs=3,
-        mini_batch_size=2,
-        learning_rate=0.1,
-    )
+    }
+    training_args = {
+        "max_epochs": 4,
+        "mini_batch_size": 2,
+        "learning_rate": 0.1,
+    }
 
-    @pytest.fixture
+    @pytest.fixture()
     def corpus(self, tasks_base_path):
-        yield ColumnCorpus(
+        return ColumnCorpus(
             data_folder=tasks_base_path / "conllu",
             train_file="train.conllup",
             dev_file="train.conllup",
@@ -35,21 +35,21 @@ class TestRelationExtractor(BaseModelTest):
             column_format={1: "text", 2: "pos", 3: "ner"},
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def example_sentence(self):
         sentence = Sentence(["Microsoft", "was", "found", "by", "Bill", "Gates"])
         sentence[:1].add_label(typename="ner", value="ORG", score=1.0)
         sentence[4:].add_label(typename="ner", value="PER", score=1.0)
-        yield sentence
+        return sentence
 
-    @pytest.fixture
+    @pytest.fixture()
     def train_test_sentence(self):
         sentence = Sentence(["Apple", "was", "founded", "by", "Steve", "Jobs", "."])
         sentence[0:1].add_label("ner", "ORG")
         sentence[4:6].add_label("ner", "PER")
-        yield sentence
+        return sentence
 
-    @pytest.fixture
+    @pytest.fixture()
     def embeddings(self):
         return TransformerWordEmbeddings(model="distilbert-base-uncased", fine_tune=True)
 
@@ -59,7 +59,4 @@ class TestRelationExtractor(BaseModelTest):
         assert relations[0].tag == "founded_by"
 
     def has_embedding(self, sentence):
-        for token in sentence:
-            if token.get_embedding().cpu().numpy().size == 0:
-                return False
-        return True
+        return all(token.get_embedding().cpu().numpy().size != 0 for token in sentence)

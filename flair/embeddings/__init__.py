@@ -32,18 +32,10 @@ from .image import (
 
 # Expose legacy embedding classes
 from .legacy import (
-    BertEmbeddings,
-    CamembertEmbeddings,
     CharLMEmbeddings,
     DocumentLSTMEmbeddings,
     DocumentMeanEmbeddings,
-    ELMoTransformerEmbeddings,
-    OpenAIGPT2Embeddings,
-    OpenAIGPTEmbeddings,
-    RoBERTaEmbeddings,
-    XLMEmbeddings,
-    XLMRobertaEmbeddings,
-    XLNetEmbeddings,
+    ELMoEmbeddings,
 )
 
 # Expose token embedding classes
@@ -51,7 +43,6 @@ from .token import (
     BPEmbSerializable,
     BytePairEmbeddings,
     CharacterEmbeddings,
-    ELMoEmbeddings,
     FastTextEmbeddings,
     FlairEmbeddings,
     HashEmbeddings,
@@ -81,19 +72,9 @@ __all__ = [
     "ImageEmbeddings",
     "NetworkImageEmbeddings",
     "PrecomputedImageEmbeddings",
-    "BertEmbeddings",
-    "CamembertEmbeddings",
     "CharLMEmbeddings",
     "DocumentLSTMEmbeddings",
     "DocumentMeanEmbeddings",
-    "ELMoTransformerEmbeddings",
-    "OpenAIGPT2Embeddings",
-    "OpenAIGPTEmbeddings",
-    "RoBERTaEmbeddings",
-    "TransformerXLEmbeddings",
-    "XLMEmbeddings",
-    "XLMRobertaEmbeddings",
-    "XLNetEmbeddings",
     "BPEmbSerializable",
     "BytePairEmbeddings",
     "CharacterEmbeddings",

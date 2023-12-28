@@ -6,7 +6,7 @@ from flair.models import LanguageModel
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 
 
-@pytest.mark.integration
+@pytest.mark.integration()
 def test_train_language_model(results_base_path, resources_path):
     # get default dictionary
     dictionary: Dictionary = Dictionary.load("chars")
@@ -40,7 +40,7 @@ def test_train_language_model(results_base_path, resources_path):
     del trainer, language_model, corpus, char_lm_embeddings
 
 
-@pytest.mark.integration
+@pytest.mark.integration()
 def test_train_resume_language_model(resources_path, results_base_path, tasks_base_path):
     # get default dictionary
     dictionary: Dictionary = Dictionary.load("chars")
@@ -76,7 +76,7 @@ def test_train_resume_language_model(resources_path, results_base_path, tasks_ba
 def test_generate_text_with_small_temperatures():
     from flair.embeddings import FlairEmbeddings
 
-    language_model = FlairEmbeddings("news-forward-fast").lm
+    language_model = FlairEmbeddings("news-forward-fast", has_decoder=True).lm
 
     text, likelihood = language_model.generate_text(temperature=0.01, number_of_characters=100)
     assert text is not None
@@ -87,7 +87,7 @@ def test_generate_text_with_small_temperatures():
 def test_compute_perplexity():
     from flair.embeddings import FlairEmbeddings
 
-    language_model = FlairEmbeddings("news-forward-fast").lm
+    language_model = FlairEmbeddings("news-forward-fast", has_decoder=True).lm
 
     grammatical = "The company made a profit"
     perplexity_gramamtical_sentence = language_model.calculate_perplexity(grammatical)
@@ -100,7 +100,7 @@ def test_compute_perplexity():
 
     assert perplexity_gramamtical_sentence < perplexity_ungramamtical_sentence
 
-    language_model = FlairEmbeddings("news-backward-fast").lm
+    language_model = FlairEmbeddings("news-backward-fast", has_decoder=True).lm
 
     grammatical = "The company made a profit"
     perplexity_gramamtical_sentence = language_model.calculate_perplexity(grammatical)

@@ -1,15 +1,16 @@
+import typing
 from typing import List
 
 import torch
 
 import flair.embeddings
 import flair.nn
-from flair.data import Sentence, TextPair
+from flair.data import Corpus, Sentence, TextPair, _iter_dataset
 
 
 class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
-    """
-    Text Pair Classification Model for tasks such as Recognizing Textual Entailment, build upon TextClassifier.
+    """Text Pair Classification Model for tasks such as Recognizing Textual Entailment, build upon TextClassifier.
+
     The model takes document embeddings and puts resulting text representation(s) into a linear layer to get the
     actual class label. We provide two ways to embed the DataPairs: Either by embedding both DataPoints
     and concatenating the resulting vectors ("embed_separately=True") or by concatenating the DataPoints and embedding
@@ -22,21 +23,27 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
         label_type: str,
         embed_separately: bool = False,
         **classifierargs,
-    ):
-        """
-        Initializes a TextClassifier
-        :param embeddings: embeddings used to embed each data point
-        :param label_dictionary: dictionary of labels you want to predict
-        :param multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
-        or False to force single-label prediction
-        :param multi_label_threshold: If multi-label you can set the threshold to make predictions
-        :param loss_weights: Dictionary of weights for labels for the loss function
-        (if any label's weight is unspecified it will default to 1.0)
+    ) -> None:
+        """Initializes a TextPairClassifier.
+
+        Args:
+            label_type: label_type: name of the label
+            embed_separately: if True, the sentence embeddings will be concatenated,
+              if False both sentences will be combined and newly embedded.
+            embeddings: embeddings used to embed each data point
+            label_dictionary: dictionary of labels you want to predict
+            multi_label: auto-detected by default, but you can set this to True to force multi-label prediction
+               or False to force single-label prediction
+            multi_label_threshold: If multi-label you can set the threshold to make predictions
+            loss_weights: Dictionary of weights for labels for the loss function.
+              If any label's weight is unspecified it will default to 1.0
+            **classifierargs: The arguments propagated to :meth:`flair.nn.DefaultClassifier.__init__`
         """
         super().__init__(
             **classifierargs,
             embeddings=embeddings,
             final_embedding_size=2 * embeddings.embedding_length if embed_separately else embeddings.embedding_length,
+            should_embed_sentence=False,
         )
 
         self._label_type = label_type
@@ -47,11 +54,11 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             # set separator to concatenate two sentences
             self.sep = " "
             if isinstance(
-                self.document_embeddings,
+                self.embeddings,
                 flair.embeddings.document.TransformerDocumentEmbeddings,
             ):
-                if self.document_embeddings.tokenizer.sep_token:
-                    self.sep = " " + str(self.document_embeddings.tokenizer.sep_token) + " "
+                if self.embeddings.tokenizer.sep_token:
+                    self.sep = " " + str(self.embeddings.tokenizer.sep_token) + " "
                 else:
                     self.sep = " [SEP] "
 
@@ -89,12 +96,9 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "document_embeddings": self.embeddings,
+            "document_embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
-            "multi_label": self.multi_label,
-            "multi_label_threshold": self.multi_label_threshold,
-            "weight_dict": self.weight_dict,
             "embed_separately": self.embed_separately,
         }
         return model_state
@@ -106,8 +110,17 @@ class TextPairClassifier(flair.nn.DefaultClassifier[TextPair, TextPair]):
             embeddings=state.get("document_embeddings"),
             label_dictionary=state.get("label_dictionary"),
             label_type=state.get("label_type"),
-            multi_label=state.get("multi_label_threshold", 0.5),
-            loss_weights=state.get("weight_dict"),
             embed_separately=state.get("embed_separately"),
             **kwargs,
         )
+
+    def get_used_tokens(
+        self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
+    ) -> typing.Iterable[List[str]]:
+        for sentence_pair in _iter_dataset(corpus.get_all_sentences()):
+            yield [t.text for t in sentence_pair.first]
+            yield [t.text for t in sentence_pair.first.left_context(context_length, respect_document_boundaries)]
+            yield [t.text for t in sentence_pair.first.right_context(context_length, respect_document_boundaries)]
+            yield [t.text for t in sentence_pair.second]
+            yield [t.text for t in sentence_pair.second.left_context(context_length, respect_document_boundaries)]
+            yield [t.text for t in sentence_pair.second.right_context(context_length, respect_document_boundaries)]

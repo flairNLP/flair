@@ -16,17 +16,18 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
     embedding_cls = TransformerWordEmbeddings
     is_token_embedding = True
     is_document_embedding = False
-    default_args = dict(model="distilbert-base-uncased", allow_long_sentences=False)
+    default_args = {"model": "distilbert-base-uncased", "allow_long_sentences": False}
     valid_args = [
-        dict(layers="-1,-2,-3,-4", layer_mean=False),
-        dict(layers="all", layer_mean=True),
-        dict(layers="all", layer_mean=False),
+        {"layers": "-1,-2,-3,-4", "layer_mean": False},
+        {"layers": "all", "layer_mean": True},
+        {"layers": "all", "layer_mean": False},
+        {"layers": "all", "layer_mean": True, "subtoken_pooling": "mean"},
     ]
 
     name_field = "embeddings"
     invalid_names = ["other", "not/existing/path/to/embeddings"]
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_transformer_jit_embeddings(self, results_base_path):
         base_embeddings = TransformerWordEmbeddings(
             "distilbert-base-uncased", layers="-1,-2,-3,-4", layer_mean=False, allow_long_sentences=True
@@ -34,14 +35,13 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         sentence: Sentence = Sentence("I love Berlin, but Vienna is where my hearth is.")
 
         class JitWrapper(torch.nn.Module):
-            def __init__(self, embedding: TransformerWordEmbeddings):
+            def __init__(self, embedding: TransformerWordEmbeddings) -> None:
                 super().__init__()
                 self.embedding = embedding
 
             def forward(
                 self,
                 input_ids: torch.Tensor,
-                sub_token_lengths: torch.LongTensor,
                 token_lengths: torch.LongTensor,
                 attention_mask: torch.Tensor,
                 overflow_to_sample_mapping: torch.Tensor,
@@ -49,7 +49,6 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             ):
                 return self.embedding.forward(
                     input_ids=input_ids,
-                    sub_token_lengths=sub_token_lengths,
                     token_lengths=token_lengths,
                     attention_mask=attention_mask,
                     overflow_to_sample_mapping=overflow_to_sample_mapping,
@@ -66,7 +65,6 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             "attention_mask",
             "input_ids",
             "overflow_to_sample_mapping",
-            "sub_token_lengths",
             "token_lengths",
             "word_ids",
         ]
@@ -100,7 +98,49 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         sentence.clear_embeddings()
         assert torch.isclose(jit_token_embedding, loaded_jit_token_embedding).all()
 
-    @pytest.mark.integration
+    def test_transformers_context_expansion(self, results_base_path):
+        emb = TransformerWordEmbeddings(
+            "distilbert-base-uncased", use_context=True, use_context_separator=True, respect_document_boundaries=True
+        )
+
+        # previous and next sentence as context
+        sentence_previous = Sentence("How is it?")
+        sentence_next = Sentence("Then again, maybe not...")
+
+        # test expansion for sentence without context
+        sentence = Sentence("This is great!")
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert " ".join([token.text for token in expanded]) == "[FLERT] This is great ! [FLERT]"
+
+        # test expansion for with previous and next as context
+        sentence = Sentence("This is great.")
+        sentence._previous_sentence = sentence_previous
+        sentence._next_sentence = sentence_next
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert (
+            " ".join([token.text for token in expanded])
+            == "How is it ? [FLERT] This is great . [FLERT] Then again , maybe not ..."
+        )
+
+        # test expansion if first sentence is document boundary
+        sentence = Sentence("This is great?")
+        sentence_previous.is_document_boundary = True
+        sentence._previous_sentence = sentence_previous
+        sentence._next_sentence = sentence_next
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert (
+            " ".join([token.text for token in expanded]) == "[FLERT] This is great ? [FLERT] Then again , maybe not ..."
+        )
+
+        # test expansion if we don't use context
+        emb.context_length = 0
+        sentence = Sentence("I am here.")
+        sentence._previous_sentence = sentence_previous
+        sentence._next_sentence = sentence_next
+        expanded, _ = emb._expand_sentence_with_context(sentence=sentence)
+        assert " ".join([token.text for token in expanded]) == "I am here ."
+
+    @pytest.mark.integration()
     def test_layoutlm_embeddings(self):
         sentence = Sentence(["I", "love", "Berlin"])
         sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
@@ -110,7 +150,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         emb.eval()
         emb.embed(sentence)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     @pytest.mark.skipif(
         condition=not is_detectron2_available(), reason="layoutlmV2 requires detectron2 to be installed manually."
     )
@@ -128,7 +168,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         emb.eval()
         emb.embed(sentence)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_layoutlmv3_embeddings(self, tasks_base_path):
         with Image.open(tasks_base_path / "example_images" / "i_love_berlin.png") as img:
             img.load()
@@ -143,7 +183,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         emb.eval()
         emb.embed(sentence)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_layoutlmv3_embeddings_with_long_context(self, tasks_base_path):
         with Image.open(tasks_base_path / "example_images" / "i_love_berlin.png") as img:
             img.load()
@@ -159,7 +199,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         emb.eval()
         emb.embed(sentence)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_ocr_embeddings_fails_when_no_bbox(self):
         sentence = Sentence(["I", "love", "Berlin"])
         emb = TransformerWordEmbeddings("microsoft/layoutlm-base-uncased", layers="-1,-2,-3,-4", layer_mean=True)
@@ -167,7 +207,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         with pytest.raises(ValueError):
             emb.embed(sentence)
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_layoutlm_embeddings_with_context_warns_user(self):
         sentence = Sentence(["I", "love", "Berlin"])
         sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
@@ -178,7 +218,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         assert len(record) == 1
         assert "microsoft/layoutlm" in record[0].message.args[0]
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_layoutlmv3_without_image_embeddings_fails(self):
         sentence = Sentence(["I", "love", "Berlin"])
         sentence[0].add_metadata("bbox", BoundingBox(0, 0, 10, 10))
@@ -204,7 +244,7 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
             0.5584433674812317,
         ]
 
-        for (token_de, token_en, exp_sim) in zip(sent_de, sent_en, expected_similarities):
+        for token_de, token_en, exp_sim in zip(sent_de, sent_en, expected_similarities):
             sim = cos(token_de.embedding, token_en.embedding).item()
             assert abs(exp_sim - sim) < 1e-5
 
@@ -261,3 +301,25 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         sentence = Sentence("El pasto es verde.")
         embeddings = TransformerWordEmbeddings("PlanTL-GOB-ES/roberta-base-biomedical-es", layers="-1")
         embeddings.embed(sentence)
+
+    @pytest.mark.skipif(importlib.util.find_spec("onnxruntime") is None, reason="Onnx export require 'onnxruntime'")
+    def test_onnx_export_works(self, results_base_path):
+        texts = [
+            "I live in Berlin",
+            "I live in Vienna",
+            "Berlin to Germany is like Vienna to Austria",
+        ]
+
+        normal_sentences = [Sentence(text) for text in texts]
+        onnx_sentences = [Sentence(text) for text in texts]
+
+        embeddings = TransformerWordEmbeddings("distilbert-base-uncased")
+        results_base_path.mkdir(exist_ok=True, parents=True)
+        onnx_embeddings = embeddings.export_onnx(results_base_path / "onnx-export.onnx", normal_sentences)
+
+        embeddings.embed(normal_sentences)
+        onnx_embeddings.embed(onnx_sentences)
+
+        for sent_a, sent_b in zip(normal_sentences, onnx_sentences):
+            for token_a, token_b in zip(sent_a, sent_b):
+                assert torch.isclose(token_a.get_embedding(), token_b.get_embedding(), atol=1e-6).all()

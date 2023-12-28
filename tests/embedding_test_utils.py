@@ -5,6 +5,7 @@ import torch
 
 from flair.data import Sentence
 from flair.embeddings import Embeddings
+from flair.embeddings.base import load_embeddings
 
 
 class BaseEmbeddingsTest:
@@ -18,19 +19,19 @@ class BaseEmbeddingsTest:
     name_field: Optional[str] = None
     weired_texts: List[str] = [
         "Hybrid mesons , qq ̄ states with an admixture",
-        "typical proportionalities of ∼ 1nmV − 1 [ 3,4 ] .",
+        "typical proportionalities of \u223C 1nmV \u2212 1 [ 3,4 ] .",
         "🤟 🤟  🤟 hüllo",
         "🤟hallo 🤟 🤟 🤟 🤟",
-        "🤟hallo 🤟 🤟 🤟 🤟",
         "🤟",
+        "\uF8F9",
     ]
 
     def create_embedding_from_name(self, name: str):
-        """Overwrite this method if it is more complex to load an embedding by name"""
+        """Overwrite this method if it is more complex to load an embedding by name."""
         assert self.name_field is not None
         kwargs = dict(self.default_args)
         kwargs.pop(self.name_field)
-        return self.embedding_cls(name, **kwargs)  # type: ignore
+        return self.embedding_cls(name, **kwargs)  # type: ignore[call-arg]
 
     def create_embedding_with_args(self, args: Dict[str, Any]):
         kwargs = dict(self.default_args)
@@ -125,3 +126,60 @@ class BaseEmbeddingsTest:
                     == 0.0
                 )
         del embeddings
+
+    @pytest.mark.parametrize("args", valid_args)
+    def test_embeddings_stay_the_same_after_saving_and_loading(self, args):
+        embeddings = self.create_embedding_with_args(args)
+
+        sentence_old: Sentence = Sentence("I love Berlin")
+        embeddings.embed(sentence_old)
+        names_old = embeddings.get_names()
+        embedding_length_old = embeddings.embedding_length
+
+        save_data = embeddings.save_embeddings(use_state_dict=True)
+        del embeddings
+        new_embeddings = load_embeddings(save_data)
+
+        sentence_new: Sentence = Sentence("I love Berlin")
+        new_embeddings.embed(sentence_new)
+        names_new = new_embeddings.get_names()
+        embedding_length_new = new_embeddings.embedding_length
+
+        assert names_old == names_new
+        assert embedding_length_old == embedding_length_new
+
+        if self.is_token_embedding:
+            for token_old, token_new in zip(sentence_old, sentence_new):
+                assert (token_old.get_embedding(names_old) == token_new.get_embedding(names_new)).all()
+        if self.is_document_embedding:
+            assert (sentence_old.get_embedding(names_old) == sentence_new.get_embedding(names_new)).all()
+
+    def test_default_embeddings_stay_the_same_after_saving_and_loading(self):
+        embeddings = self.create_embedding_with_args(self.default_args)
+
+        sentence_old: Sentence = Sentence("I love Berlin")
+        embeddings.embed(sentence_old)
+        names_old = embeddings.get_names()
+        embedding_length_old = embeddings.embedding_length
+
+        save_data = embeddings.save_embeddings(use_state_dict=True)
+        new_embeddings = load_embeddings(save_data)
+
+        sentence_new: Sentence = Sentence("I love Berlin")
+        new_embeddings.embed(sentence_new)
+        names_new = new_embeddings.get_names()
+        embedding_length_new = new_embeddings.embedding_length
+
+        assert not new_embeddings.training
+        assert names_old == names_new
+        assert embedding_length_old == embedding_length_new
+
+        if self.is_token_embedding:
+            for token_old, token_new in zip(sentence_old, sentence_new):
+                assert (token_old.get_embedding(names_old) == token_new.get_embedding(names_new)).all()
+        if self.is_document_embedding:
+            assert (sentence_old.get_embedding(names_old) == sentence_new.get_embedding(names_new)).all()
+
+    def test_embeddings_load_in_eval_mode(self):
+        embeddings = self.create_embedding_with_args(self.default_args)
+        assert not embeddings.training

@@ -1,0 +1,4 @@
+flair
+=====
+
+.. automodule:: flair

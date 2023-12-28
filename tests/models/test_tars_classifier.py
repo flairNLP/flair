@@ -10,25 +10,25 @@ from tests.model_test_utils import BaseModelTest
 class TestTarsClassifier(BaseModelTest):
     model_cls = TARSClassifier
     train_label_type = "class"
-    model_args = dict(task_name="2_CLASS")
-    training_args = dict(mini_batch_size=1, max_epochs=2)
+    model_args = {"task_name": "2_CLASS"}
+    training_args = {"mini_batch_size": 1, "max_epochs": 2}
     pretrained_model = "tars-base"
 
-    @pytest.fixture
+    @pytest.fixture()
     def corpus(self, tasks_base_path):
-        yield ClassificationCorpus(tasks_base_path / "imdb_underscore")
+        return ClassificationCorpus(tasks_base_path / "imdb_underscore")
 
-    @pytest.fixture
+    @pytest.fixture()
     def embeddings(self):
-        yield TransformerDocumentEmbeddings("distilbert-base-uncased")
+        return TransformerDocumentEmbeddings("distilbert-base-uncased")
 
-    @pytest.fixture
+    @pytest.fixture()
     def example_sentence(self):
-        yield Sentence("This is great!")
+        return Sentence("This is great!")
 
     def build_model(self, embeddings, label_dict, **kwargs):
         model_args = dict(self.model_args)
-        for k in kwargs.keys():
+        for k in kwargs:
             if k in model_args:
                 del model_args[k]
         return self.model_cls(
@@ -46,14 +46,14 @@ class TestTarsClassifier(BaseModelTest):
         )
         return corpus
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_predict_zero_shot(self, loaded_pretrained_model):
         sentence = Sentence("I am so glad you liked it!")
         loaded_pretrained_model.predict_zero_shot(sentence, ["happy", "sad"])
         assert len(sentence.get_labels(loaded_pretrained_model.label_type)) == 1
         assert sentence.get_labels(loaded_pretrained_model.label_type)[0].value == "happy"
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_predict_zero_shot_single_label_always_predicts(self, loaded_pretrained_model):
         sentence = Sentence("I hate it")
         loaded_pretrained_model.predict_zero_shot(sentence, ["happy", "sad"])
@@ -63,7 +63,7 @@ class TestTarsClassifier(BaseModelTest):
         assert len(sentence.get_labels(loaded_pretrained_model.label_type)) == 1
         assert sentence.get_labels(loaded_pretrained_model.label_type)[0].value == "sad"
 
-    @pytest.mark.integration
+    @pytest.mark.integration()
     def test_init_tars_and_switch(self, tasks_base_path, corpus):
         tars = TARSClassifier(
             task_name="2_CLASS",

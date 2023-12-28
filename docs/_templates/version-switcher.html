@@ -1,0 +1,30 @@
+{# As the version switcher will only work when JavaScript is enabled, we add it through JavaScript.
+ #}
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+      {% if current_version.is_released %} {{ current_version.name }} {% if latest_version and item == latest_version %} (stable) {% endif %} {% else %} latest (dev) {% endif %}
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+    {%- for item in versions|reverse %}
+      <a class="list-group-item list-group-item-action py-1" href="{{ item.url }}" data-version-name="dev" data-version="devdocs">
+      <span>{% if item.is_released %}
+    {{ item.name }}
+      {% if latest_version and item == latest_version %}
+      (stable)
+      {% endif %}
+    {% else %}
+    latest (dev)
+    {% endif %}
+    {% if item == current_version %}
+    [x]
+    {% endif %}</span>
+      </a>
+    {%- endfor %}
+    </div>
+  </div>
+`);
+</script>

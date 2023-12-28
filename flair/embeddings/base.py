@@ -1,7 +1,7 @@
 import inspect
 import logging
 from abc import abstractmethod
-from typing import Dict, Generic, List, Sequence, Union
+from typing import Any, Dict, Generic, List, Sequence, Type, Union
 
 import torch
 from torch.nn import Parameter, ParameterList
@@ -15,7 +15,9 @@ log = logging.getLogger("flair")
 class Embeddings(torch.nn.Module, Generic[DT]):
     """Abstract base class for all embeddings. Every new type of embedding must implement these methods."""
 
-    def __init__(self):
+    embeddings_name: str  # class-variable referring to the "class embedding name"
+
+    def __init__(self) -> None:
         """Set some attributes that would otherwise result in errors. Overwrite these in your embedding class."""
         if not hasattr(self, "name"):
             self.name: str = "unnamed_embedding"
@@ -36,33 +38,33 @@ class Embeddings(torch.nn.Module, Generic[DT]):
         raise NotImplementedError
 
     def embed(self, data_points: Union[DT, List[DT]]) -> List[DT]:
-        """Add embeddings to all words in a list of sentences. If embeddings are already added, updates only if embeddings
-        are non-static."""
+        """Add embeddings to all words in a list of sentences.
 
+        If embeddings are already added, updates only if embeddings are non-static.
+        """
         # if only one sentence is passed, convert to list of sentence
         if not isinstance(data_points, list):
             data_points = [data_points]
 
-        if not self._everything_embedded(data_points) or not self.static_embeddings:
+        if not self._everything_embedded(data_points):
             self._add_embeddings_internal(data_points)
 
         return data_points
 
     def _everything_embedded(self, data_points: Sequence[DT]) -> bool:
-        for data_point in data_points:
-            if self.name not in data_point._embeddings.keys():
-                return False
-        return True
+        return all(self.name in data_point._embeddings for data_point in data_points)
 
     @abstractmethod
     def _add_embeddings_internal(self, sentences: List[DT]):
         """Private method for adding embeddings to all words in a list of sentences."""
-        pass
 
     def get_names(self) -> List[str]:
-        """Returns a list of embedding names. In most cases, it is just a list with one item, namely the name of
+        """Returns a list of embedding names.
+
+        In most cases, it is just a list with one item, namely the name of
         this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
-        Then, the list contains the names of all embeddings in the stack."""
+        Then, the list contains the names of all embeddings in the stack.
+        """
         return [self.name]
 
     def get_named_embeddings_dict(self) -> Dict:
@@ -71,7 +73,7 @@ class Embeddings(torch.nn.Module, Generic[DT]):
     @staticmethod
     def get_instance_parameters(locals: dict) -> dict:
         class_definition = locals.get("__class__")
-        instance_parameter_names = set(inspect.signature(class_definition.__init__).parameters)  # type: ignore
+        instance_parameter_names = set(inspect.signature(class_definition.__init__).parameters)  # type: ignore[misc]
         instance_parameter_names.remove("self")
         instance_parameter_names.add("__class__")
         instance_parameters = {
@@ -81,9 +83,33 @@ class Embeddings(torch.nn.Module, Generic[DT]):
         }
         return instance_parameters
 
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
+        raise NotImplementedError
+
+    def to_params(self) -> Dict[str, Any]:
+        raise NotImplementedError
+
+    @classmethod
+    def load_embedding(cls, params: Dict[str, Any]):
+        state_dict = params.pop("state_dict", None)
+
+        embedding = cls.from_params(params)
+        if state_dict is not None:
+            embedding.load_state_dict(state_dict)
+        return embedding
+
+    def save_embeddings(self, use_state_dict: bool = True):
+        params = self.to_params()
+        if use_state_dict:
+            params["state_dict"] = self.state_dict()
+        params["__cls__"] = type(self).embeddings_name
+        return params
+
 
 class ScalarMix(torch.nn.Module):
-    """
+    """Mixes several tensors by a learned weighting.
+
     Computes a parameterised scalar mixture of N tensors.
     This method was proposed by Liu et al. (2019) in the paper:
     "Linguistic Knowledge and Transferability of Contextual Representations" (https://arxiv.org/abs/1903.08855)
@@ -94,12 +120,15 @@ class ScalarMix(torch.nn.Module):
     """
 
     def __init__(self, mixture_size: int, trainable: bool = False) -> None:
-        """
-        Inits scalar mix implementation.
+        """Inits scalar mix implementation.
+
         ``mixture = gamma * sum(s_k * tensor_k)`` where ``s = softmax(w)``, with ``w`` and ``gamma`` scalar parameters.
-        :param mixture_size: size of mixtures (usually the number of layers)
+
+        Args:
+            mixture_size: size of mixtures (usually the number of layers)
+            trainable: weather or not the weights should be learnable.
         """
-        super(ScalarMix, self).__init__()
+        super().__init__()
         self.mixture_size = mixture_size
 
         initial_scalar_parameters = [0.0] * mixture_size
@@ -127,11 +156,15 @@ class ScalarMix(torch.nn.Module):
         )
 
     def forward(self, tensors: List[torch.Tensor]) -> torch.Tensor:
-        """
+        """Forward pass of scalar mix.
+
         Computes a weighted average of the ``tensors``.  The input tensors an be any shape
         with at least two dimensions, but must all be the same shape.
-        :param tensors: list of input tensors
-        :return: computed weighted average of input tensors
+
+        Args:
+            tensors: list of input tensors
+
+        Returns: computed weighted average of input tensors
         """
         if len(tensors) != self.mixture_size:
             log.error(
@@ -140,9 +173,7 @@ class ScalarMix(torch.nn.Module):
                 )
             )
 
-        normed_weights = torch.nn.functional.softmax(
-            torch.cat([parameter for parameter in self.scalar_parameters]), dim=0
-        )
+        normed_weights = torch.nn.functional.softmax(torch.cat(list(self.scalar_parameters)), dim=0)
         normed_weights_split = torch.split(normed_weights, split_size_or_sections=1)
 
         pieces = []
@@ -169,6 +200,34 @@ class TokenEmbeddings(Embeddings[Sentence]):
     def _everything_embedded(self, data_points: Sequence[Sentence]) -> bool:
         for sentence in data_points:
             for token in sentence.tokens:
-                if self.name not in token._embeddings.keys():
+                if self.name not in token._embeddings:
                     return False
         return True
+
+
+EMBEDDING_CLASSES: Dict[str, Type[Embeddings]] = {}
+
+
+def register_embeddings(*args):
+    name = None
+
+    def _register(cls):
+        nonlocal name
+        if name is None:
+            name = cls.__name__
+        cls.embeddings_name = name
+        EMBEDDING_CLASSES[name] = cls
+        return cls
+
+    if len(args) == 1 and callable(args[0]):
+        return _register(args[0])
+    elif len(args) > 0:
+        name = args[0]
+
+    return _register
+
+
+def load_embeddings(params: Dict[str, Any]) -> Embeddings:
+    cls_name = params.pop("__cls__")
+    cls = EMBEDDING_CLASSES[cls_name]
+    return cls.load_embedding(params)

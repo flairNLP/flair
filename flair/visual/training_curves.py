@@ -16,10 +16,9 @@ WEIGHT_VALUE = 3
 log = logging.getLogger("flair")
 
 
-class Plotter(object):
-    """
-    Plots training parameters (loss, f-score, and accuracy) and training
-    weights over time.
+class Plotter:
+    """Plots training parameters (loss, f-score, and accuracy) and training weights over time.
+
     Input files are the output files 'loss.tsv' and 'weights.txt' from
     training either a sequence tagger or text classification model.
     """
@@ -34,7 +33,7 @@ class Plotter(object):
             "dev": {"loss": [], "score": []},
         }
 
-        with open(file_name, "r") as f:
+        with open(file_name) as f:
             tsvin = csv.reader(f, delimiter="\t")
 
             # determine the column index of loss, f-score and accuracy for
@@ -55,29 +54,25 @@ class Plotter(object):
 
             # then get all relevant values from the tsv
             for row in tsvin:
+                if TRAIN_SCORE is not None and row[TRAIN_SCORE] != "_":
+                    training_curves["train"]["score"].append(float(row[TRAIN_SCORE]))
 
-                if TRAIN_SCORE is not None:
-                    if row[TRAIN_SCORE] != "_":
-                        training_curves["train"]["score"].append(float(row[TRAIN_SCORE]))
+                if DEV_SCORE is not None and row[DEV_SCORE] != "_":
+                    training_curves["dev"]["score"].append(float(row[DEV_SCORE]))
 
-                if DEV_SCORE is not None:
-                    if row[DEV_SCORE] != "_":
-                        training_curves["dev"]["score"].append(float(row[DEV_SCORE]))
-
-                if TEST_SCORE is not None:
-                    if row[TEST_SCORE] != "_":
-                        training_curves["test"]["score"].append(float(row[TEST_SCORE]))
+                if TEST_SCORE is not None and row[TEST_SCORE] != "_":
+                    training_curves["test"]["score"].append(float(row[TEST_SCORE]))
 
         return training_curves
 
     @staticmethod
     def _extract_weight_data(file_name: Union[str, Path]) -> dict:
-        if type(file_name) is str:
+        if isinstance(file_name, str):
             file_name = Path(file_name)
 
-        weights: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(lambda: list()))
+        weights: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
 
-        with open(file_name, "r") as f:
+        with open(file_name) as f:
             tsvin = csv.reader(f, delimiter="\t")
 
             for row in tsvin:
@@ -91,13 +86,13 @@ class Plotter(object):
 
     @staticmethod
     def _extract_learning_rate(file_name: Union[str, Path]):
-        if type(file_name) is str:
+        if isinstance(file_name, str):
             file_name = Path(file_name)
 
         lrs = []
         losses = []
 
-        with open(file_name, "r") as f:
+        with open(file_name) as f:
             tsvin = csv.reader(f, delimiter="\t")
             row = next(tsvin)
             LEARNING_RATE = row.index("LEARNING_RATE")
@@ -162,7 +157,6 @@ class Plotter(object):
         fig = plt.figure(figsize=(15, 10))
 
         for plot_no, plot_value in enumerate(plot_values):
-
             training_curves = self._extract_evaluation_data(file_name, plot_value)
 
             plt.subplot(len(plot_values), 1, plot_no + 1)

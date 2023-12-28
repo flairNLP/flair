@@ -2,31 +2,34 @@ import hashlib
 import logging
 import os
 import re
+import tempfile
 from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import gensim
 import numpy as np
 import torch
 from bpemb import BPEmb
+from deprecated.sphinx import deprecated
 from gensim.models import KeyedVectors
+from gensim.models.fasttext import FastTextKeyedVectors, load_facebook_vectors
 from torch import nn
 
 import flair
-from flair.data import Corpus, Dictionary, Sentence, Token, _iter_dataset
-from flair.embeddings.base import TokenEmbeddings
+from flair.data import Corpus, Dictionary, Sentence, _iter_dataset
+from flair.embeddings.base import TokenEmbeddings, load_embeddings, register_embeddings
 from flair.embeddings.transformer import (
     TransformerEmbeddings,
     TransformerOnnxWordEmbeddings,
 )
-from flair.file_utils import cached_path, instance_lru_cache, open_inside_zip
+from flair.file_utils import cached_path, extract_single_zip_file, instance_lru_cache
 
 log = logging.getLogger("flair")
 
 
+@register_embeddings
 class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
-
     onnx_cls = TransformerOnnxWordEmbeddings
 
     def __init__(
@@ -35,16 +38,14 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
         is_document_embedding: bool = False,
         allow_long_sentences: bool = True,
         **kwargs,
-    ):
-        """
-        Bidirectional transformer embeddings of words from various transformer architectures.
-        :param model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for
-        options)
-        :param layers: string indicating which layers to take for embedding (-1 is topmost layer)
-        :param subtoken_pooling: how to get from token piece embeddings to token embedding. Either take the first
-        subtoken ('first'), the last subtoken ('last'), both first and last ('first_last') or a mean over all ('mean')
-        :param layer_mean: If True, uses a scalar mix of layers as embedding
-        :param fine_tune: If True, allows transformers to be fine-tuned during training
+    ) -> None:
+        """Bidirectional transformer embeddings of words from various transformer architectures.
+
+        Args:
+            model: name of transformer model (see https://huggingface.co/transformers/pretrained_models.html for options)
+            is_document_embedding: If True, the embedding can be used as DocumentEmbedding too.
+            allow_long_sentences: If True, too long sentences will be patched and strided and afterwards combined.
+            **kwargs: Arguments propagated to :meth:`flair.embeddings.transformer.TransformerEmbeddings.__init__`
         """
         TransformerEmbeddings.__init__(
             self,
@@ -62,10 +63,11 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
         return cls(**state)
 
 
+@register_embeddings
 class StackedEmbeddings(TokenEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
 
-    def __init__(self, embeddings: List[TokenEmbeddings]):
+    def __init__(self, embeddings: List[TokenEmbeddings], overwrite_names: bool = True) -> None:
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -73,8 +75,9 @@ class StackedEmbeddings(TokenEmbeddings):
 
         # IMPORTANT: add embeddings as torch modules
         for i, embedding in enumerate(embeddings):
-            embedding.name = f"{str(i)}-{embedding.name}"
-            self.add_module(f"list_embedding_{str(i)}", embedding)
+            if overwrite_names:
+                embedding.name = f"{i!s}-{embedding.name}"
+            self.add_module(f"list_embedding_{i!s}", embedding)
 
         self.name: str = "Stack"
         self.__names = [name for embedding in self.embeddings for name in embedding.get_names()]
@@ -86,6 +89,7 @@ class StackedEmbeddings(TokenEmbeddings):
         self.__embedding_length: int = 0
         for embedding in embeddings:
             self.__embedding_length += embedding.embedding_length
+        self.eval()
 
     def embed(self, sentences: Union[Sentence, List[Sentence]], static_embeddings: bool = True):
         # if only one sentence is passed, convert to list of sentence
@@ -104,19 +108,21 @@ class StackedEmbeddings(TokenEmbeddings):
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         for embedding in self.embeddings:
             embedding._add_embeddings_internal(sentences)
 
         return sentences
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'StackedEmbeddings [{",".join([str(e) for e in self.embeddings])}]'
 
     def get_names(self) -> List[str]:
-        """Returns a list of embedding names. In most cases, it is just a list with one item, namely the name of
-        this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
-        Then, the list contains the names of all embeddings in the stack."""
+        """Returns a list of embedding names.
+
+        In most cases, it is just a list with one item, namely the name of this embedding. But in some cases, the
+        embedding is made up by different embeddings (StackedEmbedding).
+        Then, the list contains the names of all embeddings in the stack.
+        """
         # make compatible with serialized models
         if "__names" not in self.__dict__:
             self.__names = [name for embedding in self.embeddings for name in embedding.get_names()]
@@ -124,113 +130,63 @@ class StackedEmbeddings(TokenEmbeddings):
         return self.__names
 
     def get_named_embeddings_dict(self) -> Dict:
-
         named_embeddings_dict = {}
         for embedding in self.embeddings:
             named_embeddings_dict.update(embedding.get_named_embeddings_dict())
 
         return named_embeddings_dict
 
+    @classmethod
+    def from_params(cls, params):
+        embeddings = [load_embeddings(p) for p in params["embeddings"]]
+        return cls(embeddings=embeddings, overwrite_names=False)
 
+    def to_params(self):
+        return {"embeddings": [emb.save_embeddings(use_state_dict=False) for emb in self.embeddings]}
+
+
+@register_embeddings
 class WordEmbeddings(TokenEmbeddings):
     """Standard static word embeddings, such as GloVe or FastText."""
 
     def __init__(
         self,
-        embeddings: str,
-        field: str = None,
+        embeddings: Optional[str],
+        field: Optional[str] = None,
         fine_tune: bool = False,
         force_cpu: bool = True,
         stable: bool = False,
-    ):
-        """
-        Initializes classic word embeddings. Constructor downloads required files if not there.
-        :param embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or custom
-        If you want to use a custom embedding file, just pass the path to the embeddings as embeddings variable.
-        set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
-        """
-        self.embeddings = embeddings
+        no_header: bool = False,
+        vocab: Optional[Dict[str, int]] = None,
+        embedding_length: Optional[int] = None,
+        name: Optional[str] = None,
+    ) -> None:
+        """Initializes classic word embeddings.
 
+        Constructor downloads required files if not there.
+
+        Args:
+            embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or a path to a custom embedding
+            field: if given, the word-embeddings embed the data for the specific label-type instead of the plain text.
+            fine_tune: If True, allows word-embeddings to be fine-tuned during training
+            force_cpu: If True, stores the large embedding matrix not on the gpu to save memory. `force_cpu` can only be used if `fine_tune` is False
+            stable: if True, use the stable embeddings as described in https://arxiv.org/abs/2110.02861
+            no_header: only for reading plain word2vec text files. If true, the reader assumes the first line to not contain embedding length and vocab size.
+            vocab: If the embeddings are already loaded in memory, provide the vocab here.
+            embedding_length: If the embeddings are already loaded in memory, provide the embedding_length here.
+            name: The name of the embeddings.
+        """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         if fine_tune and force_cpu and flair.device.type != "cpu":
             raise ValueError("Cannot train WordEmbeddings on cpu if the model is trained on gpu, set force_cpu=False")
 
-        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
+        embeddings_path = self.resolve_precomputed_path(embeddings)
+        if name is None:
+            name = str(embeddings_path)
 
-        cache_dir = Path("embeddings")
-
-        # GLOVE embeddings
-        if embeddings.lower() == "glove" or embeddings.lower() == "en-glove":
-            cached_path(f"{hu_path}/glove.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings_path = cached_path(f"{hu_path}/glove.gensim", cache_dir=cache_dir)
-
-        # TURIAN embeddings
-        elif embeddings.lower() == "turian" or embeddings.lower() == "en-turian":
-            cached_path(f"{hu_path}/turian.vectors.npy", cache_dir=cache_dir)
-            embeddings_path = cached_path(f"{hu_path}/turian", cache_dir=cache_dir)
-
-        # KOMNINOS embeddings
-        elif embeddings.lower() == "extvec" or embeddings.lower() == "en-extvec":
-            cached_path(f"{hu_path}/extvec.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings_path = cached_path(f"{hu_path}/extvec.gensim", cache_dir=cache_dir)
-
-        # pubmed embeddings
-        elif embeddings.lower() == "pubmed" or embeddings.lower() == "en-pubmed":
-            cached_path(
-                f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings_path = cached_path(f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim", cache_dir=cache_dir)
-
-        # FT-CRAWL embeddings
-        elif embeddings.lower() == "crawl" or embeddings.lower() == "en-crawl":
-            cached_path(f"{hu_path}/en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir)
-            embeddings_path = cached_path(f"{hu_path}/en-fasttext-crawl-300d-1M", cache_dir=cache_dir)
-
-        # FT-CRAWL embeddings
-        elif embeddings.lower() in ["news", "en-news", "en"]:
-            cached_path(f"{hu_path}/en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir)
-            embeddings_path = cached_path(f"{hu_path}/en-fasttext-news-300d-1M", cache_dir=cache_dir)
-
-        # twitter embeddings
-        elif embeddings.lower() in ["twitter", "en-twitter"]:
-            cached_path(f"{hu_path}/twitter.gensim.vectors.npy", cache_dir=cache_dir)
-            embeddings_path = cached_path(f"{hu_path}/twitter.gensim", cache_dir=cache_dir)
-
-        # two-letter language code wiki embeddings
-        elif len(embeddings.lower()) == 2:
-            cached_path(
-                f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings_path = cached_path(f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M", cache_dir=cache_dir)
-
-        # two-letter language code wiki embeddings
-        elif len(embeddings.lower()) == 7 and embeddings.endswith("-wiki"):
-            cached_path(
-                f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings_path = cached_path(f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M", cache_dir=cache_dir)
-
-        # two-letter language code crawl embeddings
-        elif len(embeddings.lower()) == 8 and embeddings.endswith("-crawl"):
-            cached_path(
-                f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy",
-                cache_dir=cache_dir,
-            )
-            embeddings_path = cached_path(
-                f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M",
-                cache_dir=cache_dir,
-            )
-
-        elif not Path(embeddings).exists():
-            raise ValueError(f'The given embeddings "{embeddings}" is not available or is not a valid path.')
-        else:
-            embeddings_path = Path(embeddings)
-
-        self.name: str = str(embeddings_path)
+        self.name = name
+        self.embeddings = embeddings if embeddings is not None else name
         self.static_embeddings = not fine_tune
         self.fine_tune = fine_tune
         self.force_cpu = force_cpu
@@ -238,29 +194,38 @@ class WordEmbeddings(TokenEmbeddings):
         self.stable = stable
         super().__init__()
 
-        if embeddings_path.suffix == ".bin":
-            precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
-                str(embeddings_path), binary=True
+        if embeddings_path is not None:
+            if embeddings_path.suffix in [".bin", ".txt"]:
+                precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+                    str(embeddings_path), binary=embeddings_path.suffix == ".bin", no_header=no_header
+                )
+            else:
+                precomputed_word_embeddings = gensim.models.KeyedVectors.load(str(embeddings_path))
+
+            self.__embedding_length: int = precomputed_word_embeddings.vector_size
+
+            vectors = np.row_stack(
+                (
+                    precomputed_word_embeddings.vectors,
+                    np.zeros(self.__embedding_length, dtype="float"),
+                )
             )
+
+            try:
+                # gensim version 4
+                self.vocab = precomputed_word_embeddings.key_to_index
+            except AttributeError:
+                # gensim version 3
+                self.vocab = {k: v.index for k, v in precomputed_word_embeddings.vocab.items()}
         else:
-            precomputed_word_embeddings = gensim.models.KeyedVectors.load(str(embeddings_path))
+            # if no embedding is set, the vocab and embedding length is requried
+            assert vocab is not None
+            assert embedding_length is not None
+            self.vocab = vocab
+            self.__embedding_length = embedding_length
+            vectors = np.zeros((len(self.vocab) + 1, self.__embedding_length), dtype="float")
 
-        self.__embedding_length: int = precomputed_word_embeddings.vector_size
-
-        vectors = np.row_stack(
-            (
-                precomputed_word_embeddings.vectors,
-                np.zeros(self.__embedding_length, dtype="float"),
-            )
-        )
         self.embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=not fine_tune)
-
-        try:
-            # gensim version 4
-            self.vocab = precomputed_word_embeddings.key_to_index
-        except AttributeError:
-            # gensim version 3
-            self.vocab = {k: v.index for k, v in precomputed_word_embeddings.vocab.items()}
 
         if stable:
             self.layer_norm: Optional[nn.LayerNorm] = nn.LayerNorm(
@@ -271,6 +236,85 @@ class WordEmbeddings(TokenEmbeddings):
 
         self.device = None
         self.to(flair.device)
+        self.eval()
+
+    def resolve_precomputed_path(self, embeddings: Optional[str]) -> Optional[Path]:
+        if embeddings is None:
+            return None
+
+        hu_path: str = "https://flair.informatik.hu-berlin.de/resources/embeddings/token"
+
+        cache_dir = Path("embeddings")
+
+        # GLOVE embeddings
+        if embeddings.lower() == "glove" or embeddings.lower() == "en-glove":
+            cached_path(f"{hu_path}/glove.gensim.vectors.npy", cache_dir=cache_dir)
+            return cached_path(f"{hu_path}/glove.gensim", cache_dir=cache_dir)
+
+        # TURIAN embeddings
+        elif embeddings.lower() == "turian" or embeddings.lower() == "en-turian":
+            cached_path(f"{hu_path}/turian.vectors.npy", cache_dir=cache_dir)
+            return cached_path(f"{hu_path}/turian", cache_dir=cache_dir)
+
+        # KOMNINOS embeddings
+        elif embeddings.lower() == "extvec" or embeddings.lower() == "en-extvec":
+            cached_path(f"{hu_path}/extvec.gensim.vectors.npy", cache_dir=cache_dir)
+            return cached_path(f"{hu_path}/extvec.gensim", cache_dir=cache_dir)
+
+        # pubmed embeddings
+        elif embeddings.lower() == "pubmed" or embeddings.lower() == "en-pubmed":
+            cached_path(
+                f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim.vectors.npy",
+                cache_dir=cache_dir,
+            )
+            return cached_path(f"{hu_path}/pubmed_pmc_wiki_sg_1M.gensim", cache_dir=cache_dir)
+
+        # FT-CRAWL embeddings
+        elif embeddings.lower() == "crawl" or embeddings.lower() == "en-crawl":
+            cached_path(f"{hu_path}/en-fasttext-crawl-300d-1M.vectors.npy", cache_dir=cache_dir)
+            return cached_path(f"{hu_path}/en-fasttext-crawl-300d-1M", cache_dir=cache_dir)
+
+        # FT-CRAWL embeddings
+        elif embeddings.lower() in ["news", "en-news", "en"]:
+            cached_path(f"{hu_path}/en-fasttext-news-300d-1M.vectors.npy", cache_dir=cache_dir)
+            return cached_path(f"{hu_path}/en-fasttext-news-300d-1M", cache_dir=cache_dir)
+
+        # twitter embeddings
+        elif embeddings.lower() in ["twitter", "en-twitter"]:
+            cached_path(f"{hu_path}/twitter.gensim.vectors.npy", cache_dir=cache_dir)
+            return cached_path(f"{hu_path}/twitter.gensim", cache_dir=cache_dir)
+
+        # two-letter language code wiki embeddings
+        elif len(embeddings.lower()) == 2:
+            cached_path(
+                f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M.vectors.npy",
+                cache_dir=cache_dir,
+            )
+            return cached_path(f"{hu_path}/{embeddings}-wiki-fasttext-300d-1M", cache_dir=cache_dir)
+
+        # two-letter language code wiki embeddings
+        elif len(embeddings.lower()) == 7 and embeddings.endswith("-wiki"):
+            cached_path(
+                f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M.vectors.npy",
+                cache_dir=cache_dir,
+            )
+            return cached_path(f"{hu_path}/{embeddings[:2]}-wiki-fasttext-300d-1M", cache_dir=cache_dir)
+
+        # two-letter language code crawl embeddings
+        elif len(embeddings.lower()) == 8 and embeddings.endswith("-crawl"):
+            cached_path(
+                f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M.vectors.npy",
+                cache_dir=cache_dir,
+            )
+            return cached_path(
+                f"{hu_path}/{embeddings[:2]}-crawl-fasttext-300d-1M",
+                cache_dir=cache_dir,
+            )
+
+        elif not Path(embeddings).exists():
+            raise ValueError(f'The given embeddings "{embeddings}" is not available or is not a valid path.')
+        else:
+            return Path(embeddings)
 
     @property
     def embedding_length(self) -> int:
@@ -296,15 +340,11 @@ class WordEmbeddings(TokenEmbeddings):
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         tokens = [token for sentence in sentences for token in sentence.tokens]
 
         word_indices: List[int] = []
         for token in tokens:
-            if "field" not in self.__dict__ or self.field is None:
-                word = token.text
-            else:
-                word = token.get_label(self.field).value
+            word = token.text if self.field is None else token.get_label(self.field).value
             word_indices.append(self.get_cached_token_index(word))
 
         embeddings = self.embedding(torch.tensor(word_indices, dtype=torch.long, device=self.device))
@@ -319,27 +359,20 @@ class WordEmbeddings(TokenEmbeddings):
 
         return sentences
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def extra_repr(self):
-        # fix serialized models
-        if "embeddings" not in self.__dict__:
-            self.embeddings = self.name
-
         return f"'{self.embeddings}'"
 
     def train(self, mode=True):
-        if not self.fine_tune:
-            pass
-        else:
-            super(WordEmbeddings, self).train(mode)
+        super().train(self.fine_tune and mode)
 
     def to(self, device):
         if self.force_cpu:
             device = torch.device("cpu")
         self.device = device
-        super(WordEmbeddings, self).to(device)
+        super().to(device)
 
     def _apply(self, fn):
         if fn.__name__ == "convert" and self.force_cpu:
@@ -349,22 +382,21 @@ class WordEmbeddings(TokenEmbeddings):
             if not hasattr(self, "device"):
                 self.to(flair.device)
             return
-        super(WordEmbeddings, self)._apply(fn)
+        super()._apply(fn)
 
     def __getattribute__(self, item):
         # this ignores the get_cached_vec method when loading older versions
         # it is needed for compatibility reasons
-        if "get_cached_vec" == item:
+        if item == "get_cached_vec":
             return None
         return super().__getattribute__(item)
 
-    def __setstate__(self, state):
-        if "get_cached_vec" in state:
-            del state["get_cached_vec"]
-        if "force_cpu" not in state:
-            state["force_cpu"] = True
-        if "fine_tune" not in state:
-            state["fine_tune"] = False
+    def __setstate__(self, state: Dict[str, Any]):
+        state.pop("get_cached_vec", None)
+        state.setdefault("embeddings", state["name"])
+        state.setdefault("force_cpu", True)
+        state.setdefault("fine_tune", False)
+        state.setdefault("field", None)
         if "precomputed_word_embeddings" in state:
             precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
             vectors = np.row_stack(
@@ -386,21 +418,47 @@ class WordEmbeddings(TokenEmbeddings):
         if "stable" not in state:
             state["stable"] = False
             state["layer_norm"] = None
-
         super().__setstate__(state)
 
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "WordEmbeddings":
+        return cls(embeddings=None, **params)
 
+    def to_params(self) -> Dict[str, Any]:
+        return {
+            "vocab": self.vocab,
+            "stable": self.stable,
+            "fine_tune": self.fine_tune,
+            "force_cpu": self.force_cpu,
+            "field": self.field,
+            "name": self.name,
+            "embedding_length": self.__embedding_length,
+        }
+
+    def state_dict(self, *args, **kwargs):
+        # when loading the old versions from pickle, the embeddings might not be added as pytorch module.
+        # we do this delayed, when the weights are collected (e.g. for saving), as doing this earlier might
+        # lead to issues while loading (trying to load weights that weren't stored as python weights and therefore
+        # not finding them)
+        if list(self.modules()) == [self]:
+            self.embedding = self.embedding
+        return super().state_dict(*args, **kwargs)
+
+
+@register_embeddings
 class CharacterEmbeddings(TokenEmbeddings):
     """Character embeddings of words, as proposed in Lample et al., 2016."""
 
     def __init__(
         self,
-        path_to_char_dict: str = None,
+        path_to_char_dict: Optional[Union[str, Dictionary]] = None,
         char_embedding_dim: int = 25,
         hidden_size_char: int = 25,
-    ):
-        """Uses the default character dictionary if none provided."""
+    ) -> None:
+        """Instantiates a bidirectional lstm layer toi encode words by their character representation.
 
+        Uses the default character dictionary if none provided.
+        """
         super().__init__()
         self.name = "Char"
         self.static_embeddings = False
@@ -409,6 +467,8 @@ class CharacterEmbeddings(TokenEmbeddings):
         # use list of common characters if none provided
         if path_to_char_dict is None:
             self.char_dictionary: Dictionary = Dictionary.load("common-chars")
+        elif isinstance(path_to_char_dict, Dictionary):
+            self.char_dictionary = path_to_char_dict
         else:
             self.char_dictionary = Dictionary.load_from_file(path_to_char_dict)
 
@@ -425,15 +485,14 @@ class CharacterEmbeddings(TokenEmbeddings):
         self.__embedding_length = self.hidden_size_char * 2
 
         self.to(flair.device)
+        self.eval()
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
-
         for sentence in sentences:
-
             tokens_char_indices = []
 
             # translate words in sentence into ints using dictionary
@@ -465,7 +524,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             character_embeddings = self.char_embedding(chars).transpose(0, 1)
 
-            packed = torch.nn.utils.rnn.pack_padded_sequence(character_embeddings, chars2_length)  # type: ignore
+            packed = torch.nn.utils.rnn.pack_padded_sequence(character_embeddings, chars2_length)  # type: ignore[arg-type]
 
             lstm_out, self.hidden = self.char_rnn(packed)
 
@@ -473,7 +532,7 @@ class CharacterEmbeddings(TokenEmbeddings):
             outputs = outputs.transpose(0, 1)
             chars_embeds_temp = torch.zeros(
                 (outputs.size(0), outputs.size(2)),
-                dtype=torch.float,
+                dtype=outputs.dtype,
                 device=flair.device,
             )
             for i, index in enumerate(output_lengths):
@@ -485,10 +544,22 @@ class CharacterEmbeddings(TokenEmbeddings):
             for token_number, token in enumerate(sentence.tokens):
                 token.set_embedding(self.name, character_embeddings[token_number])
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "CharacterEmbeddings":
+        return cls(**params)
 
+    def to_params(self) -> Dict[str, Any]:
+        return {
+            "path_to_char_dict": self.char_dictionary,
+            "char_embedding_dim": self.char_embedding_dim,
+            "hidden_size_char": self.hidden_size_char,
+        }
+
+
+@register_embeddings
 class FlairEmbeddings(TokenEmbeddings):
     """Contextual string embeddings of words, as proposed in Akbik et al., 2018."""
 
@@ -500,21 +571,26 @@ class FlairEmbeddings(TokenEmbeddings):
         with_whitespace: bool = True,
         tokenized_lm: bool = True,
         is_lower: bool = False,
-    ):
-        """
-        initializes contextual string embeddings using a character-level language model.
-        :param model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
-                'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward',
-                etc (see https://github.com/flairNLP/flair/blob/master/resources/docs/embeddings/FLAIR_EMBEDDINGS.md)
-                depending on which character language model is desired.
-        :param fine_tune: if set to True, the gradient will propagate into the language model. This dramatically slows
-                down training and often leads to overfitting, so use with caution.
-        :param chars_per_chunk: max number of chars per rnn pass to control speed/memory tradeoff. Higher means faster
-                but requires more memory. Lower means slower but less memory.
-        :param with_whitespace: If True, use hidden state after whitespace after word. If False, use hidden
-                 state at last character of word.
-        :param tokenized_lm: Whether this lm is tokenized. Default is True, but for LMs trained over unprocessed text
-                False might be better.
+        name: Optional[str] = None,
+        has_decoder: bool = False,
+    ) -> None:
+        """Initializes contextual string embeddings using a character-level language model.
+
+        Args:
+            model: model string, one of 'news-forward', 'news-backward', 'news-forward-fast', 'news-backward-fast',
+              'mix-forward', 'mix-backward', 'german-forward', 'german-backward', 'polish-backward', 'polish-forward' depending on which character language model is desired.
+            fine_tune: if set to True, the gradient will propagate into the language model.
+              This dramatically slows down training and often leads to overfitting, so use with caution.
+            chars_per_chunk: max number of chars per rnn pass to control speed/memory tradeoff.
+              Higher means faster but requires more memory. Lower means slower but less memory.
+            with_whitespace: If True, use hidden state after whitespace after word.
+              If False, use hidden state at last character of word.
+            tokenized_lm: Whether this lm is tokenized. Default is True,
+              but for LMs trained over unprocessed text False might be better.
+            has_decoder: Weather to load the decoder-head of the LanguageModel. This should only be true, if you intend
+              to generate text.
+            is_lower: Whether this lm is trained on lower-cased data.
+            name: The name of the embeddings
         """
         super().__init__()
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -685,12 +761,15 @@ class FlairEmbeddings(TokenEmbeddings):
 
         from flair.models import LanguageModel
 
-        if type(model) == LanguageModel:
+        if isinstance(model, LanguageModel):
             self.lm: LanguageModel = model
             self.name = f"Task-LSTM-{self.lm.hidden_size}-{self.lm.nlayers}-{self.lm.is_forward_lm}"
         else:
-            self.lm = LanguageModel.load_language_model(model)
+            self.lm = LanguageModel.load_language_model(model, has_decoder=has_decoder)
             self.name = str(model)
+
+        if name is not None:
+            self.name = name
 
         # embeddings are static if we don't do finetuning
         self.fine_tune = fine_tune
@@ -710,38 +789,18 @@ class FlairEmbeddings(TokenEmbeddings):
         self.eval()
 
     def train(self, mode=True):
-
-        # make compatible with serialized models (TODO: remove)
-        if "fine_tune" not in self.__dict__:
-            self.fine_tune = False
-        if "chars_per_chunk" not in self.__dict__:
-            self.chars_per_chunk = 512
-
         # unless fine-tuning is set, do not set language model to train() in order to disallow language model dropout
-        if not self.fine_tune:
-            pass
-        else:
-            super(FlairEmbeddings, self).train(mode)
+        super().train(self.fine_tune and mode)
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
-        # make compatible with serialized models (TODO: remove)
-        if "with_whitespace" not in self.__dict__:
-            self.with_whitespace = True
-        if "tokenized_lm" not in self.__dict__:
-            self.tokenized_lm = True
-        if "is_lower" not in self.__dict__:
-            self.is_lower = False
-
         # gradients are enable if fine-tuning is enabled
         gradient_context = torch.enable_grad() if self.fine_tune else torch.no_grad()
 
         with gradient_context:
-
             # if this is not possible, use LM to generate embedding. First, get text sentences
             text_sentences = (
                 [sentence.to_tokenized_string() for sentence in sentences]
@@ -771,7 +830,6 @@ class FlairEmbeddings(TokenEmbeddings):
                 offset_backward: int = len(sentence_text) + len(start_marker)
 
                 for token in sentence.tokens:
-
                     offset_forward += len(token.text)
                     if self.is_forward_lm:
                         offset_with_whitespace = offset_forward
@@ -799,10 +857,50 @@ class FlairEmbeddings(TokenEmbeddings):
 
         return sentences
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
+    def to_params(self):
+        return {
+            "fine_tune": self.fine_tune,
+            "chars_per_chunk": self.chars_per_chunk,
+            "is_lower": self.is_lower,
+            "tokenized_lm": self.tokenized_lm,
+            "model_params": {
+                "dictionary": self.lm.dictionary,
+                "is_forward_lm": self.lm.is_forward_lm,
+                "hidden_size": self.lm.hidden_size,
+                "nlayers": self.lm.nlayers,
+                "embedding_size": self.lm.embedding_size,
+                "nout": self.lm.nout,
+                "document_delimiter": self.lm.document_delimiter,
+                "dropout": self.lm.dropout,
+                "has_decoder": self.lm.decoder is not None,
+            },
+            "name": self.name,
+        }
 
+    @classmethod
+    def from_params(cls, params):
+        model_params = params.pop("model_params")
+        from flair.models import LanguageModel
+
+        lm = LanguageModel(**model_params)
+        return cls(lm, **params)
+
+    def __setstate__(self, d: Dict[str, Any]):
+        # make compatible with old models
+        d.setdefault("fine_tune", False)
+        d.setdefault("chars_per_chunk", 512)
+        d.setdefault("with_whitespace", True)
+        d.setdefault("tokenized_lm", True)
+        d.setdefault("is_lower", False)
+        d.setdefault("field", None)
+
+        super().__setstate__(d)
+
+
+@register_embeddings
 class PooledFlairEmbeddings(TokenEmbeddings):
     def __init__(
         self,
@@ -810,8 +908,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
         pooling: str = "min",
         only_capitalized: bool = False,
         **kwargs,
-    ):
-
+    ) -> None:
         super().__init__()
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
@@ -847,38 +944,33 @@ class PooledFlairEmbeddings(TokenEmbeddings):
             self.word_count = {}
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         self.context_embeddings.embed(sentences)
 
         # if we keep a pooling, it needs to be updated continuously
         for sentence in sentences:
             for token in sentence.tokens:
-
                 # update embedding
                 local_embedding = token._embeddings[self.context_embeddings.name].cpu()
 
                 # check token.text is empty or not
-                if token.text:
-                    if token.text[0].isupper() or not self.only_capitalized:
+                if token.text and (token.text[0].isupper() or not self.only_capitalized):
+                    if token.text not in self.word_embeddings:
+                        self.word_embeddings[token.text] = local_embedding
+                        self.word_count[token.text] = 1
+                    else:
+                        # set aggregation operation
+                        if self.pooling == "mean":
+                            aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
+                        elif self.pooling == "fade":
+                            aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
+                            aggregated_embedding /= 2
+                        elif self.pooling == "max":
+                            aggregated_embedding = torch.max(self.word_embeddings[token.text], local_embedding)
+                        elif self.pooling == "min":
+                            aggregated_embedding = torch.min(self.word_embeddings[token.text], local_embedding)
 
-                        if token.text not in self.word_embeddings:
-                            self.word_embeddings[token.text] = local_embedding
-                            self.word_count[token.text] = 1
-                        else:
-
-                            # set aggregation operation
-                            if self.pooling == "mean":
-                                aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
-                            elif self.pooling == "fade":
-                                aggregated_embedding = torch.add(self.word_embeddings[token.text], local_embedding)
-                                aggregated_embedding /= 2
-                            elif self.pooling == "max":
-                                aggregated_embedding = torch.max(self.word_embeddings[token.text], local_embedding)
-                            elif self.pooling == "min":
-                                aggregated_embedding = torch.min(self.word_embeddings[token.text], local_embedding)
-
-                            self.word_embeddings[token.text] = aggregated_embedding
-                            self.word_count[token.text] += 1
+                        self.word_embeddings[token.text] = aggregated_embedding
+                        self.word_count[token.text] += 1
 
         # add embeddings after updating
         for sentence in sentences:
@@ -903,24 +995,41 @@ class PooledFlairEmbeddings(TokenEmbeddings):
     def get_names(self) -> List[str]:
         return [self.name, self.context_embeddings.name]
 
-    def __setstate__(self, d):
-        self.__dict__ = d
+    def __setstate__(self, d: Dict[str, Any]):
+        super().__setstate__(d)
 
-        if flair.device != "cpu":
+        if flair.device.type != "cpu":
             for key in self.word_embeddings:
                 self.word_embeddings[key] = self.word_embeddings[key].cpu()
 
+    @classmethod
+    def from_params(cls, params):
+        return cls(contextual_embeddings=load_embeddings(params.pop("contextual_embeddings")), **params)
 
+    def to_params(self):
+        return {
+            "pooling": self.pooling,
+            "only_capitalized": self.only_capitalized,
+            "contextual_embeddings": self.context_embeddings.save_embeddings(use_state_dict=False),
+        }
+
+
+@register_embeddings
 class FastTextEmbeddings(TokenEmbeddings):
-    """FastText Embeddings with oov functionality"""
+    """FastText Embeddings with oov functionality."""
 
-    def __init__(self, embeddings: str, use_local: bool = True, field: str = None):
-        """
-        Initializes fasttext word embeddings. Constructor downloads required embedding file and stores in cache
-        if use_local is False.
+    def __init__(
+        self, embeddings: str, use_local: bool = True, field: Optional[str] = None, name: Optional[str] = None
+    ) -> None:
+        """Initializes fasttext word embeddings.
 
-        :param embeddings: path to your embeddings '.bin' file
-        :param use_local: set this to False if you are using embeddings from a remote source
+        Constructor downloads required embedding file and stores in cache if use_local is False.
+
+        Args:
+            embeddings: path to your embeddings '.bin' file
+            use_local: set this to False if you are using embeddings from a remote source
+            field: if given, the word-embeddings embed the data for the specific label-type instead of the plain text.
+            name: The name of the embeddings.
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
@@ -939,9 +1048,10 @@ class FastTextEmbeddings(TokenEmbeddings):
 
         self.static_embeddings = True
 
-        self.precomputed_word_embeddings: gensim.models.FastText = gensim.models.FastText.load_fasttext_format(
-            str(embeddings)
-        )
+        if embeddings_path.suffix == ".bin":
+            self.precomputed_word_embeddings: FastTextKeyedVectors = load_facebook_vectors(str(embeddings_path))
+        else:
+            self.precomputed_word_embeddings = FastTextKeyedVectors.load(str(embeddings_path))
 
         self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
 
@@ -954,24 +1064,15 @@ class FastTextEmbeddings(TokenEmbeddings):
 
     @instance_lru_cache(maxsize=10000, typed=False)
     def get_cached_vec(self, word: str) -> torch.Tensor:
-        try:
-            word_embedding = self.precomputed_word_embeddings.wv[word]
-        except IndexError:
-            word_embedding = np.zeros(self.embedding_length, dtype="float")
+        word_embedding = self.precomputed_word_embeddings.get_vector(word)
 
         word_embedding = torch.tensor(word_embedding.tolist(), device=flair.device, dtype=torch.float)
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
-        for i, sentence in enumerate(sentences):
-
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-
-                if "field" not in self.__dict__ or self.field is None:
-                    word = token.text
-                else:
-                    word = token.get_label(self.field).value
+        for sentence in sentences:
+            for token in sentence.tokens:
+                word = token.text if self.field is None else token.get_label(self.field).value
 
                 word_embedding = self.get_cached_vec(word)
 
@@ -979,13 +1080,30 @@ class FastTextEmbeddings(TokenEmbeddings):
 
         return sentences
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def extra_repr(self):
         return f"'{self.embeddings}'"
 
+    @classmethod
+    def from_params(cls, params):
+        fasttext_binary = params.pop("fasttext_binary")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            out_path = temp_path / "fasttext.model"
+            out_path.write_bytes(fasttext_binary)
+            return cls(**params, embeddings=str(out_path), use_local=True)
 
+    def to_params(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            out_path = temp_path / "fasttext.model"
+            self.precomputed_word_embeddings.save(str(out_path), separately=[])
+            return {"name": self.name, "field": self.field, "fasttext_binary": out_path.read_bytes()}
+
+
+@register_embeddings
 class OneHotEmbeddings(TokenEmbeddings):
     """One-hot encoded embeddings."""
 
@@ -995,13 +1113,14 @@ class OneHotEmbeddings(TokenEmbeddings):
         field: str = "text",
         embedding_length: int = 300,
         stable: bool = False,
-    ):
-        """
-        Initializes one-hot encoded word embeddings and a trainable embedding layer
-        :param vocab_dictionary: the vocabulary that will be encoded
-        :param field: by default, the 'text' of tokens is embedded, but you can also embed tags such as 'pos'
-        :param embedding_length: dimensionality of the trainable embedding layer
-        :param stable: set stable=True to use the stable embeddings as described in https://arxiv.org/abs/2110.02861
+    ) -> None:
+        """Initializes one-hot encoded word embeddings and a trainable embedding layer.
+
+        Args:
+            vocab_dictionary: the vocabulary that will be encoded
+            field: by default, the 'text' of tokens is embedded, but you can also embed tags such as 'pos'
+            embedding_length: dimensionality of the trainable embedding layer
+            stable: if True, use the stable embeddings as described in https://arxiv.org/abs/2110.02861
         """
         super().__init__()
         self.name = f"one-hot-{field}"
@@ -1023,13 +1142,13 @@ class OneHotEmbeddings(TokenEmbeddings):
             self.layer_norm = None
 
         self.to(flair.device)
+        self.eval()
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
         tokens = [t for sentence in sentences for t in sentence.tokens]
 
         if self.field == "text":
@@ -1048,20 +1167,20 @@ class OneHotEmbeddings(TokenEmbeddings):
 
         return sentences
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     @classmethod
     def from_corpus(cls, corpus: Corpus, field: str = "text", min_freq: int = 3, **kwargs):
         vocab_dictionary = Dictionary()
         assert corpus.train is not None
-        tokens = list(map((lambda s: s.tokens), _iter_dataset(corpus.train)))
+        tokens = [s.tokens for s in _iter_dataset(corpus.train)]
         tokens = [token for sublist in tokens for token in sublist]
 
         if field == "text":
-            most_common = Counter(list(map((lambda t: t.text), tokens))).most_common()
+            most_common = Counter([t.text for t in tokens]).most_common()
         else:
-            most_common = Counter(list(map((lambda t: t.get_label(field).value), tokens))).most_common()
+            most_common = Counter([t.get_label(field).value for t in tokens]).most_common()
 
         tokens = []
         for token, freq in most_common:
@@ -1074,12 +1193,24 @@ class OneHotEmbeddings(TokenEmbeddings):
 
         return cls(vocab_dictionary, field=field, **kwargs)
 
+    @classmethod
+    def from_params(cls, params):
+        return cls(**params)
 
+    def to_params(self):
+        return {
+            "vocab_dictionary": self.vocab_dictionary,
+            "field": self.field,
+            "embedding_length": self.__embedding_length,
+            "stable": self.layer_norm is not None,
+        }
+
+
+@register_embeddings
 class HashEmbeddings(TokenEmbeddings):
     """Standard embeddings with Hashing Trick."""
 
-    def __init__(self, num_embeddings: int = 1000, embedding_length: int = 300, hash_method="md5"):
-
+    def __init__(self, num_embeddings: int = 1000, embedding_length: int = 300, hash_method="md5") -> None:
         super().__init__()
         self.name = "hash"
         self.static_embeddings = False
@@ -1095,6 +1226,7 @@ class HashEmbeddings(TokenEmbeddings):
         torch.nn.init.xavier_uniform_(self.embedding_layer.weight)
 
         self.to(flair.device)
+        self.eval()
 
     @property
     def num_embeddings(self) -> int:
@@ -1110,7 +1242,7 @@ class HashEmbeddings(TokenEmbeddings):
             hash_function.update(bytes(str(text), "utf-8"))
             return int(hash_function.hexdigest(), 16) % self.__num_embeddings
 
-        context_idxs = [[get_idx_for_item(t.text) for t in sentence.tokens] for sentence in sentences]
+        context_idxs = [get_idx_for_item(t.text) for sentence in sentences for t in sentence.tokens]
 
         hash_sentences = torch.tensor(context_idxs, dtype=torch.long).to(flair.device)
 
@@ -1123,19 +1255,32 @@ class HashEmbeddings(TokenEmbeddings):
                 token.set_embedding(self.name, embedding)
                 index += 1
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
+    @classmethod
+    def from_params(cls, params):
+        return cls(**params)
 
+    def to_params(self):
+        return {
+            "num_embeddings": self.num_embeddings,
+            "embedding_length": self.embedding_length,
+            "hash_method": self.__hash_method,
+        }
+
+
+@register_embeddings
 class MuseCrosslingualEmbeddings(TokenEmbeddings):
     def __init__(
         self,
-    ):
+    ) -> None:
         self.name: str = "muse-crosslingual"
         self.static_embeddings = True
         self.__embedding_length: int = 300
-        self.language_embeddings = {}
+        self.language_embeddings: Dict[str, Any] = {}
         super().__init__()
+        self.eval()
 
     @instance_lru_cache(maxsize=10000, typed=False)
     def get_cached_vec(self, language_code: str, word: str) -> torch.Tensor:
@@ -1154,9 +1299,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
         return word_embedding
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
-        for i, sentence in enumerate(sentences):
-
+        for _i, sentence in enumerate(sentences):
             language_code = sentence.get_language_code()
             supported = [
                 "en",
@@ -1200,8 +1343,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
                 # load the model
                 self.language_embeddings[language_code] = gensim.models.KeyedVectors.load(str(embeddings_file))
 
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-
+            for token, _token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
                 word_embedding = self.get_cached_vec(language_code=language_code, word=token.text)
 
                 token.set_embedding(self.name, word_embedding)
@@ -1212,16 +1354,32 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
+
+    @classmethod
+    def from_params(cls, params):
+        return cls()
+
+    def to_params(self):
+        return {}
 
 
 # TODO: keep for backwards compatibility, but remove in future
+@deprecated(
+    reason="""'BPEmbSerializable' is only used in the legacy pickle-embeddings format.
+    Please save your model again to save it in the serializable json format.
+    """,
+    version="0.13.0",
+)
 class BPEmbSerializable(BPEmb):
+    """Helper class to allow pickle-seralizable BPE embeddings."""
+
     def __getstate__(self):
         state = self.__dict__.copy()
         # save the sentence piece model as binary file (not as path which may change)
-        state["spm_model_binary"] = open(self.model_file, mode="rb").read()
+        with self.model_file.open(mode="rb") as fin:
+            state["spm_model_binary"] = fin.read()
         state["spm"] = None
         return state
 
@@ -1248,19 +1406,22 @@ class BPEmbSerializable(BPEmb):
         state["spm"] = sentencepiece_load(self.model_file)
 
 
+@register_embeddings
 class BytePairEmbeddings(TokenEmbeddings):
     def __init__(
         self,
-        language: str = None,
+        language: Optional[str] = None,
         dim: int = 50,
         syllables: int = 100000,
         cache_dir=None,
-        model_file_path: Path = None,
-        embedding_file_path: Path = None,
+        model_file_path: Optional[Path] = None,
+        embedding_file_path: Optional[Path] = None,
+        name: Optional[str] = None,
         **kwargs,
-    ):
-        """
-        Initializes BP embeddings. Constructor downloads required files if not there.
+    ) -> None:
+        """Initializes BP embeddings.
+
+        Constructor downloads required files if not there.
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
@@ -1272,9 +1433,9 @@ class BytePairEmbeddings(TokenEmbeddings):
             assert (
                 model_file_path is not None and embedding_file_path is not None
             ), "Need to specify model_file_path and embedding_file_path if no language is given in BytePairEmbeddings(...)"
-            dim = None  # type: ignore
+            dim = None  # type: ignore[assignment]
 
-        self.embedder = BPEmbSerializable(
+        self.embedder = BPEmb(
             lang=language,
             vs=syllables,
             dim=dim,
@@ -1286,21 +1447,21 @@ class BytePairEmbeddings(TokenEmbeddings):
 
         if not language:
             self.name = f"bpe-custom-{self.embedder.vs}-{self.embedder.dim}"
+        if name is not None:
+            self.name = name
         self.static_embeddings = True
 
         self.__embedding_length: int = self.embedder.emb.vector_size * 2
         super().__init__()
+        self.eval()
 
     @property
     def embedding_length(self) -> int:
         return self.__embedding_length
 
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-
-        for i, sentence in enumerate(sentences):
-
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-
+        for _i, sentence in enumerate(sentences):
+            for token, _token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
                 word = token.text
 
                 if word.strip() == "":
@@ -1314,204 +1475,76 @@ class BytePairEmbeddings(TokenEmbeddings):
 
         return sentences
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def extra_repr(self):
-        return "model={}".format(self.name)
+        return f"model={self.name}"
+
+    @classmethod
+    def from_params(cls, params):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            model_file_path = temp_path / "model.spm"
+            model_file_path.write_bytes(params["spm_model_binary"])
+            embedding_file_path = temp_path / "word2vec.bin"
+            embedding_file_path.write_bytes(params["word2vec_binary"])
+            return cls(name=params["name"], model_file_path=model_file_path, embedding_file_path=embedding_file_path)
+
+    def to_params(self):
+        if not self.embedder.emb_file.exists():
+            self.embedder.emb_file = self.embedder.emb_file.with_suffix(".bin")
+            self.embedder.emb.save_word2vec_format(str(self.embedder.emb_file), binary=True)
+
+        return {
+            "name": self.name,
+            "spm_model_binary": self.embedder.spm.serialized_model_proto(),
+            "word2vec_binary": self.embedder.emb_file.read_bytes(),
+        }
 
 
-class ELMoEmbeddings(TokenEmbeddings):
-    """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018.
-    ELMo word vectors can be constructed by combining layers in different ways.
-    Default is to concatene the top 3 layers in the LM."""
-
-    def __init__(
-        self,
-        model: str = "original",
-        options_file: str = None,
-        weight_file: str = None,
-        embedding_mode: str = "all",
-    ):
-        super().__init__()
-
-        self.instance_parameters = self.get_instance_parameters(locals=locals())
-
-        try:
-            import allennlp.commands.elmo
-        except ModuleNotFoundError:
-            log.warning("-" * 100)
-            log.warning('ATTENTION! The library "allennlp" is not installed!')
-            log.warning('To use ELMoEmbeddings, please first install with "pip install allennlp==0.9.0"')
-            log.warning("-" * 100)
-            pass
-
-        assert embedding_mode in ["all", "top", "average"]
-
-        self.name = f"elmo-{model}-{embedding_mode}"
-        self.static_embeddings = True
-
-        if not options_file or not weight_file:
-            # the default model for ELMo is the 'original' model, which is very large
-            options_file = allennlp.commands.elmo.DEFAULT_OPTIONS_FILE
-            weight_file = allennlp.commands.elmo.DEFAULT_WEIGHT_FILE
-            # alternatively, a small, medium or portuguese model can be selected by passing the appropriate mode name
-            if model == "small":
-                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_options.json"
-                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x1024_128_2048cnn_1xhighway/elmo_2x1024_128_2048cnn_1xhighway_weights.hdf5"
-            if model == "medium":
-                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_options.json"
-                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x2048_256_2048cnn_1xhighway/elmo_2x2048_256_2048cnn_1xhighway_weights.hdf5"
-            if model in ["large", "5.5B"]:
-                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json"
-                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5"
-            if model == "pt" or model == "portuguese":
-                options_file = (
-                    "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_options.json"
-                )
-                weight_file = (
-                    "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pt/elmo_pt_weights.hdf5"
-                )
-            if model == "pubmed":
-                options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_options.json"
-                weight_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/contributed/pubmed/elmo_2x4096_512_2048cnn_2xhighway_weights_PubMed_only.hdf5"
-
-        if embedding_mode == "all":
-            self.embedding_mode_fn = self.use_layers_all
-        elif embedding_mode == "top":
-            self.embedding_mode_fn = self.use_layers_top
-        elif embedding_mode == "average":
-            self.embedding_mode_fn = self.use_layers_average
-
-            # put on Cuda if available
-        from flair import device
-
-        if re.fullmatch(r"cuda:[0-9]+", str(device)):
-            cuda_device = int(str(device).split(":")[-1])
-        elif str(device) == "cpu":
-            cuda_device = -1
-        else:
-            cuda_device = 0
-
-        self.ee = allennlp.commands.elmo.ElmoEmbedder(
-            options_file=options_file, weight_file=weight_file, cuda_device=cuda_device
-        )
-
-        # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence([Token("hello")])
-        embedded_dummy = self.embed(dummy_sentence)
-        self.__embedding_length: int = len(embedded_dummy[0][0].get_embedding())
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def use_layers_all(self, x):
-        return torch.cat(x, 0)
-
-    def use_layers_top(self, x):
-        return x[-1]
-
-    def use_layers_average(self, x):
-        return torch.mean(torch.stack(x), 0)
-
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
-        # ELMoEmbeddings before Release 0.5 did not set self.embedding_mode_fn
-        if not getattr(self, "embedding_mode_fn", None):
-            self.embedding_mode_fn = self.use_layers_all
-
-        sentence_words: List[List[str]] = []
-        for sentence in sentences:
-            sentence_words.append([token.text for token in sentence])
-
-        embeddings = self.ee.embed_batch(sentence_words)
-
-        for i, sentence in enumerate(sentences):
-
-            sentence_embeddings = embeddings[i]
-
-            for token, token_idx in zip(sentence.tokens, range(len(sentence.tokens))):
-                elmo_embedding_layers = [
-                    torch.FloatTensor(sentence_embeddings[0, token_idx, :]),
-                    torch.FloatTensor(sentence_embeddings[1, token_idx, :]),
-                    torch.FloatTensor(sentence_embeddings[2, token_idx, :]),
-                ]
-                word_embedding = self.embedding_mode_fn(elmo_embedding_layers)
-                token.set_embedding(self.name, word_embedding)
-
-        return sentences
-
-    def extra_repr(self):
-        return "model={}".format(self.name)
-
-    def __str__(self):
-        return self.name
-
-    def __setstate__(self, state):
-        self.__dict__ = state
-
-        if re.fullmatch(r"cuda:[0-9]+", str(flair.device)):
-            cuda_device = int(str(flair.device).split(":")[-1])
-        elif str(flair.device) == "cpu":
-            cuda_device = -1
-        else:
-            cuda_device = 0
-
-        self.ee.cuda_device = cuda_device
-
-        self.ee.elmo_bilm.to(device=flair.device)
-        self.ee.elmo_bilm._elmo_lstm._states = tuple(
-            [state.to(flair.device) for state in self.ee.elmo_bilm._elmo_lstm._states]
-        )
-
-
+@register_embeddings
 class NILCEmbeddings(WordEmbeddings):
-    def __init__(self, embeddings: str, model: str = "skip", size: int = 100):
-        """
-        Initializes portuguese classic word embeddings trained by NILC Lab (http://www.nilc.icmc.usp.br/embeddings).
-        Constructor downloads required files if not there.
-        :param embeddings: one of: 'fasttext', 'glove', 'wang2vec' or 'word2vec'
-        :param model: one of: 'skip' or 'cbow'. This is not applicable to glove.
-        :param size: one of: 50, 100, 300, 600 or 1000.
-        """
+    def __init__(self, embeddings: str, model: str = "skip", size: int = 100) -> None:
+        """Initializes portuguese classic word embeddings trained by NILC Lab.
 
+        See: http://www.nilc.icmc.usp.br/embeddings
+        Constructor downloads required files if not there.
+
+        Args:
+            embeddings: one of: 'fasttext', 'glove', 'wang2vec' or 'word2vec'
+            model: one of: 'skip' or 'cbow'. This is not applicable to glove.
+            size: one of: 50, 100, 300, 600 or 1000.
+        """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
         base_path = "http://143.107.183.175:22980/download.php?file=embeddings/"
 
-        cache_dir = Path("embeddings") / embeddings.lower()
+        cache_dir = Path("embeddings") / ("nilc-" + embeddings.lower())
 
         # GLOVE embeddings
         if embeddings.lower() == "glove":
             cached_path(f"{base_path}{embeddings}/{embeddings}_s{size}.zip", cache_dir=cache_dir)
-            embeddings_path = cached_path(f"{base_path}{embeddings}/{embeddings}_s{size}.zip", cache_dir=cache_dir)
+            embeddings_path = f"{base_path}{embeddings}/{embeddings}_s{size}.zip"
 
         elif embeddings.lower() in ["fasttext", "wang2vec", "word2vec"]:
             cached_path(f"{base_path}{embeddings}/{model}_s{size}.zip", cache_dir=cache_dir)
-            embeddings_path = cached_path(f"{base_path}{embeddings}/{model}_s{size}.zip", cache_dir=cache_dir)
+            embeddings_path = f"{base_path}{embeddings}/{model}_s{size}.zip"
 
         elif not Path(embeddings).exists():
             raise ValueError(f'The given embeddings "{embeddings}" is not available or is not a valid path.')
         else:
-            embeddings_path = Path(embeddings)
-
-        self.name: str = str(embeddings_path)
-        self.static_embeddings = True
+            embeddings_path = embeddings
 
         log.info("Reading embeddings from %s" % embeddings_path)
-        self.precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
-            open_inside_zip(str(embeddings_path), cache_dir=cache_dir)
+        super().__init__(
+            embeddings=str(extract_single_zip_file(embeddings_path, cache_dir=cache_dir)), name="NILC-" + embeddings
         )
 
-        self.__embedding_length: int = self.precomputed_word_embeddings.vector_size
-        super(TokenEmbeddings, self).__init__()
-
-    @property
-    def embedding_length(self) -> int:
-        return self.__embedding_length
-
-    def __str__(self):
-        return self.name
+    @classmethod
+    def from_params(cls, params: Dict[str, Any]) -> "WordEmbeddings":
+        #  no need to recreate as NILCEmbeddings
+        return WordEmbeddings(embeddings=None, **params)
 
 
 def replace_with_language_code(string: str):
@@ -1539,3 +1572,19 @@ def replace_with_language_code(string: str):
     string = string.replace("spanish-", "es-")
     string = string.replace("swedish-", "sv-")
     return string
+
+
+__all__ = [
+    "TransformerWordEmbeddings",
+    "StackedEmbeddings",
+    "WordEmbeddings",
+    "CharacterEmbeddings",
+    "FlairEmbeddings",
+    "PooledFlairEmbeddings",
+    "FastTextEmbeddings",
+    "OneHotEmbeddings",
+    "HashEmbeddings",
+    "MuseCrosslingualEmbeddings",
+    "BytePairEmbeddings",
+    "NILCEmbeddings",
+]

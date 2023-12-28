@@ -4,11 +4,11 @@ import pytest
 
 import flair
 from flair.data import Corpus, Dictionary, Label, Sentence
-from flair.datasets import FlairDatapointDataset, SentenceDataset
+from flair.datasets import ColumnCorpus, FlairDatapointDataset, SentenceDataset
 
 
 def test_dictionary_get_items_with_unk():
-    dictionary: Dictionary = Dictionary()
+    dictionary: Dictionary = Dictionary(add_unk=True)
 
     dictionary.add_item("class_1")
     dictionary.add_item("class_2")
@@ -16,11 +16,11 @@ def test_dictionary_get_items_with_unk():
 
     items = dictionary.get_items()
 
-    assert 4 == len(items)
-    assert "<unk>" == items[0]
-    assert "class_1" == items[1]
-    assert "class_2" == items[2]
-    assert "class_3" == items[3]
+    assert len(items) == 4
+    assert items[0] == "<unk>"
+    assert items[1] == "class_1"
+    assert items[2] == "class_2"
+    assert items[3] == "class_3"
 
 
 def test_dictionary_get_items_without_unk():
@@ -32,10 +32,10 @@ def test_dictionary_get_items_without_unk():
 
     items = dictionary.get_items()
 
-    assert 3 == len(items)
-    assert "class_1" == items[0]
-    assert "class_2" == items[1]
-    assert "class_3" == items[2]
+    assert len(items) == 3
+    assert items[0] == "class_1"
+    assert items[1] == "class_2"
+    assert items[2] == "class_3"
 
 
 def test_dictionary_get_idx_for_item():
@@ -47,7 +47,7 @@ def test_dictionary_get_idx_for_item():
 
     idx = dictionary.get_idx_for_item("class_2")
 
-    assert 1 == idx
+    assert idx == 1
 
 
 def test_dictionary_get_item_for_index():
@@ -59,7 +59,7 @@ def test_dictionary_get_item_for_index():
 
     item = dictionary.get_item_for_index(0)
 
-    assert "class_1" == item
+    assert item == "class_1"
 
 
 def test_dictionary_save_and_load():
@@ -99,7 +99,7 @@ def test_tagged_corpus_get_all_sentences():
 
     all_sentences = corpus.get_all_sentences()
 
-    assert 3 == len(all_sentences)
+    assert len(all_sentences) == 3
 
 
 def test_tagged_corpus_make_vocab_dictionary():
@@ -109,18 +109,18 @@ def test_tagged_corpus_make_vocab_dictionary():
 
     vocab = corpus.make_vocab_dictionary(max_tokens=2, min_freq=-1)
 
-    assert 3 == len(vocab)
+    assert len(vocab) == 3
     assert "<unk>" in vocab.get_items()
     assert "training" in vocab.get_items()
     assert "." in vocab.get_items()
 
     vocab = corpus.make_vocab_dictionary(max_tokens=-1, min_freq=-1)
 
-    assert 7 == len(vocab)
+    assert len(vocab) == 7
 
     vocab = corpus.make_vocab_dictionary(max_tokens=-1, min_freq=2)
 
-    assert 3 == len(vocab)
+    assert len(vocab) == 3
     assert "<unk>" in vocab.get_items()
     assert "training" in vocab.get_items()
     assert "." in vocab.get_items()
@@ -129,12 +129,12 @@ def test_tagged_corpus_make_vocab_dictionary():
 def test_label_set_confidence():
     label = Label(data_point=None, value="class_1", score=3.2)
 
-    assert 3.2 == label.score
-    assert "class_1" == label.value
+    assert label.score == 3.2
+    assert label.value == "class_1"
 
-    label.score = 0.2
+    label._score = 0.2
 
-    assert 0.2 == label.score
+    assert label.score == 0.2
 
 
 def test_tagged_corpus_make_label_dictionary():
@@ -150,9 +150,9 @@ def test_tagged_corpus_make_label_dictionary():
         FlairDatapointDataset([]),
     )
 
-    label_dict = corpus.make_label_dictionary("label")
+    label_dict = corpus.make_label_dictionary("label", add_unk=True)
 
-    assert 3 == len(label_dict)
+    assert len(label_dict) == 3
     assert "<unk>" in label_dict.get_items()
     assert "class_1" in label_dict.get_items()
     assert "class_2" in label_dict.get_items()
@@ -207,15 +207,15 @@ def test_tagged_corpus_statistics():
 
     assert "class_1" in class_to_count_dict
     assert "class_2" in class_to_count_dict
-    assert 2 == class_to_count_dict["class_1"]
-    assert 1 == class_to_count_dict["class_2"]
+    assert class_to_count_dict["class_1"] == 2
+    assert class_to_count_dict["class_2"] == 1
 
     tokens_in_sentences = Corpus._get_tokens_per_sentence([train_sentence, dev_sentence, test_sentence])
 
-    assert 3 == len(tokens_in_sentences)
-    assert 4 == tokens_in_sentences[0]
-    assert 5 == tokens_in_sentences[1]
-    assert 4 == tokens_in_sentences[2]
+    assert len(tokens_in_sentences) == 3
+    assert tokens_in_sentences[0] == 4
+    assert tokens_in_sentences[1] == 5
+    assert tokens_in_sentences[2] == 4
 
 
 def test_tagged_corpus_statistics_multi_label():
@@ -231,15 +231,15 @@ def test_tagged_corpus_statistics_multi_label():
 
     assert "class_1" in class_to_count_dict
     assert "class_2" in class_to_count_dict
-    assert 2 == class_to_count_dict["class_1"]
-    assert 2 == class_to_count_dict["class_2"]
+    assert class_to_count_dict["class_1"] == 2
+    assert class_to_count_dict["class_2"] == 2
 
     tokens_in_sentences = Corpus._get_tokens_per_sentence([train_sentence, dev_sentence, test_sentence])
 
-    assert 3 == len(tokens_in_sentences)
-    assert 4 == tokens_in_sentences[0]
-    assert 5 == tokens_in_sentences[1]
-    assert 4 == tokens_in_sentences[2]
+    assert len(tokens_in_sentences) == 3
+    assert tokens_in_sentences[0] == 4
+    assert tokens_in_sentences[1] == 5
+    assert tokens_in_sentences[2] == 4
 
 
 def test_tagged_corpus_downsample():
@@ -263,11 +263,11 @@ def test_tagged_corpus_downsample():
         sample_missing_splits=False,
     )
 
-    assert 10 == len(corpus.train)
+    assert len(corpus.train) == 10
 
     corpus.downsample(percentage=0.3, downsample_dev=False, downsample_test=False)
 
-    assert 3 == len(corpus.train)
+    assert len(corpus.train) == 3
 
 
 def test_classification_corpus_multi_labels_without_negative_examples(tasks_base_path):
@@ -288,3 +288,29 @@ def test_classification_corpus_multi_labels_with_negative_examples(tasks_base_pa
     assert len(corpus.train) == 8
     assert len(corpus.dev) == 5
     assert len(corpus.test) == 6
+
+
+def test_misalignment_spans(tasks_base_path):
+    example_txt = """George B-NAME
+Washington I-NAME
+went O
+\t O
+Washington B-CITY
+and O
+enjoyed O
+some O
+coffee B-BEVERAGE
+"""
+    train_path = tasks_base_path / "tmp" / "train.txt"
+    try:
+        train_path.parent.mkdir(exist_ok=True, parents=True)
+        train_path.write_text(example_txt, encoding="utf-8")
+        corpus = ColumnCorpus(
+            data_folder=train_path.parent, column_format={0: "text", 1: "ner"}, train_file=train_path.name
+        )
+        sentence = corpus.train[0]
+        span_texts = [span.text for span in sentence.get_spans("ner")]
+        assert span_texts == ["George Washington", "Washington", "coffee"]
+    finally:
+        train_path.unlink()
+        train_path.parent.rmdir()

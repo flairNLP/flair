@@ -1,0 +1,45 @@
+name: 'Build doc page'
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - "*"
+
+jobs:
+  publish_docs:
+    name: Build the docs using Sphinx and push to gh-pages
+    runs-on: ubuntu-latest
+    env:
+      python-version: 3.8
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: setup python ${{ env.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.python-version }}
+      - name: Install Torch cpu
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Install Flair dependencies
+        run: pip install -e .
+      - name: Install unittest dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Install doc dependencies
+        run: pip install -r docs/requirements.txt
+      - name: Fetch git tags
+        run: git fetch --tags origin
+      - name: Build docs
+        run: |
+          sphinx-multiversion docs doc_build/
+      - name: Add redirect to stable doc
+        run: |
+          cp assets/redirect.html doc_build/index.html
+          cp assets/redirect.html doc_build/404.html
+          cp assets/README.md doc_build/README.md
+          sed -i "s/\[VERSION\]/$(python -c 'import flair;print(flair.__version__)')/g" doc_build/index.html
+          sed -i "s/\[VERSION\]/$(python -c 'import flair;print(flair.__version__)')/g" doc_build/404.html
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc_build

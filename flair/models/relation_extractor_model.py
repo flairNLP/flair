@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import torch
 
@@ -18,27 +18,29 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         embeddings: flair.embeddings.TokenEmbeddings,
         label_type: str,
         entity_label_type: str,
-        entity_pair_filters: List[Tuple[str, str]] = None,
+        entity_pair_filters: Optional[List[Tuple[str, str]]] = None,
         pooling_operation: str = "first_last",
         train_on_gold_pairs_only: bool = False,
         **classifierargs,
-    ):
-        """
-        Initializes a RelationClassifier
-        :param document_embeddings: embeddings used to embed each data point
-        :param label_dictionary: dictionary of labels you want to predict
-        :param beta: Parameter for F-beta score for evaluation and training annealing
-        :param loss_weights: Dictionary of weights for labels for the loss function
-        :param train_on_gold_pairs_only: Set true to not train to predict no relation.
-        (if any label's weight is unspecified it will default to 1.0)
-        """
+    ) -> None:
+        """Initializes a RelationClassifier.
 
+        Args:
+            embeddings: embeddings used to embed each data point
+            label_type: name of the label
+            entity_label_type: name of the labels used to represent entities
+            entity_pair_filters: if provided, only classify pairs that apply the filter
+            pooling_operation: either "first" or "first_last" how the embeddings of the entities
+              should be used to create relation embeddings
+            train_on_gold_pairs_only: if True, relations with "O" (no relation) label will be ignored in training.
+            **classifierargs: The arguments propagated to :meth:`flair.nn.DefaultClassifier.__init__`
+        """
         # pooling operation to get embeddings for entites
         self.pooling_operation = pooling_operation
         relation_representation_length = 2 * embeddings.embedding_length
         if self.pooling_operation == "first_last":
             relation_representation_length *= 2
-        super(RelationExtractor, self).__init__(
+        super().__init__(
             embeddings=embeddings,
             final_embedding_size=relation_representation_length,
             **classifierargs,
@@ -108,7 +110,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def _print_predictions(self, batch, gold_label_type):
         lines = []
         for datapoint in batch:
-
             eval_line = f"\n{datapoint.to_original_text()}\n"
 
             for relation in datapoint.get_relations(gold_label_type):
@@ -126,7 +127,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "embeddings": self.embeddings,
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_dictionary": self.label_dictionary,
             "label_type": self.label_type,
             "entity_label_type": self.entity_label_type,
@@ -139,7 +140,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-
         return super()._init_model_with_state_dict(
             state,
             embeddings=state.get("embeddings"),
@@ -159,7 +159,6 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
     @staticmethod
     def _fetch_model(model_name) -> str:
-
         model_map = {}
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
@@ -171,3 +170,9 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
             model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
 
         return model_name
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "RelationExtractor":
+        from typing import cast
+
+        return cast("RelationExtractor", super().load(model_path=model_path))

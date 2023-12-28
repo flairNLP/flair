@@ -7,9 +7,9 @@ Let's use the pre-trained *HunFlair* model for biomedical named entity recogniti
 This model was trained over 24 biomedical NER data sets and can recognize 5 different entity types,
 i.e. cell lines, chemicals, disease, gene / proteins and species.
 ```python
-from flair.models import MultiTagger
+from flair.nn import Classifier
 
-tagger = MultiTagger.load("hunflair")
+tagger = Classifier.load("hunflair")
 ```
 All you need to do is use the predict() method of the tagger on a sentence.
 This will add predicted tags to the tokens in the sentence.
@@ -23,7 +23,7 @@ sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fra
 tagger.predict(sentence)
 
 # print sentence with predicted tags
-print(sentence.to_tagged_string())
+print(sentence)
 ```
 This should print:
 ~~~
@@ -40,7 +40,7 @@ Often named entities consist of multiple words spanning a certain text span in t
 "_Behavioral Abnormalities_" or "_Fragile X Syndrome_" in our example sentence.
 You can directly get such spans in a tagged sentence like this:
 ```python
-for disease in sentence.get_spans("hunflair-disease"):
+for disease in sentence.get_labels("hunflair-disease"):
     print(disease)
 ```
 This should print:
@@ -71,9 +71,8 @@ You can retrieve all annotated entities of the other entity types in analogous w
 for cell lines,  `hunflair-chemical` for chemicals, `hunflair-gene` for genes and proteins, and `hunflair-species`
 for species. To get all entities in one you can run:
 ```python
-for annotation_layer in sentence.annotation_layers.keys():
-    for entity in sentence.get_spans(annotation_layer):
-        print(entity)
+for entity in sentence.get_labels():
+    print(entity)
 ```
 This should print:
 ~~~
@@ -91,8 +90,8 @@ This can be unfavourable if applied to biomedical texts.
 *HunFlair* integrates [SciSpaCy](https://allenai.github.io/scispacy/), a library specially designed to work with scientific text.
 To use the library we first have to install it and download one of it's models:
 ~~~
-pip install scispacy==0.2.5
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.5/en_core_sci_sm-0.2.5.tar.gz
+pip install scispacy==0.5.1
+pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_sm-0.5.1.tar.gz
 ~~~
 
 To use the tokenizer we just have to pass it as parameter to when instancing a sentence:
@@ -117,7 +116,7 @@ abstract = "Fragile X syndrome (FXS) is a developmental disorder caused by a mut
 To work with complete abstracts or full-text, we first have to split them into separate sentences.
 Again we can apply the integration of the [SciSpaCy](https://allenai.github.io/scispacy/) library:
 ```python
-from flair.tokenization import SciSpacySentenceSplitter
+from flair.splitter import SciSpacySentenceSplitter
 
 # initialize the sentence splitter
 splitter = SciSpacySentenceSplitter()

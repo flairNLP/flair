@@ -139,3 +139,9 @@ flair_embedding_forward.embed(sentence)
 ```
 
 Note that while we get some of our best results with `PooledFlairEmbeddings` they are very ineffective memory-wise since they keep past embeddings of all words in memory. In many cases, regular `FlairEmbeddings` will be nearly as good but with much lower memory requirements.
+
+
+## Next
+
+Now that you are familiar with Flair embeddings, check 
+out the [**`TransformerEmbeddings`**](/resources/docs/embeddings/TRANSFORMER_EMBEDDINGS.md) next!

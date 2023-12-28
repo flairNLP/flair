@@ -1,0 +1,74 @@
+name: Bug Report
+description: Create a report to help us improve
+title: "[Bug]: "
+labels: ["bug"]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: Please describe the bug as concrete as possible
+      placeholder:
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: To Reproduce
+      description: Steps to reproduce the behavior (e.g. which model did you train? what parameters did you use? etc.).
+      placeholder: |
+        import flair
+        from flair.datasets import WNUT_17
+        corpus = WNUT_17()
+        ....
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: expectation
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Logs and Stack traces
+      description: If applicable, please past any relevant logs or error messages, please don't cut off the stack trace.
+      placeholder: |
+        Traceback (most recent call last):
+        File "flair\flair\embeddings\token.py", line 84, in __init__
+        self.__embedding_type: str = embeddings[0].embedding_type
+        IndexError: list index out of range
+      render: stacktrace
+    validations:
+      required: false
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+      placeholder: if applicable, copy paste an image in here
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add anything worthy to add that wasn't mentioned yet.
+    validations:
+      required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please run the [collect_env.py](../blob/master/collect_env.py) and paste it's output in here
+      placeholder: python collect_env.py
+    validations:
+      required: true

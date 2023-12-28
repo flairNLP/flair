@@ -74,18 +74,18 @@ class TestRelationClassifier(BaseModelTest):
     model_cls = RelationClassifier
     train_label_type = "relation"
     multiclass_prediction_labels = ["apple", "tv"]
-    model_args = dict(
-        entity_label_types="ner",
-        entity_pair_labels={  # Define valid entity pair combinations, used as relation candidates
+    model_args = {
+        "entity_label_types": "ner",
+        "entity_pair_labels": {  # Define valid entity pair combinations, used as relation candidates
             ("ORG", "PER"),  # founded_by
             ("LOC", "PER"),  # place_of_birth
         },
-        allow_unk_tag=False,
-    )
-    training_args = dict(max_epochs=25, learning_rate=4e-5, mini_batch_size=4)
+        "allow_unk_tag": False,
+    }
+    training_args = {"max_epochs": 2, "learning_rate": 4e-4, "mini_batch_size": 4}
     finetune_instead_of_train = True
 
-    @pytest.fixture
+    @pytest.fixture()
     def corpus(self, tasks_base_path):
         return ColumnCorpus(
             data_folder=tasks_base_path / "conllu",
@@ -95,21 +95,21 @@ class TestRelationClassifier(BaseModelTest):
             column_format={1: "text", 2: "pos", 3: "ner"},
         )
 
-    @pytest.fixture
+    @pytest.fixture()
     def embeddings(self):
-        yield TransformerDocumentEmbeddings(model="distilbert-base-uncased", layers="-1", fine_tune=True)
+        return TransformerDocumentEmbeddings(model="distilbert-base-uncased", layers="-1", fine_tune=True)
 
     def transform_corpus(self, model, corpus):
         return model.transform_corpus(corpus)
 
-    @pytest.fixture
+    @pytest.fixture()
     def example_sentence(self):
         sentence = Sentence(["Microsoft", "was", "found", "by", "Bill", "Gates"])
         sentence[:1].add_label(typename="ner", value="ORG", score=1.0)
         sentence[4:].add_label(typename="ner", value="PER", score=1.0)
-        yield sentence
+        return sentence
 
-    @pytest.fixture
+    @pytest.fixture()
     def train_test_sentence(self):
         sentence: Sentence = Sentence(
             [
@@ -166,10 +166,10 @@ class TestRelationClassifier(BaseModelTest):
         split: Optional[Dataset],
         ground_truth: Set[Tuple[str, Tuple[str, ...]]],
     ) -> None:
-        """Ground truth is a set of tuples of (<Sentence Text>, <Relation Label Values>)"""
+        # Ground truth is a set of tuples of (<Sentence Text>, <Relation Label Values>)
         assert split is not None
 
-        data_loader = DataLoader(split, batch_size=1, num_workers=0)
+        data_loader = DataLoader(split, batch_size=1)
         assert all(isinstance(sentence, EncodedSentence) for sentence in map(itemgetter(0), data_loader))
         assert {
             (sentence.to_tokenized_string(), tuple(label.value for label in sentence.get_labels("relation")))
@@ -180,7 +180,7 @@ class TestRelationClassifier(BaseModelTest):
         "cross_augmentation", [True, False], ids=["with_cross_augmentation", "without_cross_augmentation"]
     )
     @pytest.mark.parametrize(
-        "encoding_strategy, encoded_entity_pairs",
+        ("encoding_strategy", "encoded_entity_pairs"),
         encoding_strategies.items(),
         ids=[type(encoding_strategy).__name__ for encoding_strategy in encoding_strategies],
     )

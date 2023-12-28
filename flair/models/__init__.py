@@ -1,33 +1,37 @@
 from .clustering import ClusteringModel
-from .entity_linker_model import EntityLinker
+from .entity_linker_model import SpanClassifier
 from .language_model import LanguageModel
 from .lemmatizer_model import Lemmatizer
 from .multitask_model import MultitaskModel
 from .pairwise_classification_model import TextPairClassifier
+from .pairwise_regression_model import TextPairRegressor
 from .regexp_tagger import RegexpTagger
 from .relation_classifier_model import RelationClassifier
 from .relation_extractor_model import RelationExtractor
-from .sequence_tagger_model import MultiTagger, SequenceTagger, EarlyExitSequenceTagger
+from .sequence_tagger_model import SequenceTagger, EarlyExitSequenceTagger
 from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier, TextClassifierProbes
-from .word_tagger_model import WordTagger
+from .text_regression_model import TextRegressor
+from .word_tagger_model import TokenClassifier, WordTagger
 
 __all__ = [
-    "EntityLinker",
+    "SpanClassifier",
     "LanguageModel",
     "Lemmatizer",
     "TextPairClassifier",
+    "TextPairRegressor",
     "RelationClassifier",
     "RelationExtractor",
     "RegexpTagger",
-    "MultiTagger",
     "SequenceTagger",
+    "TokenClassifier",
     "EarlyExitSequenceTagger",
     "WordTagger",
     "FewshotClassifier",
     "TARSClassifier",
     "TARSTagger",
     "TextClassifier",
+    "TextRegressor",
     "TextClassifierProbes",
     "ClusteringModel",
     "MultitaskModel",
