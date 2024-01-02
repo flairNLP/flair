@@ -654,14 +654,14 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         """
         mention_embs = self.emb_search(entity_mentions)
         all_scores = mention_embs @ self._precomputed_embeddings.T
-        selected_indices = np.argsort(all_scores, axis=1)[:, :top_k]
-        scores = np.take_along_axis(all_scores, selected_indices, axis=1)
+        indices_top_k = np.argpartition(all_scores, kth=-top_k, axis=1)[:, -top_k:]
+        mention_numbers = np.tile(np.arange(len(entity_mentions)), (top_k, 1)).T
+        positions_top_k = np.argsort(all_scores[mention_numbers, indices_top_k], axis=1)
+        sorted_indices_top_k = indices_top_k[mention_numbers, positions_top_k]
 
         results = []
-        for i in range(selected_indices.shape[0]):
-            results.append(
-                [(self.ids[selected_indices[i, j]], float(scores[i, j])) for j in range(selected_indices.shape[1])]
-            )
+        for i in range(sorted_indices_top_k.shape[0]):
+            results.append([(self.ids[j], float(all_scores[i, j])) for j in sorted_indices_top_k[i, :]])
 
         return results
 
