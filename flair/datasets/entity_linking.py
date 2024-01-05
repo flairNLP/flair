@@ -8,7 +8,8 @@ import requests
 
 import flair
 from flair.data import Corpus, EntityCandidate, MultiCorpus, Sentence
-from flair.datasets.sequence_labeling import ColumnCorpus, MultiFileColumnCorpus
+from flair.datasets.sequence_labeling import (ColumnCorpus,
+                                              MultiFileColumnCorpus)
 from flair.file_utils import cached_path, unpack_file
 from flair.splitter import SegtokSentenceSplitter, SentenceSplitter
 
@@ -39,11 +40,14 @@ class EntityLinkingDictionary:
         candidates = list(candidates)
 
         self._idx_to_candidates = {candidate.concept_id: candidate for candidate in candidates}
-        self._text_to_index = {
-            text: candidate.concept_id
-            for candidate in candidates
-            for text in [candidate.concept_name, *candidate.synonyms]
-        }
+
+        # one name can map to multiple concepts
+        self._text_to_index: Dict[str, List] = {}
+        for candidate in candidates:
+            for text in [candidate.concept_name, *candidate.synonyms]:
+                if text not in self._text_to_index:
+                    self._text_to_index[text] = []
+                self._text_to_index[text].append(candidate.concept_id)
 
     @property
     def database_name(self) -> str:
@@ -51,7 +55,7 @@ class EntityLinkingDictionary:
         return self._dataset_name
 
     @property
-    def text_to_index(self) -> Dict[str, str]:
+    def text_to_index(self) -> Dict[str, List]:
         return self._text_to_index
 
     @property
@@ -109,7 +113,6 @@ class HunerEntityLinkingDictionary(EntityLinkingDictionary):
                     continue
                 assert "||" in line, "Preprocessed EntityLinkingDictionary must have lines in the format: `cui||name`"
                 cui, name = line.split("||", 1)
-                name = name.lower()
                 cui, *additional_ids = cui.split("|")
                 yield EntityCandidate(
                     concept_id=cui,
@@ -171,13 +174,11 @@ class CTD_DISEASES_DICTIONARY(EntityLinkingDictionary):
                 identifier = row["identifier"]
                 additional_identifiers = [i for i in row.get("alternative_identifiers", "").split("|") if i != ""]
 
-                if identifier == "MESH:C" and not additional_identifiers:
-                    return None
+                if any(i == "MESH:C" for i in [identifier, *additional_identifiers]):
+                    continue
 
                 symbol = row["symbol"]
-
                 synonyms = [s for s in row.get("synonyms", "").split("|") if s != ""]
-                definition = row["definition"]
 
                 yield EntityCandidate(
                     concept_id=identifier,
@@ -185,7 +186,6 @@ class CTD_DISEASES_DICTIONARY(EntityLinkingDictionary):
                     database_name="CTD-DISEASES",
                     additional_ids=additional_identifiers,
                     synonyms=synonyms,
-                    description=definition,
                 )
 
 
@@ -240,14 +240,12 @@ class CTD_CHEMICALS_DICTIONARY(EntityLinkingDictionary):
                 identifier = row["identifier"]
                 additional_identifiers = [i for i in row.get("alternative_identifiers", "").split("|") if i != ""]
 
-                if identifier == "MESH:D013749":
-                    # This MeSH ID was used by MeSH when this chemical was part of the MeSH controlled vocabulary.
-                    continue
+                # if identifier == "MESH:D013749":
+                #     # This MeSH ID was used by MeSH when this chemical was part of the MeSH controlled vocabulary.
+                #     continue
 
                 symbol = row["symbol"]
-
                 synonyms = [s for s in row.get("synonyms", "").split("|") if s != "" and s != symbol]
-                definition = row["definition"]
 
                 yield EntityCandidate(
                     concept_id=identifier,
@@ -255,7 +253,6 @@ class CTD_CHEMICALS_DICTIONARY(EntityLinkingDictionary):
                     database_name="CTD-CHEMICALS",
                     additional_ids=additional_identifiers,
                     synonyms=synonyms,
-                    description=definition,
                 )
 
 
@@ -347,11 +344,6 @@ class NCBI_GENE_HUMAN_DICTIONARY(EntityLinkingDictionary):
 
                 if self._is_invalid_name(symbol):
                     continue
-                additional_identifiers = [i for i in row.get("alternative_identifiers", "").split("|") if i != ""]
-
-                if identifier == "MESH:D013749":
-                    # This MeSH ID was used by MeSH when this chemical was part of the MeSH controlled vocabulary.
-                    continue
 
                 synonyms = []
                 for synonym_field in synonym_fields:
@@ -364,7 +356,6 @@ class NCBI_GENE_HUMAN_DICTIONARY(EntityLinkingDictionary):
                     concept_id=identifier,
                     concept_name=symbol,
                     database_name="NCBI-GENE-HUMAN",
-                    additional_ids=additional_identifiers,
                     synonyms=synonyms,
                 )
 
@@ -447,12 +438,14 @@ class NCBI_TAXONOMY_DICTIONARY(EntityLinkingDictionary):
                         curr_name = synonym
                     else:
                         curr_synonyms.append(synonym)
+
                 elif curr_identifier != parsed_line["identifier"]:
                     assert curr_name is not None
                     yield EntityCandidate(
                         concept_id=curr_identifier,
                         concept_name=curr_name,
                         database_name="NCBI-TAXONOMY",
+                        synonyms=curr_synonyms,
                     )
 
                     curr_identifier = parsed_line["identifier"]
