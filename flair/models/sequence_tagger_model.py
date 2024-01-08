@@ -1447,7 +1447,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 store_embeddings(batch, embedding_storage_mode)
 
                 # make printout lines
-                if out_path:
+                if out_path and layer_idx==-1:
                     lines.extend(self._print_predictions(batch, gold_label_type))
 
             # convert true and predicted values to two span-aligned lists
@@ -1467,9 +1467,10 @@ class EarlyExitSequenceTagger(SequenceTagger):
                     all_predicted_values[span] if span in all_predicted_values else ["O"]
                 )
 
-            # write all_predicted_values to out_file if set
-            if out_path:
-                with open(Path(out_path), "w", encoding="utf-8") as outfile:
+            # write all_predicted_values to out_file if set (per-epoch)
+            if out_path and layer_idx==-1:
+                epoch_log_path = str(out_path)[:-4]+'_'+str(self.model_card["training_parameters"]["epoch"])+'.tsv'
+                with open(Path(epoch_log_path), "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
 
             # make the evaluation dictionary
@@ -1607,3 +1608,64 @@ class EarlyExitSequenceTagger(SequenceTagger):
         return result
 
 
+    def _print_predictions(self, batch, gold_label_type):
+        # this override also prints out PD for each token
+        lines = []
+        if self.predict_spans:
+            for datapoint in batch:
+                # all labels default to "O"
+                for token in datapoint:
+                    token.set_label("gold_bio", "O")
+                    token.set_label("clean_bio", "O")
+                    token.set_label("predicted_bio", "O")
+
+                # set gold token-level
+                for gold_label in datapoint.get_labels(gold_label_type):
+                    gold_span: Span = gold_label.data_point
+                    prefix = "B-"
+                    for token in gold_span:
+                        token.set_label("gold_bio", prefix + gold_label.value)
+                        token.set_label("clean_bio", prefix + gold_label.value + '_clean') # TODO: add checks, this only works if ner_clean column is given
+
+                        prefix = "I-"
+
+                # set predicted token-level
+                for predicted_label in datapoint.get_labels("predicted"):
+                    predicted_span: Span = predicted_label.data_point
+                    prefix = "B-"
+                    for token in predicted_span:
+                        token.set_label("predicted_bio", prefix + predicted_label.value)
+                        prefix = "I-"
+
+                # now print labels in CoNLL format
+                for token in datapoint:
+                    gold = token.get_label('gold_bio').value
+                    clean = token.get_label('clean_bio').value
+                    pred = token.get_label('predicted_bio').value
+                    eval_line = (
+                        f"{token.text} "
+                        f"{gold} "
+                        f"{pred} "
+                        f"{pred == gold} " # correct prediction flag
+                        f"{gold != clean} " # noisy flag 
+                        f"{token.get_label('PD').score}\n"
+                    )
+                    lines.append(eval_line)
+                lines.append("\n")
+
+        else:
+            for datapoint in batch:
+                # print labels in CoNLL format
+                for token in datapoint:
+                    eval_line = (
+                        f"{token.text} "
+                        f"{token.get_label(gold_label_type).value} "
+                        f"{token.get_label('predicted').value} "
+                        f"{token.get_label('PD').score}\n"
+                    )
+                    lines.append(eval_line)
+                lines.append("\n")
+
+        return lines
+ 
+    
