@@ -1158,6 +1158,22 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         return loss, len(labels)
 
+    def _calculate_pd(self, scores: torch.Tensor, label_threshold=None) -> int:
+        """
+        Calculates the prediction depth for a given (single) data point.
+        :param scores: tensor with softmax or sigmoid scores of all layers
+        :param label_threshold: relevant only for multi-label classification
+        """
+        pd = self.n_layers - 1
+
+        pred_labels = torch.argmax(scores, dim=-1)
+        for i in range(self.n_layers - 2, -1, -1):  # iterate over the layers starting from the penultimate one
+            if pred_labels[i] == pred_labels[-1]:
+                pd -= 1
+            else:
+                break
+        return pd       
+
     def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
         """
         Softmax over emission scores from forward propagation.
@@ -1185,6 +1201,21 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 scores_batch = scores_batch[len(sentence) :]
                 prediction_batch = prediction_batch[len(sentence) :]
             predictions.append(layer_predictions)
+        
+        new_sentence_start = 0
+
+        for sentence in batch:
+            for k, token in enumerate(sentence):
+                pd = self._calculate_pd(softmax_batch[:, new_sentence_start + k, :])
+                if not token.has_label('PD'):
+                    token.add_label(typename="PD", value="PD", score=pd)
+                else:
+                    token.set_label(typename="PD", value="PD", score=pd)
+
+            new_sentence_start += len(sentence)
+
+            #TODO: also log overall PD for sentence
+
 
         if probabilities_for_all_classes:
             for i in range(self.n_layers):
