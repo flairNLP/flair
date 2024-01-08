@@ -1669,3 +1669,298 @@ class EarlyExitSequenceTagger(SequenceTagger):
         return lines
  
     
+ 
+class HybridEarlyExitSequenceTagger(EarlyExitSequenceTagger):
+    def __init__(
+        self,
+        embeddings: TransformerWordEmbeddings, # layer_mean = False, layers = "all"
+        warm_up_epochs: bool = False,
+        **seqtaggerargs
+    ):
+        """
+        Modify Early-Exit SequenceTagger
+        :param warm_up_epochs: number of epochs to fine-tune the TransformerEmbeddings, together with the last Linear layer, 
+                            after that they are frozen and only the N linear layers are fine-tuned for the remaining epochs.
+        """
+
+        self.warm_up_epochs = warm_up_epochs
+
+        super().__init__(
+            embeddings = embeddings,
+            last_layer_only = True,
+            **seqtaggerargs
+        )
+
+    def evaluate(
+        self,
+        data_points: Union[List[DT], Dataset],
+        gold_label_type: str,
+        out_path: Union[str, Path] = None,
+        embedding_storage_mode: str = "none",
+        mini_batch_size: int = 32,
+        num_workers: Optional[int] = 8,
+        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: List[str] = [],
+        gold_label_dictionary: Optional[Dictionary] = None,
+        return_loss: bool = True,
+        layer_idx = -1,
+        **kwargs,
+    ) -> Result:
+        import numpy as np
+        import sklearn
+
+        """
+        This override contains solely the following chagne:
+        when evaluate is 
+        
+        """
+
+        # make sure <unk> is contained in gold_label_dictionary, if given
+        if gold_label_dictionary and not gold_label_dictionary.add_unk:
+            raise AssertionError("gold_label_dictionary must have add_unk set to true in initialization.")
+
+        # read Dataset into data loader, if list of sentences passed, make Dataset first
+        if not isinstance(data_points, Dataset):
+            data_points = FlairDatapointDataset(data_points)
+
+        with torch.no_grad():
+
+            # loss calculation
+            eval_loss = torch.zeros(1, device=flair.device)
+            average_over = 0
+
+            # variables for printing
+            lines: List[str] = []
+
+            # variables for computing scores
+            all_spans: Set[str] = set()
+            all_true_values = {}
+            all_predicted_values = {}
+
+            loader = DataLoader(data_points, batch_size=mini_batch_size)
+
+            sentence_id = 0
+            for batch in Tqdm.tqdm(loader):
+
+                # remove any previously predicted labels
+                for datapoint in batch:
+                    datapoint.remove_labels("predicted")
+
+                # predict for batch
+                loss_and_count = self.predict(
+                    batch,
+                    embedding_storage_mode=embedding_storage_mode,
+                    mini_batch_size=mini_batch_size,
+                    label_name="predicted",
+                    return_loss=return_loss,
+                    layer_idx=layer_idx,
+                )
+
+                if return_loss:
+                    if isinstance(loss_and_count, tuple):
+                        average_over += loss_and_count[1]
+                        eval_loss += loss_and_count[0]
+                    else:
+                        eval_loss += loss_and_count
+
+                # get the gold labels
+                for datapoint in batch:
+
+                    for gold_label in datapoint.get_labels(gold_label_type):
+                        representation = str(sentence_id) + ": " + gold_label.unlabeled_identifier
+
+                        value = gold_label.value
+                        if gold_label_dictionary and gold_label_dictionary.get_idx_for_item(value) == 0:
+                            value = "<unk>"
+
+                        if representation not in all_true_values:
+                            all_true_values[representation] = [value]
+                        else:
+                            all_true_values[representation].append(value)
+
+                        if representation not in all_spans:
+                            all_spans.add(representation)
+
+                    for predicted_span in datapoint.get_labels("predicted"):
+                        representation = str(sentence_id) + ": " + predicted_span.unlabeled_identifier
+
+                        # add to all_predicted_values
+                        if representation not in all_predicted_values:
+                            all_predicted_values[representation] = [predicted_span.value]
+                        else:
+                            all_predicted_values[representation].append(predicted_span.value)
+
+                        if representation not in all_spans:
+                            all_spans.add(representation)
+
+                    sentence_id += 1
+
+                store_embeddings(batch, embedding_storage_mode)
+
+                # make printout lines
+                if out_path and layer_idx==-1:
+                    lines.extend(self._print_predictions(batch, gold_label_type))
+
+            # convert true and predicted values to two span-aligned lists
+            true_values_span_aligned = []
+            predicted_values_span_aligned = []
+            for span in all_spans:
+                list_of_gold_values_for_span = all_true_values[span] if span in all_true_values else ["O"]
+                # delete exluded labels if exclude_labels is given
+                for excluded_label in exclude_labels:
+                    if excluded_label in list_of_gold_values_for_span:
+                        list_of_gold_values_for_span.remove(excluded_label)
+                # if after excluding labels, no label is left, ignore the datapoint
+                if not list_of_gold_values_for_span:
+                    continue
+                true_values_span_aligned.append(list_of_gold_values_for_span)
+                predicted_values_span_aligned.append(
+                    all_predicted_values[span] if span in all_predicted_values else ["O"]
+                )
+
+            # write all_predicted_values to out_file if set
+            if out_path and layer_idx==-1:
+                epoch_log_path = str(out_path)[:-4]+'_'+str(self.model_card["training_parameters"]["epoch"])+'.tsv'
+                with open(Path(epoch_log_path), "w", encoding="utf-8") as outfile:
+                    outfile.write("".join(lines))
+
+            # make the evaluation dictionary
+            evaluation_label_dictionary = Dictionary(add_unk=False)
+            evaluation_label_dictionary.add_item("O")
+            for true_values in all_true_values.values():
+                for label in true_values:
+                    evaluation_label_dictionary.add_item(label)
+            for predicted_values in all_predicted_values.values():
+                for label in predicted_values:
+                    evaluation_label_dictionary.add_item(label)
+
+        # check if this is a multi-label problem
+        multi_label = False
+        for true_instance, predicted_instance in zip(true_values_span_aligned, predicted_values_span_aligned):
+            if len(true_instance) > 1 or len(predicted_instance) > 1:
+                multi_label = True
+                break
+
+        log.info(f"Evaluating as a multi-label problem: {multi_label}")
+
+        # compute numbers by formatting true and predicted such that Scikit-Learn can use them
+        y_true = []
+        y_pred = []
+        if multi_label:
+            # multi-label problems require a multi-hot vector for each true and predicted label
+            for true_instance in true_values_span_aligned:
+                y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
+                for true_value in true_instance:
+                    y_true_instance[evaluation_label_dictionary.get_idx_for_item(true_value)] = 1
+                y_true.append(y_true_instance.tolist())
+
+            for predicted_values in predicted_values_span_aligned:
+                y_pred_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
+                for predicted_value in predicted_values:
+                    y_pred_instance[evaluation_label_dictionary.get_idx_for_item(predicted_value)] = 1
+                y_pred.append(y_pred_instance.tolist())
+        else:
+            # single-label problems can do with a single index for each true and predicted label
+            y_true = [
+                evaluation_label_dictionary.get_idx_for_item(true_instance[0])
+                for true_instance in true_values_span_aligned
+            ]
+            y_pred = [
+                evaluation_label_dictionary.get_idx_for_item(predicted_instance[0])
+                for predicted_instance in predicted_values_span_aligned
+            ]
+
+        # now, calculate evaluation numbers
+        target_names = []
+        labels = []
+
+        counter = Counter(itertools.chain.from_iterable(all_true_values.values()))
+        counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
+
+        for label_name, count in counter.most_common():
+            if label_name == "O":
+                continue
+            target_names.append(label_name)
+            labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
+
+        # there is at least one gold label or one prediction (default)
+        if len(all_true_values) + len(all_predicted_values) > 1:
+            classification_report = sklearn.metrics.classification_report(
+                y_true,
+                y_pred,
+                digits=4,
+                target_names=target_names,
+                zero_division=0,
+                labels=labels,
+            )
+
+            classification_report_dict = sklearn.metrics.classification_report(
+                y_true,
+                y_pred,
+                target_names=target_names,
+                zero_division=0,
+                output_dict=True,
+                labels=labels,
+            )
+
+            accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
+            macro_f_score = round(classification_report_dict["macro avg"]["f1-score"], 4)
+
+            # if there is only one label, then "micro avg" = "macro avg"
+            if len(target_names) == 1:
+                classification_report_dict["micro avg"] = classification_report_dict["macro avg"]
+
+            if "micro avg" in classification_report_dict:
+                # micro average is only computed if zero-label exists (for instance "O")
+                precision_score = round(classification_report_dict["micro avg"]["precision"], 4)
+                recall_score = round(classification_report_dict["micro avg"]["recall"], 4)
+                micro_f_score = round(classification_report_dict["micro avg"]["f1-score"], 4)
+            else:
+                # if no zero-label exists (such as in POS tagging) micro average is equal to accuracy
+                precision_score = round(classification_report_dict["accuracy"], 4)
+                recall_score = round(classification_report_dict["accuracy"], 4)
+                micro_f_score = round(classification_report_dict["accuracy"], 4)
+
+            # same for the main score
+            if "micro avg" not in classification_report_dict and main_evaluation_metric[0] == "micro avg":
+                main_score = classification_report_dict["accuracy"]
+            else:
+                main_score = classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]]
+
+        else:
+            # issue error and default all evaluation numbers to 0.
+            log.error(
+                "ACHTUNG! No gold labels and no all_predicted_values found! "
+                "Could be an error in your corpus or how you "
+                "initialize the trainer!"
+            )
+            accuracy_score = precision_score = recall_score = micro_f_score = macro_f_score = main_score = 0.0
+            classification_report = ""
+            classification_report_dict = {}
+
+        detailed_result = (
+            "\nResults:"
+            f"\n- F-score (micro) {micro_f_score}"
+            f"\n- F-score (macro) {macro_f_score}"
+            f"\n- Accuracy {accuracy_score}"
+            "\n\nBy class:\n" + classification_report
+        )
+
+        if average_over > 0:
+            eval_loss /= average_over
+
+        result = Result(
+            main_score=main_score,
+            detailed_results=detailed_result,
+            classification_report=classification_report_dict,
+            scores={'loss':eval_loss.item()},
+        )
+
+        ## this would only work if evaluate is called at the end of each epoch, if not it needs to be modified
+        if self.embeddings.fine_tune and self.model_card["training_parameters"]["epoch"] == self.warm_up_epochs:
+            
+            # change training mode: freeze embeddings, enable fine-tuning of all N classifier heads
+            self.last_layer_only = False
+            self.embeddings.fine_tune =  False
+
+        return result
