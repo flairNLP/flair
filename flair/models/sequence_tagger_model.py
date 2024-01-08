@@ -1386,7 +1386,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
             all_true_values = {}
             all_predicted_values = {}
 
-            loader = DataLoader(data_points, batch_size=mini_batch_size, num_workers=0)
+            loader = DataLoader(data_points, batch_size=mini_batch_size)
 
             sentence_id = 0
             for batch in Tqdm.tqdm(loader):
@@ -1594,20 +1594,16 @@ class EarlyExitSequenceTagger(SequenceTagger):
             "\n\nBy class:\n" + classification_report
         )
 
-        # line for log file
-        log_header = "PRECISION\tRECALL\tF1\tACCURACY"
-        log_line = f"{precision_score}\t" f"{recall_score}\t" f"{micro_f_score}\t" f"{accuracy_score}"
-
         if average_over > 0:
             eval_loss /= average_over
 
         result = Result(
             main_score=main_score,
-            log_line=log_line,
-            log_header=log_header,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            loss=eval_loss.item(),
+            scores={'loss':eval_loss.item()},
         )
 
         return result
+
+
