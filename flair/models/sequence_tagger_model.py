@@ -1,5 +1,7 @@
 import logging
 import tempfile
+from abc import ABC, abstractmethod
+
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
 from urllib.error import HTTPError
@@ -8,15 +10,17 @@ import torch
 import torch.nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from torch.utils.data import Dataset
 from tqdm import tqdm
 
 import flair.nn
-from flair.data import Dictionary, Label, Sentence, Span, get_spans_from_bio
+from flair.data import Dictionary, Label, Sentence, Span, get_spans_from_bio, Corpus, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.models.sequence_tagger_utils.crf import CRF
 from flair.models.sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
+from flair.nn.model import get_non_abstract_subclasses
 from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
@@ -395,6 +399,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             for sentence in sentences:
                 sentence_labels = ["O"] * len(sentence)
                 for label in sentence.get_labels(self.label_type):
+                    if label.value == "O":
+                        continue
+
                     span: Span = label.data_point
                     if self.tag_format == "BIOES":
                         if len(span) == 1:
@@ -1034,3 +1041,333 @@ for entity in sentence.get_spans('ner'):
         from typing import cast
 
         return cast("SequenceTagger", super().load(model_path=model_path))
+
+
+class AugmentedSentence(Sentence):
+    """A Sentence that expresses that a sentence is augmented and compatible with the HunFlairAllInOneSequenceTagger
+
+    For inference, i.e. `predict` and `evaluate`, the HunFlairAllInOneSequenceTagger internally encodes the sentences.
+    Therefore, these functions work with the regular flair sentence objects.
+    """
+
+
+class SentenceAugmentationStrategy(ABC):
+
+    @abstractmethod
+    def augment_sentence(
+            self,
+            sentence: Sentence,
+            annotation_layers: Union[str, List[str]] = None
+    ) -> AugmentedSentence:
+        """
+            Augments the given sentence text with additional instructions for working / predicting
+            the task on the given annotations.
+
+            Args:
+                sentence: The sentence to be augmented
+                annotation_layers: Annotations which should be predicted.
+        """
+        ...
+
+    @abstractmethod
+    def apply_predictions(
+            self,
+            augmented_sentence: Sentence,
+            original_sentence: Sentence,
+            source_annotation_layer: str,
+            target_annotation_layer: str
+    ):
+        """
+            Transfers the predictions made on the augmented sentence to the original one.
+
+            Args:
+                  augmented_sentence: The augmented sentence instance
+                  original_sentence: The original sentence before the augmentation was applied
+                  source_annotation_layer: Annotation layer of the augmented sentence in which the predictions are stored.
+                  target_annotation_layer: Annotation layer in which the predictions should be stored in the original sentence.
+        """
+        ...
+
+    @abstractmethod
+    def _get_state_dict(self):
+        """
+            Returns the state dict for the given augmentation strategy.
+        """
+        ...
+
+    @classmethod
+    def _init_strategy_with_state_dict(cls, state, **kwargs):
+        """
+            Initializes the strategy from the given state.
+        """
+
+    def augment_dataset(
+            self,
+            dataset: Dataset[Sentence],
+            annotation_layers: Union[str, List[str]] = None
+
+    ) -> FlairDatapointDataset[AugmentedSentence]:
+        """Transforms a dataset into a dataset containing augmented sentences specific to
+        the `HunFlairAllInOneSequenceTagger`.
+
+        The returned dataset is stored in memory. For more information on the internal sentence transformation
+        procedure, see the :class:`HunFlairAllInOneSequenceTagger` architecture.
+
+        Args:
+            dataset: A dataset of sentences to augment
+            annotation_layers: Annotations which should be predicted.
+
+        Returns: A dataset of augmented sentences specific to the `HunFlairAllInOneSequenceTagger`
+        """
+        data_loader: DataLoader = DataLoader(dataset, batch_size=1)
+        original_sentences: List[Sentence] = [batch[0] for batch in iter(data_loader)]
+
+        augmented_sentences = [
+            self.augment_sentence(sentence, annotation_layers)
+            for sentence in original_sentences
+
+        ]
+
+        return FlairDatapointDataset(augmented_sentences)
+
+    def augment_corpus(
+            self,
+            corpus: Corpus[Sentence],
+            annotation_layers: Union[str, List[str]] = None
+    ) -> Corpus[AugmentedSentence]:
+        """Transforms a corpus into a corpus containing augmented sentences specific to the
+        `HunFlairAllInOneSequenceTagger`.
+
+        The splits of the returned corpus are stored in memory. For more information on the internal
+        sentence augmentation procedure, see the :class:`HunFlairAllInOneSequenceTagger`.
+
+        Args:
+            corpus: A corpus of sentences to augment
+            annotation_layers: Annotations which should be predicted.
+
+        Returns: A corpus of encoded sentences specific to the `HunFlairAllInOneSequenceTagger`
+        """
+        return Corpus(
+            train=self.augment_dataset(corpus.train, annotation_layers) if corpus.train is not None else None,
+            dev=self.augment_dataset(corpus.dev, annotation_layers) if corpus.dev is not None else None,
+            test=self.augment_dataset(corpus.test, annotation_layers) if corpus.test is not None else None,
+            name=corpus.name,
+            # If we sample missing splits, the encoded sentences that correspond to the same original sentences
+            # may get distributed into different splits. For training purposes, this is always undesired.
+            sample_missing_splits=False,
+        )
+
+
+class EntityTypeTaskPromptAugmentationStrategy(SentenceAugmentationStrategy):
+    """
+        Augmentation strategy that augments a sentence with a task description which specifies
+        which entity types should be tagged.
+
+        Example:
+            "[Tag gene and disease] Mutations in the TP53 tumour suppressor gene are found in ~50% of human cancers"
+
+        This approach is inspired by the paper from Luo et al.:
+        AIONER: All-in-one scheme-based biomedical named entity recognition using deep learning
+        https://arxiv.org/abs/2211.16944
+    """
+
+    def __init__(self, entity_types: List[str]):
+        if len(entity_types) <= 0:
+            raise AssertionError()
+
+        self.entity_types = entity_types
+        self.task_prompt = self._build_tag_prompt_prefix(entity_types)
+
+    def augment_sentence(
+            self,
+            sentence: Sentence,
+            annotation_layers: Union[str, List[str]] = None
+    ) -> AugmentedSentence:
+        # Prepend the task description prompt to the sentence text
+        augmented_sentence = AugmentedSentence(
+            text=self.task_prompt + [t.text for t in sentence.tokens],
+            use_tokenizer=False,
+            language_code=sentence.language_code,
+            start_position=sentence.start_position
+        )
+
+        # Make sure it's a list
+        if annotation_layers and isinstance(annotation_layers, str):
+            annotation_layers = [annotation_layers]
+
+        # Reconstruct all annotations from the original sentence (necessary for learning classifiers)
+        layers = annotation_layers if annotation_layers else sentence.annotation_layers.keys()
+        len_task_prompt = len(self.task_prompt)
+
+        for layer in layers:
+            for label in sentence.get_labels(layer):
+                if isinstance(label.data_point, Token):
+                    label_span = augmented_sentence[
+                                 len_task_prompt + label.data_point.idx - 1:
+                                 len_task_prompt + label.data_point.idx]
+                else:
+                    label_span = augmented_sentence[
+                                 len_task_prompt + label.data_point.tokens[0].idx - 1:
+                                 len_task_prompt + label.data_point.tokens[-1].idx]
+
+                label_span.add_label(layer, label.value, label.score)
+
+        return augmented_sentence
+
+    def apply_predictions(
+            self,
+            augmented_sentence: Sentence,
+            original_sentence: Sentence,
+            source_annotation_layer: str,
+            target_annotation_layer: str
+    ):
+        new_labels = augmented_sentence.get_labels(source_annotation_layer)
+        len_task_prompt = len(self.task_prompt)
+
+        for label in new_labels:
+            orig_span = original_sentence[
+                        label.data_point.tokens[0].idx - len_task_prompt - 1:
+                        label.data_point.tokens[-1].idx - len_task_prompt
+                        ]
+            orig_span.add_label(target_annotation_layer, label.value, label.score)
+
+    def _build_tag_prompt_prefix(self, entity_types: List[str]) -> List[str]:
+        if len(self.entity_types) == 1:
+            prompt = f"[ Tag {entity_types[0]} ]"
+        else:
+            prompt = "[ Tag " + ", ".join(entity_types[:-1]) + " and " + entity_types[-1] + " ]"
+
+        return prompt.split()
+
+    def _get_state_dict(self):
+        return {"entity_types": self.entity_types}
+
+    @classmethod
+    def _init_strategy_with_state_dict(cls, state, **kwargs):
+        return cls(state["entity_types"])
+
+
+class AugmentedSentenceSequenceTagger(SequenceTagger):
+
+    def __init__(
+            self,
+            *args,
+            augmentation_strategy: SentenceAugmentationStrategy,
+            **kwargs
+    ):
+        super().__init__(*args, **kwargs)
+
+        if augmentation_strategy is None:
+            raise AssertionError("Please provide an augmentation strategy")
+
+        self.augmentation_strategy = augmentation_strategy
+
+    def _get_state_dict(self):
+        state = super(AugmentedSentenceSequenceTagger, self)._get_state_dict()
+        class_name = ".".join([self.augmentation_strategy.__module__,
+                               self.augmentation_strategy.__class__.__name__])
+
+        state["augmentation_strategy_cls"] = class_name
+        state["augmentation_strategy_state"] = self.augmentation_strategy._get_state_dict()
+
+        return state
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+        subclasses = [
+            (".".join([subclass.__module__, subclass.__name__]), subclass)
+            for subclass in get_non_abstract_subclasses(SentenceAugmentationStrategy)
+        ]
+
+        aug_strategy_cls_name = state.get("augmentation_strategy_cls")
+        strategy = None
+
+        for subclass_name, subclass in subclasses:
+            if aug_strategy_cls_name == subclass_name:
+                strategy = subclass._init_strategy_with_state_dict(
+                    state.get("augmentation_strategy_state"))
+                break
+
+        if strategy is None:
+            raise AssertionError("Can't load augmentation strategy")
+
+        return super()._init_model_with_state_dict(
+            state,
+            augmentation_strategy=strategy,
+            **kwargs,
+        )
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "AugmentedSentenceSequenceTagger":
+        from typing import cast
+
+        return cast("AugmentedSentenceSequenceTagger", super().load(model_path=model_path))
+
+    def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
+        # If all sentences are not augmented -> augment them
+        if all(isinstance(sentence, Sentence) for sentence in sentences):
+            sentences = self.augment_sentences(
+                sentences=sentences,
+                annotation_layers=self.tag_type
+            )
+        elif not all(isinstance(sentence, AugmentedSentence) for sentence in sentences):
+            raise ValueError("All passed sentences must be either uniformly augmented or not.")
+
+        return super(AugmentedSentenceSequenceTagger, self).forward_loss(sentences)
+
+    def predict(self, sentences: Union[List[Sentence], Sentence], **kwargs):
+        # make sure it's a list
+        if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
+            sentences = [sentences]
+
+        # If all sentences are already augmented (i.e. compatible with this class), just forward the sentences
+        if all(isinstance(sentence, AugmentedSentence) for sentence in sentences):
+            return super(AugmentedSentenceSequenceTagger, self).predict(sentences, **kwargs)
+
+        elif not all(isinstance(sentence, Sentence) for sentence in sentences):
+            raise ValueError("All passed sentences must be either uniformly augmented or not.")
+
+        # Save output label name
+        orig_label_name = self.tag_type
+        if "label_name" in kwargs:
+            orig_label_name = kwargs.pop("label_name")
+
+            # Remove existing labels
+            for sentence in sentences:
+                sentence.remove_labels(orig_label_name)
+
+        # Augment sentences - copy all annotation of the given tag type
+        augmented_sentences = self.augment_sentences(sentences, self.tag_type)
+
+        # Predict on augmented sentence and store it in an internal annotation layer / label
+        loss_and_count = super(AugmentedSentenceSequenceTagger, self).predict(
+            sentences=augmented_sentences,
+            label_name=orig_label_name,
+            **kwargs
+        )
+
+        # Append predicted labels to the original sentences
+        for orig_sent, aug_sent in zip(sentences, augmented_sentences):
+            self.augmentation_strategy.apply_predictions(
+                aug_sent, orig_sent, orig_label_name, orig_label_name
+            )
+
+            if orig_label_name == "predicted":
+                orig_sent.remove_labels("predicted_bio")
+                orig_sent.remove_labels("gold_bio")
+
+        if loss_and_count is not None:
+            return loss_and_count
+
+    def augment_sentences(
+            self,
+            sentences: Union[Sentence, List[Sentence]],
+            annotation_layers: Union[str, List[str]] = None
+    ) -> List[AugmentedSentence]:
+        if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
+            sentences = [sentences]
+
+        return [
+            self.augmentation_strategy.augment_sentence(sentence, annotation_layers)
+            for sentence in sentences
+        ]
