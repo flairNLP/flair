@@ -1,3 +1,4 @@
+import copy
 import inspect
 import logging
 import os
@@ -14,12 +15,13 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
 
 import numpy as np
 import torch
+from scipy import sparse
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
 import flair
 from flair.class_utils import get_state_subclass_by_name
-from flair.data import DT, Dictionary, Label, Sentence, Span
+from flair.data import DT, Dictionary, Sentence
 from flair.datasets import (
     CTD_CHEMICALS_DICTIONARY,
     CTD_DISEASES_DICTIONARY,
@@ -52,7 +54,19 @@ PRETRAINED_HYBRID_MODELS = {
     "dmis-lab/biosyn-sapbert-bc2gn": "gene",
 }
 
+# fetched from original repo to avoid download
+HYBRID_MODELS_SPARSE_WEIGHT = {
+    "dmis-lab/biosyn-sapbert-bc5cdr-disease": 0.09762775897979736,
+    "dmis-lab/biosyn-sapbert-ncbi-disease": 0.40971508622169495,
+    "dmis-lab/biosyn-sapbert-bc5cdr-chemical": 0.07534809410572052,
+    "dmis-lab/biosyn-biobert-bc5cdr-disease": 1.5729279518127441,
+    "dmis-lab/biosyn-biobert-ncbi-disease": 1.7646825313568115,
+    "dmis-lab/biosyn-biobert-bc2gn": 1.5786927938461304,
+    "dmis-lab/biosyn-sapbert-bc2gn": 0.0288906991481781,
+}
+
 PRETRAINED_MODELS = list(PRETRAINED_HYBRID_MODELS) + PRETRAINED_DENSE_MODELS
+
 
 # just in case we add: fuzzy search, Levenstein, ...
 STRING_MATCHING_MODELS = ["exact-string-match"]
@@ -101,6 +115,16 @@ MODEL_NAME_TO_DICTIONARY = {
 DEFAULT_SPARSE_WEIGHT = 0.5
 
 
+class SimilarityMetric(Enum):
+    """Similarity metrics."""
+
+    INNER_PRODUCT = auto()
+    COSINE = auto()
+
+
+PRETRAINED_MODEL_TO_SIMILARITY_METRIC = {m: SimilarityMetric.INNER_PRODUCT for m in PRETRAINED_MODELS}
+
+
 def load_dictionary(
     dictionary_name_or_path: Union[Path, str], dataset_name: Optional[str] = None
 ) -> EntityLinkingDictionary:
@@ -117,13 +141,6 @@ def load_dictionary(
     return HunerEntityLinkingDictionary(path=dictionary_name_or_path, dataset_name=dataset_name)
 
 
-class SimilarityMetric(Enum):
-    """Similarity metrics."""
-
-    INNER_PRODUCT = auto()
-    COSINE = auto()
-
-
 class EntityPreprocessor(ABC):
     """A pre-processor used to transform / clean both entity mentions and entity names."""
 
@@ -136,7 +153,7 @@ class EntityPreprocessor(ABC):
             sentences: List of sentences that will be processed.
         """
 
-    def process_mention(self, entity_mention: Label, sentence: Sentence) -> str:
+    def process_mention(self, entity_mention: str, sentence: Optional[Sentence] = None) -> str:
         """Processes the given entity mention and applies the transformation procedure to it.
 
         Usually just forwards the entity_mention to :meth:`EntityPreprocessor.process_entity_name`, but can be implemented
@@ -149,7 +166,7 @@ class EntityPreprocessor(ABC):
         Returns:
             Cleaned / transformed string representation of the given entity mention
         """
-        return self.process_entity_name(entity_mention.data_point.text)
+        return self.process_entity_name(entity_mention)
 
     @abstractmethod
     def process_entity_name(self, entity_name: str) -> str:
@@ -197,6 +214,8 @@ class BioSynEntityPreprocessor(EntityPreprocessor):
         self.rmv_puncts_regex = re.compile(rf"[\s{re.escape(string.punctuation)}]+")
 
     def process_entity_name(self, entity_name: str) -> str:
+        original = copy.deepcopy(entity_name)
+
         if self.lowercase:
             entity_name = entity_name.lower()
 
@@ -204,7 +223,12 @@ class BioSynEntityPreprocessor(EntityPreprocessor):
             name_parts = self.rmv_puncts_regex.split(entity_name)
             entity_name = " ".join(name_parts).strip()
 
-        return entity_name.strip()
+        entity_name = entity_name.strip()
+
+        # NOTE: Avoid emtpy string if mentions are just punctutations (e.g. `-` or `(`)
+        entity_name = original if len(entity_name) == 0 else entity_name
+
+        return entity_name
 
     def _get_state(self) -> Dict[str, Any]:
         return {
@@ -223,7 +247,12 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
     https://github.com/ncbi-nlp/Ab3P.
     """
 
-    def __init__(self, ab3p_path: Path, word_data_dir: Path, preprocessor: Optional[EntityPreprocessor] = None) -> None:
+    def __init__(
+        self,
+        ab3p_path: Optional[Path] = None,
+        word_data_dir: Optional[Path] = None,
+        preprocessor: Optional[EntityPreprocessor] = None,
+    ) -> None:
         """Creates the mention pre-processor.
 
         Args:
@@ -231,31 +260,36 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
             word_data_dir: Path to the word data directory
             preprocessor: Basic entity preprocessor
         """
-        self.ab3p_path = ab3p_path
-        self.word_data_dir = word_data_dir
+        if ab3p_path is not None and word_data_dir is not None:
+            self.ab3p_path = ab3p_path
+            self.word_data_dir = word_data_dir
+        else:
+            self.ab3p_path, self.word_data_dir = self._get_biosyn_ab3p_paths()
         self.preprocessor = preprocessor
         self.abbreviation_dict: Dict[str, Dict[str, str]] = {}
 
     def initialize(self, sentences: List[Sentence]) -> None:
         self.abbreviation_dict = self._build_abbreviation_dict(sentences)
 
-    def process_mention(self, entity_mention: Label, sentence: Sentence) -> str:
-        sentence_text = sentence.to_tokenized_string().strip()
-        tokens = [token.text for token in cast(Span, entity_mention.data_point).tokens]
+    def process_mention(self, entity_mention: str, sentence: Optional[Sentence] = None) -> str:
+        assert (
+            sentence is not None
+        ), "Ab3P requires the sentence where `entity_mention` was found for abbreviation resolution"
 
-        parsed_tokens = []
-        for token in tokens:
-            if self.preprocessor is not None:
-                token = self.preprocessor.process_entity_name(token)
+        original = copy.deepcopy(entity_mention)
 
-            if sentence_text in self.abbreviation_dict and token.lower() in self.abbreviation_dict[sentence_text]:
-                parsed_tokens.append(self.abbreviation_dict[sentence_text][token.lower()])
-                continue
+        sentence_text = sentence.to_original_text()
 
-            if len(token) != 0:
-                parsed_tokens.append(token)
+        if entity_mention in self.abbreviation_dict.get(sentence_text, {}):
+            entity_mention = self.abbreviation_dict[sentence_text][entity_mention]
 
-        return " ".join(parsed_tokens)
+        if self.preprocessor is not None:
+            entity_mention = self.preprocessor.process_entity_name(entity_mention)
+
+        # NOTE: Avoid emtpy string if mentions are just punctutations (e.g. `-` or `(`)
+        entity_mention = original if len(entity_mention) == 0 else entity_mention
+
+        return entity_mention
 
     def process_entity_name(self, entity_name: str) -> str:
         # Ab3P works on sentence-level and not on a single entity mention / name
@@ -265,8 +299,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
 
         return entity_name
 
-    @classmethod
-    def load_biosyn(cls, preprocessor: Optional[EntityPreprocessor] = None):
+    def _get_biosyn_ab3p_paths(self) -> Tuple[Path, Path]:
         data_dir = flair.cache_root / "ab3p_biosyn"
         if not data_dir.exists():
             data_dir.mkdir(parents=True)
@@ -275,12 +308,11 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         if not word_data_dir.exists():
             word_data_dir.mkdir()
 
-        ab3p_path = cls._download_biosyn_ab3p(data_dir, word_data_dir)
+        ab3p_path = self._download_biosyn_ab3p(data_dir, word_data_dir)
 
-        return cls(ab3p_path, word_data_dir, preprocessor)
+        return ab3p_path, word_data_dir
 
-    @classmethod
-    def _download_biosyn_ab3p(cls, data_dir: Path, word_data_dir: Path) -> Path:
+    def _download_biosyn_ab3p(self, data_dir: Path, word_data_dir: Path) -> Path:
         """Downloads the Ab3P tool and all necessary data files."""
         # Download word data for Ab3P if not already downloaded
         ab3p_url = "https://raw.githubusercontent.com/dmis-lab/BioSyn/master/Ab3P/WordData/"
@@ -337,7 +369,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         # Create a temp file which holds the sentences we want to process with Ab3P
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as temp_file:
             for sentence in sentences:
-                temp_file.write(sentence.to_tokenized_string() + "\n")
+                temp_file.write(sentence.to_original_text() + "\n")
             temp_file.flush()
 
             # Temporarily create path file in the current working directory for Ab3P
@@ -376,8 +408,8 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
                             continue
 
                         sf, lf, _ = line.split("|")
-                        sf = sf.strip().lower()
-                        lf = lf.strip().lower()
+                        sf = sf.strip()
+                        lf = lf.strip()
                         abbreviation_dict[cur_sentence][sf] = lf
 
                     elif len(line.strip()) > 0:
@@ -498,34 +530,32 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
 
     def __init__(
         self,
-        embeddings: List[DocumentEmbeddings],
-        similarity_metric: SimilarityMetric = SimilarityMetric.COSINE,
-        weights: Optional[List[float]] = None,
+        embeddings: Dict[str, DocumentEmbeddings],
+        hybrid_search: bool,
+        similarity_metric: SimilarityMetric = SimilarityMetric.INNER_PRODUCT,
+        sparse_weight: float = DEFAULT_SPARSE_WEIGHT,
         batch_size: int = 128,
         show_progress: bool = True,
     ):
-        """Initializes the EncoderCandidateSearchIndex.
+        """Initializes the SemanticCandidateSearchIndex.
 
         Args:
             embeddings: A list of embeddings used for search.
-            weights: Weight the embedding's importance.
+            hybrid_search: combine sparse and dense embeddings
+            sparse_weight: Weight for sparse embeddings.
             similarity_metric: The metric used to define similarity.
             batch_size: The batch size used for indexing embeddings.
             show_progress: show the progress while indexing.
         """
-        if weights is None:
-            weights = [1.0 for _ in embeddings]
-        if len(weights) != len(embeddings):
-            raise ValueError("Weights have to be of the same length as embeddings")
-
         self.embeddings = embeddings
-        self.weights = weights
+        self.hybrid_search = hybrid_search
+        self.sparse_weight = sparse_weight
         self.similarity_metric = similarity_metric
         self.show_progress = show_progress
         self.batch_size = batch_size
 
         self.ids: List[str] = []
-        self._precomputed_embeddings: np.ndarray = np.array([])
+        self._precomputed_embeddings: Dict[str, np.ndarray] = {"sparse": np.array([]), "dense": np.array([])}
 
     @classmethod
     def bi_encoder(
@@ -539,8 +569,12 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         preprocessor: Optional[EntityPreprocessor] = None,
         dictionary: Optional[EntityLinkingDictionary] = None,
     ) -> "SemanticCandidateSearchIndex":
-        embeddings: List[DocumentEmbeddings] = [TransformerDocumentEmbeddings(model_name_or_path)]
-        weights = [1.0]
+        # NOTE: ensure correct similarity metric for pretrained model
+        if model_name_or_path in PRETRAINED_MODELS:
+            similarity_metric = PRETRAINED_MODEL_TO_SIMILARITY_METRIC[model_name_or_path]
+
+        embeddings: Dict[str, DocumentEmbeddings] = {"dense": TransformerDocumentEmbeddings(model_name_or_path)}
+
         if hybrid_search:
             if dictionary is None:
                 raise ValueError("Require dictionary to be set on hybrid search.")
@@ -554,20 +588,25 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
             if preprocessor is not None:
                 texts = [preprocessor.process_entity_name(t) for t in texts]
 
-            embeddings.append(
-                DocumentTFIDFEmbeddings(
-                    [Sentence(t) for t in texts],
-                    analyzer="char",
-                    ngram_range=(1, 2),
-                )
+            embeddings["sparse"] = DocumentTFIDFEmbeddings(
+                [Sentence(t) for t in texts],
+                analyzer="char",
+                ngram_range=(1, 2),
             )
-            weights = [1.0, sparse_weight]
+
+        sparse_weight = (
+            sparse_weight
+            if model_name_or_path not in HYBRID_MODELS_SPARSE_WEIGHT
+            else HYBRID_MODELS_SPARSE_WEIGHT[model_name_or_path]
+        )
+
         return cls(
             embeddings,
             similarity_metric=similarity_metric,
-            weights=weights,
+            sparse_weight=sparse_weight,
             batch_size=batch_size,
             show_progress=show_progress,
+            hybrid_search=hybrid_search,
         )
 
     def index(self, dictionary: EntityLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None) -> None:
@@ -583,8 +622,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
                 texts.append(p(synonym))
                 self.ids.append(candidate.concept_id)
 
-        precomputed_embeddings = []
-
+        dense_embeddings = []
         with torch.no_grad():
             if self.show_progress:
                 iterations = tqdm(
@@ -598,49 +636,60 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
                 end = min(start + self.batch_size, len(texts))
                 batch = [Sentence(name) for name in texts[start:end]]
 
-                for embedding in self.embeddings:
-                    embedding.embed(batch)
-
+                self.embeddings["dense"].embed(batch)
                 for sent in batch:
-                    embs = []
-                    for embedding, weight in zip(self.embeddings, self.weights):
-                        emb = sent.get_embedding(embedding.get_names())
-                        if self.similarity_metric == SimilarityMetric.COSINE:
-                            emb = emb / torch.norm(emb)
-                        embs.append(emb * weight)
-
-                    precomputed_embeddings.append(torch.cat(embs, dim=0).cpu().numpy())
+                    emb = sent.get_embedding()
+                    if self.similarity_metric == SimilarityMetric.COSINE:
+                        emb = emb / torch.norm(emb)
+                    dense_embeddings.append(emb.cpu().numpy())
                     sent.clear_embeddings()
                 if flair.device.type == "cuda":
                     torch.cuda.empty_cache()
 
-        self._precomputed_embeddings = np.stack(precomputed_embeddings, axis=0)
+        self._precomputed_embeddings["dense"] = np.stack(dense_embeddings, axis=0)
 
-    def emb_search(self, entity_mentions: List[str]) -> np.ndarray:
-        embeddings = []
+        if self.hybrid_search:
+            sparse_embs = []
+            batch = [Sentence(name) for name in texts]
+            self.embeddings["sparse"].embed(batch)
+            for sent in batch:
+                sparse_emb = sent.get_embedding()
+                if self.similarity_metric == SimilarityMetric.COSINE:
+                    sparse_emb = sparse_emb / torch.norm(sparse_emb)
+                sparse_embs.append(sparse_emb.cpu().numpy())
+                sent.clear_embeddings()
+            self._precomputed_embeddings["sparse"] = np.stack(sparse_embs, axis=0)
+
+    def embed(self, entity_mentions: List[str]) -> Dict[str, np.ndarray]:
+        query_embeddings: Dict[str, List] = {"dense": []}
+
+        inputs = [Sentence(name) for name in entity_mentions]
 
         with torch.no_grad():
             for start in range(0, len(entity_mentions), self.batch_size):
                 end = min(start + self.batch_size, len(entity_mentions))
-                batch = [Sentence(name) for name in entity_mentions[start:end]]
-
-                for embedding in self.embeddings:
-                    embedding.embed(batch)
-
+                batch = inputs[start:end]
+                self.embeddings["dense"].embed(batch)
                 for sent in batch:
-                    embs = []
-                    for embedding in self.embeddings:
-                        emb = sent.get_embedding(embedding.get_names())
-                        if self.similarity_metric == SimilarityMetric.COSINE:
-                            emb = emb / torch.norm(emb)
-                        embs.append(emb)
-
-                    embeddings.append(torch.cat(embs, dim=0).cpu().numpy())
+                    emb = sent.get_embedding()
+                    if self.similarity_metric == SimilarityMetric.COSINE:
+                        emb = emb / torch.norm(emb)
+                    query_embeddings["dense"].append(emb.cpu().numpy())
                     sent.clear_embeddings()
                 if flair.device.type == "cuda":
                     torch.cuda.empty_cache()
 
-        return np.stack(embeddings, axis=0)
+        if self.hybrid_search:
+            query_embeddings["sparse"] = []
+            self.embeddings["sparse"].embed(inputs)
+            for sent in inputs:
+                sparse_emb = sent.get_embedding()
+                if self.similarity_metric == SimilarityMetric.COSINE:
+                    sparse_emb = sparse_emb / torch.norm(sparse_emb)
+                query_embeddings["sparse"].append(sparse_emb.cpu().numpy())
+                sent.clear_embeddings()
+
+        return {k: np.stack(v, axis=0) for k, v in query_embeddings.items()}
 
     def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, float]]]:
         """Returns the top-k entity / concept identifiers for each entity mention.
@@ -652,26 +701,39 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         Returns:
             List containing a list of entity linking candidates per entity mention from the input
         """
-        mention_embs = self.emb_search(entity_mentions)
-        all_scores = mention_embs @ self._precomputed_embeddings.T
-        indices_top_k = np.argpartition(all_scores, kth=-top_k, axis=1)[:, -top_k:]
-        mention_numbers = np.tile(np.arange(len(entity_mentions)), (top_k, 1)).T
-        positions_top_k = np.argsort(all_scores[mention_numbers, indices_top_k], axis=1)
-        sorted_indices_top_k = indices_top_k[mention_numbers, positions_top_k]
+        mention_embs = self.embed(entity_mentions)
+
+        scores = mention_embs["dense"] @ self._precomputed_embeddings["dense"].T
+
+        if self.hybrid_search:
+            query = sparse.csr_matrix(mention_embs["sparse"])
+            index = sparse.csr_matrix(self._precomputed_embeddings["sparse"])
+            sparse_scores = query.dot(index.T).toarray()
+            scores += self.sparse_weight * sparse_scores
+
+        num_mentions = scores.shape[0]
+        unsorted_indices = np.argpartition(scores, -top_k)[:, -top_k:]
+        unsorted_scores = scores[np.arange(num_mentions)[:, None], unsorted_indices]
+        sorted_score_matrix_indices = np.argsort(-unsorted_scores)
+        topk_idxs = unsorted_indices[np.arange(num_mentions)[:, None], sorted_score_matrix_indices]
+        topk_scores = unsorted_scores[np.arange(num_mentions)[:, None], sorted_score_matrix_indices]
 
         results = []
-        for i in range(sorted_indices_top_k.shape[0]):
-            results.append([(self.ids[j], float(all_scores[i, j])) for j in sorted_indices_top_k[i, :]])
+        for i in range(num_mentions):
+            results.append([(self.ids[j], s) for j, s in zip(topk_idxs[i, :], topk_scores[i, :])])
 
         return results
 
     @classmethod
-    def _from_state(cls, state_dict: Dict[str, Any]) -> "CandidateSearchIndex":
+    def _from_state(cls, state_dict: Dict[str, Any]) -> "SemanticCandidateSearchIndex":
         index = cls(
-            embeddings=cast(List[DocumentEmbeddings], [load_embeddings(emb) for emb in state_dict["embeddings"]]),
+            embeddings=cast(
+                Dict[str, DocumentEmbeddings], {k: load_embeddings(emb) for k, emb in state_dict["embeddings"].items()}
+            ),
             similarity_metric=SimilarityMetric(state_dict["similarity_metric"]),
-            weights=state_dict["weights"],
+            sparse_weight=state_dict["sparse_weight"],
             batch_size=state_dict["batch_size"],
+            hybrid_search=state_dict["hybrid_search"],
             show_progress=state_dict["show_progress"],
         )
         index.ids = state_dict["ids"]
@@ -681,11 +743,12 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
     def _get_state(self) -> Dict[str, Any]:
         return {
             **super()._get_state(),
-            "embeddings": [emb.save_embeddings() for emb in self.embeddings],
+            "embeddings": {k: emb.save_embeddings() for k, emb in self.embeddings.items()},
             "similarity_metric": self.similarity_metric.value,
-            "weights": self.weights,
+            "sparse_weight": self.sparse_weight,
             "batch_size": self.batch_size,
             "show_progress": self.show_progress,
+            "hybrid_search": self.hybrid_search,
             "ids": self.ids,
             "precomputed_embeddings": self._precomputed_embeddings,
         }
@@ -717,25 +780,6 @@ class EntityMentionLinker(flair.nn.Model):
     def dictionary(self) -> EntityLinkingDictionary:
         return self._dictionary
 
-    def extract_mentions(
-        self,
-        sentences: List[Sentence],
-    ) -> Tuple[List[Span], List[str]]:
-        """Unpack all mentions in sentences for batch search."""
-        data_points = []
-        mentions = []
-
-        for sentence in sentences:
-            for entity in sentence.get_labels(self.entity_label_type):
-                data_points.append(entity.data_point)
-                mentions.append(
-                    self.preprocessor.process_mention(entity, sentence)
-                    if self.preprocessor is not None
-                    else entity.data_point.text,
-                )
-
-        return data_points, mentions
-
     def predict(
         self,
         sentences: Union[List[Sentence], Sentence],
@@ -754,7 +798,17 @@ class EntityMentionLinker(flair.nn.Model):
         if self.preprocessor is not None:
             self.preprocessor.initialize(sentences)
 
-        data_points, mentions = self.extract_mentions(sentences=sentences)
+        data_points = []
+        mentions = []
+
+        for sentence in sentences:
+            for entity in sentence.get_labels(self.entity_label_type):
+                data_points.append(entity.data_point)
+                mentions.append(
+                    self.preprocessor.process_mention(entity, sentence)
+                    if self.preprocessor is not None
+                    else entity.data_point.text,
+                )
 
         # no mentions: nothing to do here
         if len(mentions) > 0:
@@ -818,9 +872,8 @@ class EntityMentionLinker(flair.nn.Model):
         dictionary_name_or_path: Optional[Union[str, Path]] = None,
         hybrid_search: bool = True,
         batch_size: int = 128,
-        similarity_metric: SimilarityMetric = SimilarityMetric.COSINE,
-        preprocessor: EntityPreprocessor = BioSynEntityPreprocessor(),
-        force_hybrid_search: bool = False,
+        similarity_metric: SimilarityMetric = SimilarityMetric.INNER_PRODUCT,
+        preprocessor: Optional[EntityPreprocessor] = None,
         sparse_weight: float = DEFAULT_SPARSE_WEIGHT,
         entity_type: Optional[str] = None,
         dictionary: Optional[EntityLinkingDictionary] = None,
@@ -843,11 +896,16 @@ class EntityMentionLinker(flair.nn.Model):
                 model_name_or_path=model_name_or_path,
                 entity_type=entity_type,
                 hybrid_search=hybrid_search,
-                force_hybrid_search=force_hybrid_search,
             )
         else:
             assert entity_type is not None, "When using a custom model you must specify `entity_type`"
             assert entity_type in ENTITY_TYPES, f"Invalid entity type `{entity_type}! Must be one of: {ENTITY_TYPES}"
+
+        preprocessor = (
+            preprocessor
+            if preprocessor is not None
+            else Ab3PEntityPreprocessor(preprocessor=BioSynEntityPreprocessor())
+        )
 
         if model_name_or_path == "exact-string-match":
             candidate_generator: CandidateSearchIndex = ExactMatchCandidateSearchIndex()
@@ -865,7 +923,7 @@ class EntityMentionLinker(flair.nn.Model):
         candidate_generator.index(dictionary, preprocessor)
 
         logger.info(
-            "BiomedicalEntityLinker predicts: Dictionary `%s` (entity type: %s)", dictionary_name_or_path, entity_type
+            "EntityMentionLinker predicts: Dictionary `%s` (entity type: %s)", dictionary_name_or_path, entity_type
         )
 
         return cls(
@@ -881,7 +939,6 @@ class EntityMentionLinker(flair.nn.Model):
         model_name_or_path: Union[str, Path],
         entity_type: Optional[str] = None,
         hybrid_search: bool = False,
-        force_hybrid_search: bool = False,
     ) -> Tuple[Union[str, Path], str]:
         """Try to figure out what model the user wants."""
         if model_name_or_path not in MODELS and model_name_or_path not in ENTITY_TYPES:
@@ -898,36 +955,31 @@ class EntityMentionLinker(flair.nn.Model):
             # load model by entity_type
             if isinstance(model_name_or_path, str) and model_name_or_path in ENTITY_TYPES:
                 model_name_or_path = cast(str, model_name_or_path)
+                entity_type = model_name_or_path
 
                 # check if we have a hybrid pre-trained model
                 if model_name_or_path in ENTITY_TYPE_TO_HYBRID_MODEL:
-                    entity_type = model_name_or_path
                     model_name_or_path = ENTITY_TYPE_TO_HYBRID_MODEL[model_name_or_path]
                 else:
-                    # check if user really wants to use hybrid search anyway
-                    if not force_hybrid_search:
-                        logger.warning(
-                            "BiEncoderCandidateGenerator: model for entity type `%s` was not trained for"
-                            " hybrid search: no sparse search will be performed."
-                            " If you want to use sparse search please pass `force_hybrid_search=True`:"
-                            " we will fit a sparse encoder for you. The default value of `sparse_weight` is `%s`.",
-                            model_name_or_path,
-                            DEFAULT_SPARSE_WEIGHT,
-                        )
+                    logger.warning(
+                        "EntityMentionLinker: `hybrid_search=True` but model for entity type `%s` was not trained for hybrid search."
+                        " Results may be poor.",
+                        model_name_or_path,
+                    )
                     model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
             else:
-                if model_name_or_path not in PRETRAINED_HYBRID_MODELS and not force_hybrid_search:
+                if model_name_or_path not in PRETRAINED_HYBRID_MODELS:
                     logger.warning(
-                        "BiEncoderCandidateGenerator: model `%s` was not trained for hybrid search: no sparse"
-                        " search will be performed."
-                        " If you want to use sparse search please pass `force_hybrid_search=True`:"
-                        " we will fit a sparse encoder for you. The default value of `sparse_weight` is `%s`.",
+                        "EntityMentionLinker: `hybrid_search=True` but model `%s` was not trained for hybrid search."
+                        " Results may be poor.",
                         model_name_or_path,
-                        DEFAULT_SPARSE_WEIGHT,
                     )
-
-                model_name_or_path = cast(str, model_name_or_path)
-                entity_type = PRETRAINED_HYBRID_MODELS[model_name_or_path]
+                    assert (
+                        entity_type is not None
+                    ), f"For non-hybrid model `{model_name_or_path}` with `hybrid_search=True` you must specify `entity_type`"
+                else:
+                    model_name_or_path = cast(str, model_name_or_path)
+                    entity_type = PRETRAINED_HYBRID_MODELS[model_name_or_path]
 
         else:
             if isinstance(model_name_or_path, str) and model_name_or_path in ENTITY_TYPES:
@@ -970,6 +1022,12 @@ class EntityMentionLinker(flair.nn.Model):
 
     def forward_loss(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
         raise NotImplementedError("The EntityLinker cannot be trained")
+
+    @classmethod
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "EntityMentionLinker":
+        from typing import cast
+
+        return cast("EntityMentionLinker", super().load(model_path=model_path))
 
     def evaluate(
         self,
