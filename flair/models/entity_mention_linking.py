@@ -805,7 +805,7 @@ class EntityMentionLinker(flair.nn.Model):
             for entity in sentence.get_labels(self.entity_label_type):
                 data_points.append(entity.data_point)
                 mentions.append(
-                    self.preprocessor.process_mention(entity, sentence)
+                    self.preprocessor.process_mention(entity.data_point.text, sentence)
                     if self.preprocessor is not None
                     else entity.data_point.text,
                 )
