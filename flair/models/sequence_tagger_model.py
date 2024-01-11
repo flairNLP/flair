@@ -1625,9 +1625,18 @@ class EarlyExitSequenceTagger(SequenceTagger):
                     prefix = "B-"
                     for token in gold_span:
                         token.set_label("gold_bio", prefix + gold_label.value)
-                        token.set_label("clean_bio", prefix + gold_label.value + '_clean') # TODO: add checks, this only works if ner_clean column is given
-
                         prefix = "I-"
+
+                sentence_flag = datapoint.get_labels(gold_label_type) != datapoint.get_labels(gold_label_type+'_clean')
+
+                # set clean token-level
+                for clean_label in datapoint.get_labels(gold_label_type+'_clean'):
+                    clean_span: Span = clean_label.data_point
+                    prefix = "B-"
+                    for token in clean_span:
+                        token.set_label("clean_bio", prefix + clean_label.value) # TODO: add checks, this only works if ner_clean column is given
+                        prefix = "I-"
+
 
                 # set predicted token-level
                 for predicted_label in datapoint.get_labels("predicted"):
@@ -1644,10 +1653,11 @@ class EarlyExitSequenceTagger(SequenceTagger):
                     pred = token.get_label('predicted_bio').value
                     eval_line = (
                         f"{token.text} "
-                        f"{gold} "
-                        f"{pred} "
+                        f"{gold} " # observed (noisy) label
+                        f"{pred} " # predicted label
                         f"{pred == gold} " # correct prediction flag
                         f"{gold != clean} " # noisy flag 
+                        f"{sentence_flag} " # sentence noisy flag
                         f"{token.get_label('PD').score}\n"
                     )
                     lines.append(eval_line)
