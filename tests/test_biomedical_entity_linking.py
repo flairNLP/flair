@@ -1,5 +1,7 @@
 from flair.data import Sentence
 from flair.models.entity_mention_linking import (
+    Ab3PEntityPreprocessor,
+    BioSynEntityPreprocessor,
     EntityMentionLinker,
     load_dictionary,
 )
@@ -43,6 +45,36 @@ def test_bel_dictionary():
     dictionary = load_dictionary("genes")
     candidate = dictionary.candidates[0]
     assert candidate.concept_id.isdigit()
+
+
+def test_biosyn_preprocessing():
+    """Check preprocessing does not produce empty strings."""
+    preprocessor = BioSynEntityPreprocessor()
+
+    # NOTE: Avoid emtpy string if mentions are just punctutations (e.g. `-` or `(`)
+    for s in ["-", "(", ")", "9"]:
+        assert len(preprocessor.process_mention(s)) > 0
+        assert len(preprocessor.process_entity_name(s)) > 0
+
+
+def test_abbrevitation_resolution():
+    """Test abbreviation resolution works correctly."""
+    preprocessor = Ab3PEntityPreprocessor(preprocessor=BioSynEntityPreprocessor())
+
+    sentences = [
+        Sentence("Features of ARCL type II overlap with those of Wrinkly skin syndrome (WSS)."),
+        Sentence("Weaver-Smith syndrome (WSS) is a Mendelian disorder of the epigenetic machinery."),
+    ]
+
+    preprocessor.initialize(sentences)
+
+    mentions = ["WSS", "WSS"]
+    for idx, (mention, sentence) in enumerate(zip(mentions, sentences)):
+        mention = preprocessor.process_mention(mention, sentence)
+        if idx == 0:
+            assert mention == "wrinkly skin syndrome"
+        elif idx == 1:
+            assert mention == "weaver-smith syndrome"
 
 
 def test_biomedical_entity_linking():
