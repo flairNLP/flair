@@ -74,7 +74,7 @@ def test_abbrevitation_resolution():
         if idx == 0:
             assert mention == "wrinkly skin syndrome"
         elif idx == 1:
-            assert mention == "weaver-smith syndrome"
+            assert mention == "weaver smith syndrome"
 
 
 def test_biomedical_entity_linking():
@@ -83,25 +83,20 @@ def test_biomedical_entity_linking():
     tagger = Classifier.load("hunflair")
     tagger.predict(sentence)
 
-    disease_linker = EntityMentionLinker.load("bio-disease")
+    disease_linker = EntityMentionLinker.load("masaenger/bio-nen-disease")
     disease_dictionary = disease_linker.dictionary
-    disease_linker.predict(sentence)
+    disease_linker.predict(sentence, pred_label_type="disease-nen", entity_label_types="diseases")
 
-    gene_linker = EntityMentionLinker.load("bio-gene")
+    gene_linker = EntityMentionLinker.load("masaenger/bio-nen-gene")
     gene_dictionary = gene_linker.dictionary
-
-    gene_linker.predict(sentence)
+    gene_linker.predict(sentence,  pred_label_type="gene-nen", entity_label_types="genes")
 
     print("Diseases")
-    for span in sentence.get_spans(disease_linker.entity_label_type):
-        print(f"Span: {span.text}")
-        for candidate_label in span.get_labels(disease_linker.label_type):
-            candidate = disease_dictionary[candidate_label.value]
-            print(f"Candidate: {candidate.concept_name}")
+    for label in sentence.get_labels("disease-nen"):
+        candidate = disease_dictionary[label.value]
+        print(f"Candidate: {candidate.concept_name}")
 
     print("Genes")
-    for span in sentence.get_spans(gene_linker.entity_label_type):
-        print(f"Span: {span.text}")
-        for candidate_label in span.get_labels(gene_linker.label_type):
-            candidate = gene_dictionary[candidate_label.value]
-            print(f"Candidate: {candidate.concept_name}")
+    for label in sentence.get_labels("gene-nen"):
+        candidate = gene_dictionary[label.value]
+        print(f"Candidate: {candidate.concept_name}")

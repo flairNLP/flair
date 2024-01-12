@@ -11,7 +11,8 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast, Sequence, Set
+from collections.abc import Iterable
 
 import numpy as np
 import torch
@@ -761,13 +762,23 @@ class EntityMentionLinker(flair.nn.Model):
         self,
         candidate_generator: CandidateSearchIndex,
         preprocessor: EntityPreprocessor,
-        entity_label_type: str,
+        entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
         label_type: str,
         dictionary: EntityLinkingDictionary,
     ):
+        """
+            Initializes an entity mention linker
+
+            Args:
+                candidate_generator: Strategy to find matching entities for a given mention
+                preprocessor: Pre-processing strategy to transform / clean entity mentions
+                entity_label_types: A label type or sequence of label types of the required relation entities. You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set. E.g. to use only 'disease' and 'chemical' labels from a NER-tagger: `{'ner': {'disease', 'chemical'}}`. To use all labels from 'ner', pass 'ner'
+                label_type: The label under which the predictions of the linker should be stored
+                dictionary: The dictionary listing all entities
+        """
         self.preprocessor = preprocessor
         self.candidate_generator = candidate_generator
-        self.entity_label_type = entity_label_type
+        self.entity_label_types = entity_label_types
         self._label_type = label_type
         self._dictionary = dictionary
         super().__init__()
@@ -784,16 +795,29 @@ class EntityMentionLinker(flair.nn.Model):
         self,
         sentences: Union[List[Sentence], Sentence],
         top_k: int = 1,
+        pred_label_type: Optional[str] = None,
+        entity_label_types: Optional[Union[str, Sequence[str], Dict[str, Optional[Set[str]]]]] = None
     ) -> None:
         """Predicts the best matching top-k entity / concept identifiers of all named entities annotated with tag input_entity_annotation_layer.
 
         Args:
             sentences: One or more sentences to run the prediction on
             top_k: Number of best-matching entity / concept identifiers
+            entity_label_types: A label type or sequence of label types of the required relation entities. You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set. E.g. to use only 'disease' and 'chemical' labels from a NER-tagger: `{'ner': {'disease', 'chemical'}}`. To use all labels from 'ner', pass 'ner'
+            pred_label_type: The label under which the predictions of the linker should be stored
         """
         # make sure sentences is a list of sentences
         if not isinstance(sentences, list):
             sentences = [sentences]
+
+        # Make sure entity label types are represented as dict
+        entity_label_types = entity_label_types if entity_label_types is not None else self.entity_label_types
+        if isinstance(entity_label_types, str):
+            entity_label_types = {entity_label_types: []}
+        elif isinstance(entity_label_types, Iterable):
+            entity_label_types = {label: [] for label in entity_label_types}
+
+        pred_label_type = pred_label_type if pred_label_type is not None else self.label_type
 
         if self.preprocessor is not None:
             self.preprocessor.initialize(sentences)
@@ -802,7 +826,17 @@ class EntityMentionLinker(flair.nn.Model):
         mentions = []
 
         for sentence in sentences:
-            for entity in sentence.get_labels(self.entity_label_type):
+            # Collect all entities based on entity type labels configuration
+            entities = []
+            for label_type, entity_types in entity_label_types.items():
+                labels = sentence.get_labels(label_type)
+                if len(entity_types) > 0:
+                    labels = [label for label in labels if label.value in entity_types]
+
+                entities.extend(labels)
+
+            # Preprocess entity mentions
+            for entity in entities:
                 data_points.append(entity.data_point)
                 mentions.append(
                     self.preprocessor.process_mention(entity.data_point.text, sentence)
@@ -818,7 +852,7 @@ class EntityMentionLinker(flair.nn.Model):
             # Add a label annotation for each candidate
             for data_point, mention_candidates in zip(data_points, candidates):
                 for candidate_id, confidence in mention_candidates:
-                    data_point.add_label(self.label_type, candidate_id, confidence)
+                    data_point.add_label(pred_label_type, candidate_id, confidence)
 
     @staticmethod
     def _fetch_model(model_name: str) -> str:
@@ -847,18 +881,18 @@ class EntityMentionLinker(flair.nn.Model):
     def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs) -> "EntityMentionLinker":
         candidate_generator = CandidateSearchIndex._from_state(state["candidate_search_index"])
         preprocessor = EntityPreprocessor._from_state(state["entity_preprocessor"])
-        entity_label_type = state["entity_label_type"]
+        entity_label_types = state["entity_label_types"]
         label_type = state["label_type"]
         dictionary = InMemoryEntityLinkingDictionary.from_state(state["dictionary"])
 
-        return cls(candidate_generator, preprocessor, entity_label_type, label_type, dictionary)
+        return cls(candidate_generator, preprocessor, entity_label_types, label_type, dictionary)
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""
         return {
             **super()._get_state_dict(),
             "label_type": self.label_type,
-            "entity_label_type": self.entity_label_type,
+            "entity_label_types": self.entity_label_types,
             "entity_preprocessor": self.preprocessor._get_state(),
             "candidate_search_index": self.candidate_generator._get_state(),
             "dictionary": self.dictionary.to_in_memory_dictionary().to_state(),
@@ -929,7 +963,7 @@ class EntityMentionLinker(flair.nn.Model):
         return cls(
             candidate_generator=candidate_generator,
             preprocessor=preprocessor,
-            entity_label_type=entity_type,
+            entity_label_types=entity_type,
             label_type=label_type,
             dictionary=dictionary,
         )
