@@ -41,7 +41,7 @@ class EntityLinkingDictionary:
         self._idx_to_candidates = {candidate.concept_id: candidate for candidate in candidates}
 
         # one name can map to multiple concepts
-        self._text_to_index: Dict[str, List] = {}
+        self._text_to_index: Dict[str, List[str]] = {}
         for candidate in candidates:
             for text in [candidate.concept_name, *candidate.synonyms]:
                 if text not in self._text_to_index:
@@ -54,7 +54,7 @@ class EntityLinkingDictionary:
         return self._dataset_name
 
     @property
-    def text_to_index(self) -> Dict[str, List]:
+    def text_to_index(self) -> Dict[str, List[str]]:
         return self._text_to_index
 
     @property
