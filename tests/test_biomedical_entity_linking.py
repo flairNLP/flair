@@ -89,7 +89,7 @@ def test_biomedical_entity_linking():
 
     gene_linker = EntityMentionLinker.load("masaenger/bio-nen-gene")
     gene_dictionary = gene_linker.dictionary
-    gene_linker.predict(sentence,  pred_label_type="gene-nen", entity_label_types="genes")
+    gene_linker.predict(sentence, pred_label_type="gene-nen", entity_label_types="genes")
 
     print("Diseases")
     for label in sentence.get_labels("disease-nen"):
@@ -100,3 +100,8 @@ def test_biomedical_entity_linking():
     for label in sentence.get_labels("gene-nen"):
         candidate = gene_dictionary[label.value]
         print(f"Candidate: {candidate.concept_name}")
+
+
+if __name__ == "__main__":
+    test_abbrevitation_resolution()
+    test_biomedical_entity_linking()

@@ -9,10 +9,10 @@ import subprocess
 import tempfile
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Iterable
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type, Union, cast, Sequence, Set
-from collections.abc import Iterable
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Type, Union, cast
 
 import numpy as np
 import torch
@@ -45,14 +45,14 @@ PRETRAINED_DENSE_MODELS = [
 
 # Dense + sparse retrieval
 PRETRAINED_HYBRID_MODELS = {
-    "dmis-lab/biosyn-sapbert-bc5cdr-disease": "disease",
-    "dmis-lab/biosyn-sapbert-ncbi-disease": "disease",
+    "dmis-lab/biosyn-sapbert-bc5cdr-disease": "diseases",
+    "dmis-lab/biosyn-sapbert-ncbi-disease": "diseases",
     "dmis-lab/biosyn-sapbert-bc5cdr-chemical": "chemical",
-    "dmis-lab/biosyn-biobert-bc5cdr-disease": "disease",
-    "dmis-lab/biosyn-biobert-ncbi-disease": "disease",
+    "dmis-lab/biosyn-biobert-bc5cdr-disease": "diseases",
+    "dmis-lab/biosyn-biobert-ncbi-disease": "diseases",
     "dmis-lab/biosyn-biobert-bc5cdr-chemical": "chemical",
-    "dmis-lab/biosyn-biobert-bc2gn": "gene",
-    "dmis-lab/biosyn-sapbert-bc2gn": "gene",
+    "dmis-lab/biosyn-biobert-bc2gn": "genes",
+    "dmis-lab/biosyn-sapbert-bc2gn": "genes",
 }
 
 # fetched from original repo to avoid download
@@ -762,19 +762,18 @@ class EntityMentionLinker(flair.nn.Model):
         self,
         candidate_generator: CandidateSearchIndex,
         preprocessor: EntityPreprocessor,
-        entity_label_types: Union[str, Sequence[str], Dict[str, Optional[Set[str]]]],
+        entity_label_types: Union[str, Sequence[str], Dict[str, Set[str]]],
         label_type: str,
         dictionary: EntityLinkingDictionary,
     ):
-        """
-            Initializes an entity mention linker
+        """Initializes an entity mention linker.
 
-            Args:
-                candidate_generator: Strategy to find matching entities for a given mention
-                preprocessor: Pre-processing strategy to transform / clean entity mentions
-                entity_label_types: A label type or sequence of label types of the required relation entities. You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set. E.g. to use only 'disease' and 'chemical' labels from a NER-tagger: `{'ner': {'disease', 'chemical'}}`. To use all labels from 'ner', pass 'ner'
-                label_type: The label under which the predictions of the linker should be stored
-                dictionary: The dictionary listing all entities
+        Args:
+            candidate_generator: Strategy to find matching entities for a given mention
+            preprocessor: Pre-processing strategy to transform / clean entity mentions
+            entity_label_types: A label type or sequence of label types of the required relation entities. You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set. E.g. to use only 'disease' and 'chemical' labels from a NER-tagger: `{'ner': {'disease', 'chemical'}}`. To use all labels from 'ner', pass 'ner'
+            label_type: The label under which the predictions of the linker should be stored
+            dictionary: The dictionary listing all entities
         """
         self.preprocessor = preprocessor
         self.candidate_generator = candidate_generator
@@ -796,7 +795,7 @@ class EntityMentionLinker(flair.nn.Model):
         sentences: Union[List[Sentence], Sentence],
         top_k: int = 1,
         pred_label_type: Optional[str] = None,
-        entity_label_types: Optional[Union[str, Sequence[str], Dict[str, Optional[Set[str]]]]] = None
+        entity_label_types: Optional[Union[str, Sequence[str], Dict[str, Set[str]]]] = None,
     ) -> None:
         """Predicts the best matching top-k entity / concept identifiers of all named entities annotated with tag input_entity_annotation_layer.
 
@@ -813,9 +812,9 @@ class EntityMentionLinker(flair.nn.Model):
         # Make sure entity label types are represented as dict
         entity_label_types = entity_label_types if entity_label_types is not None else self.entity_label_types
         if isinstance(entity_label_types, str):
-            entity_label_types = {entity_label_types: []}
+            entity_label_types = cast(Dict[str, Set[str]], {entity_label_types: {}})
         elif isinstance(entity_label_types, Iterable):
-            entity_label_types = {label: [] for label in entity_label_types}
+            entity_label_types = cast(Dict[str, Set[str]], {label: {} for label in entity_label_types})
 
         pred_label_type = pred_label_type if pred_label_type is not None else self.label_type
 
@@ -1016,9 +1015,10 @@ class EntityMentionLinker(flair.nn.Model):
                     entity_type = PRETRAINED_HYBRID_MODELS[model_name_or_path]
 
         else:
-            if isinstance(model_name_or_path, str) and model_name_or_path in ENTITY_TYPES:
+            if isinstance(model_name_or_path, str):
                 model_name_or_path = cast(str, model_name_or_path)
-                model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
+                if model_name_or_path in ENTITY_TYPES:
+                    model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
 
         assert (
             entity_type is not None

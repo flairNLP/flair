@@ -8,8 +8,7 @@ import requests
 
 import flair
 from flair.data import Corpus, EntityCandidate, MultiCorpus, Sentence
-from flair.datasets.sequence_labeling import (ColumnCorpus,
-                                              MultiFileColumnCorpus)
+from flair.datasets.sequence_labeling import ColumnCorpus, MultiFileColumnCorpus
 from flair.file_utils import cached_path, unpack_file
 from flair.splitter import SegtokSentenceSplitter, SentenceSplitter
 
