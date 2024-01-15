@@ -1210,18 +1210,13 @@ class EntityTypeTaskPromptAugmentationStrategy(SentenceAugmentationStrategy):
         new_labels = augmented_sentence.get_labels(source_annotation_layer)
         len_task_prompt = len(self.task_prompt)
 
-        try:
-            for label in new_labels:
-                if label.data_point.tokens[0].idx - len_task_prompt - 1 < 0:
-                    continue
-                orig_span = original_sentence[
-                    label.data_point.tokens[0].idx - len_task_prompt - 1 : label.data_point.tokens[-1].idx
-                    - len_task_prompt
-                ]
-                orig_span.add_label(target_annotation_layer, label.value, label.score)
-        except IndexError:
-            for token in original_sentence:
-                print(token)
+        for label in new_labels:
+            if label.data_point.tokens[0].idx - len_task_prompt - 1 < 0:
+                continue
+            orig_span = original_sentence[
+                label.data_point.tokens[0].idx - len_task_prompt - 1 : label.data_point.tokens[-1].idx - len_task_prompt
+            ]
+            orig_span.add_label(target_annotation_layer, label.value, label.score)
 
     def _build_tag_prompt_prefix(self, entity_types: List[str]) -> List[str]:
         if len(self.entity_types) == 1:
