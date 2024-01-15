@@ -1,5 +1,5 @@
 from flair.data import Sentence
-from flair.models.sequence_tagger_model import EntityTypeTaskPromptAugmentationStrategy, AugmentedSentence
+from flair.models.sequence_tagger_model import AugmentedSentence, EntityTypeTaskPromptAugmentationStrategy
 
 
 def test_entity_type_task_prompt_augmentation_single_type():
@@ -91,7 +91,7 @@ def test_entity_type_task_prompt_augmentation_label_application_label_in_tag():
     sent = Sentence("TP53 - also known as tumour protein 53 - is an onco-gene.")
 
     aug_sent = strategy.augment_sentence(sent, "ner")
-    aug_sent[2:4].add_label("predict", "gene", 1.0) # Add label in tagging prompt
+    aug_sent[2:4].add_label("predict", "gene", 1.0)  # Add label in tagging prompt
 
     strategy.apply_predictions(aug_sent, sent, "predict", "ner")
 

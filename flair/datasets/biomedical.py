@@ -372,14 +372,6 @@ class CoNLLWriter:
 
         # Add task description for multi-task learning
         assert len(dataset.entity_types) > 0
-        entity_types = sorted(set(dataset.entity_types))
-        mapping = {
-            CELL_LINE_TAG: "cell lines",
-            CHEMICAL_TAG: "chemicals",
-            DISEASE_TAG: "diseases",
-            GENE_TAG: "genes",
-            SPECIES_TAG: "species",
-        }
 
         with output_file.open("w", encoding="utf8") as f:
             for document_id in Tqdm.tqdm(
