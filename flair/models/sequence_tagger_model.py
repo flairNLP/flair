@@ -1267,30 +1267,20 @@ class AugmentedSentenceSequenceTagger(SequenceTagger):
                 strategy = subclass._init_strategy_with_state_dict(state.get("augmentation_strategy_state"))
                 break
 
+        if strategy is None:
+            raise AssertionError("Can't reload augmentation strategy")
+
         return super()._init_model_with_state_dict(
             state,
             augmentation_strategy=strategy,
-            **kwargs,
+            **kwargs
         )
 
     @classmethod
-    def load(
-        cls,
-        model_path: Union[str, Path, Dict[str, Any]],
-        augmentation_strategy: EntityTypeTaskPromptAugmentationStrategy,
-    ) -> "AugmentedSentenceSequenceTagger":
+    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "AugmentedSentenceSequenceTagger":
         from typing import cast
 
-        if augmentation_strategy is None:
-            raise AssertionError("Please provide an augmentation strategy")
-
-        model_instance = cast("AugmentedSentenceSequenceTagger", super().load(model_path=model_path))
-
-        model_instance.augmentation_strategy = augmentation_strategy
-
-        logging.warning(f"Loaded model '{model_path}' with augmentation strategy '{augmentation_strategy}'")
-
-        return model_instance
+        return cast("AugmentedSentenceSequenceTagger", super().load(model_path=model_path))
 
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
         # If all sentences are not augmented -> augment them
