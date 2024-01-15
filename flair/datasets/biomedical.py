@@ -46,9 +46,6 @@ SPECIES_TAG = "Species"
 
 SENTENCE_TAG = "[__SENT__]"
 
-MULTI_TASK_LEARNING = False
-IGNORE_NEGATIVE_SAMPLES = False
-
 logger = logging.getLogger("flair")
 
 
@@ -363,11 +360,11 @@ class CoNLLWriter:
 
     def process_dataset(self, datasets: Dict[str, InternalBioNerDataset], out_dir: Path):
         if "train" in datasets:
-            self.write_to_conll(datasets["train"], out_dir / "train.conll")
+            self.write_to_conll(datasets["train"], out_dir / (self.sentence_splitter.name + "_train.conll"))
         if "dev" in datasets:
-            self.write_to_conll(datasets["dev"], out_dir / "dev.conll")
+            self.write_to_conll(datasets["dev"], out_dir / (self.sentence_splitter.name + "_dev.conll"))
         if "test" in datasets:
-            self.write_to_conll(datasets["test"], out_dir / "test.conll")
+            self.write_to_conll(datasets["test"], out_dir / (self.sentence_splitter.name + "_test.conll"))
 
     def write_to_conll(self, dataset: InternalBioNerDataset, output_file: Path):
         os.makedirs(str(output_file.parent), exist_ok=True)
@@ -383,19 +380,6 @@ class CoNLLWriter:
             GENE_TAG: "genes",
             SPECIES_TAG: "species",
         }
-        if not MULTI_TASK_LEARNING:
-            task_description = ""
-        else:
-            task_description = "[Tag"
-            for i, entity_type in enumerate(entity_types):
-                if i == 0:
-                    task_description += f" {mapping[entity_type]}"
-                elif i == len(entity_types) - 1:
-                    task_description += f" and {mapping[entity_type]}"
-                else:
-                    task_description += f", {mapping[entity_type]}"
-            task_description += "]"
-        task_sentence = self.sentence_splitter.split(task_description)
 
         with output_file.open("w", encoding="utf8") as f:
             for document_id in Tqdm.tqdm(
@@ -407,7 +391,6 @@ class CoNLLWriter:
                 document_text = re.sub(r"[\u2000-\u200B]", " ", document_text)  # replace unicode space characters!
                 document_text = document_text.replace("\xa0", " ")  # replace non-break space
                 document_buffer = ""
-                document_had_tags = not IGNORE_NEGATIVE_SAMPLES
 
                 entities = deque(
                     sorted(
@@ -422,18 +405,6 @@ class CoNLLWriter:
                 for sentence in sentences:
                     in_entity = False
                     sentence_had_tokens = False
-
-                    # Add task description for multi-task learning
-                    if MULTI_TASK_LEARNING:
-                        for i, flair_token in enumerate(task_sentence[0].tokens):
-                            token = flair_token.text.strip()
-                            if flair_token.whitespace_after > 0 or i == len(task_sentence[0].tokens) - 1:
-                                whitespace_after = "+"
-                            else:
-                                whitespace_after = "-"
-                            if len(token) > 0:
-                                tag = "O"
-                                document_buffer += " ".join([token, tag, whitespace_after]) + "\n"
 
                     for flair_token in sentence.tokens:
                         token = flair_token.text.strip()
@@ -462,14 +433,11 @@ class CoNLLWriter:
                         if len(token) > 0:
                             document_buffer += " ".join([token, tag, whitespace_after]) + "\n"
                             sentence_had_tokens = True
-                        if not tag.startswith("O"):
-                            document_had_tags = True
 
                     if sentence_had_tokens:
                         document_buffer += "\n"
 
-                if document_had_tags:
-                    f.write(document_buffer)
+                f.write(document_buffer)
 
 
 class HunerDataset(ColumnCorpus, ABC):
@@ -664,6 +632,13 @@ class HUNER_GENE_BIO_INFER(HunerDataset):
     """HUNER version of the BioInfer corpus containing only gene/protein annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {
+            "Individual_protein": GENE_TAG,
+            "Gene/protein/RNA": GENE_TAG,
+            "Gene": GENE_TAG,
+            "DNA_family_or_group": GENE_TAG,
+            "Protein_family_or_group": GENE_TAG,
+        }
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -675,18 +650,13 @@ class HUNER_GENE_BIO_INFER(HunerDataset):
         train_data = BIO_INFER.parse_dataset(corpus_folder / "BioInfer-train.xml")
         test_data = BIO_INFER.parse_dataset(corpus_folder / "BioInfer-test.xml")
 
-        entity_type_mapping = {
-            "Individual_protein": GENE_TAG,
-            "Gene/protein/RNA": GENE_TAG,
-            "Gene": GENE_TAG,
-            "DNA_family_or_group": GENE_TAG,
-            "Protein_family_or_group": GENE_TAG,
-        }
-
-        train_data = filter_and_map_entities(train_data, entity_type_mapping)
-        test_data = filter_and_map_entities(test_data, entity_type_mapping)
+        train_data = filter_and_map_entities(train_data, self.entity_type_mapping)
+        test_data = filter_and_map_entities(test_data, self.entity_type_mapping)
 
         return merge_datasets([train_data, test_data])
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 @deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
@@ -856,6 +826,9 @@ class HUNER_JNLPBA(HunerDataset):
 
         return merge_datasets([train_data, test_data])
 
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
+
 
 class HUNER_GENE_JNLPBA(HUNER_JNLPBA):
     """HUNER version of the JNLPBA corpus containing gene annotations."""
@@ -1021,6 +994,11 @@ class HUNER_ALL_CELL_FINDER(HunerDataset):
     """HUNER version of the CellFinder corpus containing only gene annotations."""
 
     def __init__(self, *args, **kwargs):
+        self.entity_type_mapping = {
+            "CellLine": CELL_LINE_TAG,
+            "Species": SPECIES_TAG,
+            "GeneProtein": GENE_TAG,
+        }
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1034,14 +1012,13 @@ class HUNER_ALL_CELL_FINDER(HunerDataset):
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         data = CELL_FINDER.download_and_prepare(data_dir)
-        entity_type_mapping = {
-            "CellLine": CELL_LINE_TAG,
-            "Species": SPECIES_TAG,
-            "GeneProtein": GENE_TAG,
-        }
-        data = filter_and_map_entities(data, entity_type_mapping)
+
+        data = filter_and_map_entities(data, self.entity_type_mapping)
 
         return data
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class MIRNA(ColumnCorpus):
@@ -1206,6 +1183,9 @@ class HUNER_MIRNA(HunerDataset):
         test_data = filter_and_map_entities(test_data, self.entity_type_mapping)
 
         return merge_datasets([train_data, test_data])
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HUNER_GENE_MIRNA(HUNER_MIRNA):
@@ -1594,6 +1574,9 @@ class HUNER_LOCTEXT(HunerDataset):
 
         return filter_and_map_entities(dataset, self.entity_type_mapping)
 
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
+
 
 class HUNER_SPECIES_LOCTEXT(HUNER_LOCTEXT):
     """HUNER version of the Loctext corpus containing species annotations."""
@@ -1920,6 +1903,7 @@ class HUNER_SPECIES_LINNEAUS(HunerDataset):
     """HUNER version of the LINNEAUS corpus containing species annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"Species": SPECIES_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -1928,6 +1912,9 @@ class HUNER_SPECIES_LINNEAUS(HunerDataset):
 
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         return LINNEAUS.download_and_parse_dataset(data_dir)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 @deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
@@ -1998,6 +1985,7 @@ class HUNER_DISEASE_CDR(HunerDataset):
     """HUNER version of the IEPA corpus containing disease annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"Disease": DISEASE_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2011,15 +1999,19 @@ class HUNER_DISEASE_CDR(HunerDataset):
         dev_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml")
         test_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml")
         all_data = merge_datasets([train_data, dev_data, test_data])
-        all_data = filter_and_map_entities(all_data, {"Disease": DISEASE_TAG})
+        all_data = filter_and_map_entities(all_data, self.entity_type_mapping)
 
         return all_data
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HUNER_CHEMICAL_CDR(HunerDataset):
     """HUNER version of the IEPA corpus containing chemical annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"Chemical": CHEMICAL_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2033,15 +2025,19 @@ class HUNER_CHEMICAL_CDR(HunerDataset):
         dev_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml")
         test_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml")
         all_data = merge_datasets([train_data, dev_data, test_data])
-        all_data = filter_and_map_entities(all_data, {"Chemical": CHEMICAL_TAG})
+        all_data = filter_and_map_entities(all_data, self.entity_type_mapping)
 
         return all_data
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HUNER_ALL_CDR(HunerDataset):
     """HUNER version of the IEPA corpus containing disease and chemical annotations."""
 
     def __init__(self, *args, **kwargs):
+        self.entity_type_mapping = {"Disease": DISEASE_TAG, "Chemical": CHEMICAL_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2059,10 +2055,13 @@ class HUNER_ALL_CDR(HunerDataset):
         dev_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_DevelopmentSet.BioC.xml")
         test_data = bioc_to_internal(data_dir / "CDR_Data" / "CDR.Corpus.v010516" / "CDR_TestSet.BioC.xml")
         all_data = merge_datasets([train_data, dev_data, test_data])
-        entity_type_mapping = {"Disease": DISEASE_TAG, "Chemical": CHEMICAL_TAG}
-        all_data = filter_and_map_entities(all_data, entity_type_mapping)
+
+        all_data = filter_and_map_entities(all_data, self.entity_type_mapping)
 
         return all_data
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class VARIOME(ColumnCorpus):
@@ -2161,6 +2160,7 @@ class HUNER_GENE_VARIOME(HunerDataset):
     """HUNER version of the Variome corpus containing gene annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"gene": GENE_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2171,15 +2171,19 @@ class HUNER_GENE_VARIOME(HunerDataset):
         os.makedirs(str(data_dir), exist_ok=True)
         VARIOME.download_dataset(data_dir)
         all_data = VARIOME.parse_corpus(data_dir / "hvp_bioc.xml")
-        all_data = filter_and_map_entities(all_data, {"gene": GENE_TAG})
+        all_data = filter_and_map_entities(all_data, self.entity_type_mapping)
 
         return all_data
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HUNER_DISEASE_VARIOME(HunerDataset):
     """HUNER version of the Variome corpus containing disease annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"Disorder": DISEASE_TAG, "disease": DISEASE_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2190,15 +2194,19 @@ class HUNER_DISEASE_VARIOME(HunerDataset):
         os.makedirs(str(data_dir), exist_ok=True)
         VARIOME.download_dataset(data_dir)
         all_data = VARIOME.parse_corpus(data_dir / "hvp_bioc.xml")
-        all_data = filter_and_map_entities(all_data, {"Disorder": DISEASE_TAG, "disease": DISEASE_TAG})
+        all_data = filter_and_map_entities(all_data, self.entity_type_mapping)
 
         return all_data
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HUNER_SPECIES_VARIOME(HunerDataset):
     """HUNER version of the Variome corpus containing species annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"Living_Beings": SPECIES_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2209,15 +2217,24 @@ class HUNER_SPECIES_VARIOME(HunerDataset):
         os.makedirs(str(data_dir), exist_ok=True)
         VARIOME.download_dataset(data_dir)
         all_data = VARIOME.parse_corpus(data_dir / "hvp_bioc.xml")
-        all_data = filter_and_map_entities(all_data, {"Living_Beings": SPECIES_TAG})
+        all_data = filter_and_map_entities(all_data, self.entity_type_mapping)
 
         return all_data
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HUNER_ALL_VARIOME(HunerDataset):
     """HUNER version of the Variome corpus containing gene, disease and species annotations."""
 
     def __init__(self, *args, **kwargs):
+        self.entity_type_mapping = {
+            "gene": GENE_TAG,
+            "Disorder": DISEASE_TAG,
+            "disease": DISEASE_TAG,
+            "Living_Beings": SPECIES_TAG,
+        }
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2233,15 +2250,13 @@ class HUNER_ALL_VARIOME(HunerDataset):
         os.makedirs(str(data_dir), exist_ok=True)
         VARIOME.download_dataset(data_dir)
         all_data = VARIOME.parse_corpus(data_dir / "hvp_bioc.xml")
-        entity_type_mapping = {
-            "gene": GENE_TAG,
-            "Disorder": DISEASE_TAG,
-            "disease": DISEASE_TAG,
-            "Living_Beings": SPECIES_TAG,
-        }
-        all_data = filter_and_map_entities(all_data, entity_type_mapping)
+
+        all_data = filter_and_map_entities(all_data, self.entity_type_mapping)
 
         return all_data
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class NCBI_DISEASE(ColumnCorpus):
@@ -2386,6 +2401,7 @@ class HUNER_DISEASE_NCBI(HunerDataset):
     """HUNER version of the NCBI corpus containing disease annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"Disease": DISEASE_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2400,6 +2416,9 @@ class HUNER_DISEASE_NCBI(HunerDataset):
         test_data = NCBI_DISEASE.parse_input_file(orig_folder / "NCBItestset_corpus.txt")
 
         return merge_datasets([train_data, dev_data, test_data])
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class ScaiCorpus(ColumnCorpus):
@@ -2554,6 +2573,16 @@ class HUNER_CHEMICAL_SCAI(HunerDataset):
     """HUNER version of the SCAI chemicals corpus containing chemical annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {
+            "FAMILY": CHEMICAL_TAG,
+            "TRIVIALVAR": CHEMICAL_TAG,
+            "PARTIUPAC": CHEMICAL_TAG,
+            "TRIVIAL": CHEMICAL_TAG,
+            "ABBREVIATION": CHEMICAL_TAG,
+            "IUPAC": CHEMICAL_TAG,
+            "MODIFIER": CHEMICAL_TAG,
+            "SUM": CHEMICAL_TAG,
+        }
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2564,25 +2593,17 @@ class HUNER_CHEMICAL_SCAI(HunerDataset):
         original_file = SCAI_CHEMICALS.perform_corpus_download(data_dir)
         corpus = ScaiCorpus.parse_input_file(original_file)
 
-        # Map all entities to chemicals
-        entity_type_mapping = {
-            "FAMILY": CHEMICAL_TAG,
-            "TRIVIALVAR": CHEMICAL_TAG,
-            "PARTIUPAC": CHEMICAL_TAG,
-            "TRIVIAL": CHEMICAL_TAG,
-            "ABBREVIATION": CHEMICAL_TAG,
-            "IUPAC": CHEMICAL_TAG,
-            "MODIFIER": CHEMICAL_TAG,
-            "SUM": CHEMICAL_TAG,
-        }
+        return filter_and_map_entities(corpus, self.entity_type_mapping)
 
-        return filter_and_map_entities(corpus, entity_type_mapping)
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HUNER_DISEASE_SCAI(HunerDataset):
     """HUNER version of the SCAI chemicals corpus containing disease annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"DISEASE": DISEASE_TAG, "ADVERSE": DISEASE_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2593,16 +2614,28 @@ class HUNER_DISEASE_SCAI(HunerDataset):
         original_file = SCAI_DISEASE.perform_corpus_download(data_dir)
         corpus = ScaiCorpus.parse_input_file(original_file)
 
-        # Map all entities to disease
-        entity_type_mapping = {"DISEASE": DISEASE_TAG, "ADVERSE": DISEASE_TAG}
+        return filter_and_map_entities(corpus, self.entity_type_mapping)
 
-        return filter_and_map_entities(corpus, entity_type_mapping)
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HUNER_ALL_SCAI(HunerDataset):
     """HUNER version of the SCAI chemicals corpus containing chemical and disease annotations."""
 
     def __init__(self, *args, **kwargs):
+        self.entity_type_mapping = {
+            "DISEASE": DISEASE_TAG,
+            "ADVERSE": DISEASE_TAG,
+            "FAMILY": CHEMICAL_TAG,
+            "TRIVIALVAR": CHEMICAL_TAG,
+            "PARTIUPAC": CHEMICAL_TAG,
+            "TRIVIAL": CHEMICAL_TAG,
+            "ABBREVIATION": CHEMICAL_TAG,
+            "IUPAC": CHEMICAL_TAG,
+            "MODIFIER": CHEMICAL_TAG,
+            "SUM": CHEMICAL_TAG,
+        }
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2617,20 +2650,10 @@ class HUNER_ALL_SCAI(HunerDataset):
         original_file = SCAI_DISEASE.perform_corpus_download(data_dir)
         corpus = ScaiCorpus.parse_input_file(original_file)
 
-        entity_type_mapping = {
-            "DISEASE": DISEASE_TAG,
-            "ADVERSE": DISEASE_TAG,
-            "FAMILY": CHEMICAL_TAG,
-            "TRIVIALVAR": CHEMICAL_TAG,
-            "PARTIUPAC": CHEMICAL_TAG,
-            "TRIVIAL": CHEMICAL_TAG,
-            "ABBREVIATION": CHEMICAL_TAG,
-            "IUPAC": CHEMICAL_TAG,
-            "MODIFIER": CHEMICAL_TAG,
-            "SUM": CHEMICAL_TAG,
-        }
+        return filter_and_map_entities(corpus, self.entity_type_mapping)
 
-        return filter_and_map_entities(corpus, entity_type_mapping)
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 @deprecated(version="0.13.0", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
@@ -2738,6 +2761,7 @@ class HUNER_GENE_OSIRIS(HunerDataset):
     """HUNER version of the OSIRIS corpus containing (only) gene annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"ge": GENE_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2748,8 +2772,10 @@ class HUNER_GENE_OSIRIS(HunerDataset):
         original_file = OSIRIS.download_dataset(data_dir)
         corpus = OSIRIS.parse_dataset(original_file / "OSIRIScorpusv02")
 
-        entity_type_mapping = {"ge": GENE_TAG}
-        return filter_and_map_entities(corpus, entity_type_mapping)
+        return filter_and_map_entities(corpus, self.entity_type_mapping)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class S800(ColumnCorpus):
@@ -2834,6 +2860,7 @@ class HUNER_SPECIES_S800(HunerDataset):
     """HUNER version of the S800 corpus containing species annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"Species": SPECIES_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2843,9 +2870,12 @@ class HUNER_SPECIES_S800(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         S800.download_dataset(data_dir)
         data = S800.parse_dataset(data_dir)
-        data = filter_and_map_entities(data, {"Species": SPECIES_TAG})
+        data = filter_and_map_entities(data, self.entity_type_mapping)
 
         return data
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class GPRO(ColumnCorpus):
@@ -2971,6 +3001,7 @@ class HUNER_GENE_GPRO(HunerDataset):
     """HUNER version of the GPRO corpus containing gene annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"Gene": GENE_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -2989,6 +3020,9 @@ class HUNER_GENE_GPRO(HunerDataset):
         dev_data = GPRO.parse_input_file(dev_text_file, dev_ann_file)
 
         return merge_datasets([train_data, dev_data])
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class DECA(ColumnCorpus):
@@ -3085,6 +3119,7 @@ class HUNER_GENE_DECA(HunerDataset):
     """HUNER version of the DECA corpus containing gene annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"Gene": GENE_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -3097,6 +3132,9 @@ class HUNER_GENE_DECA(HunerDataset):
         gold_file = corpus_dir / "gold.txt"
 
         return DECA.parse_corpus(text_dir, gold_file)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class FSU(ColumnCorpus):
@@ -3233,6 +3271,13 @@ class HUNER_GENE_FSU(HunerDataset):
     """HUNER version of the FSU corpus containing (only) gene annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {
+            "protein": GENE_TAG,
+            "protein_familiy_or_group": GENE_TAG,
+            "protein_complex": GENE_TAG,
+            "protein_variant": GENE_TAG,
+            "protein_enum": GENE_TAG,
+        }
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -3251,14 +3296,10 @@ class HUNER_GENE_FSU(HunerDataset):
 
         corpus = FSU.parse_corpus(corpus_dir, sentence_separator)
 
-        entity_type_mapping = {
-            "protein": GENE_TAG,
-            "protein_familiy_or_group": GENE_TAG,
-            "protein_complex": GENE_TAG,
-            "protein_variant": GENE_TAG,
-            "protein_enum": GENE_TAG,
-        }
-        return filter_and_map_entities(corpus, entity_type_mapping)
+        return filter_and_map_entities(corpus, self.entity_type_mapping)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class CRAFT(ColumnCorpus):
@@ -3744,6 +3785,18 @@ class HUNER_CHEMICAL_CEMP(HunerDataset):
     """HUNER version of the CEMP corpus containing chemical annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {
+            x: CHEMICAL_TAG
+            for x in [
+                "ABBREVIATION",
+                "FAMILY",
+                "FORMULA",
+                "IDENTIFIERS",
+                "MULTIPLE",
+                "SYSTEMATIC",
+                "TRIVIAL",
+            ]
+        }
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -3762,19 +3815,10 @@ class HUNER_CHEMICAL_CEMP(HunerDataset):
         dev_data = CEMP.parse_input_file(dev_text_file, dev_ann_file)
 
         dataset = merge_datasets([train_data, dev_data])
-        entity_type_mapping = {
-            x: CHEMICAL_TAG
-            for x in [
-                "ABBREVIATION",
-                "FAMILY",
-                "FORMULA",
-                "IDENTIFIERS",
-                "MULTIPLE",
-                "SYSTEMATIC",
-                "TRIVIAL",
-            ]
-        }
-        return filter_and_map_entities(dataset, entity_type_mapping)
+        return filter_and_map_entities(dataset, self.entity_type_mapping)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 @deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
@@ -3911,6 +3955,9 @@ class HUNER_CHEBI(HunerDataset):
         corpus_dir = CHEBI.download_dataset(data_dir)
         dataset = CHEBI.parse_dataset(corpus_dir, annotator=annotator)
         return filter_and_map_entities(dataset, self.entity_type_mapping)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HUNER_CHEMICAL_CHEBI(HUNER_CHEBI):
@@ -4698,6 +4745,9 @@ class HUNER_CRAFT_V4(HunerDataset):
 
         return filter_and_map_entities(corpus, self.entity_type_mapping)
 
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
+
 
 class HUNER_CHEMICAL_CRAFT_V4(HUNER_CRAFT_V4):
     """HUNER version of the CRAFT corpus containing (only) chemical annotations."""
@@ -4752,6 +4802,9 @@ class HUNER_BIONLP2013_CG(HunerDataset):
         corpus = merge_datasets([train_corpus, dev_corpus, test_corpus])
 
         return filter_and_map_entities(corpus, self.entity_type_mapping)
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HUNER_CHEMICAL_BIONLP2013_CG(HUNER_BIONLP2013_CG):
@@ -4958,6 +5011,7 @@ class HUNER_DISEASE_PDR(HunerDataset):
     """PDR Dataset with only Disease annotations."""
 
     def __init__(self, *args, **kwargs) -> None:
+        self.entity_type_mapping = {"Disease": DISEASE_TAG}
         super().__init__(*args, **kwargs)
 
     @staticmethod
@@ -4967,9 +5021,12 @@ class HUNER_DISEASE_PDR(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         corpus_folder = PDR.download_corpus(data_dir)
         corpus_data = brat_to_internal(corpus_folder, ann_file_suffixes=[".ann", ".ann2"])
-        corpus_data = filter_and_map_entities(corpus_data, {"Disease": DISEASE_TAG})
+        corpus_data = filter_and_map_entities(corpus_data, self.entity_type_mapping)
 
         return corpus_data
+
+    def get_entity_type_mapping(self) -> Optional[Dict]:
+        return self.entity_type_mapping
 
 
 class HunerMultiCorpus(MultiCorpus):
@@ -5122,9 +5179,9 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         self.sentence_splitter = sentence_splitter if sentence_splitter else SciSpacySentenceSplitter()
 
         dataset_dir_name = self.build_corpus_directory_name(dataset_name)
-        data_folder = base_path / dataset_dir_name / self.sentence_splitter.name
+        data_folder = base_path / dataset_dir_name
 
-        train_file = data_folder / "train.conll"
+        train_file = data_folder / (self.sentence_splitter.name + "_train.conll")
 
         # Download data if necessary
         # Some datasets in BigBio only have train or test splits, not both
