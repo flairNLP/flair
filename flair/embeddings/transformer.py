@@ -1104,7 +1104,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                 transformer_model = prepare_model_for_kbit_training(transformer_model)
             transformer_model = get_peft_model(transformer_model, peft_config)
 
-            trainable_params, all_param = self.get_nb_trainable_parameters()
+            trainable_params, all_param = transformer_model.get_nb_trainable_parameters()
             log.info(
                 f"trainable params: {trainable_params:,d} || "
                 f"all params: {all_param:,d} || "
