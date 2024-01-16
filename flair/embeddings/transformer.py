@@ -998,6 +998,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
         peft_config: dict = None,
+        transformers_tokenizer_kwargs: Dict[str, Any] = dict(),
+        transformers_config_kwargs: Dict[str, Any] = dict(),
+        transformers_model_kwargs: Dict[str, Any] = dict(),
         **kwargs,
     ) -> None:
         """Instantiate transformers embeddings.
@@ -1044,7 +1047,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
         if tokenizer_data is None:
             # load tokenizer and transformer model
-            self.tokenizer = AutoTokenizer.from_pretrained(model, add_prefix_space=True, **kwargs)
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                model, add_prefix_space=True, **transformers_tokenizer_kwargs, **kwargs
+            )
             try:
                 self.feature_extractor = AutoFeatureExtractor.from_pretrained(model, apply_ocr=False)
             except OSError:
@@ -1062,21 +1067,27 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             return getattr(config, "model_type", "") in t5_supported_model_types
 
         if saved_config is None:
-            config = AutoConfig.from_pretrained(model, output_hidden_states=True, **kwargs)
+            config = AutoConfig.from_pretrained(
+                model, output_hidden_states=True, **transformers_config_kwargs, **kwargs
+            )
 
             if is_supported_t5_model(config):
                 from transformers import T5EncoderModel
 
-                transformer_model = T5EncoderModel.from_pretrained(model, config=config, **kwargs)
+                transformer_model = T5EncoderModel.from_pretrained(
+                    model, config=config, **transformers_model_kwargs, **kwargs
+                )
             else:
-                transformer_model = AutoModel.from_pretrained(model, config=config, **kwargs)
+                transformer_model = AutoModel.from_pretrained(
+                    model, config=config, **transformers_model_kwargs, **kwargs
+                )
         else:
             if is_supported_t5_model(saved_config):
                 from transformers import T5EncoderModel
 
-                transformer_model = T5EncoderModel(saved_config, **kwargs)
+                transformer_model = T5EncoderModel(saved_config, **transformers_model_kwargs, **kwargs)
             else:
-                transformer_model = AutoModel.from_config(saved_config, **kwargs)
+                transformer_model = AutoModel.from_config(saved_config, **transformers_model_kwargs, **kwargs)
         try:
             transformer_model = transformer_model.to(flair.device)
         except ValueError as e:
