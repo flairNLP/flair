@@ -1111,7 +1111,12 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if not isinstance(peft_config, PeftConfig) and isinstance(peft_config, dict):
                 peft_config = PeftConfig(**peft_config)
             # peft_config.task_type should be set to TaskType.FEATURE_EXTRACTION. Could be checked or even enforced here.
-            if kwargs.get("load_in_4bit", False) or kwargs.get("load_in_8bit", False):
+            if (
+                kwargs.get("load_in_4bit", False)
+                or transformers_model_kwargs.get("load_in_4bit", False)
+                or kwargs.get("load_in_8bit", False)
+                or transformers_model_kwargs.get("load_in_8bit", False)
+            ):
                 transformer_model = prepare_model_for_kbit_training(transformer_model)
             transformer_model = get_peft_model(transformer_model, peft_config)
 
