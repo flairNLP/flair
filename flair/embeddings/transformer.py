@@ -997,6 +997,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         force_max_length: bool = False,
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
+        peft_config: dict = None,
         **kwargs,
     ) -> None:
         """Instantiate transformers embeddings.
@@ -1023,6 +1024,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             force_max_length: If True, the tokenizer will always pad the sequences to maximum length.
             needs_manual_ocr: If True, bounding boxes will be calculated manually. This is used for models like `layoutlm <https://huggingface.co/docs/transformers/model_doc/layoutlm>`_ where the tokenizer doesn't compute the bounding boxes itself.
             use_context_separator: If True, the embedding will hold an additional token to allow the model to distingulish between context and prediction.
+            peft_config: If set, the model will be trained using adapters:
             **kwargs: Further values forwarded to the transformers config
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -1076,6 +1078,32 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             else:
                 transformer_model = AutoModel.from_config(saved_config, **kwargs)
         transformer_model = transformer_model.to(flair.device)
+
+        if peft_config is not None:
+            try:
+                from peft import (
+                    PeftConfig,
+                    TaskType,
+                    get_peft_model,
+                    prepare_model_for_kbit_training,
+                )
+            except ImportError:
+                log.error("You cannot use the PEFT finetuning without peft being installed")
+                raise
+
+            if not isinstance(transformer_model.config, PeftConfig):
+                peft_config = PeftConfig(**peft_config)
+            # peft_config.task_type should be set to TaskType.FEATURE_EXTRACTION
+            if kwargs.get("load_in_4bit", False) or kwargs.get("load_in_8bit", False):
+                transformer_model = prepare_model_for_kbit_training(transformer_model)
+            transformer_model = get_peft_model(model, transformer_model)
+
+            trainable_params, all_param = self.get_nb_trainable_parameters()
+            log.info(
+                f"trainable params: {trainable_params:,d} || "
+                f"all params: {all_param:,d} || "
+                f"trainable%: {100 * trainable_params / all_param:.4f}"
+            )
 
         self.truncate = True
         self.force_max_length = force_max_length
