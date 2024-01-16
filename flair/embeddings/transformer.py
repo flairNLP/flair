@@ -1065,9 +1065,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if is_supported_t5_model(config):
                 from transformers import T5EncoderModel
 
-                transformer_model = T5EncoderModel.from_pretrained(model, config=config)
+                transformer_model = T5EncoderModel.from_pretrained(model, config=config, **kwargs)
             else:
-                transformer_model = AutoModel.from_pretrained(model, config=config)
+                transformer_model = AutoModel.from_pretrained(model, config=config, **kwargs)
         else:
             if is_supported_t5_model(saved_config):
                 from transformers import T5EncoderModel
