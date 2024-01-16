@@ -1102,7 +1102,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             # peft_config.task_type should be set to TaskType.FEATURE_EXTRACTION. Could be checked or even enforced here.
             if kwargs.get("load_in_4bit", False) or kwargs.get("load_in_8bit", False):
                 transformer_model = prepare_model_for_kbit_training(transformer_model)
-            transformer_model = get_peft_model(model, transformer_model)
+            transformer_model = get_peft_model(transformer_model, peft_config)
 
             trainable_params, all_param = self.get_nb_trainable_parameters()
             log.info(
