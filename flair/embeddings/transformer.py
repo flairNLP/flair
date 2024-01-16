@@ -1077,9 +1077,15 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                 transformer_model = T5EncoderModel(saved_config, **kwargs)
             else:
                 transformer_model = AutoModel.from_config(saved_config, **kwargs)
-        transformer_model = transformer_model.to(flair.device)
+        try:
+            transformer_model = transformer_model.to(flair.device)
+        except ValueError as e:
+            # if model is quantized by BitsAndBytes this will fail
+            if "Please use the model as it is" not in str(e):
+                raise e
 
         if peft_config is not None:
+            # add adapters for finetuning
             try:
                 from peft import (
                     PeftConfig,
@@ -1093,7 +1099,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
             if not isinstance(transformer_model.config, PeftConfig):
                 peft_config = PeftConfig(**peft_config)
-            # peft_config.task_type should be set to TaskType.FEATURE_EXTRACTION
+            # peft_config.task_type should be set to TaskType.FEATURE_EXTRACTION. Could be checked or even enforced here.
             if kwargs.get("load_in_4bit", False) or kwargs.get("load_in_8bit", False):
                 transformer_model = prepare_model_for_kbit_training(transformer_model)
             transformer_model = get_peft_model(model, transformer_model)
