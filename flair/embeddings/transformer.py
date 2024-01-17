@@ -1108,7 +1108,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                 log.error("You cannot use the PEFT finetuning without peft being installed")
                 raise
 
-            if not isinstance(peft_config, PeftConfig) and isinstance(peft_config, dict):
+            if not isinstance(peft_config, PeftConfig):
                 peft_config = PeftConfig(**peft_config)
             # peft_config.task_type should be set to TaskType.FEATURE_EXTRACTION. Could be checked or even enforced here.
             if (
