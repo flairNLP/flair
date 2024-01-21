@@ -22,7 +22,7 @@ from tqdm import tqdm
 
 import flair
 from flair.class_utils import get_state_subclass_by_name
-from flair.data import DT, Dictionary, Sentence
+from flair.data import DT, Dictionary, Sentence, _iter_dataset
 from flair.datasets import (
     CTD_CHEMICALS_DICTIONARY,
     CTD_DISEASES_DICTIONARY,
@@ -755,7 +755,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         }
 
 
-class EntityMentionLinker(flair.nn.Model):
+class EntityMentionLinker(flair.nn.Model[Sentence]):
     """Entity linking model for the biomedical domain."""
 
     def __init__(
@@ -798,6 +798,7 @@ class EntityMentionLinker(flair.nn.Model):
         top_k: int = 1,
         pred_label_type: Optional[str] = None,
         entity_label_types: Optional[Union[str, Sequence[str], Dict[str, Set[str]]]] = None,
+        batch_size: Optional[int] = None,
     ) -> None:
         """Predicts the best matching top-k entity / concept identifiers of all named entities annotated with tag input_entity_annotation_layer.
 
@@ -810,6 +811,8 @@ class EntityMentionLinker(flair.nn.Model):
         # make sure sentences is a list of sentences
         if not isinstance(sentences, list):
             sentences = [sentences]
+        if batch_size is None:
+            batch_size = self.batch_size
 
         # Make sure entity label types are represented as dict
         entity_label_types = entity_label_types if entity_label_types is not None else self.entity_label_types
@@ -846,11 +849,11 @@ class EntityMentionLinker(flair.nn.Model):
                 )
 
         # Retrieve top-k concept / entity candidates
-        for i in range(0, len(mentions), self.batch_size):
-            candidates = self.candidate_generator.search(entity_mentions=mentions[i : i + self.batch_size], top_k=top_k)
+        for i in range(0, len(mentions), batch_size):
+            candidates = self.candidate_generator.search(entity_mentions=mentions[i : i + batch_size], top_k=top_k)
 
             # Add a label annotation for each candidate
-            for data_point, mention_candidates in zip(data_points[i : i + self.batch_size], candidates):
+            for data_point, mention_candidates in zip(data_points[i : i + batch_size], candidates):
                 for candidate_id, confidence in mention_candidates:
                     data_point.add_label(pred_label_type, candidate_id, confidence)
 
@@ -1068,15 +1071,45 @@ class EntityMentionLinker(flair.nn.Model):
 
     def evaluate(
         self,
-        data_points: Union[List[DT], Dataset],
+        data_points: Union[List[Sentence], Dataset],
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        main_evaluation_metric: Tuple[str, str] = ("accuracy", "f1-score"),
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
+        k: int = 1,
         **kwargs,
     ) -> Result:
-        raise NotImplementedError("Evaluation is currently not implemented for EntityLinking")
+        if gold_label_dictionary is not None:
+            raise NotImplementedError("evaluating an EntityMentionLinker with a gold_label_dictionary is not supported")
+
+        if isinstance(data_points, Dataset):
+            data_points = list(_iter_dataset(data_points))
+
+        self.predict(data_points, top_k=k, pred_label_type="predicted", entity_label_types=gold_label_type, batch_size=mini_batch_size)
+
+        hits = 0
+        total = 0
+        for sentence in data_points:
+            spans = sentence.get_spans(gold_label_type)
+            for span in spans:
+                exps = set(exp.value for exp in span.get_labels(gold_label_type) if exp.value not in exclude_labels)
+
+                predictions = set(pred.value for pred in span.get_labels("predicted"))
+                total += 1
+                if exps & predictions:
+                    hits += 1
+            sentence.remove_labels("predicted")
+        accuracy = hits / total
+
+        detailed_results = f"Accuracy@{k}: {accuracy:0.2%}"
+        scores = {"accuracy": accuracy, f"accuracy@{k}": accuracy, "loss": 0.0}
+
+        return Result(
+            main_score=accuracy,
+            detailed_results=detailed_results,
+            scores=scores
+        )
