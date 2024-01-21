@@ -64,6 +64,9 @@ class EntityLinkingDictionary:
     def __getitem__(self, item: str) -> EntityCandidate:
         return self._idx_to_candidates[item]
 
+    def __contains__(self, item: str) -> bool:
+        return item in self._idx_to_candidates
+
     def to_in_memory_dictionary(self) -> "InMemoryEntityLinkingDictionary":
         return InMemoryEntityLinkingDictionary(list(self._idx_to_candidates.values()), self._dataset_name)
 

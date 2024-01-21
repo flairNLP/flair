@@ -215,7 +215,7 @@ class BioSynEntityPreprocessor(EntityPreprocessor):
         self.rmv_puncts_regex = re.compile(rf"[\s{re.escape(string.punctuation)}]+")
 
     def process_entity_name(self, entity_name: str) -> str:
-        original = copy.deepcopy(entity_name)
+        original = entity_name
 
         if self.lowercase:
             entity_name = entity_name.lower()
@@ -277,7 +277,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
             sentence is not None
         ), "Ab3P requires the sentence where `entity_mention` was found for abbreviation resolution"
 
-        original = copy.deepcopy(entity_mention)
+        original = entity_mention
 
         sentence_text = sentence.to_original_text()
 
@@ -672,11 +672,11 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
                 batch = inputs[start:end]
                 self.embeddings["dense"].embed(batch)
                 for sent in batch:
-                    emb = sent.get_embedding()
+                    emb = sent.get_embedding(self.embeddings["dense"].get_names())
                     if self.similarity_metric == SimilarityMetric.COSINE:
                         emb = emb / torch.norm(emb)
                     query_embeddings["dense"].append(emb.cpu().numpy())
-                    sent.clear_embeddings()
+                    sent.clear_embeddings(self.embeddings["dense"].get_names())
                 if flair.device.type == "cuda":
                     torch.cuda.empty_cache()
 
@@ -684,11 +684,11 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
             query_embeddings["sparse"] = []
             self.embeddings["sparse"].embed(inputs)
             for sent in inputs:
-                sparse_emb = sent.get_embedding()
+                sparse_emb = sent.get_embedding(self.embeddings["sparse"].get_names())
                 if self.similarity_metric == SimilarityMetric.COSINE:
                     sparse_emb = sparse_emb / torch.norm(sparse_emb)
                 query_embeddings["sparse"].append(sparse_emb.cpu().numpy())
-                sent.clear_embeddings()
+                sent.clear_embeddings(self.embeddings["sparse"].get_names())
 
         return {k: np.stack(v, axis=0) for k, v in query_embeddings.items()}
 
@@ -765,6 +765,7 @@ class EntityMentionLinker(flair.nn.Model):
         entity_label_types: Union[str, Sequence[str], Dict[str, Set[str]]],
         label_type: str,
         dictionary: EntityLinkingDictionary,
+        batch_size: int = 1024,
     ):
         """Initializes an entity mention linker.
 
@@ -780,6 +781,7 @@ class EntityMentionLinker(flair.nn.Model):
         self.entity_label_types = entity_label_types
         self._label_type = label_type
         self._dictionary = dictionary
+        self.batch_size = batch_size
         super().__init__()
 
     @property
@@ -843,13 +845,12 @@ class EntityMentionLinker(flair.nn.Model):
                     else entity.data_point.text,
                 )
 
-        # no mentions: nothing to do here
-        if len(mentions) > 0:
-            # Retrieve top-k concept / entity candidates
-            candidates = self.candidate_generator.search(entity_mentions=mentions, top_k=top_k)
+        # Retrieve top-k concept / entity candidates
+        for i in range(0, len(mentions), self.batch_size):
+            candidates = self.candidate_generator.search(entity_mentions=mentions[i : i + self.batch_size], top_k=top_k)
 
             # Add a label annotation for each candidate
-            for data_point, mention_candidates in zip(data_points, candidates):
+            for data_point, mention_candidates in zip(data_points[i : i + self.batch_size], candidates):
                 for candidate_id, confidence in mention_candidates:
                     data_point.add_label(pred_label_type, candidate_id, confidence)
 
@@ -883,8 +884,9 @@ class EntityMentionLinker(flair.nn.Model):
         entity_label_types = state["entity_label_types"]
         label_type = state["label_type"]
         dictionary = InMemoryEntityLinkingDictionary.from_state(state["dictionary"])
+        batch_size = state.get("batch_size", 128)
 
-        return cls(candidate_generator, preprocessor, entity_label_types, label_type, dictionary)
+        return cls(candidate_generator, preprocessor, entity_label_types, label_type, dictionary, batch_size=batch_size)
 
     def _get_state_dict(self):
         """Returns the state dictionary for this model."""
@@ -895,6 +897,7 @@ class EntityMentionLinker(flair.nn.Model):
             "entity_preprocessor": self.preprocessor._get_state(),
             "candidate_search_index": self.candidate_generator._get_state(),
             "dictionary": self.dictionary.to_in_memory_dictionary().to_state(),
+            "batch_size": self.batch_size,
         }
 
     @classmethod
