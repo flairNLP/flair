@@ -210,3 +210,63 @@ def get_wikidata_categories(entity, method, add_occupation, add_field_of_work):
             "wikidata_title": wikidata_title,
             "wikibase_description": wikibase_shortdesc,
             }
+
+def get_sitelinks_of_entity(entity):
+    wikidata_id = None
+    wikibase_shortdesc = ""
+
+    url = 'https://en.wikipedia.org/w/api.php'
+    params = {
+        'action': 'query',
+        'format': 'json',
+        'titles': entity,
+        'prop': 'pageprops',
+        'redirects': True,
+        # 'exintro': True,
+        # 'explaintext': True,
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+    page = next(iter(data['query']['pages'].values()))
+    wikidata_title = page["title"]
+    pageprops = page.get("pageprops", None)
+    if pageprops:
+        wikidata_id = pageprops.get("wikibase_item", None)
+        wikibase_shortdesc = pageprops.get("wikibase-shortdesc", "")
+
+    if wikidata_id:
+        wikidata_url = f"https://www.wikidata.org/wiki/{wikidata_id}"
+
+    query = f"""
+             SELECT ?item
+                    ?itemLabel
+                    ( COUNT( ?sitelink ) AS ?sitelink_count )
+       
+             WHERE {{
+                BIND(wd:{wikidata_id} AS ?item).
+                ?sitelink schema:about ?item. # sitelink about the item
+                                              # label in English
+                SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+
+                }}
+             GROUP BY ?item ?itemLabel
+             """
+
+    try:
+        query_result = mkwikidata.run_query(query, params={})
+    except:
+        time.sleep(10)
+        query_result = mkwikidata.run_query(query, params={})
+
+    try:
+        return query_result["results"]["bindings"][0]["sitelink_count"]["value"]
+    except:
+        return None # Fallback
+
+if __name__ == "__main__":
+    nr_sitelinks = get_sitelinks_of_entity("Berlin")
+    print(nr_sitelinks)
+    nr_sitelinks = get_sitelinks_of_entity("Chris_Harris_(cricketer)")
+    print(nr_sitelinks)
+
