@@ -18,7 +18,7 @@ from flair.models.entity_linker_model import CandidateGenerator
 
 from pathlib import Path
 
-from flair.nn.wikidata_utils import get_wikidata_categories
+from flair.nn.wikidata_utils import get_wikidata_categories, get_sitelinks_of_entity
 
 log = logging.getLogger("flair")
 
@@ -40,7 +40,8 @@ class WikidataLabelVerbalizer:
         self.add_occupation = add_occupation
         self.add_field_of_work = add_field_of_work
 
-        self.verbalized_labels = self.verbalize_all_labels(self, label_dictionary=self.label_dictionary)
+        self.verbalized_labels = self.verbalize_all_labels(self, label_dictionary=self.label_dictionary, save_verbalizations=True)
+        self.label_dict_list = self.label_dictionary.get_items()
 
         self.max_verbalization_length = max_verbalization_length
 
@@ -72,6 +73,8 @@ class WikidataLabelVerbalizer:
     def verbalize_all_labels(self, label_dictionary: Dictionary, save_verbalizations = True) -> List[Sentence]:
 
         if len(self.verbalizations_paths) > 0:
+            print(f"Found {len(self.verbalizations_paths)} source paths of verbalizations:")
+            print(self.verbalizations_paths)
             self.verbalizations = {}
             for p in self.verbalizations_paths:
                 if os.path.exists(p):
@@ -110,10 +113,11 @@ class WikidataLabelVerbalizer:
 
             # save every n entities and final
             if save_verbalizations:
-                if idx % 100 == 0 or idx >= len(label_dictionary.item2idx.items()) -1:
+                if counter_newly_verbalized > 0 and (idx % 100 == 0 or idx >= len(label_dictionary.item2idx.items()) -1):
                     verbalizations_dict = self.verbalizations
                     with open(f"{self.verbalizations_paths[0]}", "w") as file:
                         json.dump(verbalizations_dict, file)
+                    print("saved new verbalizations at:", self.verbalizations_paths[0])
 
         print(f"--- Created verbalized labels for {len(verbalized_labels)} labels")
         print(f"--- Thereof newly verbalized:", counter_newly_verbalized)
@@ -121,9 +125,9 @@ class WikidataLabelVerbalizer:
         return verbalized_labels
 
     def verbalize_list_of_labels(self, list_of_labels):
-        if set(list_of_labels).issubset(self.label_dictionary.get_items()):
+        if set(list_of_labels).issubset(self.label_dict_list):
             label_idx = [self.label_dictionary.get_idx_for_item(idx) for idx in list_of_labels]
-            return [self.verbalized_labels[idx] for idx in label_idx ]
+            rt =  [self.verbalized_labels[idx] for idx in label_idx ]
 
         else:
             rt = []
@@ -134,7 +138,7 @@ class WikidataLabelVerbalizer:
                     verbalization = self.verbalize_entity(l)
                     self.verbalizations[l] = verbalization
                     rt.append(verbalization)
-            return rt
+        return rt
 
     def add_new_verbalization_path(self, json_path):
         self.verbalizations_paths.append(json_path)
@@ -155,16 +159,15 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         label_dictionary: Dictionary,
         pooling_operation: str = "average",
         label_type: str = "nel",
-        dropout: float = 0.1,
-        linear_size: int = 128,
-        use_span_width_embeddings: bool = True,
-        max_span_width: int = 8,
         custom_label_verbalizations = None,
         train_only_with_positive_labels = True,
         negative_sampling_factor: [int, bool] = 1,
         negative_sampling_strategy: str = "random",
         margin_loss: float = 0.5,
         threshold_in_prediction: float = 0.5,
+        weighted_loss = False,
+        add_popularity = False,
+        popularity_save_path: Path = None,
         label_embeddings_save_path: Path = None,
         BCE_loss: bool = False,
         candidates: Optional[CandidateGenerator] = None,
@@ -175,6 +178,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         self.token_encoder = token_encoder
         self.label_encoder = label_encoder
         self.label_dictionary = label_dictionary
+        self.label_dict_list = self.label_dictionary.get_items()
         self._label_type = label_type
 
         self.pooling_operation = pooling_operation
@@ -183,7 +187,6 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         self.train_only_with_positive_labels = train_only_with_positive_labels
         self.negative_sampling_factor = negative_sampling_factor
         self.negative_sampling_strategy = negative_sampling_strategy
-        self.current_label_embeddings = []
         self.is_first_batch_in_evaluation = True
         if not self.train_only_with_positive_labels:
             self.negative_sampling_factor = False
@@ -195,20 +198,32 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             assert self.negative_sampling_strategy in ["hard_negatives", "random"], \
                 ("You need to choose between 'random' and 'hard_negatives' as a negative_sampling_strategy!")
 
+        self.weighted_loss = weighted_loss
+        self.add_popularity = add_popularity
+        self.popularity_save_path = popularity_save_path
+        if self.add_popularity:
+            if not self.popularity_save_path:
+                self.popularity_save_path = "/tmp/wikipedia_sitelinks_dict.json"
+            self._create_popularity_dict(self.label_dict_list)
+
         self.BCE_loss = BCE_loss
         if self.BCE_loss:
-            self.loss_function = torch.nn.BCEWithLogitsLoss()
+            self.loss_function = torch.nn.BCEWithLogitsLoss(
+                                                            #pos_weight=torch.Tensor(negative_sampling_factor)
+                                                            )
             self.margin_loss = None
             self.threshold_in_prediction = None
         else:
             self.margin_loss = margin_loss
             self.loss_function = torch.nn.CosineEmbeddingLoss(margin=self.margin_loss,
-                                                              #reduction="sum"
+                                                              reduction="none" if self.weighted_loss else "mean",
                                                               )
             self.threshold_in_prediction = threshold_in_prediction
         self.label_embeddings_save_path = label_embeddings_save_path
         if self.label_embeddings_save_path:
             self.label_embeddings_save_path.mkdir(parents=True, exist_ok=True)
+
+        self.current_label_embeddings, _ = self._embed_labels_batchwise(cpu=True, max_limit=None) # before training
 
         self.candidates = candidates
 
@@ -224,8 +239,6 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             raise KeyError('pooling_operation has to be one of "average", "first", "last" or "first_last"')
 
         self.aggregated_embedding = cases[pooling_operation]
-
-        self.to(flair.device)
 
         self.to(flair.device)
 
@@ -256,35 +269,128 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
     def _get_embedding_for_data_point(self, prediction_data_point: Span) -> torch.Tensor:
         return self.aggregated_embedding(prediction_data_point, self.token_encoder.get_names())
 
-    def _embed_labels_batchwise(self, batch_size=128, cpu = False):
+    def _create_popularity_dict(self, labels):
+
+        with open(self.popularity_save_path, "r") as handle:
+            self.sitelinks_dict = json.load(handle)
+
+        print(f"Found sitelinks_dict with {len(self.sitelinks_dict)} entries")
+        if not all(item in self.sitelinks_dict for item in labels):
+            for i, e in enumerate(self.label_dict_list):
+                if e not in self.sitelinks_dict:
+                    sitelinks = get_sitelinks_of_entity(e)
+                    self.sitelinks_dict[e] = {"sitelinks": sitelinks}
+                    print(i, e, self.sitelinks_dict[e]["sitelinks"])
+
+                if i % 100 == 0:
+                    print("saving...")
+                    with open(self.popularity_save_path, "w") as f:
+                        json.dump(self.sitelinks_dict, f)
+
+            with open(self.popularity_save_path, "w") as f:
+                json.dump(self.sitelinks_dict, f)
+
+        # get highest sitelinks value for normalizing
+        # max_sitelinks = 0
+        # for entity, info in self.sitelinks_dict.items():
+        #     if "sitelinks" in info:
+        #         sitelinks_count = int(info["sitelinks"])
+        #         if sitelinks_count > max_sitelinks:
+        #             max_sitelinks = sitelinks_count
+
+        # or just use N as max, so everything above N gets 1.0
+        max_sitelinks = 100
+
+        # now normalize:
+        for entity, info in self.sitelinks_dict.items():
+            if info["sitelinks"]:
+                self.sitelinks_dict[entity]["sitelinks_normalized"] = min(
+                    round(int(info["sitelinks"]) / max_sitelinks, 6), 1.0)
+            else:
+                self.sitelinks_dict[entity][
+                    "sitelinks_normalized"] = 0.0  # Dummy, if sitelinks was None (e.g. article was deleted)
+
+        if self.add_popularity == "concatenate":
+            # add a dense layer on token embeddings, to match dimension (+1)
+            new_dimension = self.token_encoder.embedding_length + 1
+            self.token_dense = torch.nn.Linear(in_features=self.token_encoder.embedding_length,
+                                               out_features=new_dimension)
+            self.token_dense.to(flair.device)
+
+            with torch.no_grad():
+                # Initialize the weights to approximate an identity mapping:
+                # self.token_dense.weight.copy_(torch.eye(self.token_encoder.embedding_length))
+                torch.nn.init.eye_(self.token_dense.weight)
+                self.token_dense.bias.zero_()
+
+        if self.add_popularity == "verbalize":
+            self.popularity_mapping = {(0, 0.25): "Low Popularity",
+                                       (0.25, 0.5): "Medium Popularity",
+                                       (0.5, 0.75): "High Popularity",
+                                       (0.75, 1.0): "Very High Popularity"
+                                       }
+
+            for entity, info in self.sitelinks_dict.items():
+                for range_, label in self.popularity_mapping.items():
+                    if range_[0] <= self.sitelinks_dict[entity]["sitelinks_normalized"] <= range_[1]:
+                        verbalization = label
+                self.sitelinks_dict[entity]["sitelinks_verbalized"] = verbalization
+
+        print("done with preprocessing sitelinks info")
+
+    def _embed_labels_batchwise(self, batch_size=128, cpu = False, max_limit = None):
+        print(f"Now creating label embeddings with limit {max_limit}...")
         if cpu:
             label_embeddings = torch.tensor([], device="cpu")
         else:
             label_embeddings = torch.tensor([], device=flair.device)
 
-        indices = [idx for idx in range(len(self.label_dictionary))]
-        labels = [byte_label.decode("utf-8") for byte_label, idx in self.label_dictionary.item2idx.items()]
+        import random
+        used_indices = sorted(random.sample(range(len(self.label_dictionary)), len(self.label_dictionary) if not max_limit else max_limit))
+        used_labels = np.array(self.label_dict_list)[used_indices]
+
+        if self.add_popularity == "verbalize":
+            popularities_verbalized = [self.sitelinks_dict[label]["sitelinks_verbalized"] for label in used_labels]
 
         if self.custom_label_verbalizations:
-            labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(labels)
-            labels_verbalized = [Sentence(label) for label in labels_verbalized]
+            used_labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(used_labels)
+            if self.add_popularity == "verbalize":
+                used_labels_verbalized = [Sentence(label + f", {popularity}") for label, popularity
+                                          in zip(used_labels_verbalized, popularities_verbalized)]
+            else:
+                used_labels_verbalized = [Sentence(label) for label in used_labels_verbalized]
         else:
-            labels_verbalized = [Sentence(label) for label in labels]
+            if self.add_popularity == "verbalize":
+                used_labels_verbalized = [Sentence(label + f", {popularity}") for label, popularity
+                                          in zip(used_labels, popularities_verbalized)]
+            else:
+                used_labels_verbalized = [Sentence(label) for label in used_labels]
 
-        for i in range(0, len(indices), batch_size):
-
-            labels_batch = labels_verbalized[i:i + batch_size]
-
-            self.label_encoder.embed(labels_batch)
-            label_embeddings_batch = torch.stack([label.get_embedding() for label in labels_batch])
+        for i in range(0, len(used_indices), batch_size):
+            #print(i)
+            #print(torch.cuda.memory_summary(device=flair.device, abbreviated=False))
+            labels_batch = used_labels_verbalized[i:i + batch_size]
             if cpu:
-                label_embeddings_batch = label_embeddings_batch.detach().cpu()
+                self.label_encoder.embed(labels_batch)
+                label_embeddings_batch = torch.stack([label.get_embedding() for label in labels_batch]).detach().cpu()
+                #label_embeddings_batch = torch.stack([label.get_embedding() for label in labels_batch])
+
+            else:
+                self.label_encoder.embed(labels_batch)
+                label_embeddings_batch = torch.stack([label.get_embedding() for label in labels_batch])
+
             label_embeddings = torch.cat((label_embeddings, label_embeddings_batch), dim = 0)
+            del label_embeddings_batch
 
             for s in labels_batch:
                 s.clear_embeddings()
 
-        return label_embeddings
+        if self.add_popularity == "concatenate":
+            popularities = torch.Tensor([self.sitelinks_dict[e]["sitelinks_normalized"] for e in used_labels])
+            label_embeddings = torch.cat((label_embeddings, popularities.unsqueeze(1)), dim = 1)
+
+        del used_labels
+        return label_embeddings, used_indices
 
 
     def _encode_data_points(self, sentences): #-> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -300,41 +406,70 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
         span_hidden_states = torch.stack([self.aggregated_embedding(d, self.token_encoder.get_names()) for d in datapoints])
 
+        if self.add_popularity == "concatenate":
+            # TODO is this good? set to non trainable?
+            span_hidden_states = self.token_dense(span_hidden_states)
+
         if self.training:
             if self.train_only_with_positive_labels:
-                labels = set()
+                #labels = set()
+                labels = []
                 for d in datapoints:
-                    labels.add(d.get_label(self.label_type).value)
-                labels = list(labels)
+                    #labels.add(d.get_label(self.label_type).value)
+                    labels.append(d.get_label(self.label_type).value)
+                #labels = list(labels)
 
                 labels_ids = [self.label_dictionary.get_idx_for_item(l) for l in labels]
 
+                if self.add_popularity == "verbalize":
+                    popularities_verbalized = [self.sitelinks_dict[label]["sitelinks_verbalized"] for label in
+                                               labels]
+
                 if self.custom_label_verbalizations:
                     labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(labels)
-                    labels_verbalized = [Sentence(label) for label in labels_verbalized]
+                    if self.add_popularity == "verbalize":
+                        labels_verbalized = [Sentence(label + f", {popularity}") for label, popularity
+                                                  in zip(labels_verbalized, popularities_verbalized)]
+                    else:
+                        labels_verbalized = [Sentence(label) for label in labels_verbalized]
                 else:
-                    labels_verbalized = [Sentence(label) for label in labels]
+                    if self.add_popularity == "verbalize":
+                        labels_verbalized = [Sentence(label + f", {popularity}") for label, popularity
+                                                  in zip(labels, popularities_verbalized)]
+                    else:
+                        labels_verbalized = [Sentence(label) for label in labels]
 
+                # if self.custom_label_verbalizations:
+                #     labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(labels)
+                #     labels_verbalized = [Sentence(label) for label in labels_verbalized]
+                # else:
+                #     labels_verbalized = [Sentence(label) for label in labels]
+                #
                 self.label_encoder.embed(labels_verbalized)
                 label_hidden_states_batch = torch.stack([label.get_embedding() for label in labels_verbalized])
 
-                label_hidden_states = torch.zeros(len(self.label_dictionary), self.label_encoder.embedding_length,
+                if self.add_popularity == "concatenate":
+                    popularities = torch.Tensor(
+                        [self.sitelinks_dict[e]["sitelinks_normalized"] for e in labels]).to(flair.device)
+                    label_hidden_states_batch = torch.cat((label_hidden_states_batch, popularities.unsqueeze(1)), dim=1)
+
+                label_hidden_states = torch.zeros(len(self.label_dictionary), label_hidden_states_batch.shape[1],
                                                   device=flair.device)
                 label_hidden_states[torch.LongTensor(list(labels_ids)), :] = label_hidden_states_batch
 
             else:
-                label_hidden_states = self._embed_labels_batchwise()
+                label_hidden_states, _ = self._embed_labels_batchwise(max_limit=None)
 
         else:
             # if it's the first batch right after training, embed all and save!
             if self.is_first_batch_in_evaluation:
                 #self.label_encoder.embed(labels_verbalized)
                 #label_hidden_states = torch.stack([label.get_embedding() for label in labels_verbalized])
-                label_hidden_states = self._embed_labels_batchwise(cpu = True)
+                label_hidden_states, _ = self._embed_labels_batchwise(cpu = True, max_limit=None)
                 self.current_label_embeddings = label_hidden_states
                 self.is_first_batch_in_evaluation = False
 
-                # save them to enable inspection:
+                # save them to enable inspection (and for one of the negative sampling methods):
                 if self.training and self.label_embeddings_save_path:
                     print("\nSaving current embeddings here:")
                     print(self.label_embeddings_save_path)
@@ -357,74 +492,202 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         return span_hidden_states, label_hidden_states, datapoints, sentences
 
 
-    def _get_random_negative_labels(self, span_hidden_states, labels, factor):
+    def _get_random_negative_labels(self, span_hidden_states, labels, factor, epoch_wise = False):
         import random
-        random_idx = random.sample(range(len(self.label_dictionary)), len(labels)*factor)
-        random_labels = [self.label_dictionary.get_items()[idx] for idx in random_idx]
-        if self.custom_label_verbalizations:
-            random_labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(random_labels)
-            random_labels_verbalized = [Sentence(label) for label in random_labels_verbalized]
+        rt_random_negatives_embeddings = []
+        popularities = []
+        for f in range(factor):
+            random_idx = random.sample(range(len(self.label_dictionary)), len(labels))
+            random_labels = [self.label_dict_list[idx] for idx in random_idx]
+            if self.add_popularity == "concatenate":
+                popularities.extend([self.sitelinks_dict[e]["sitelinks_normalized"] for e in random_labels])
 
-        else:
-            random_labels_verbalized = [Sentence(label) for label in random_labels]
-        self.label_encoder.embed(random_labels_verbalized)
-        random_label_hidden_states = torch.stack([label.get_embedding() for label in random_labels_verbalized])
+            if epoch_wise:
+                random_label_hidden_states = self.current_label_embeddings[random_idx]
 
-        return random_label_hidden_states
+            else:
+                #if self.custom_label_verbalizations:
+                #    random_labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(random_labels)
+                #    random_labels_verbalized = [Sentence(label) for label in random_labels_verbalized]
+                #
+                #else:
+                #    random_labels_verbalized = [Sentence(label) for label in random_labels]
+                #print(f"Now embedding random labels:", len(random_labels_verbalized))
 
-    def _get_hard_negative_labels(self, span_hidden_states, labels, factor):
+                if self.add_popularity == "verbalize":
+                    popularities_verbalized = [self.sitelinks_dict[label]["sitelinks_verbalized"] for label in
+                                               random_labels]
+
+                if self.custom_label_verbalizations:
+                    random_labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(random_labels)
+                    if self.add_popularity == "verbalize":
+                        random_labels_verbalized = [Sentence(label + f", {popularity}") for label, popularity
+                                                  in zip(random_labels_verbalized, popularities_verbalized)]
+                    else:
+                        random_labels_verbalized = [Sentence(label) for label in random_labels_verbalized]
+                else:
+                    if self.add_popularity == "verbalize":
+                        random_labels_verbalized = [Sentence(label + f", {popularity}") for label, popularity
+                                                  in zip(random_labels, popularities_verbalized)]
+                    else:
+                        random_labels_verbalized = [Sentence(label) for label in random_labels]
+
+                self.label_encoder.embed(random_labels_verbalized)
+                random_label_hidden_states = torch.stack([label.get_embedding() for label in random_labels_verbalized])
+
+            rt_random_negatives_embeddings.extend(random_label_hidden_states)
+
+        rt_random_negatives_embeddings = torch.stack(rt_random_negatives_embeddings, dim=0).to(flair.device)
+
+        if self.add_popularity == "concatenate":
+            popularities = torch.Tensor(popularities)
+            rt_random_negatives_embeddings = torch.cat((rt_random_negatives_embeddings, popularities.unsqueeze(1)), dim=1)
+
+        return rt_random_negatives_embeddings
+
+    def _get_hard_negative_labels(self, span_hidden_states, labels, factor,
+                                  epoch_wise = True,
+                                  ):
+
+        with torch.no_grad():
+
+            #TODO: Do I want to choose by similarity to the gold LABEL or by similarity to the SPAN embedding?
+            # i.e. span_hidden_states or (see above) batch_labels_verbalized?
+
+            # first: just for getting indices of similar labels: no gradient tracking / gpu necessary:
+            if epoch_wise:
+                all_labels_embeddings = self.current_label_embeddings
+                all_labels_indices = range(len(self.current_label_embeddings))
+
+            else:
+                raise NotImplementedError
+                # TODO embed and compare all labels
+
+            batch_labels_indices = [self.label_dictionary.get_idx_for_item(l) for l in labels]
+
+            #if self.custom_label_verbalizations:
+            #    labels_batch_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(
+            #        labels)
+            #    labels_batch_verbalized = [Sentence(label) for label in labels_batch_verbalized]
+            #else:
+            #    labels_batch_verbalized = [Sentence(label) for label in labels]
+            if self.add_popularity == "verbalize":
+                popularities_verbalized = [self.sitelinks_dict[label]["sitelinks_verbalized"] for label in
+                                           labels]
+
+            if self.custom_label_verbalizations:
+                labels_batch_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(labels)
+                if self.add_popularity == "verbalize":
+                    labels_batch_verbalized = [Sentence(label + f", {popularity}") for label, popularity
+                                         in zip(labels_batch_verbalized, popularities_verbalized)]
+                else:
+                    labels_batch_verbalized = [Sentence(label) for label in labels_batch_verbalized]
+            else:
+                if self.add_popularity == "verbalize":
+                    labels_batch_verbalized = [Sentence(label + f", {popularity}") for label, popularity
+                                         in zip(labels, popularities_verbalized)]
+                else:
+                    labels_batch_verbalized = [Sentence(label) for label in labels]
+
+            self.label_encoder.embed(labels_batch_verbalized)
+            batch_labels_embeddings = torch.stack(
+                [label.get_embedding() for label in labels_batch_verbalized])
+
+            if self.add_popularity == "concatenate":
+                popularities = torch.Tensor([self.sitelinks_dict[e]["sitelinks_normalized"] for e in labels]).to(flair.device)
+                batch_labels_embeddings = torch.cat((batch_labels_embeddings, popularities.unsqueeze(1)), dim=1)
 
 
-        # first: just for getting similar labels, no gradient tracking / gpu necessary:
-        all_labels_embeddings = self._embed_labels_batchwise(cpu=True)
-        batch_labels_indices = [self.label_dictionary.get_idx_for_item(l) for l in labels]
-        batch_labels_embeddings = all_labels_embeddings[batch_labels_indices]
+            #if self.add_popularity == "concatenate:
+            #    all_labels_embeddings = all_labels_embeddings[:,:self.label_encoder.embedding_length] # don't use the popularity score for similarity
 
-        if self.BCE_loss:
-            span_hidden_states = span_hidden_states.detach().cpu()
+            if self.BCE_loss:
 
-            # Compute cosine similarity
-            logits = torch.mm(span_hidden_states, all_labels_embeddings.t())
-            # exclude the real label
-            for i, label_idx in enumerate(batch_labels_indices):
-                logits[i, label_idx] = float("-inf")
+                # Compute cosine similarity
+                #logits = torch.mm(batch_labels_embeddings.detach().cpu(),
+                #                  all_labels_embeddings.t())
+                #logits = torch.mm(F.normalize(span_hidden_states.detach().cpu(), p=2, dim=1),
+                #                  F.normalize(all_labels_embeddings.detach().cpu().t(), p=2, dim=1))
+                logits = torch.mm(span_hidden_states.detach().cpu(),
+                                  all_labels_embeddings.detach().cpu().t())
 
-            _, hard_negative_indices = torch.topk(logits, factor, dim=1)
+                # exclude the real label
+                for i, label_idx in enumerate(batch_labels_indices):
+                    if label_idx in all_labels_indices:
+                        logits[i, all_labels_indices.index(label_idx)] = float("-inf")
 
-        else:
-            similarity_matrix = cosine_similarity(batch_labels_embeddings.detach().cpu(),
-                                                  all_labels_embeddings.detach().cpu())
+                _, hard_negative_indices_sample = torch.topk(logits, factor, dim=1)
 
-            # to exclude the real label
-            for i, label_idx in enumerate(batch_labels_indices):
-                similarity_matrix[i, label_idx] = float("-inf")
+            else:
+                if self.add_popularity == "concatenate":
+                    #batch_labels_embeddings = batch_labels_embeddings[:, :self.label_encoder.embedding_length]  # don't use the popularity score for similarity
+                    #similarity_matrix = cosine_similarity(batch_labels_embeddings.detach().cpu(),
+                    #                                     all_labels_embeddings.detach().cpu())
 
-            _, hard_negative_indices = torch.topk(torch.tensor(similarity_matrix), factor, dim=1)
+                    similarity_matrix = cosine_similarity(span_hidden_states.detach().cpu(),
+                                                          all_labels_embeddings.detach().cpu())
 
 
-        # important: We need to "enroll" the labels the right way: each span should get it's hard negative, spans are concatenated each factor!
+                else:
+                    # TODO see above
+                    #similarity_matrix = cosine_similarity(batch_labels_embeddings.detach().cpu(),
+                    #                                      all_labels_embeddings.detach().cpu())
+                    similarity_matrix = cosine_similarity(span_hidden_states.detach().cpu(),
+                                                          all_labels_embeddings.detach().cpu())
 
+                # to exclude the real label
+                for i, label_idx in enumerate(batch_labels_indices):
+                    if label_idx in all_labels_indices:
+                        similarity_matrix[i, all_labels_indices.index(label_idx)] = float("-inf")
+
+                _, hard_negative_indices_sample = torch.topk(torch.tensor(similarity_matrix), factor, dim=1)
+
+        # now embed those negative labels 'for real', so that gradient tracking possible and most current version
+        # important: We need to "enroll" the labels the right way: each span should get its hard negative, spans are concatenated each factor!
         rt_hard_negatives_embeddings = []
         rt_hard_negatives_verbalized = [] # not used, but for debugging
+        rt_hard_negatives_labels = []
         for f in range(factor):
-            hard_negative_indices_f = hard_negative_indices[:,f]
+            hard_negative_indices_f = hard_negative_indices_sample[:,f]
+            labels_f = [self.label_dict_list[idx] for idx in hard_negative_indices_f]
 
-            # now embed those 'for real', so that gradient tracking possible and most current version
+            # if self.custom_label_verbalizations:
+            #     hard_negatives_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(
+            #                                     labels_f
+            #                                     )
+            # else:
+            #     hard_negatives_verbalized = labels_f
+
+            if self.add_popularity == "verbalize":
+                popularities_verbalized = [self.sitelinks_dict[label]["sitelinks_verbalized"] for label in
+                                           labels_f]
+
             if self.custom_label_verbalizations:
-                hard_negatives_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(
-                                                [self.label_dictionary.get_items()[idx] for idx in hard_negative_indices_f]
-                                                )
+                hard_negatives_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(labels_f)
+                if self.add_popularity == "verbalize":
+                    hard_negatives_verbalized = [Sentence(label + f", {popularity}") for label, popularity
+                                         in zip(hard_negatives_verbalized, popularities_verbalized)]
+                else:
+                    hard_negatives_verbalized = [Sentence(label) for label in hard_negatives_verbalized]
             else:
-                hard_negatives_verbalized = [self.label_dictionary.get_items()[idx] for idx in hard_negative_indices_f]
+                if self.add_popularity == "verbalize":
+                    hard_negatives_verbalized = [Sentence(label + f", {popularity}") for label, popularity
+                                         in zip(labels_f, popularities_verbalized)]
+                else:
+                    hard_negatives_verbalized = [Sentence(label) for label in labels_f]
 
             rt_hard_negatives_verbalized.extend(hard_negatives_verbalized)
-            hard_negatives = [ flair.data.Sentence(n) for n in hard_negatives_verbalized ]
-            self.label_encoder.embed(hard_negatives)
+            self.label_encoder.embed(hard_negatives_verbalized)
 
-            hard_negatives_embeddings = [ n.get_embedding() for n in hard_negatives ]
+            hard_negatives_embeddings = [ n.get_embedding() for n in hard_negatives_verbalized ]
             rt_hard_negatives_embeddings.extend(hard_negatives_embeddings)
+            rt_hard_negatives_labels.extend(labels_f)
 
         rt_hard_negatives_embeddings = torch.stack(rt_hard_negatives_embeddings, dim=0).to(flair.device)
+
+        if self.add_popularity == "concatenate":
+            popularities = torch.Tensor([self.sitelinks_dict[e]["sitelinks_normalized"] for e in rt_hard_negatives_labels]).to(flair.device)
+            rt_hard_negatives_embeddings = torch.cat((rt_hard_negatives_embeddings, popularities.unsqueeze(1)), dim=1)
 
         return rt_hard_negatives_embeddings
 
@@ -473,20 +736,51 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
             if self.BCE_loss:
                 logits = torch.mm(span_hidden_states, gold_labels_hidden_states.t())
+                #logits = torch.mm(F.normalize(span_hidden_states, p=2, dim=1),
+                #                  F.normalize(gold_labels_hidden_states.t(), p=2, dim=1))
                 target = torch.zeros(span_hidden_states.shape[0], gold_labels_hidden_states.shape[0], device=flair.device)
                 target[torch.arange(span_hidden_states.shape[0]), torch.arange(gold_labels_hidden_states.shape[0])] = y
 
-                loss = self.loss_function(logits, target)
+                if self.weighted_loss:
+                    real_gold_labels = gold_labels_hidden_states[:len(gold_labels)]
+                    real_gold_labels_concat = torch.cat([real_gold_labels] * (1+self.negative_sampling_factor), dim=0)
+                    weights = torch.Tensor(cosine_similarity(real_gold_labels_concat.detach().cpu(),
+                                                             gold_labels_hidden_states.detach().cpu())
+                                           ).to(flair.device)
+                    target = weights
+
+                    loss = self.loss_function(logits, target)
+                else:
+                    loss = self.loss_function(logits, target)
 
             else:
                 y = torch.where(y == 0, -1, 1)
-                loss = self.loss_function(span_hidden_states, gold_labels_hidden_states, y).unsqueeze(0)
+                if self.weighted_loss:
+                    losses = self.loss_function(span_hidden_states, gold_labels_hidden_states, y)
+                    ## A: using gold LABEL embeddings for weight calc:
+                    real_gold_labels = gold_labels_hidden_states[:len(gold_labels)]
+                    real_gold_labels_concat = torch.cat([real_gold_labels] * (1+self.negative_sampling_factor), dim=0)
+                    weights = torch.Tensor(np.diagonal(cosine_similarity(real_gold_labels_concat.detach().cpu(),
+                                                                         gold_labels_hidden_states.detach().cpu()))
+                                           ).to(flair.device)
+
+                    ## B: using SPAN embeddings for weight calc:
+                    #weights = torch.Tensor(np.diagonal(cosine_similarity(span_hidden_states.detach().cpu(),
+                    #                                                    gold_labels_hidden_states.detach().cpu()))
+                    #                      ).to(flair.device)
+
+                    loss = torch.sum(losses * weights)
+                else:
+                    loss = self.loss_function(span_hidden_states, gold_labels_hidden_states, y).unsqueeze(0)
 
         else:
 
             if self.BCE_loss:
 
                 logits = torch.mm(span_hidden_states, label_hidden_states.t())
+                #logits = torch.mm(F.normalize(span_hidden_states, p=2, dim=1),
+                #                  F.normalize(label_hidden_states.t(), p=2, dim=1))
+
                 target = torch.zeros(span_hidden_states.shape[0], label_hidden_states.shape[0],
                                      device=flair.device if self.training else "cpu")
 
@@ -505,6 +799,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                     span_repeated = span_hidden_states[i].repeat(label_hidden_states.shape[0],1)
 
                     y = torch.where(y == 0, -1, 1)
+
                     sp_loss = self.loss_function(span_repeated, label_hidden_states, y)
 
                     losses.append(sp_loss)
@@ -564,7 +859,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                     new_labels = set()
                     for d in datapoints:
                         candidate_set = self.candidates.get_candidates(d.text)
-                        new_labels.update({c for c in candidate_set if c not in self.label_dictionary.get_items()})
+                        new_labels.update({c for c in candidate_set if c not in self.label_dict_list})
                     new_labels = list(new_labels)
 
                     if self.custom_label_verbalizations:
@@ -578,48 +873,45 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
                     label_hidden_states = torch.cat((label_hidden_states, new_labels_hidden_states_batch), dim = 0)
 
-                    label_ordering = self.label_dictionary.get_items() + new_labels
+                    label_ordering = self.label_dict_list + new_labels
 
                 if self.BCE_loss:
                     span_hidden_states = span_hidden_states.detach().cpu()
                     label_hidden_states = label_hidden_states.detach().cpu()
 
                     # Compute cosine similarity
+                    #logits = torch.mm(F.normalize(span_hidden_states, p=2, dim=1),
+                    #                  F.normalize(label_hidden_states.t(), p=2, dim=1))
+
                     logits = torch.mm(span_hidden_states, label_hidden_states.t())
                     logits_sigmoided = torch.sigmoid(logits)
 
-                    _, final_label_indices = torch.max(logits_sigmoided, dim=1)
+                    top_indices = torch.topk(logits_sigmoided, k=5, dim=1)[1]
+                    top_labels = [[self.label_dict_list[index] for index in indices] for indices in top_indices]
+                    # take the highest one
+                    final_label_indices = top_indices[:, 0]
 
                 else:
 
-                    # Compute cosine similarity and use threshold for prediction
-                    # Normalize the embeddings along the dimension D (this is crucial for cosine similarity)
-                    span_hidden_states = F.normalize(span_hidden_states, p=2, dim=1).detach().cpu()
-                    label_hidden_states = F.normalize(label_hidden_states, p=2, dim=1).detach().cpu()
-                    # The result will be of size (BS, N) where each row contains the similarities between a span and all labels
-                    similarity = torch.mm(span_hidden_states, label_hidden_states.t())
+                    span_hidden_states = span_hidden_states.detach().cpu()
+                    label_hidden_states = label_hidden_states.detach().cpu()
+
+                    # version 1 (so far used)
+                    #similarity = torch.mm(span_hidden_states, label_hidden_states.t())
 
                     # version 2:
-                    # Compute cosine similarity using torch.nn.CosineSimilarity
-                    #cosine_sim = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
-                    #similarity = torch.zeros((len(datapoints), label_hidden_states.shape[0]))
-                    #for i in range(len(datapoints)):
-                    #    for j in range(label_hidden_states.shape[0]):
-                    #        similarity[i, j] = cosine_sim(span_hidden_states[i].unsqueeze(0), label_hidden_states[j].unsqueeze(0))
-
-                    if self.candidates:
-                        similarity = self._mask_scores(similarity, datapoints, label_order=label_ordering)
-
-                    # Check which similarities are above the threshold
-                    above_threshold = similarity > self.threshold_in_prediction
+                    similarity = torch.tensor(cosine_similarity(span_hidden_states, label_hidden_states))
 
                     # Get the label indices with maximum similarity for each span
                     _, max_label_indices = torch.max(similarity, dim=1)
 
-                    # If the maximum similarity for a span is below the threshold, we'll set its label index to -1
-                    final_label_indices = torch.where(above_threshold[torch.arange(len(datapoints)), max_label_indices],
-                                                      max_label_indices,
-                                                      torch.tensor(-1).cpu())
+                    # just for inspection: get the top N (=5) most probable labels:
+                    top_indices = torch.topk(similarity, k=5, dim=1)[1]
+                    top_labels = [[self.label_dict_list[index] for index in indices] for indices in top_indices]
+                    # take the highest one
+                    final_label_indices = top_indices[:, 0]
+
+
                 #print(final_label_indices)
 
                 for i,d in enumerate(datapoints):
@@ -632,15 +924,16 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                         label_idx = final_label_indices[i]
                         conf = similarity[i, label_idx]
 
-                    if label_idx != -1:
-                        if self.candidates:
-                            label = label_ordering[label_idx]
-                        else:
-                            label = self.label_dictionary.get_items()[label_idx]
-                        d.add_label(label_name,
-                                    value=label,
-                                    score=conf
-                                    )
+                    #if conf >= self.threshold_in_prediction:
+                    if self.candidates:
+                        label = label_ordering[label_idx]
+                    else:
+                        label = self.label_dict_list[label_idx]
+                    d.set_label(label_name,
+                                value=label,
+                                score=conf
+                                )
+                    d.set_label(typename = "top_5", value = "|".join(top_labels[i]))
 
         if return_loss:
             if len(datapoints) == 0:
@@ -662,7 +955,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                 symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
-                    f' --> {span.get_label("predicted").value} ({symbol})\n'
+                    f' --> {span.get_label("predicted").value} ({symbol}) top_5: {span.get_label("top_5").value}\n'
                 )
 
             lines.append(eval_line)
@@ -685,6 +978,9 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             "threshold_in_prediction": self.threshold_in_prediction,
             "label_embeddings_save_path": self.label_embeddings_save_path,
             "is_first_batch_in_evaluation": self.is_first_batch_in_evaluation,
+            "weighted_loss": self.weighted_loss,
+            "add_popularity": self.add_popularity,
+            "popularity_save_path": self.popularity_save_path,
             #"candidates": self.candidates
         }
         return model_state
@@ -707,6 +1003,9 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             threshold_in_prediction = state.get("threshold_in_prediction"),
             BCE_loss = state.get("BCE_loss"),
             label_embeddings_save_path = state.get("label_embeddings_save_path"),
+            weighted_loss = state.get("weighted_loss"),
+            add_popularity = state.get("add_popularity"),
+            popularity_save_path = state.get("popularity_save_path"),
             #candidates = state.get("candidates")
             **kwargs,
         )
