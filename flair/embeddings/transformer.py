@@ -997,10 +997,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         force_max_length: bool = False,
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
-        peft_config: dict = None,
         transformers_tokenizer_kwargs: Dict[str, Any] = dict(),
         transformers_config_kwargs: Dict[str, Any] = dict(),
         transformers_model_kwargs: Dict[str, Any] = dict(),
+        peft_config: Optional[Dict[str, Any]] = None,
+        peft_gradient_checkpointing_kwargs: Optional[Dict[str, Any]] = dict(),
         **kwargs,
     ) -> None:
         """Instantiate transformers embeddings.
@@ -1117,7 +1118,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                 or kwargs.get("load_in_8bit", False)
                 or transformers_model_kwargs.get("load_in_8bit", False)
             ):
-                transformer_model = prepare_model_for_kbit_training(transformer_model)
+                transformer_model = prepare_model_for_kbit_training(
+                    transformer_model,
+                    **(peft_gradient_checkpointing_kwargs or {}),
+                )
             transformer_model = get_peft_model(transformer_model, peft_config)
 
             trainable_params, all_param = transformer_model.get_nb_trainable_parameters()
