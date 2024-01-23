@@ -1421,6 +1421,70 @@ class CONLL_03_SPANISH(ColumnCorpus):
         )
 
 
+class CLEANCONLL(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ) -> None:
+        """Initialize the CleanCoNLL corpus.
+
+        The first time you call this constructor it will automatically download the necessary files from the repository
+        (https://github.com/flairNLP/CleanCoNLL) and construct the corpus.
+
+        Args:
+            base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
+            in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
+
+        # column format
+        columns = {0: "text",
+                   1: "pos",
+                   2: "nel",
+                   3: "ner*",
+                   4: "ner"}
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary (checking for existence of train set)
+        train_set = data_folder / 'CleanCoNLL-main/data/cleanconll/cleanconll.train'
+
+        if not train_set.exists():
+            print("CleanCoNLL files not found, so downloading and creating them.")
+
+            github_url = "https://github.com/flairNLP/CleanCoNLL/archive/master.zip"
+            zip_path = cached_path(f"{github_url}", Path("datasets") / dataset_name)
+            # unzip the downloaded repo
+            unpack_file(zip_path, data_folder, "zip", False)
+
+            # set the root directory used in the shell script
+            script_root = data_folder / 'CleanCoNLL-main'
+
+            # run shell script for creating corpus files
+            import subprocess
+            subprocess.call(['chmod', 'u+x', script_root / 'create_cleanconll_from_conll03.sh'])
+            subprocess.call(['bash', script_root / 'create_cleanconll_from_conll03.sh'],
+                            env={'SCRIPT_ROOT': str(script_root)})
+            print("CleanCoNLL files are placed here:", script_root / 'data/cleanconll/')
+
+        else:
+            print("Found files for CleanCoNLL in:", data_folder / 'CleanCoNLL-main/data/cleanconll/')
+
+        super().__init__(
+            data_folder / 'CleanCoNLL-main/data/cleanconll',
+            columns,
+            encoding="utf-8",
+            in_memory=in_memory,
+            document_separator_token="-DOCSTART-",
+            **corpusargs,
+        )
+
+
 class CONLL_2000(ColumnCorpus):
     def __init__(
         self,
