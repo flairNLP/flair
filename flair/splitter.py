@@ -30,14 +30,7 @@ class SentenceSplitter(ABC):
         if not link_sentences:
             return sentences
 
-        num_sentences = len(sentences)
-        for i, sentence in enumerate(sentences):
-            if i > 0:
-                sentence._previous_sentence = sentences[i - 1]
-
-            if i + 1 < num_sentences:
-                sentence._next_sentence = sentences[i + 1]
-
+        Sentence.set_context_for_sentences(sentences)
         return sentences
 
     @abstractmethod
