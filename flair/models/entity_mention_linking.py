@@ -1,4 +1,3 @@
-import copy
 import inspect
 import logging
 import os
@@ -9,7 +8,6 @@ import subprocess
 import tempfile
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from collections.abc import Iterable
 from enum import Enum, auto
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Type, Union, cast
@@ -22,7 +20,7 @@ from tqdm import tqdm
 
 import flair
 from flair.class_utils import get_state_subclass_by_name
-from flair.data import DT, Dictionary, Sentence, _iter_dataset
+from flair.data import DT, Dictionary, Label, Sentence, _iter_dataset
 from flair.datasets import (
     CTD_CHEMICALS_DICTIONARY,
     CTD_DISEASES_DICTIONARY,
@@ -45,14 +43,14 @@ PRETRAINED_DENSE_MODELS = [
 
 # Dense + sparse retrieval
 PRETRAINED_HYBRID_MODELS = {
-    "dmis-lab/biosyn-sapbert-bc5cdr-disease": "diseases",
-    "dmis-lab/biosyn-sapbert-ncbi-disease": "diseases",
+    "dmis-lab/biosyn-sapbert-bc5cdr-disease": "disease",
+    "dmis-lab/biosyn-sapbert-ncbi-disease": "disease",
     "dmis-lab/biosyn-sapbert-bc5cdr-chemical": "chemical",
-    "dmis-lab/biosyn-biobert-bc5cdr-disease": "diseases",
-    "dmis-lab/biosyn-biobert-ncbi-disease": "diseases",
+    "dmis-lab/biosyn-biobert-bc5cdr-disease": "disease",
+    "dmis-lab/biosyn-biobert-ncbi-disease": "disease",
     "dmis-lab/biosyn-biobert-bc5cdr-chemical": "chemical",
-    "dmis-lab/biosyn-biobert-bc2gn": "genes",
-    "dmis-lab/biosyn-sapbert-bc2gn": "genes",
+    "dmis-lab/biosyn-biobert-bc2gn": "gene",
+    "dmis-lab/biosyn-sapbert-bc2gn": "gene",
 }
 
 # fetched from original repo to avoid download
@@ -74,12 +72,12 @@ STRING_MATCHING_MODELS = ["exact-string-match"]
 
 MODELS = PRETRAINED_MODELS + STRING_MATCHING_MODELS
 
-ENTITY_TYPES = ["diseases", "chemical", "genes", "species"]
+ENTITY_TYPES = ["disease", "chemical", "gene", "species"]
 
 ENTITY_TYPE_TO_HYBRID_MODEL = {
-    "diseases": "dmis-lab/biosyn-sapbert-bc5cdr-disease",
+    "disease": "dmis-lab/biosyn-sapbert-bc5cdr-disease",
     "chemical": "dmis-lab/biosyn-sapbert-bc5cdr-chemical",
-    "genes": "dmis-lab/biosyn-sapbert-bc2gn",
+    "gene": "dmis-lab/biosyn-sapbert-bc2gn",
 }
 
 # for now we always fall back to SapBERT,
@@ -89,9 +87,9 @@ ENTITY_TYPE_TO_DENSE_MODEL = {
 }
 
 ENTITY_TYPE_TO_DICTIONARY = {
-    "genes": "ncbi-gene",
+    "gene": "ncbi-gene",
     "species": "ncbi-taxonomy",
-    "diseases": "ctd-diseases",
+    "disease": "ctd-diseases",
     "chemical": "ctd-chemicals",
 }
 
@@ -103,13 +101,13 @@ BIOMEDICAL_DICTIONARIES: Dict[str, Type] = {
 }
 
 MODEL_NAME_TO_DICTIONARY = {
-    "dmis-lab/biosyn-sapbert-bc5cdr-disease": "ctd-disease",
-    "dmis-lab/biosyn-sapbert-ncbi-disease": "ctd-disease",
-    "dmis-lab/biosyn-sapbert-bc5cdr-chemical": "ctd-chemical",
+    "dmis-lab/biosyn-sapbert-bc5cdr-disease": "ctd-diseases",
+    "dmis-lab/biosyn-sapbert-ncbi-disease": "ctd-diseases",
+    "dmis-lab/biosyn-sapbert-bc5cdr-chemical": "ctd-chemicals",
     "dmis-lab/biosyn-sapbert-bc2gn": "ncbi-gene",
-    "dmis-lab/biosyn-biobert-bc5cdr-disease": "ctd-chemical",
-    "dmis-lab/biosyn-biobert-ncbi-disease": "ctd-disease",
-    "dmis-lab/biosyn-biobert-bc5cdr-chemical": "ctd-chemical",
+    "dmis-lab/biosyn-biobert-bc5cdr-disease": "ctd-chemicals",
+    "dmis-lab/biosyn-biobert-ncbi-disease": "ctd-diseases",
+    "dmis-lab/biosyn-biobert-bc5cdr-chemical": "ctd-chemicals",
     "dmis-lab/biosyn-biobert-bc2gn": "ncbi-gene",
 }
 
@@ -124,6 +122,18 @@ class SimilarityMetric(Enum):
 
 
 PRETRAINED_MODEL_TO_SIMILARITY_METRIC = {m: SimilarityMetric.INNER_PRODUCT for m in PRETRAINED_MODELS}
+
+
+def normalize_entity_type(entity_type: str) -> str:
+    """Normalize entity type to ease interoperability."""
+    entity_type = entity_type.lower()
+
+    if entity_type == "diseases":
+        entity_type = "disease"
+    elif entity_type == "genes":
+        entity_type = "gene"
+
+    return entity_type
 
 
 def load_dictionary(
@@ -435,7 +445,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
     @classmethod
     def _from_state(cls, state_dict: Dict[str, Any]) -> "EntityPreprocessor":
         return cls(
-            ab3p_path=Path(state_dict["ad3p_path"]),
+            ab3p_path=Path(state_dict["ab3p_path"]),
             word_data_dir=Path(state_dict["word_data_dir"]),
             preprocessor=None
             if state_dict["preprocessor"] is None
@@ -772,17 +782,44 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         Args:
             candidate_generator: Strategy to find matching entities for a given mention
             preprocessor: Pre-processing strategy to transform / clean entity mentions
-            entity_label_types: A label type or sequence of label types of the required relation entities. You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set. E.g. to use only 'disease' and 'chemical' labels from a NER-tagger: `{'ner': {'disease', 'chemical'}}`. To use all labels from 'ner', pass 'ner'
+            entity_label_types: A label type or sequence of label types of the required entities.
+                                You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set.
+                                E.g. to use only 'disease' and 'chemical' labels from a NER-tagger: `{'ner': {'disease', 'chemical'}}`.
+                                To use all labels from 'ner', pass 'ner'
             label_type: The label under which the predictions of the linker should be stored
             dictionary: The dictionary listing all entities
+            batch_size: Batch size to encode mentions/dictionary names
         """
         self.preprocessor = preprocessor
         self.candidate_generator = candidate_generator
-        self.entity_label_types = entity_label_types
+        self.entity_label_types = self.get_entity_label_types(entity_label_types)
         self._label_type = label_type
         self._dictionary = dictionary
         self.batch_size = batch_size
         super().__init__()
+
+    def get_entity_label_types(
+        self, entity_label_types: Union[str, Sequence[str], Dict[str, Set[str]]]
+    ) -> Dict[str, Set[str]]:
+        """Find out what NER labels to extract from sentence.
+
+        Args:
+            entity_label_types: A label type or sequence of label types of the required entities.
+                                You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set.
+                                E.g. to use only 'disease' and 'chemical' labels from a NER-tagger: `{'ner': {'disease', 'chemical'}}`.
+                                To use all labels from 'ner', pass 'ner'
+        """
+        if isinstance(entity_label_types, str):
+            entity_label_types = cast(Dict[str, Set[str]], {entity_label_types: {}})
+        elif isinstance(entity_label_types, Sequence):
+            entity_label_types = cast(Dict[str, Set[str]], {label: {} for label in entity_label_types})
+
+        entity_label_types = {
+            label: {normalize_entity_type(e) for e in entity_types}
+            for label, entity_types in entity_label_types.items()
+        }
+
+        return entity_label_types
 
     @property
     def label_type(self):
@@ -791,6 +828,28 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
     @property
     def dictionary(self) -> EntityLinkingDictionary:
         return self._dictionary
+
+    def extract_entities_mentions(self, sentence: Sentence, entity_label_types: Dict[str, Set[str]]) -> List[Label]:
+        """Extract tagged mentions from sentences."""
+        entities_mentions: List[Label] = []
+
+        if all(len(sentence.get_labels(lt)) == 0 for lt in entity_label_types):
+            # TODO: This is a hacky workaround for the fact that
+            # `Classifier.load('hunflair)` `label_type='diseases'`,
+            # Remove once the new unified (i.e multi-entity-type) NER is merged
+            # See: https://github.com/flairNLP/flair/pull/3387
+            entity_types = {e for sublist in entity_label_types.values() for e in sublist}
+            entities_mentions = [
+                label for label in sentence.get_labels() if normalize_entity_type(label.value) in entity_types
+            ]
+        else:
+            for label_type, entity_types in entity_label_types.items():
+                labels = sentence.get_labels(label_type)
+                if len(entity_types) > 0:
+                    labels = [label for label in labels if normalize_entity_type(label.value) in entity_types]
+                entities_mentions.extend(labels)
+
+        return entities_mentions
 
     def predict(
         self,
@@ -805,8 +864,12 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         Args:
             sentences: One or more sentences to run the prediction on
             top_k: Number of best-matching entity / concept identifiers
-            entity_label_types: A label type or sequence of label types of the required relation entities. You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set. E.g. to use only 'disease' and 'chemical' labels from a NER-tagger: `{'ner': {'disease', 'chemical'}}`. To use all labels from 'ner', pass 'ner'
+            entity_label_types: A label type or sequence of label types of the required entities.
+                                You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set.
+                                E.g. to use only 'disease' and 'chemical' labels from a NER-tagger: `{'ner': {'disease', 'chemical'}}`.
+                                To use all labels from 'ner', pass 'ner'
             pred_label_type: The label under which the predictions of the linker should be stored
+            batch_size: Batch size to encode mentions/dictionary names
         """
         # make sure sentences is a list of sentences
         if not isinstance(sentences, list):
@@ -815,11 +878,11 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
             batch_size = self.batch_size
 
         # Make sure entity label types are represented as dict
-        entity_label_types = entity_label_types if entity_label_types is not None else self.entity_label_types
-        if isinstance(entity_label_types, str):
-            entity_label_types = cast(Dict[str, Set[str]], {entity_label_types: {}})
-        elif isinstance(entity_label_types, Iterable):
-            entity_label_types = cast(Dict[str, Set[str]], {label: {} for label in entity_label_types})
+        entity_label_types = (
+            self.get_entity_label_types(entity_label_types)
+            if entity_label_types is not None
+            else self.entity_label_types
+        )
 
         pred_label_type = pred_label_type if pred_label_type is not None else self.label_type
 
@@ -831,16 +894,10 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
 
         for sentence in sentences:
             # Collect all entities based on entity type labels configuration
-            entities = []
-            for label_type, entity_types in entity_label_types.items():
-                labels = sentence.get_labels(label_type)
-                if len(entity_types) > 0:
-                    labels = [label for label in labels if label.value in entity_types]
-
-                entities.extend(labels)
+            entities_mentions = self.extract_entities_mentions(sentence, entity_label_types)
 
             # Preprocess entity mentions
-            for entity in entities:
+            for entity in entities_mentions:
                 data_points.append(entity.data_point)
                 mentions.append(
                     self.preprocessor.process_mention(entity.data_point.text, sentence)
@@ -907,7 +964,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
     def build(
         cls,
         model_name_or_path: Union[str, Path],
-        label_type: str,
+        label_type: str = "link",
         dictionary_name_or_path: Optional[Union[str, Path]] = None,
         hybrid_search: bool = True,
         batch_size: int = 128,
@@ -968,7 +1025,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         return cls(
             candidate_generator=candidate_generator,
             preprocessor=preprocessor,
-            entity_label_types=entity_type,
+            entity_label_types={"ner": {entity_type}},
             label_type=label_type,
             dictionary=dictionary,
         )
@@ -989,6 +1046,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
 
         if model_name_or_path == "cambridgeltl/SapBERT-from-PubMedBERT-fulltext":
             assert entity_type is not None, f"For model {model_name_or_path} you must specify `entity_type`"
+            entity_type = normalize_entity_type(entity_type)
 
         if hybrid_search:
             # load model by entity_type
@@ -1089,7 +1147,13 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         if isinstance(data_points, Dataset):
             data_points = list(_iter_dataset(data_points))
 
-        self.predict(data_points, top_k=k, pred_label_type="predicted", entity_label_types=gold_label_type, batch_size=mini_batch_size)
+        self.predict(
+            data_points,
+            top_k=k,
+            pred_label_type="predicted",
+            entity_label_types=gold_label_type,
+            batch_size=mini_batch_size,
+        )
 
         hits = 0
         total = 0
@@ -1108,8 +1172,4 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         detailed_results = f"Accuracy@{k}: {accuracy:0.2%}"
         scores = {"accuracy": accuracy, f"accuracy@{k}": accuracy, "loss": 0.0}
 
-        return Result(
-            main_score=accuracy,
-            detailed_results=detailed_results,
-            scores=scores
-        )
+        return Result(main_score=accuracy, detailed_results=detailed_results, scores=scores)
