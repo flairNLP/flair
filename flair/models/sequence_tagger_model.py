@@ -19,7 +19,6 @@ from flair.embeddings import TokenEmbeddings
 from flair.file_utils import cached_path, unzip_file
 from flair.models.sequence_tagger_utils.crf import CRF
 from flair.models.sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
-from flair.nn.model import get_non_abstract_subclasses
 from flair.training_utils import store_embeddings
 
 log = logging.getLogger("flair")
@@ -1183,7 +1182,9 @@ class EntityTypeTaskPromptAugmentationStrategy(SentenceAugmentationStrategy):
                     ]
                 else:
                     label_span = augmented_sentence[
-                        len_task_prompt + label.data_point.tokens[0].idx - 1 : len_task_prompt
+                        len_task_prompt
+                        + label.data_point.tokens[0].idx
+                        - 1 : len_task_prompt
                         + label.data_point.tokens[-1].idx
                     ]
 
