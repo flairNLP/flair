@@ -171,6 +171,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         label_embeddings_save_path: Path = None,
         BCE_loss: bool = False,
         candidates: Optional[CandidateGenerator] = None,
+        predict_greedy: bool = False,
 
     ):
         super().__init__()
@@ -206,6 +207,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                 self.popularity_save_path = "/tmp/wikipedia_sitelinks_dict.json"
             self._create_popularity_dict(self.label_dict_list)
 
+        self.predict_greedy = predict_greedy
         self.BCE_loss = BCE_loss
         if self.BCE_loss:
             self.loss_function = torch.nn.BCEWithLogitsLoss(
@@ -886,7 +888,9 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                     logits = torch.mm(span_hidden_states, label_hidden_states.t())
                     logits_sigmoided = torch.sigmoid(logits)
 
-                    top_indices = torch.topk(logits_sigmoided, k=5, dim=1)[1]
+                    top_confidences, top_indices = torch.topk(logits_sigmoided, k=5, dim=1)
+                    top_confidences = [[round(float(tensor), 3) for tensor in inner_list] for inner_list in
+                                       top_confidences]
                     top_labels = [[self.label_dict_list[index] for index in indices] for indices in top_indices]
                     # take the highest one
                     final_label_indices = top_indices[:, 0]
@@ -906,14 +910,17 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                     _, max_label_indices = torch.max(similarity, dim=1)
 
                     # just for inspection: get the top N (=5) most probable labels:
-                    top_indices = torch.topk(similarity, k=5, dim=1)[1]
+                    top_confidences, top_indices = torch.topk(similarity, k=5, dim=1)
+                    top_confidences = [[round(float(tensor), 3) for tensor in inner_list] for inner_list in
+                                      top_confidences]
+
                     top_labels = [[self.label_dict_list[index] for index in indices] for indices in top_indices]
                     # take the highest one
                     final_label_indices = top_indices[:, 0]
 
-
                 #print(final_label_indices)
 
+                still_to_predict_indices = []
                 for i,d in enumerate(datapoints):
                     if self.BCE_loss:
                         #label_idx = final_label_indices[i][0]
@@ -924,23 +931,113 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                         label_idx = final_label_indices[i]
                         conf = similarity[i, label_idx]
 
-                    #if conf >= self.threshold_in_prediction:
                     if self.candidates:
                         label = label_ordering[label_idx]
                     else:
                         label = self.label_dict_list[label_idx]
+
+                    if self.predict_greedy:
+                        if conf <= self.threshold_in_prediction:
+                            still_to_predict_indices.append(i)
+                            #print(d.text, d.get_label("nel").value, "-->", label, conf, "--> not labeled!")
+                            continue
+
                     d.set_label(label_name,
                                 value=label,
-                                score=conf
+                                score=float(conf)
                                 )
-                    d.set_label(typename = "top_5", value = "|".join(top_labels[i]))
+                    d.set_label(typename = "top_5", value = " | ".join(f"{item1} {item2}" for item1, item2 in zip(top_labels[i], top_confidences[i])))
+
+                if self.predict_greedy:
+                    still_to_predict = [datapoints[i] for i in still_to_predict_indices]
+                    still_to_predict_right_spans = []
+
+                    if len(still_to_predict) >0:
+                        new_sentences = []
+                        for d in still_to_predict:
+                            sentence_before = d.sentence.text
+                            sentence_with_verbalization = sentence_before
+                            labels_already = d.sentence.get_spans("predicted")
+                            labels_already.sort(key=lambda a: a.start_position)
+                            added_characters = 0
+                            d_start_position = d.start_position
+                            d_end_position = d.end_position
+                            for l in labels_already:
+                                label = l.get_label("predicted").value
+                                label_idx = self.label_dictionary.get_idx_for_item(label)
+                                add_at_position = l.end_position+added_characters
+                                if self.custom_label_verbalizations:
+                                    sentence_with_verbalization = sentence_before[:add_at_position] + \
+                                                                  " (" + self.custom_label_verbalizations.verbalized_labels[
+                                                                      label_idx] + ")" + \
+                                                                  sentence_before[add_at_position:]
+                                else:
+                                    sentence_with_verbalization = sentence_before[:add_at_position] + \
+                                                                  "(" + self.label_dict_list[
+                                                                      label_idx] + ")" + \
+                                                                  sentence_before[add_at_position:]
+                                added_just_now = len(sentence_with_verbalization) - len(sentence_before)
+                                added_characters += added_just_now
+                                sentence_before = sentence_with_verbalization
+
+                                if d_start_position > add_at_position:
+                                    d_start_position += added_just_now
+                                    d_end_position += added_just_now
+
+                            new_sentence = flair.data.Sentence(sentence_with_verbalization)
+                            new_sentence.copy_context_from_sentence(d.sentence)
+                            new_sentences.append(new_sentence)
+                            #d.sentence = new_sentence
+                            d_start_token = [i for i,t in enumerate(new_sentence.tokens) if t.start_position == d_start_position]
+                            d_end_token = [i for i,t in enumerate(new_sentence.tokens) if t.end_position == d_end_position]
+
+                            still_to_predict_right_spans.append(flair.data.Span(new_sentence.tokens[d_start_token[0]:d_end_token[0]+1]))
+
+                        self.token_encoder.embed(new_sentences)
+
+                        still_to_predict_span_hidden_states = torch.stack(
+                           [self.aggregated_embedding(d, self.token_encoder.get_names()) for d in still_to_predict_right_spans]).detach().cpu()
+
+                        still_to_predict_similarity = torch.tensor(
+                            cosine_similarity(still_to_predict_span_hidden_states, label_hidden_states))
+                        _, still_to_predict_max_label_indices = torch.max(still_to_predict_similarity, dim=1)
+
+                        # just for inspection: get the top N (=5) most probable labels:
+                        still_to_predict_top_confidences, still_to_predict_top_indices = torch.topk(still_to_predict_similarity, k=5, dim=1)
+                        still_to_predict_top_confidences = [[round(float(tensor), 3) for tensor in inner_list] for inner_list in
+                                                             still_to_predict_top_confidences]
+                        still_to_predict_top_labels = [[self.label_dict_list[index] for index in indices] for indices in
+                                                       still_to_predict_top_indices]
+
+                        # take the highest one
+                        still_to_predict_final_label_indices = still_to_predict_top_indices[:, 0]
+
+                        for i, d in enumerate(still_to_predict):
+                            if self.BCE_loss:
+                                raise(NotImplementedError)
+                            else:
+                                label_idx = still_to_predict_final_label_indices[i]
+                                conf = still_to_predict_similarity[i, label_idx]
+
+                            if self.candidates:
+                                label = label_ordering[label_idx]
+                            else:
+                                label = self.label_dict_list[label_idx]
+                            d.set_label(label_name,
+                                        value=label,
+                                        score=float(conf)
+                                        )
+                            d.set_label(typename="top_5", value=" | ".join(
+                                f"{item1} {item2}" for item1, item2 in zip(still_to_predict_top_labels[i],
+                                                                           still_to_predict_top_confidences[i])))
 
         if return_loss:
             if len(datapoints) == 0:
                 return torch.tensor(0.0, dtype=torch.float, device=flair.device,
                                     requires_grad=False), 0
+            # TODO this is not right yet
             return self._calculate_loss(
-                span_hidden_states, label_hidden_states, datapoints, sentences, label_name = self.label_type # todo or use "predicted" (label_name)?
+                span_hidden_states, label_hidden_states, datapoints, sentences, label_name = self.label_type
             )
 
         return None
@@ -981,6 +1078,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             "weighted_loss": self.weighted_loss,
             "add_popularity": self.add_popularity,
             "popularity_save_path": self.popularity_save_path,
+            "predict_greedy": self.predict_greedy,
             #"candidates": self.candidates
         }
         return model_state
@@ -1006,6 +1104,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             weighted_loss = state.get("weighted_loss"),
             add_popularity = state.get("add_popularity"),
             popularity_save_path = state.get("popularity_save_path"),
+            predict_greedy = state.get("predict_greedy"),
             #candidates = state.get("candidates")
             **kwargs,
         )
