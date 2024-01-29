@@ -841,6 +841,63 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
         return masked_scores
 
+    def _add_already_predicted_label_verbalizations_to_sentences(self, sentences):
+
+        modified_sentences = []
+        datapoints_in_modified_sentences = []
+        for s in sentences:
+            datapoints_in_sentence = s.get_spans("nel")
+            sentence_before = s.text
+            sentence_with_verbalization = sentence_before
+            labels_already = s.get_spans("predicted")
+            labels_already.sort(key=lambda a: a.start_position)
+            added_characters = 0
+            modified_datapoints_offsets = [[d.start_position, d.end_position] for d in datapoints_in_sentence]
+            if len(labels_already) == 0:
+                modified_sentences.append(s)
+                datapoints_in_modified_sentences.extend(datapoints_in_sentence)
+
+            else:
+                for l in labels_already:
+                    label = l.get_label("predicted").value
+                    label_idx = self.label_dictionary.get_idx_for_item(label)
+                    add_at_position = l.end_position + added_characters
+                    if self.custom_label_verbalizations:
+                        sentence_with_verbalization = sentence_before[:add_at_position] + \
+                                                      " (" + self.custom_label_verbalizations.verbalized_labels[
+                                                          label_idx] + ")" + \
+                                                      sentence_before[add_at_position:]
+                    else:
+                        sentence_with_verbalization = sentence_before[:add_at_position] + \
+                                                      "(" + self.label_dict_list[
+                                                          label_idx] + ")" + \
+                                                      sentence_before[add_at_position:]
+                    added_just_now = len(sentence_with_verbalization) - len(sentence_before)
+                    added_characters += added_just_now
+                    sentence_before = sentence_with_verbalization
+
+                    for counter,d in enumerate(datapoints_in_sentence):
+                        d_start_position = modified_datapoints_offsets[counter][0]
+                        d_end_position = modified_datapoints_offsets[counter][1]
+
+                        if d_start_position > add_at_position:
+                            d_start_position += added_just_now
+                            d_end_position += added_just_now
+                            modified_datapoints_offsets[counter][0] = d_start_position
+                            modified_datapoints_offsets[counter][1] = d_end_position
+
+                new_sentence = flair.data.Sentence(sentence_with_verbalization)
+
+                for d_offsets in modified_datapoints_offsets:
+                    start, end = d_offsets
+                    d_start_token = [i for i, t in enumerate(new_sentence.tokens) if t.start_position == start]
+                    d_end_token = [i for i, t in enumerate(new_sentence.tokens) if t.end_position == end]
+                    datapoints_in_modified_sentences.append(flair.data.Span(new_sentence.tokens[d_start_token[0]:d_end_token[0] + 1]))
+
+                new_sentence.copy_context_from_sentence(s)
+                modified_sentences.append(new_sentence)
+
+        return datapoints_in_modified_sentences, modified_sentences
 
     def predict(
         self,
@@ -937,8 +994,8 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                         label = self.label_dict_list[label_idx]
 
                     if self.predict_greedy:
-                        if conf <= self.threshold_in_prediction:
-                            still_to_predict_indices.append(i)
+                        if conf < self.threshold_in_prediction:
+                            #still_to_predict_indices.append(i)
                             #print(d.text, d.get_label("nel").value, "-->", label, conf, "--> not labeled!")
                             continue
 
@@ -949,54 +1006,19 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                     d.set_label(typename = "top_5", value = " | ".join(f"{item1} {item2}" for item1, item2 in zip(top_labels[i], top_confidences[i])))
 
                 if self.predict_greedy:
-                    still_to_predict = [datapoints[i] for i in still_to_predict_indices]
-                    still_to_predict_right_spans = []
+                    # choose criterion what to keep and what to predict newly
 
-                    if len(still_to_predict) >0:
-                        new_sentences = []
-                        for d in still_to_predict:
-                            sentence_before = d.sentence.text
-                            sentence_with_verbalization = sentence_before
-                            labels_already = d.sentence.get_spans("predicted")
-                            labels_already.sort(key=lambda a: a.start_position)
-                            added_characters = 0
-                            d_start_position = d.start_position
-                            d_end_position = d.end_position
-                            for l in labels_already:
-                                label = l.get_label("predicted").value
-                                label_idx = self.label_dictionary.get_idx_for_item(label)
-                                add_at_position = l.end_position+added_characters
-                                if self.custom_label_verbalizations:
-                                    sentence_with_verbalization = sentence_before[:add_at_position] + \
-                                                                  " (" + self.custom_label_verbalizations.verbalized_labels[
-                                                                      label_idx] + ")" + \
-                                                                  sentence_before[add_at_position:]
-                                else:
-                                    sentence_with_verbalization = sentence_before[:add_at_position] + \
-                                                                  "(" + self.label_dict_list[
-                                                                      label_idx] + ")" + \
-                                                                  sentence_before[add_at_position:]
-                                added_just_now = len(sentence_with_verbalization) - len(sentence_before)
-                                added_characters += added_just_now
-                                sentence_before = sentence_with_verbalization
+                    still_to_predict_indices = [i for i,d in enumerate(datapoints) if d.get_label("predicted").value == "O"] # predict the ones that have not been predicted
+                    #still_to_predict_indices = [i for i,d in enumerate(datapoints)] # predict for ALL, also the ones that already have been
 
-                                if d_start_position > add_at_position:
-                                    d_start_position += added_just_now
-                                    d_end_position += added_just_now
-
-                            new_sentence = flair.data.Sentence(sentence_with_verbalization)
-                            new_sentence.copy_context_from_sentence(d.sentence)
-                            new_sentences.append(new_sentence)
-                            #d.sentence = new_sentence
-                            d_start_token = [i for i,t in enumerate(new_sentence.tokens) if t.start_position == d_start_position]
-                            d_end_token = [i for i,t in enumerate(new_sentence.tokens) if t.end_position == d_end_position]
-
-                            still_to_predict_right_spans.append(flair.data.Span(new_sentence.tokens[d_start_token[0]:d_end_token[0]+1]))
+                    if len(still_to_predict_indices) >0:
+                        datapoints_modified, new_sentences = self._add_already_predicted_label_verbalizations_to_sentences(sentences)
 
                         self.token_encoder.embed(new_sentences)
 
                         still_to_predict_span_hidden_states = torch.stack(
-                           [self.aggregated_embedding(d, self.token_encoder.get_names()) for d in still_to_predict_right_spans]).detach().cpu()
+                           [self.aggregated_embedding(d, self.token_encoder.get_names()) for i,d in enumerate(datapoints_modified)
+                            if i in still_to_predict_indices]).detach().cpu()
 
                         still_to_predict_similarity = torch.tensor(
                             cosine_similarity(still_to_predict_span_hidden_states, label_hidden_states))
@@ -1012,7 +1034,9 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                         # take the highest one
                         still_to_predict_final_label_indices = still_to_predict_top_indices[:, 0]
 
-                        for i, d in enumerate(still_to_predict):
+                        for i, id in enumerate(still_to_predict_indices):
+                            d = datapoints[id]
+
                             if self.BCE_loss:
                                 raise(NotImplementedError)
                             else:
