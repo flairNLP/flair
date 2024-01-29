@@ -78,30 +78,30 @@ def test_abbrevitation_resolution():
 
 
 def test_biomedical_entity_linking():
-    sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome")
+    sentence = Sentence(
+        "The mutation in the ABCD1 gene causes X-linked adrenoleukodystrophy, "
+        "a neurodegenerative disease, which is exacerbated by exposure to high "
+        "levels of mercury in dolphin populations.",
+    )
 
     tagger = Classifier.load("hunflair")
     tagger.predict(sentence)
 
-    disease_linker = EntityMentionLinker.load("masaenger/bio-nen-disease")
-    disease_dictionary = disease_linker.dictionary
-    disease_linker.predict(sentence, pred_label_type="disease-nen", entity_label_types="diseases")
+    for entity_type in ["disease", "chemical", "gene", "species"]:
+        linker = EntityMentionLinker.load(f"{entity_type}-linker")
+        linker.predict(sentence)
 
-    gene_linker = EntityMentionLinker.load("masaenger/bio-nen-gene")
-    gene_dictionary = gene_linker.dictionary
-    gene_linker.predict(sentence, pred_label_type="gene-nen", entity_label_types="genes")
-
-    print("Diseases")
-    for label in sentence.get_labels("disease-nen"):
-        candidate = disease_dictionary[label.value]
-        print(f"Candidate: {candidate.concept_name}")
-
-    print("Genes")
-    for label in sentence.get_labels("gene-nen"):
-        candidate = gene_dictionary[label.value]
-        print(f"Candidate: {candidate.concept_name}")
+    for span in sentence.get_spans():
+        print(span)
 
 
-if __name__ == "__main__":
-    test_abbrevitation_resolution()
-    test_biomedical_entity_linking()
+def test_legacy_sequence_tagger():
+    sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome")
+
+    legacy_tagger = Classifier.load("hunflair")
+    legacy_tagger.predict(sentence)
+
+    disease_linker = EntityMentionLinker.load("hunflair/biosyn-sapbert-ncbi-disease")
+    disease_linker.predict(sentence, pred_label_type="disease-nen")
+
+    assert disease_linker._warned_legacy_sequence_tagger
