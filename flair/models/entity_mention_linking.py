@@ -437,16 +437,12 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
     def _get_state(self) -> Dict[str, Any]:
         return {
             **super()._get_state(),
-            "ab3p_path": str(self.ab3p_path),
-            "word_data_dir": str(self.word_data_dir),
             "preprocessor": None if self.preprocessor is None else self.preprocessor._get_state(),
         }
 
     @classmethod
     def _from_state(cls, state_dict: Dict[str, Any]) -> "EntityPreprocessor":
         return cls(
-            ab3p_path=Path(state_dict["ab3p_path"]),
-            word_data_dir=Path(state_dict["word_data_dir"]),
             preprocessor=None
             if state_dict["preprocessor"] is None
             else EntityPreprocessor._from_state(state_dict["preprocessor"]),
@@ -796,6 +792,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         self._label_type = label_type
         self._dictionary = dictionary
         self.batch_size = batch_size
+        self._warned_legacy_sequence_tagger = False
         super().__init__()
 
     def get_entity_label_types(
@@ -833,11 +830,17 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         """Extract tagged mentions from sentences."""
         entities_mentions: List[Label] = []
 
-        if all(len(sentence.get_labels(lt)) == 0 for lt in entity_label_types):
-            # TODO: This is a hacky workaround for the fact that
-            # `Classifier.load('hunflair)` `label_type='diseases'`,
-            # Remove once the new unified (i.e multi-entity-type) NER is merged
-            # See: https://github.com/flairNLP/flair/pull/3387
+        # NOTE: This is a hacky workaround for the fact that
+        # the `label_type`s in `Classifier.load('hunflair)` are
+        # 'diseases', 'genes', 'species', 'chemical' instead of 'ner'.
+        # We warn users once they need to update SequenceTagger model
+        # See: https://github.com/flairNLP/flair/pull/3387
+        if any(label in ["diseases", "genes", "species", "chemical"] for label in sentence.annotation_layers):
+            if not self._warned_legacy_sequence_tagger:
+                logger.warn(
+                    "The tagger `Classifier.load('hunflair') is deprecated. Please update to: `Classifier.load('hunflair2')`."
+                )
+                self._warned_legacy_sequence_tagger = True
             entity_types = {e for sublist in entity_label_types.values() for e in sublist}
             entities_mentions = [
                 label for label in sentence.get_labels() if normalize_entity_type(label.value) in entity_types
@@ -919,17 +922,12 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         if Path(model_name).exists():
             return model_name
 
-        bio_base_repo = "helpmefindaname"
-
+        bio_base_repo = "hunflair"
         hf_model_map = {
-            "bio-gene": f"{bio_base_repo}/flair-eml-sapbert-bc2gn-gene",
-            "bio-disease": f"{bio_base_repo}/flair-eml-sapbert-bc5cdr-disease",
-            "bio-chemical": f"{bio_base_repo}/flair-eml-sapbert-bc5cdr-chemical",
-            "bio-species": f"{bio_base_repo}/flair-eml-species-exact-match",
-            "bio-gene-exact-match": f"{bio_base_repo}/flair-eml-gene-exact-match",
-            "bio-disease-exact-match": f"{bio_base_repo}/flair-eml-disease-exact-match",
-            "bio-chemical-exact-match": f"{bio_base_repo}/flair-eml-chemical-exact-match",
-            "bio-species-exact-match": f"{bio_base_repo}/flair-eml-species-exact-match",
+            "gene-linker": f"{bio_base_repo}/biosyn-sapbert-bc2gn",
+            "disease-linker": f"{bio_base_repo}/biosyn-sapbert-bc5cdr-disease",
+            "chemical-linker": f"{bio_base_repo}/biosyn-sapbert-bc5cdr-chemical",
+            "species-linker": f"{bio_base_repo}/sapbert-ncbi-taxonomy",
         }
 
         if model_name in hf_model_map:
@@ -1040,7 +1038,6 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         if model_name_or_path not in MODELS and model_name_or_path not in ENTITY_TYPES:
             raise ValueError(
                 f"Unknown model `{model_name_or_path}`!"
-                f" Available entity types are: {ENTITY_TYPES}"
                 " If you want to pass a local path please use the `Path` class, i.e. `model_name_or_path=Path(my_path)`"
             )
 
@@ -1113,7 +1110,8 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
                 dictionary_name_or_path = ENTITY_TYPE_TO_DICTIONARY[model_name_or_path]
             else:
                 raise ValueError(
-                    f"When using a custom model you need to specify a dictionary. Available options are: {ENTITY_TYPES}. Or provide a path to a dictionary file."
+                    f"When using a custom model you need to specify a dictionary. Available options are: {list(ENTITY_TYPE_TO_DICTIONARY.values())}. "
+                    "Or provide a path to a dictionary file."
                 )
 
         return dictionary_name_or_path
