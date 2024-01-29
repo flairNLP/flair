@@ -837,7 +837,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         # See: https://github.com/flairNLP/flair/pull/3387
         if any(label in ["diseases", "genes", "species", "chemical"] for label in sentence.annotation_layers):
             if not self._warned_legacy_sequence_tagger:
-                logger.warn(
+                logger.warning(
                     "The tagger `Classifier.load('hunflair') is deprecated. Please update to: `Classifier.load('hunflair2')`."
                 )
                 self._warned_legacy_sequence_tagger = True
