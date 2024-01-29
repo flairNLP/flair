@@ -14,7 +14,7 @@ def test_bel_dictionary():
     Hard to define a good test as dictionaries are DYNAMIC,
     i.e. they can change over time.
     """
-    dictionary = load_dictionary("diseases")
+    dictionary = load_dictionary("disease")
     candidate = dictionary.candidates[0]
     assert candidate.concept_id.startswith(("MESH:", "OMIM:", "DO:DOID"))
 
@@ -42,7 +42,7 @@ def test_bel_dictionary():
     candidate = dictionary.candidates[0]
     assert candidate.concept_id.isdigit()
 
-    dictionary = load_dictionary("genes")
+    dictionary = load_dictionary("gene")
     candidate = dictionary.candidates[0]
     assert candidate.concept_id.isdigit()
 
@@ -105,3 +105,7 @@ def test_legacy_sequence_tagger():
     disease_linker.predict(sentence, pred_label_type="disease-nen")
 
     assert disease_linker._warned_legacy_sequence_tagger
+
+
+if __name__ == "__main__":
+    test_bel_dictionary()
