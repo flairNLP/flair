@@ -1,3 +1,4 @@
+from .binder_model import BinderModel
 from .clustering import ClusteringModel
 from .entity_linker_model import SpanClassifier
 from .language_model import LanguageModel
@@ -15,6 +16,7 @@ from .text_regression_model import TextRegressor
 from .word_tagger_model import TokenClassifier, WordTagger
 
 __all__ = [
+    "BinderModel",
     "SpanClassifier",
     "LanguageModel",
     "Lemmatizer",
