@@ -726,7 +726,7 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.token.WordEmbeddings.extra_repr">
 <span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/token.py#L365-L366"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.token.WordEmbeddings.extra_repr" title="Permalink to this definition">#</a></dt>
-<dd><p>Set the extra representation of the module</p>
+<dd><p>Set the extra representation of the module.</p>
 <p>To print customized extra information, you should re-implement
 this method in your own modules. Both single-line and multi-line
 strings are acceptable.</p>
@@ -735,7 +735,7 @@ strings are acceptable.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.token.WordEmbeddings.train">
 <span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/token.py#L368-L369"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.token.WordEmbeddings.train" title="Permalink to this definition">#</a></dt>
-<dd><p>Sets the module in training mode.</p>
+<dd><p>Set the module in training mode.</p>
 <p>This has any effect only on certain modules. See documentations of
 particular modules for details of their behaviors in training/evaluation
 mode, if they are affected, e.g. <code class="xref py py-class docutils literal notranslate"><span class="pre">Dropout</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNorm</span></code>,
@@ -757,7 +757,7 @@ mode (<code class="docutils literal notranslate"><span class="pre">False</span><
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.token.WordEmbeddings.to">
 <span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/token.py#L371-L375"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.token.WordEmbeddings.to" title="Permalink to this definition">#</a></dt>
-<dd><p>Moves and/or casts the parameters and buffers.</p>
+<dd><p>Move and/or cast the parameters and buffers.</p>
 <p>This can be called as</p>
 <dl class="py function">
 <dt class="sig sig-object py">
@@ -878,7 +878,7 @@ only argument)</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.token.WordEmbeddings.state_dict">
 <span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/token.py#L438-L445"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.token.WordEmbeddings.state_dict" title="Permalink to this definition">#</a></dt>
-<dd><p>Returns a dictionary containing references to the whole state of the module.</p>
+<dd><p>Return a dictionary containing references to the whole state of the module.</p>
 <p>Both parameters and persistent buffers (e.g. running averages) are
 included. Keys are corresponding parameter and buffer names.
 Parameters and buffers set to <code class="docutils literal notranslate"><span class="pre">None</span></code> are not included.</p>
@@ -1035,7 +1035,7 @@ to generate text.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.token.FlairEmbeddings.train">
 <span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/token.py#L791-L793"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.token.FlairEmbeddings.train" title="Permalink to this definition">#</a></dt>
-<dd><p>Sets the module in training mode.</p>
+<dd><p>Set the module in training mode.</p>
 <p>This has any effect only on certain modules. See documentations of
 particular modules for details of their behaviors in training/evaluation
 mode, if they are affected, e.g. <code class="xref py py-class docutils literal notranslate"><span class="pre">Dropout</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNorm</span></code>,
@@ -1094,7 +1094,7 @@ mode (<code class="docutils literal notranslate"><span class="pre">False</span><
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.token.PooledFlairEmbeddings.train">
 <span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/token.py#L938-L944"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.token.PooledFlairEmbeddings.train" title="Permalink to this definition">#</a></dt>
-<dd><p>Sets the module in training mode.</p>
+<dd><p>Set the module in training mode.</p>
 <p>This has any effect only on certain modules. See documentations of
 particular modules for details of their behaviors in training/evaluation
 mode, if they are affected, e.g. <code class="xref py py-class docutils literal notranslate"><span class="pre">Dropout</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNorm</span></code>,
@@ -1201,7 +1201,7 @@ Then, the list contains the names of all embeddings in the stack.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.token.FastTextEmbeddings.extra_repr">
 <span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/token.py#L1086-L1087"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.token.FastTextEmbeddings.extra_repr" title="Permalink to this definition">#</a></dt>
-<dd><p>Set the extra representation of the module</p>
+<dd><p>Set the extra representation of the module.</p>
 <p>To print customized extra information, you should re-implement
 this method in your own modules. Both single-line and multi-line
 strings are acceptable.</p>
@@ -1413,7 +1413,7 @@ strings are acceptable.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.token.BytePairEmbeddings.extra_repr">
 <span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/token.py#L1481-L1482"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.token.BytePairEmbeddings.extra_repr" title="Permalink to this definition">#</a></dt>
-<dd><p>Set the extra representation of the module</p>
+<dd><p>Set the extra representation of the module.</p>
 <p>To print customized extra information, you should re-implement
 this method in your own modules. Both single-line and multi-line
 strings are acceptable.</p>
