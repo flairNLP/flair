@@ -227,9 +227,7 @@ class LanguageModelTrainer:
                 optimizer.load_state_dict(self.optimizer_state)
 
             if isinstance(optimizer, (AdamW, SGDW)):
-                scheduler: ReduceLROnPlateau = ReduceLRWDOnPlateau(
-                    optimizer, factor=anneal_factor, patience=patience
-                )
+                scheduler: ReduceLROnPlateau = ReduceLRWDOnPlateau(optimizer, factor=anneal_factor, patience=patience)
             else:
                 scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience)
 
