@@ -108,9 +108,9 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
         super().__init__(
             embeddings=embeddings,
             label_dictionary=label_dictionary,
-            final_embedding_size=embeddings.embedding_length * 2
-            if pooling_operation == "first_last"
-            else embeddings.embedding_length,
+            final_embedding_size=(
+                embeddings.embedding_length * 2 if pooling_operation == "first_last" else embeddings.embedding_length
+            ),
             **classifierargs,
         )
 

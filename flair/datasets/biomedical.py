@@ -2191,11 +2191,8 @@ class NCBI_DISEASE(ColumnCorpus):
             3249: '10923035\t711\t761\tgeneralized epilepsy and febrile seizures " plus "\tSpecificDisease\tD004829+D003294\n'
         }
         with orig_train_file.open(encoding="utf-8") as input, patched_file.open("w", encoding="utf-8") as output:
-            line_no = 1
-
-            for line in input:
-                output.write(patch_lines[line_no] if line_no in patch_lines else line)
-                line_no += 1
+            for line_no, line in enumerate(input, start=1):
+                output.write(patch_lines.get(line_no, line))
 
     @staticmethod
     def parse_input_file(input_file: Path):

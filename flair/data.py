@@ -361,7 +361,7 @@ class DataPoint:
         if typename is None:
             return self.labels
 
-        return self.annotation_layers[typename] if typename in self.annotation_layers else []
+        return self.annotation_layers.get(typename, [])
 
     @property
     def labels(self) -> List[Label]:
@@ -987,12 +987,10 @@ class Sentence(DataPoint):
         return self[span_slice]
 
     @typing.overload
-    def __getitem__(self, idx: int) -> Token:
-        ...
+    def __getitem__(self, idx: int) -> Token: ...
 
     @typing.overload
-    def __getitem__(self, s: slice) -> Span:
-        ...
+    def __getitem__(self, s: slice) -> Span: ...
 
     def __getitem__(self, subscript):
         if isinstance(subscript, slice):

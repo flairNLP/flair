@@ -339,7 +339,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             true_values_span_aligned = []
             predicted_values_span_aligned = []
             for span in all_spans:
-                list_of_gold_values_for_span = all_true_values[span] if span in all_true_values else ["O"]
+                list_of_gold_values_for_span = all_true_values.get(span, ["O"])
                 # delete exluded labels if exclude_labels is given
                 for excluded_label in exclude_labels:
                     if excluded_label in list_of_gold_values_for_span:
@@ -348,9 +348,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 if not list_of_gold_values_for_span:
                     continue
                 true_values_span_aligned.append(list_of_gold_values_for_span)
-                predicted_values_span_aligned.append(
-                    all_predicted_values[span] if span in all_predicted_values else ["O"]
-                )
+                predicted_values_span_aligned.append(all_predicted_values.get(span, ["O"]))
 
             # write all_predicted_values to out_file if set
             if out_path:
@@ -700,9 +698,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         else:
             return torch.tensor(
                 [
-                    self.label_dictionary.get_idx_for_item(label[0])
-                    if len(label) > 0
-                    else self.label_dictionary.get_idx_for_item("O")
+                    (
+                        self.label_dictionary.get_idx_for_item(label[0])
+                        if len(label) > 0
+                        else self.label_dictionary.get_idx_for_item("O")
+                    )
                     for label in labels
                 ],
                 dtype=torch.long,

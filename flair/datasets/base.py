@@ -182,7 +182,7 @@ class MongoDataset(FlairDataset):
             for document in self.__cursor.find(filter=query, skip=start, limit=0):
                 sentence = self._parse_document_to_sentence(
                     document[self.text],
-                    [document[_] if _ in document else "" for _ in self.categories],
+                    [document.get(c, "") for c in self.categories],
                     tokenizer,
                 )
                 if sentence is not None and len(sentence.tokens) > 0:
@@ -225,7 +225,7 @@ class MongoDataset(FlairDataset):
             document = self.__cursor.find_one({"_id": index})
             sentence = self._parse_document_to_sentence(
                 document[self.text],
-                [document[_] if _ in document else "" for _ in self.categories],
+                [document.get(c, "") for c in self.categories],
                 self.tokenizer,
             )
             return sentence
