@@ -213,10 +213,11 @@ class Label:
     Default value for the score is 1.0.
     """
 
-    def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0) -> None:
+    def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0, **metadata) -> None:
         self._value = value
         self._score = score
         self.data_point: DataPoint = data_point
+        self.metadata = metadata
         super().__init__()
 
     def set_value(self, value: str, score: float = 1.0):
@@ -235,14 +236,14 @@ class Label:
         return {"value": self.value, "confidence": self.score}
 
     def __str__(self) -> str:
-        return f"{self.data_point.unlabeled_identifier}{flair._arrow}{self._value} ({round(self._score, 4)})"
+        return f"{self.data_point.unlabeled_identifier}{flair._arrow}{self._value}{self.metadata_str} ({round(self._score, 4)})"
 
     @property
     def shortstring(self):
         return f'"{self.data_point.text}"/{self._value}'
 
     def __repr__(self) -> str:
-        return f"'{self.data_point.unlabeled_identifier}'/'{self._value}' ({round(self._score, 4)})"
+        return f"'{self.data_point.unlabeled_identifier}'/'{self._value}'{self.metadata_str} ({round(self._score, 4)})"
 
     def __eq__(self, other):
         return self.value == other.value and self.score == other.score and self.data_point == other.data_point
@@ -252,6 +253,13 @@ class Label:
 
     def __lt__(self, other):
         return self.data_point < other.data_point
+
+    @property
+    def metadata_str(self) -> str:
+        if not self.metadata:
+            return ""
+        rep = "/".join(f"{k}={v}" for k, v in self.metadata.items())
+        return f"/{rep}"
 
     @property
     def labeled_identifier(self):
@@ -336,8 +344,8 @@ class DataPoint:
     def has_metadata(self, key: str) -> bool:
         return key in self._metadata
 
-    def add_label(self, typename: str, value: str, score: float = 1.0):
-        label = Label(self, value, score)
+    def add_label(self, typename: str, value: str, score: float = 1.0, **metadata):
+        label = Label(self, value, score, **metadata)
 
         if typename not in self.annotation_layers:
             self.annotation_layers[typename] = [label]
@@ -346,8 +354,8 @@ class DataPoint:
 
         return self
 
-    def set_label(self, typename: str, value: str, score: float = 1.0):
-        self.annotation_layers[typename] = [Label(self, value, score)]
+    def set_label(self, typename: str, value: str, score: float = 1.0, **metadata):
+        self.annotation_layers[typename] = [Label(self, value, score, **metadata)]
         return self
 
     def remove_labels(self, typename: str):
@@ -377,28 +385,25 @@ class DataPoint:
     def unlabeled_identifier(self):
         raise NotImplementedError
 
-    def _printout_labels(self, main_label=None, add_score: bool = True):
+    def _printout_labels(self, main_label=None, add_score: bool = True, add_metadata: bool = True):
         all_labels = []
         keys = [main_label] if main_label is not None else self.annotation_layers.keys()
-        if add_score:
-            for key in keys:
-                all_labels.extend(
-                    [
-                        f"{label.value} ({round(label.score, 4)})"
-                        for label in self.get_labels(key)
-                        if label.data_point == self
-                    ]
-                )
-            labels = "; ".join(all_labels)
-            if labels != "":
-                labels = flair._arrow + labels
-        else:
-            for key in keys:
-                all_labels.extend([f"{label.value}" for label in self.get_labels(key) if label.data_point == self])
-            labels = "/".join(all_labels)
-            if labels != "":
-                labels = "/" + labels
-        return labels
+
+        sep = "; " if add_score else "/"
+        sent_sep = flair._arrow if add_score else "/"
+        for key in keys:
+            for label in self.get_labels(key):
+                if label.data_point is not self:
+                    continue
+                value = label.value
+                if add_metadata:
+                    value = f"{value}{label.metadata_str}"
+                if add_score:
+                    value = f"{value} ({label.score:.04f})"
+                all_labels.append(value)
+        if not all_labels:
+            return ""
+        return sent_sep + sep.join(all_labels)
 
     def __str__(self) -> str:
         return self.unlabeled_identifier + self._printout_labels()
@@ -497,18 +502,18 @@ class _PartOfSentence(DataPoint, ABC):
         super().__init__()
         self.sentence: Sentence = sentence
 
-    def add_label(self, typename: str, value: str, score: float = 1.0):
-        super().add_label(typename, value, score)
-        self.sentence.annotation_layers.setdefault(typename, []).append(Label(self, value, score))
+    def add_label(self, typename: str, value: str, score: float = 1.0, **metadata):
+        super().add_label(typename, value, score, **metadata)
+        self.sentence.annotation_layers.setdefault(typename, []).append(Label(self, value, score, **metadata))
 
-    def set_label(self, typename: str, value: str, score: float = 1.0):
+    def set_label(self, typename: str, value: str, score: float = 1.0, **metadata):
         if len(self.annotation_layers.get(typename, [])) > 0:
             # First we remove any existing labels for this PartOfSentence in self.sentence
             self.sentence.annotation_layers[typename] = [
                 label for label in self.sentence.annotation_layers.get(typename, []) if label.data_point != self
             ]
-        self.sentence.annotation_layers.setdefault(typename, []).append(Label(self, value, score))
-        super().set_label(typename, value, score)
+        self.sentence.annotation_layers.setdefault(typename, []).append(Label(self, value, score, **metadata))
+        super().set_label(typename, value, score, **metadata)
         return self
 
     def remove_labels(self, typename: str):

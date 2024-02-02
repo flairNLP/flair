@@ -915,7 +915,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
             # Add a label annotation for each candidate
             for data_point, mention_candidates in zip(data_points[i : i + batch_size], candidates):
                 for candidate_id, confidence in mention_candidates:
-                    data_point.add_label(pred_label_type, candidate_id, confidence)
+                    data_point.add_label(pred_label_type, candidate_id, confidence, name=self.dictionary[candidate_id].concept_name)
 
     @staticmethod
     def _fetch_model(model_name: str) -> str:
