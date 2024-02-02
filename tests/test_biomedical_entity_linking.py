@@ -1,3 +1,5 @@
+import pytest
+
 from flair.data import Sentence
 from flair.models.entity_mention_linking import (
     Ab3PEntityPreprocessor,
@@ -77,6 +79,7 @@ def test_abbrevitation_resolution():
             assert mention == "weaver smith syndrome"
 
 
+@pytest.mark.integration()
 def test_biomedical_entity_linking():
     sentence = Sentence(
         "The mutation in the ABCD1 gene causes X-linked adrenoleukodystrophy, "
