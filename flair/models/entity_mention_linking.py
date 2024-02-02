@@ -1158,9 +1158,9 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         for sentence in data_points:
             spans = sentence.get_spans(gold_label_type)
             for span in spans:
-                exps = set(exp.value for exp in span.get_labels(gold_label_type) if exp.value not in exclude_labels)
+                exps = {exp.value for exp in span.get_labels(gold_label_type) if exp.value not in exclude_labels}
 
-                predictions = set(pred.value for pred in span.get_labels("predicted"))
+                predictions = {pred.value for pred in span.get_labels("predicted")}
                 total += 1
                 if exps & predictions:
                     hits += 1
@@ -1169,5 +1169,4 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
 
         detailed_results = f"Accuracy@{k}: {accuracy:0.2%}"
         scores = {"accuracy": accuracy, f"accuracy@{k}": accuracy, "loss": 0.0}
-
         return Result(main_score=accuracy, detailed_results=detailed_results, scores=scores)
