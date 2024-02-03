@@ -17,7 +17,6 @@ https://github.com/asappresearch/dynamic-classification/blob/master/LICENSE.md
 Source: https://github.com/asappresearch/dynamic-classification/blob/55beb5a48406c187674bea40487c011e8fa45aab/distance/euclidean.py
 """
 
-
 import torch
 from torch import Tensor, nn
 

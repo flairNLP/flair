@@ -63,7 +63,7 @@ class FeideggerDataset(FlairDataset):
             return x
 
         preprocessor = identity
-        if "lowercase" in kwargs and kwargs["lowercase"]:
+        if kwargs.get("lowercase"):
             preprocessor = str.lower
 
         for image_info in dataset_info:

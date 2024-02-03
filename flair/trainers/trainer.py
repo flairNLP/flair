@@ -816,7 +816,7 @@ class ModelTrainer(Pluggable):
 
     def _get_current_lr_and_momentum(self, batch_count):
         current_learning_rate = [group["lr"] for group in self.optimizer.param_groups]
-        momentum = [group["momentum"] if "momentum" in group else 0 for group in self.optimizer.param_groups]
+        momentum = [group.get("momentum", 0) for group in self.optimizer.param_groups]
         lr_info = " - lr: " + ",".join([f"{m:.6f}" for m in current_learning_rate])
         momentum_info = " - momentum: " + ",".join([f"{m:.6f}" for m in momentum])
         self._record(MetricRecord.scalar_list("learning_rate", current_learning_rate, batch_count))
