@@ -599,21 +599,21 @@ class Token(_PartOfSentence):
     def __repr__(self) -> str:
         return self.__str__()
 
-    def add_label(self, typename: str, value: str, score: float = 1.0):
+    def add_label(self, typename: str, value: str, score: float = 1.0, **metadata):
         # The Token is a special _PartOfSentence in that it may be initialized without a Sentence.
         # therefore, labels get added only to the Sentence if it exists
         if self.sentence:
-            super().add_label(typename=typename, value=value, score=score)
+            super().add_label(typename=typename, value=value, score=score, **metadata)
         else:
-            DataPoint.add_label(self, typename=typename, value=value, score=score)
+            DataPoint.add_label(self, typename=typename, value=value, score=score, **metadata)
 
-    def set_label(self, typename: str, value: str, score: float = 1.0):
+    def set_label(self, typename: str, value: str, score: float = 1.0, **metadata):
         # The Token is a special _PartOfSentence in that it may be initialized without a Sentence.
         # Therefore, labels get set only to the Sentence if it exists
         if self.sentence:
-            super().set_label(typename=typename, value=value, score=score)
+            super().set_label(typename=typename, value=value, score=score, **metadata)
         else:
-            DataPoint.set_label(self, typename=typename, value=value, score=score)
+            DataPoint.set_label(self, typename=typename, value=value, score=score, **metadata)
 
     def to_dict(self, tag_type: Optional[str] = None):
         return {

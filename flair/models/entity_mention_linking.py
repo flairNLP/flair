@@ -443,9 +443,11 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
     @classmethod
     def _from_state(cls, state_dict: Dict[str, Any]) -> "EntityPreprocessor":
         return cls(
-            preprocessor=None
-            if state_dict["preprocessor"] is None
-            else EntityPreprocessor._from_state(state_dict["preprocessor"]),
+            preprocessor=(
+                None
+                if state_dict["preprocessor"] is None
+                else EntityPreprocessor._from_state(state_dict["preprocessor"])
+            ),
         )
 
 
@@ -601,11 +603,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
                 ngram_range=(1, 2),
             )
 
-        sparse_weight = (
-            sparse_weight
-            if model_name_or_path not in HYBRID_MODELS_SPARSE_WEIGHT
-            else HYBRID_MODELS_SPARSE_WEIGHT[model_name_or_path]
-        )
+        sparse_weight = HYBRID_MODELS_SPARSE_WEIGHT.get(model_name_or_path, sparse_weight)
 
         return cls(
             embeddings,
@@ -903,9 +901,11 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
             for entity in entities_mentions:
                 data_points.append(entity.data_point)
                 mentions.append(
-                    self.preprocessor.process_mention(entity.data_point.text, sentence)
-                    if self.preprocessor is not None
-                    else entity.data_point.text,
+                    (
+                        self.preprocessor.process_mention(entity.data_point.text, sentence)
+                        if self.preprocessor is not None
+                        else entity.data_point.text
+                    ),
                 )
 
         # Retrieve top-k concept / entity candidates
@@ -915,7 +915,9 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
             # Add a label annotation for each candidate
             for data_point, mention_candidates in zip(data_points[i : i + batch_size], candidates):
                 for candidate_id, confidence in mention_candidates:
-                    data_point.add_label(pred_label_type, candidate_id, confidence, name=self.dictionary[candidate_id].concept_name)
+                    data_point.add_label(
+                        pred_label_type, candidate_id, confidence, name=self.dictionary[candidate_id].concept_name
+                    )
 
     @staticmethod
     def _fetch_model(model_name: str) -> str:
