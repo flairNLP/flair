@@ -1,5 +1,6 @@
 import logging
 import pwd
+import random
 from typing import Tuple, Dict, List, Callable
 
 import numpy as np
@@ -157,7 +158,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         token_encoder: TokenEmbeddings,
         label_encoder: DocumentEmbeddings,
         label_dictionary: Dictionary,
-        pooling_operation: str = "average",
+        pooling_operation: str = "average", #todo "average",
         label_type: str = "nel",
         custom_label_verbalizations = None,
         train_only_with_positive_labels = True,
@@ -172,6 +173,8 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         BCE_loss: bool = False,
         candidates: Optional[CandidateGenerator] = None,
         predict_greedy: bool = False,
+        predict_again_finally: bool = False,
+        train_greedy: bool = False,
 
     ):
         super().__init__()
@@ -204,10 +207,16 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         self.popularity_save_path = popularity_save_path
         if self.add_popularity:
             if not self.popularity_save_path:
-                self.popularity_save_path = "/tmp/wikipedia_sitelinks_dict.json"
+                #self.popularity_save_path = "/tmp/wikipedia_sitelinks_dict.json"
+                self.popularity_save_path = "/vol/tmp/ruckersu/dual_encoder_entity_linking/sitelinks_dict.json"
+
             self._create_popularity_dict(self.label_dict_list)
 
         self.predict_greedy = predict_greedy
+        self.predict_again_finally = predict_again_finally
+        self.train_greedy = train_greedy
+        if self.train_greedy:
+            self.predict_greedy = True
         self.BCE_loss = BCE_loss
         if self.BCE_loss:
             self.loss_function = torch.nn.BCEWithLogitsLoss(
@@ -392,12 +401,12 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             label_embeddings = torch.cat((label_embeddings, popularities.unsqueeze(1)), dim = 1)
 
         del used_labels
+        print("Done with creating label embeddings.")
         return label_embeddings, used_indices
 
 
     def _encode_data_points(self, sentences): #-> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
 
-        self.token_encoder.embed(sentences)
 
         datapoints = []
         for s in sentences:
@@ -406,7 +415,19 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         if len(datapoints) == 0:
             return [], [], [], []
 
+        #if self.train_greedy:
+            # add a random part of gold labels (verbalizations) to the sentences, similar to in prediction, then embed and use those
+            # TODO not really "training" though ...
+            #datapoints_modified, new_sentences = self._add_already_predicted_label_verbalizations_to_sentences(sentences, use_gold=True)
+
+            #self.token_encoder.embed(new_sentences)
+            #span_hidden_states = torch.stack([self.aggregated_embedding(d, self.token_encoder.get_names()) for d in datapoints_modified])
+
+        #else:
+        self.token_encoder.embed(sentences)
         span_hidden_states = torch.stack([self.aggregated_embedding(d, self.token_encoder.get_names()) for d in datapoints])
+
+        [s.clear_embeddings() for s in sentences]
 
         if self.add_popularity == "concatenate":
             # TODO is this good? set to non trainable?
@@ -414,12 +435,10 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
         if self.training:
             if self.train_only_with_positive_labels:
-                #labels = set()
                 labels = []
                 for d in datapoints:
                     #labels.add(d.get_label(self.label_type).value)
                     labels.append(d.get_label(self.label_type).value)
-                #labels = list(labels)
 
                 labels_ids = [self.label_dictionary.get_idx_for_item(l) for l in labels]
 
@@ -494,7 +513,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         return span_hidden_states, label_hidden_states, datapoints, sentences
 
 
-    def _get_random_negative_labels(self, span_hidden_states, labels, factor, epoch_wise = False):
+    def _get_random_negative_labels(self, span_hidden_states, labels, factor, datapoints, epoch_wise = False):
         import random
         rt_random_negatives_embeddings = []
         popularities = []
@@ -547,7 +566,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
         return rt_random_negatives_embeddings
 
-    def _get_hard_negative_labels(self, span_hidden_states, labels, factor,
+    def _get_hard_negative_labels(self, span_hidden_states, labels, factor, datapoints,
                                   epoch_wise = True,
                                   ):
 
@@ -626,23 +645,38 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                     #similarity_matrix = cosine_similarity(batch_labels_embeddings.detach().cpu(),
                     #                                     all_labels_embeddings.detach().cpu())
 
-                    similarity_matrix = cosine_similarity(span_hidden_states.detach().cpu(),
-                                                          all_labels_embeddings.detach().cpu())
+                    #similarity_matrix = cosine_similarity(span_hidden_states.detach().cpu(),
+                    #                                      all_labels_embeddings.detach().cpu())
+
+                    similarity_matrix = torch.mm(span_hidden_states.detach().cpu(), all_labels_embeddings.detach().cpu())
+                    similarity_matrix = torch.softmax(similarity_matrix, dim=1)
+
 
 
                 else:
                     # TODO see above
                     #similarity_matrix = cosine_similarity(batch_labels_embeddings.detach().cpu(),
                     #                                      all_labels_embeddings.detach().cpu())
-                    similarity_matrix = cosine_similarity(span_hidden_states.detach().cpu(),
-                                                          all_labels_embeddings.detach().cpu())
+                    #similarity_matrix = cosine_similarity(span_hidden_states.detach().cpu(),
+                    #                                      all_labels_embeddings.detach().cpu())
+
+                    # TODO see above
+                    # A) choose "nard negatives" by similarity to the LABEL embedding?
+                    #similarity_matrix = torch.mm(batch_labels_embeddings.detach().cpu(), all_labels_embeddings.detach().cpu().t())
+                    #similarity_matrix = torch.softmax(similarity_matrix, dim=1)
+
+                    # B) choose "hard negatives" by similarity to the SPAN embedding?
+                    similarity_matrix = torch.mm(span_hidden_states.detach().cpu(), all_labels_embeddings.detach().cpu().t())
+                    similarity_matrix = torch.softmax(similarity_matrix, dim=1)
 
                 # to exclude the real label
                 for i, label_idx in enumerate(batch_labels_indices):
                     if label_idx in all_labels_indices:
                         similarity_matrix[i, all_labels_indices.index(label_idx)] = float("-inf")
 
-                _, hard_negative_indices_sample = torch.topk(torch.tensor(similarity_matrix), factor, dim=1)
+                #_, hard_negative_indices_sample = torch.topk(torch.tensor(similarity_matrix), factor, dim=1)
+                _, hard_negative_indices_sample = torch.topk(similarity_matrix, factor, dim=1)
+
 
         # now embed those negative labels 'for real', so that gradient tracking possible and most current version
         # important: We need to "enroll" the labels the right way: each span should get its hard negative, spans are concatenated each factor!
@@ -696,7 +730,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
     def _calculate_loss(self, span_hidden_states, label_hidden_states, datapoints, sentences, label_name):
         gold_label_name = label_name
-        # todo: This is not quite right. We're comparing the label embeddings of the gold labels to the span embeddings.
+        # todo: Is this right like so? We're comparing the label embeddings of the gold labels to the span embeddings.
         # todo: Shouldn't we compare the labels? Or the embeddings of the predicted labels against the embeddings of the real label?
 
         gold_labels = [d.get_label(gold_label_name).value for d in datapoints]
@@ -716,13 +750,15 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                 if self.negative_sampling_strategy == "random":
                     some_random_label_hidden_states = self._get_random_negative_labels(span_hidden_states,
                                                                                        gold_labels,
-                                                                                       self.negative_sampling_factor)
+                                                                                       self.negative_sampling_factor,
+                                                                                       datapoints)
                     gold_labels_hidden_states_with_negatives = torch.cat((gold_labels_hidden_states,
                                                                           some_random_label_hidden_states), dim = 0)
                 if self.negative_sampling_strategy == "hard_negatives":
                     hard_negatives_label_hidden_states = self._get_hard_negative_labels(span_hidden_states,
                                                                                         gold_labels,
-                                                                                        self.negative_sampling_factor)
+                                                                                        self.negative_sampling_factor,
+                                                                                        datapoints)
                     gold_labels_hidden_states_with_negatives = torch.cat((gold_labels_hidden_states,
                                                                           hard_negatives_label_hidden_states), dim = 0)
 
@@ -819,6 +855,10 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
         span_hidden_states, label_hidden_states, datapoints, sentences = self._encode_data_points(sentences)
+
+        if self.train_greedy:
+            span_hidden_states, label_hidden_states = self.predict(sentences, return_span_and_label_hidden_states=True)
+
         loss, nr_datapoints = self._calculate_loss(span_hidden_states, label_hidden_states, datapoints, sentences, label_name=self.label_type)
 
         return loss, nr_datapoints
@@ -841,63 +881,167 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
         return masked_scores
 
-    def _add_already_predicted_label_verbalizations_to_sentences(self, sentences):
+    def _add_already_predicted_label_verbalizations_to_sentences(self,
+                                                                 sentences,
+                                                                 datapoints,
+                                                                 leave_out_datapoints_to_be_predicted: True,
+                                                                 use_gold = False,
+                                                                 use_gold_percentage = 0.5,
+                                                                 also_add_in_context = True): # insert predicted verbalizations also in context sentences
 
-        modified_sentences = []
-        datapoints_in_modified_sentences = []
-        for s in sentences:
+        modified_sentences_per_datapoint = []
+        datapoints_in_modified_sentences = [None for d in datapoints]
+
+        for d_i, datapoint in enumerate(datapoints):
+            s = datapoint.sentence
             datapoints_in_sentence = s.get_spans("nel")
             sentence_before = s.text
             sentence_with_verbalization = sentence_before
-            labels_already = s.get_spans("predicted")
+            if use_gold:
+                labels_already = s.get_spans("nel")
+                labels_already = random.sample(labels_already, int(len(labels_already)* use_gold_percentage))
+            else:
+                labels_already = s.get_spans("predicted")
+            # todo How to do this: ?
+            if leave_out_datapoints_to_be_predicted:
+                if datapoint in labels_already:
+                    labels_already.remove(datapoint)
             labels_already.sort(key=lambda a: a.start_position)
             added_characters = 0
             modified_datapoints_offsets = [[d.start_position, d.end_position] for d in datapoints_in_sentence]
-            if len(labels_already) == 0:
-                modified_sentences.append(s)
-                datapoints_in_modified_sentences.extend(datapoints_in_sentence)
 
-            else:
-                for l in labels_already:
+            for l in labels_already:
+                if use_gold:
+                    label = l.get_label("nel").value
+                else:
                     label = l.get_label("predicted").value
-                    label_idx = self.label_dictionary.get_idx_for_item(label)
-                    add_at_position = l.end_position + added_characters
-                    if self.custom_label_verbalizations:
-                        sentence_with_verbalization = sentence_before[:add_at_position] + \
-                                                      " (" + self.custom_label_verbalizations.verbalized_labels[
-                                                          label_idx] + ")" + \
-                                                      sentence_before[add_at_position:]
+                label_idx = self.label_dictionary.get_idx_for_item(label)
+                add_at_position = l.end_position + added_characters
+                if self.custom_label_verbalizations:
+                    sentence_with_verbalization = sentence_before[:add_at_position] + \
+                                                  " (" + self.custom_label_verbalizations.verbalized_labels[
+                                                      label_idx] + ")" + \
+                                                  sentence_before[add_at_position:]
+                else:
+                    sentence_with_verbalization = sentence_before[:add_at_position] + \
+                                                  "(" + self.label_dict_list[
+                                                      label_idx] + ")" + \
+                                                  sentence_before[add_at_position:]
+                added_just_now = len(sentence_with_verbalization) - len(sentence_before)
+                added_characters += added_just_now
+                sentence_before = sentence_with_verbalization
+
+                for counter,d in enumerate(datapoints_in_sentence):
+                    d_start_position = modified_datapoints_offsets[counter][0]
+                    d_end_position = modified_datapoints_offsets[counter][1]
+
+                    if d_start_position > add_at_position:
+                        d_start_position += added_just_now
+                        d_end_position += added_just_now
+                        modified_datapoints_offsets[counter][0] = d_start_position
+                        modified_datapoints_offsets[counter][1] = d_end_position
+
+            new_sentence = flair.data.Sentence(sentence_with_verbalization)
+
+            for i, datapoint_in_sentence in enumerate(datapoints_in_sentence):
+                start, end = modified_datapoints_offsets[i]
+                d_start_token = [i for i, t in enumerate(new_sentence.tokens) if t.start_position == start]
+                d_end_token = [i for i, t in enumerate(new_sentence.tokens) if t.end_position == end]
+                if datapoint_in_sentence == datapoint:
+                    datapoints_in_modified_sentences[d_i] = flair.data.Span(new_sentence.tokens[d_start_token[0]:d_end_token[0] + 1])
+
+            new_sentence.copy_context_from_sentence(s)
+
+            if also_add_in_context:
+                relevant_sentences_before = []
+                at_sentence = new_sentence
+                len_context_before = 0
+                while len_context_before <= self.token_encoder.context_length:
+                    if "DOCSTART" in at_sentence.text or not at_sentence._previous_sentence:
+                        break
+                    relevant_sentences_before.append(at_sentence._previous_sentence)
+                    at_sentence = at_sentence._previous_sentence
+                    len_context_before += len(at_sentence)
+
+                relevant_sentences_after = []
+                at_sentence = new_sentence
+                len_context_after = 0
+                while len_context_after <= self.token_encoder.context_length:
+                    if "DOCSTART" in at_sentence.text or not at_sentence._next_sentence:
+                        break
+                    relevant_sentences_after.append(at_sentence._next_sentence)
+                    at_sentence = at_sentence._next_sentence
+                    len_context_after += len(at_sentence)
+
+                context_sentences = relevant_sentences_before + relevant_sentences_after
+                context_sentences_left_modified = []
+                context_sentences_right_modified = []
+                for i, s in enumerate(context_sentences):
+                    datapoints_in_sentence = s.get_spans("nel")
+                    sentence_before = s.text
+                    sentence_with_verbalization = sentence_before
+                    if use_gold:
+                        labels_already = s.get_spans("nel")
+                        labels_already = random.sample(labels_already, int(len(labels_already) * use_gold_percentage))
                     else:
-                        sentence_with_verbalization = sentence_before[:add_at_position] + \
-                                                      "(" + self.label_dict_list[
-                                                          label_idx] + ")" + \
-                                                      sentence_before[add_at_position:]
-                    added_just_now = len(sentence_with_verbalization) - len(sentence_before)
-                    added_characters += added_just_now
-                    sentence_before = sentence_with_verbalization
+                        labels_already = s.get_spans("predicted")
 
-                    for counter,d in enumerate(datapoints_in_sentence):
-                        d_start_position = modified_datapoints_offsets[counter][0]
-                        d_end_position = modified_datapoints_offsets[counter][1]
+                    labels_already.sort(key=lambda a: a.start_position)
+                    added_characters = 0
+                    modified_datapoints_offsets = [[d.start_position, d.end_position] for d in datapoints_in_sentence]
 
-                        if d_start_position > add_at_position:
-                            d_start_position += added_just_now
-                            d_end_position += added_just_now
-                            modified_datapoints_offsets[counter][0] = d_start_position
-                            modified_datapoints_offsets[counter][1] = d_end_position
+                    for l in labels_already:
+                        if use_gold:
+                            label = l.get_label("nel").value
+                        else:
+                            label = l.get_label("predicted").value
+                        label_idx = self.label_dictionary.get_idx_for_item(label)
+                        add_at_position = l.end_position + added_characters
+                        if self.custom_label_verbalizations:
+                            sentence_with_verbalization = sentence_before[:add_at_position] + \
+                                                          " (" + self.custom_label_verbalizations.verbalized_labels[
+                                                              label_idx] + ")" + \
+                                                          sentence_before[add_at_position:]
+                        else:
+                            sentence_with_verbalization = sentence_before[:add_at_position] + \
+                                                          "(" + self.label_dict_list[
+                                                              label_idx] + ")" + \
+                                                          sentence_before[add_at_position:]
+                        added_just_now = len(sentence_with_verbalization) - len(sentence_before)
+                        added_characters += added_just_now
+                        sentence_before = sentence_with_verbalization
 
-                new_sentence = flair.data.Sentence(sentence_with_verbalization)
+                        # for counter, d in enumerate(datapoints_in_sentence):
+                        #     d_start_position = modified_datapoints_offsets[counter][0]
+                        #     d_end_position = modified_datapoints_offsets[counter][1]
+                        #
+                        #     if d_start_position > add_at_position:
+                        #         d_start_position += added_just_now
+                        #         d_end_position += added_just_now
+                        #         modified_datapoints_offsets[counter][0] = d_start_position
+                        #         modified_datapoints_offsets[counter][1] = d_end_position
 
-                for d_offsets in modified_datapoints_offsets:
-                    start, end = d_offsets
-                    d_start_token = [i for i, t in enumerate(new_sentence.tokens) if t.start_position == start]
-                    d_end_token = [i for i, t in enumerate(new_sentence.tokens) if t.end_position == end]
-                    datapoints_in_modified_sentences.append(flair.data.Span(new_sentence.tokens[d_start_token[0]:d_end_token[0] + 1]))
+                    new_context_sentence = flair.data.Sentence(sentence_with_verbalization)
+                    if i < len(relevant_sentences_before):
+                        context_sentences_left_modified.append(new_context_sentence)
+                    else:
+                        context_sentences_right_modified.append(new_context_sentence)
 
-                new_sentence.copy_context_from_sentence(s)
-                modified_sentences.append(new_sentence)
+                at_sentence = new_sentence
+                for context_sentence in context_sentences_left_modified:
+                    at_sentence._previous_sentence = context_sentence
+                    at_sentence = context_sentence
 
-        return datapoints_in_modified_sentences, modified_sentences
+                at_sentence = new_sentence
+                for context_sentence in context_sentences_right_modified:
+                    at_sentence._next_sentence = context_sentence
+                    at_sentence = context_sentence
+
+            modified_sentences_per_datapoint.append(new_sentence)
+
+        if len(datapoints) != len(datapoints_in_modified_sentences):
+            print("here not the same!")
+        return datapoints_in_modified_sentences, modified_sentences_per_datapoint
 
     def predict(
         self,
@@ -908,8 +1052,13 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         label_name: Optional[str] = None,
         return_loss=False,
         embedding_storage_mode="none",
+        return_span_and_label_hidden_states: bool = True,
     ):
-        with torch.no_grad():
+        with torch.no_grad() if not self.training else torch.enable_grad():
+
+            if self.training:
+                label_name = "predicted"
+
             span_hidden_states, label_hidden_states, datapoints, sentences = self._encode_data_points(sentences)
             if len(datapoints) != 0:
 
@@ -954,14 +1103,13 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
                 else:
 
-                    span_hidden_states = span_hidden_states.detach().cpu()
-                    label_hidden_states = label_hidden_states.detach().cpu()
+                    if not self.training:
+                        span_hidden_states = span_hidden_states.detach().cpu()
+                        label_hidden_states = label_hidden_states.detach().cpu()
 
-                    # version 1 (so far used)
-                    #similarity = torch.mm(span_hidden_states, label_hidden_states.t())
+                    similarity = torch.mm(torch.nn.functional.normalize(span_hidden_states),
+                                          torch.nn.functional.normalize(label_hidden_states).t())
 
-                    # version 2:
-                    similarity = torch.tensor(cosine_similarity(span_hidden_states, label_hidden_states))
 
                     # Get the label indices with maximum similarity for each span
                     _, max_label_indices = torch.max(similarity, dim=1)
@@ -977,83 +1125,197 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
                 #print(final_label_indices)
 
-                still_to_predict_indices = []
-                for i,d in enumerate(datapoints):
-                    if self.BCE_loss:
-                        #label_idx = final_label_indices[i][0]
-                        #conf = final_label_indices[i][1]
-                        label_idx = final_label_indices[i].item()
-                        conf = logits_sigmoided[i, label_idx].item()
-                    else:
-                        label_idx = final_label_indices[i]
-                        conf = similarity[i, label_idx]
+                if not self.predict_greedy:
+                    for i,d in enumerate(datapoints):
+                        if self.BCE_loss:
+                            #label_idx = final_label_indices[i][0]
+                            #conf = final_label_indices[i][1]
+                            label_idx = final_label_indices[i].item()
+                            conf = logits_sigmoided[i, label_idx].item()
+                        else:
+                            label_idx = final_label_indices[i]
+                            conf = similarity[i, label_idx]
 
-                    if self.candidates:
-                        label = label_ordering[label_idx]
-                    else:
-                        label = self.label_dict_list[label_idx]
+                        if self.candidates:
+                            label = label_ordering[label_idx]
+                        else:
+                            label = self.label_dict_list[label_idx]
 
-                    if self.predict_greedy:
-                        if conf < self.threshold_in_prediction:
-                            #still_to_predict_indices.append(i)
-                            #print(d.text, d.get_label("nel").value, "-->", label, conf, "--> not labeled!")
-                            continue
+                        d.set_label(label_name,
+                                    value=label,
+                                    score=float(conf)
+                                    )
+                        d.set_label(typename = "top_5", value = " | ".join(f"{item1} {item2}" for item1, item2 in zip(top_labels[i], top_confidences[i])))
 
-                    d.set_label(label_name,
-                                value=label,
-                                score=float(conf)
-                                )
-                    d.set_label(typename = "top_5", value = " | ".join(f"{item1} {item2}" for item1, item2 in zip(top_labels[i], top_confidences[i])))
+                # predict_greedy:
+                else:
+                    if not self.training or len(datapoints) > 1: # in training, if it's just one datapoint, not necessary
 
-                if self.predict_greedy:
-                    # choose criterion what to keep and what to predict newly
+                        PREDICT_SIZE = int(len(datapoints)/2) if self.training else int(len(datapoints)/5)
+                        PREDICT_SIZE = max(1, PREDICT_SIZE) # in case len(datapoints) is <=3, so it's not 0
 
-                    still_to_predict_indices = [i for i,d in enumerate(datapoints) if d.get_label("predicted").value == "O"] # predict the ones that have not been predicted
-                    #still_to_predict_indices = [i for i,d in enumerate(datapoints)] # predict for ALL, also the ones that already have been
+                        criterion = "similarity"      # the ones with the highest similarity scores
+                        criterion = "clear_distance"  # the ones where the distance to the next probable one is very high
 
-                    if len(still_to_predict_indices) >0:
-                        datapoints_modified, new_sentences = self._add_already_predicted_label_verbalizations_to_sentences(sentences)
+                        if criterion == "clear_distance":
+                            def custom_sorting_key(list_of_scores):
+                                first_score = list_of_scores[0]
+                                mean_distance = sum(abs(first_score - score) for score in list_of_scores[1:]) / len(
+                                    list_of_scores[1:])
+                                return mean_distance
 
-                        self.token_encoder.embed(new_sentences)
+                        first = True
+                        still_to_predict_indices = [i for i in range(len(datapoints))]
 
-                        still_to_predict_span_hidden_states = torch.stack(
-                           [self.aggregated_embedding(d, self.token_encoder.get_names()) for i,d in enumerate(datapoints_modified)
-                            if i in still_to_predict_indices]).detach().cpu()
+                        while len(still_to_predict_indices) >0:
+                            if first:
+                                if criterion == "similarity":
+                                    confidences = [similarity[i, final_label_indices[i]] for i in range(len(datapoints)) ]
+                                    _, high_confidence_indices = torch.topk(torch.Tensor(confidences), min(PREDICT_SIZE, len(datapoints)), dim=0)
+                                    high_confidence_indices = [int(tensor) for tensor in high_confidence_indices]
 
-                        still_to_predict_similarity = torch.tensor(
-                            cosine_similarity(still_to_predict_span_hidden_states, label_hidden_states))
-                        _, still_to_predict_max_label_indices = torch.max(still_to_predict_similarity, dim=1)
+                                if criterion == "clear_distance":
+                                    sorted_indices = sorted(range(len(top_confidences)),
+                                                            key=lambda i: custom_sorting_key(top_confidences[i]),
+                                                            reverse=True)
+                                    high_confidence_indices = sorted_indices[:min(PREDICT_SIZE, len(datapoints))]
 
-                        # just for inspection: get the top N (=5) most probable labels:
-                        still_to_predict_top_confidences, still_to_predict_top_indices = torch.topk(still_to_predict_similarity, k=5, dim=1)
-                        still_to_predict_top_confidences = [[round(float(tensor), 3) for tensor in inner_list] for inner_list in
-                                                             still_to_predict_top_confidences]
-                        still_to_predict_top_labels = [[self.label_dict_list[index] for index in indices] for indices in
-                                                       still_to_predict_top_indices]
+                                first = False
 
-                        # take the highest one
-                        still_to_predict_final_label_indices = still_to_predict_top_indices[:, 0]
-
-                        for i, id in enumerate(still_to_predict_indices):
-                            d = datapoints[id]
-
-                            if self.BCE_loss:
-                                raise(NotImplementedError)
                             else:
-                                label_idx = still_to_predict_final_label_indices[i]
-                                conf = still_to_predict_similarity[i, label_idx]
 
-                            if self.candidates:
-                                label = label_ordering[label_idx]
-                            else:
-                                label = self.label_dict_list[label_idx]
-                            d.set_label(label_name,
-                                        value=label,
-                                        score=float(conf)
-                                        )
-                            d.set_label(typename="top_5", value=" | ".join(
-                                f"{item1} {item2}" for item1, item2 in zip(still_to_predict_top_labels[i],
-                                                                           still_to_predict_top_confidences[i])))
+                                datapoints_modified, new_sentences = self._add_already_predicted_label_verbalizations_to_sentences(
+                                    sentences, datapoints, leave_out_datapoints_to_be_predicted=True)
+                                self.token_encoder.embed(new_sentences)
+                                if len([(i, d) for i,d in enumerate(datapoints_modified) if i in still_to_predict_indices]) == 0:
+                                    print("here")
+                                still_to_predict_span_hidden_states = torch.stack(
+                                    [self.aggregated_embedding(d, self.token_encoder.get_names()) for i, d in
+                                     enumerate(datapoints_modified)
+                                     if i in still_to_predict_indices])
+
+                                [s.clear_embeddings() for s in new_sentences]
+
+                                if not self.training:
+                                    still_to_predict_span_hidden_states = still_to_predict_span_hidden_states.detach().cpu()
+
+                                #if self.training:
+                                #    still_to_predict_similarity = torch.mm(still_to_predict_span_hidden_states, label_hidden_states.t())
+                                #    still_to_predict_similarity = torch.softmax(still_to_predict_similarity, dim=1)
+
+                                #else:
+                                #    still_to_predict_similarity = torch.tensor(
+                                #        cosine_similarity(still_to_predict_span_hidden_states, label_hidden_states))
+
+                                    #still_to_predict_similarity = torch.mm(still_to_predict_span_hidden_states, label_hidden_states.t())
+                                    #still_to_predict_similarity = torch.softmax(still_to_predict_similarity, dim=1)
+
+                                still_to_predict_similarity = torch.mm(torch.nn.functional.normalize(still_to_predict_span_hidden_states),
+                                                                       torch.nn.functional.normalize(label_hidden_states).t())
+
+                                still_to_predict_top_confidences, still_to_predict_top_indices = torch.topk(still_to_predict_similarity, k=5, dim=1)
+
+                                still_to_predict_final_labels_indices = still_to_predict_top_indices[:, 0]
+                                still_to_predict_confidences = [still_to_predict_similarity[i, still_to_predict_final_labels_indices[i]] for i in range(len(still_to_predict_indices)) ]
+
+                                if criterion == "similarity":
+                                    still_to_predict_high_confidences, still_to_predict_high_confidence_indices = torch.topk(torch.Tensor(still_to_predict_confidences),
+                                                                                             k=min(PREDICT_SIZE, len(still_to_predict_indices)), # in case less than 5
+                                                                                             dim=0)
+                                    still_to_predict_high_confidence_indices = [int(tensor) for tensor in still_to_predict_high_confidence_indices]
+
+                                if criterion == "clear_distance":
+                                    sorted_indices = sorted(range(len(still_to_predict_top_confidences)),
+                                                            key=lambda i: custom_sorting_key(
+                                                                still_to_predict_top_confidences[i]),
+                                                            reverse=True)
+                                    still_to_predict_high_confidence_indices = sorted_indices[:min(PREDICT_SIZE, len(datapoints))]
+
+                                # map indices back to original order in datapoints
+                                high_confidence_indices = [still_to_predict_indices[i] for i in still_to_predict_high_confidence_indices]
+
+                                # and write it into the global lists:
+                                for nr, i_local in enumerate(still_to_predict_high_confidence_indices):
+                                    i_global = still_to_predict_indices[i_local]
+                                    final_label_indices[i_global] = still_to_predict_final_labels_indices[i_local]
+                                    similarity[i_global] = still_to_predict_similarity[i_local, still_to_predict_final_labels_indices[i_local]]
+                                    #similarity[i_global] = still_to_predict_high_confidences[nr]
+                                    top_labels[i_global] = [self.label_dict_list[i] for i in still_to_predict_top_indices[i_local]]
+                                    top_confidences[i_global] = [round(float(i), 3) for i in still_to_predict_top_confidences[i_local]]
+
+
+                            for i, d in enumerate(datapoints):
+                                if i not in high_confidence_indices:
+                                    continue
+                                if self.BCE_loss:
+                                    # label_idx = final_label_indices[i][0]
+                                    # conf = final_label_indices[i][1]
+                                    label_idx = final_label_indices[i].item()
+                                    conf = logits_sigmoided[i, label_idx].item()
+                                else:
+                                    label_idx = final_label_indices[i]
+                                    conf = similarity[i, label_idx]
+
+                                if self.candidates:
+                                    label = label_ordering[label_idx]
+                                else:
+                                    label = self.label_dict_list[label_idx]
+
+                                #print("Now labeling datapoint:", i, "with conf:", float(conf))
+                                d.set_label(label_name,
+                                            value=label,
+                                            score=float(conf)
+                                            )
+
+                                d.set_label(typename="top_5", value=" | ".join(
+                                    f"{item1} {item2}" for item1, item2 in zip(top_labels[i], top_confidences[i])))
+                                #print(d)
+
+
+                            still_to_predict_indices = [i for i, d in enumerate(datapoints) if d.get_label(
+                                "predicted").value == "O"]  # predict the ones that have not been predicted
+
+        if not self.training and self.predict_again_finally:
+
+            datapoints_modified, new_sentences = self._add_already_predicted_label_verbalizations_to_sentences(
+                sentences, datapoints, leave_out_datapoints_to_be_predicted=True)
+            self.token_encoder.embed(new_sentences)
+
+            span_hidden_states = torch.stack(
+                [self.aggregated_embedding(d, self.token_encoder.get_names()) for d in datapoints_modified])
+
+            [s.clear_embeddings() for s in new_sentences]
+
+            span_hidden_states = span_hidden_states.detach().cpu()
+            label_hidden_states = label_hidden_states.detach().cpu()
+
+            similarity = torch.mm(torch.nn.functional.normalize(span_hidden_states),
+                                  torch.nn.functional.normalize(label_hidden_states.t()))
+
+            # Get the label indices with maximum similarity for each span
+            _, max_label_indices = torch.max(similarity, dim=1)
+
+            # just for inspection: get the top N (=5) most probable labels:
+            top_confidences, top_indices = torch.topk(similarity, k=5, dim=1)
+            top_confidences = [[round(float(tensor), 3) for tensor in inner_list] for inner_list in
+                               top_confidences]
+
+            top_labels = [[self.label_dict_list[index] for index in indices] for indices in top_indices]
+            # take the highest one
+            final_label_indices = top_indices[:, 0]
+
+            for i, d in enumerate(datapoints):
+                label_idx = final_label_indices[i]
+                label = self.label_dict_list[label_idx]
+                conf = similarity[i, label_idx]
+
+                d.set_label(label_name,
+                            value=label,
+                            score=float(conf)
+                            )
+
+                d.set_label(typename="top_5", value=" | ".join(
+                    f"{item1} {item2}" for item1, item2 in zip(top_labels[i], top_confidences[i])))
 
         if return_loss:
             if len(datapoints) == 0:
@@ -1063,6 +1325,24 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             return self._calculate_loss(
                 span_hidden_states, label_hidden_states, datapoints, sentences, label_name = self.label_type
             )
+
+        if return_span_and_label_hidden_states:
+            #embed again with now ALL predicted labels in sentence (all but the one in question)
+            # and return those. And of course the label embeddings as well.
+            datapoints_modified, new_sentences = self._add_already_predicted_label_verbalizations_to_sentences(
+                sentences, datapoints, leave_out_datapoints_to_be_predicted=True)
+            self.token_encoder.embed(new_sentences)
+
+            span_hidden_states = torch.stack(
+                [self.aggregated_embedding(d, self.token_encoder.get_names()) for d in datapoints_modified])
+
+            [s.clear_embeddings() for s in new_sentences]
+
+            if self.training:
+                [d.remove_labels("predicted") for d in datapoints] # necessary so that in epoch 2 the while loop condition takes effect!
+                [d.remove_labels("top_5") for d in datapoints]
+
+        return span_hidden_states, label_hidden_states
 
         return None
 
@@ -1103,6 +1383,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             "add_popularity": self.add_popularity,
             "popularity_save_path": self.popularity_save_path,
             "predict_greedy": self.predict_greedy,
+            "predict_again_finally": self.predict_again_finally,
             #"candidates": self.candidates
         }
         return model_state
@@ -1129,6 +1410,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             add_popularity = state.get("add_popularity"),
             popularity_save_path = state.get("popularity_save_path"),
             predict_greedy = state.get("predict_greedy"),
+            predict_again_finally = state.get("predict_again_finally"),
             #candidates = state.get("candidates")
             **kwargs,
         )
