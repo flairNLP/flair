@@ -2,6 +2,7 @@ import time
 
 import mkwikidata  # https://pypi.org/project/mkwikidata/
 import requests
+import json
 
 
 # try out Wikidata Query Service:
@@ -117,7 +118,7 @@ def format_to_query(wikidata_id,
        LIMIT 100
        """
 
-    ## allowing any combination of instance_of and subclass_of
+    ## too many classes: allowing any combination of instance_of and subclass_of
     if method == "allow_combination":
         query = f"""
 
@@ -169,8 +170,7 @@ def get_wikidata_categories(entity, method, add_occupation, add_field_of_work):
         'titles': entity,
         'prop': 'pageprops',
         'redirects': True,
-        # 'exintro': True,
-        # 'explaintext': True,
+
     }
 
     response = requests.get(url, params=params)
@@ -213,7 +213,6 @@ def get_wikidata_categories(entity, method, add_occupation, add_field_of_work):
 
 def get_sitelinks_of_entity(entity):
     wikidata_id = None
-    wikibase_shortdesc = ""
 
     url = 'https://en.wikipedia.org/w/api.php'
     params = {
@@ -222,8 +221,7 @@ def get_sitelinks_of_entity(entity):
         'titles': entity,
         'prop': 'pageprops',
         'redirects': True,
-        # 'exintro': True,
-        # 'explaintext': True,
+
     }
 
     response = requests.get(url, params=params)
@@ -264,9 +262,79 @@ def get_sitelinks_of_entity(entity):
     except:
         return None # Fallback
 
+#### MAPPING THE WIKIDATA CLASSES TO OUR NER LABELS ####
+
+org_classes = ["organization", "political party", "political organization", "confederation", "sports club",
+               "political party", "business", "public company", "type of organisation",
+               "national sports team", "association football club", "sports team", "government organization"
+               ]
+loc_classes = ["state", "country", "city", "classification of human settlements", "human settlement",
+               "geographic entity",
+               "physical location", "U.S. state", "historical country", "island", "geographic region"]
+per_classes = ["human", "person",
+               "Wikimedia human name disambiguation page",
+               ]
+
+# if after that and nothing found, you could look for substrings:
+# org_strings = ["organization", "business",
+#                "team",
+#                "football club", "sports club", "political party",
+#                "Broadcasting Company"]
+# loc_strings = ["city", "town", "continent", "state of", "province of", "comune of"]
+# per_strings = ["human name disambiguation page"]
+# else: MISC
+
+
+
+def map_wikidata_list_to_ner(wikidata_classes):
+
+    tag_dict = {"ORG": False,
+                "LOC": False,
+                "PER": False,
+                "MISC": False}
+
+    for c in wikidata_classes:
+        if c in per_classes:
+            tag_dict["PER"] = True
+        if c in loc_classes:
+            tag_dict["LOC"] = True
+        if c in org_classes:
+            tag_dict["ORG"] = True
+
+    # if no rule applied? --> MISC
+    if not True in tag_dict.values():
+        tag_dict["MISC"] = True
+
+    # if more than one rule applied? --> MISC
+    if sum(tag_dict.values()) > 1:
+        tag_dict["MISC"] = True
+        tag_dict["PER"] = False
+        tag_dict["LOC"] = False
+        tag_dict["ORG"] = False
+
+    ner_label = [k for k,v in tag_dict.items() if v == True][0]
+
+    return ner_label, tag_dict
+
 if __name__ == "__main__":
-    nr_sitelinks = get_sitelinks_of_entity("Berlin")
-    print(nr_sitelinks)
-    nr_sitelinks = get_sitelinks_of_entity("Chris_Harris_(cricketer)")
-    print(nr_sitelinks)
+
+    for e in ["Berlin", "Chris_Harris_(cricketer)", "Council_of_the_European_Union"]:
+        print("--")
+        print(e)
+
+        print("Nr of Sitelinks:", get_sitelinks_of_entity(e))
+
+        print("The list that we used:")
+        item_info = get_wikidata_categories(e, method="strict", add_occupation=True, add_field_of_work=False)
+        print(json.dumps(item_info, indent = 4))
+
+        print("NER:", map_wikidata_list_to_ner(item_info["class_names"])[0])
+
+        #print("\ndifferent combinations of the relations, one lead to too many, one to too little:")
+        #print(get_wikidata_categories(e, method= "only_one_level_up", add_occupation=True, add_field_of_work=False))
+        #print(get_wikidata_categories(e, method= "allow_combination", add_occupation=True, add_field_of_work=False))
+
+
+
+
 
