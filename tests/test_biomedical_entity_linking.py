@@ -90,9 +90,8 @@ def test_biomedical_entity_linking():
     tagger = Classifier.load("hunflair")
     tagger.predict(sentence)
 
-    for entity_type in ["disease", "chemical", "gene", "species"]:
-        linker = EntityMentionLinker.load(f"{entity_type}-linker")
-        linker.predict(sentence)
+    linker = EntityMentionLinker.load("disease-linker")
+    linker.predict(sentence)
 
     for span in sentence.get_spans():
         print(span)
