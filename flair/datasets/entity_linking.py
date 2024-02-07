@@ -29,12 +29,13 @@ class EntityLinkingDictionary:
     def __init__(
         self,
         candidates: Iterable[EntityCandidate],
-        dataset_name: Optional[str] = None,
+        dataset_name: Optional[str] = None,  # used as prefix to `EntityCandidate.concept_id`, e.g. NCBI Gene:2
     ):
         """Initialize the entity linking dictionary.
 
         Args:
             candidates: A iterable sequence of all Candidates contained in the knowledge base.
+            dataset_name: string to prefix concept IDs. To be used for custom dictionaries.
         """
         # this dataset name
         if dataset_name is None:
@@ -76,6 +77,8 @@ class EntityLinkingDictionary:
         return InMemoryEntityLinkingDictionary(list(self._idx_to_candidates.values()), self._dataset_name)
 
 
+# NOTE: EntityLinkingDictionary are lazy-loaded from a preprocessed file.
+# Use this class to load into memory all candidates
 class InMemoryEntityLinkingDictionary(EntityLinkingDictionary):
     def __init__(self, candidates: List[EntityCandidate], dataset_name: str):
         self._dataset_name = dataset_name
@@ -2212,7 +2215,17 @@ class WSD_TRAINOMATIC(ColumnCorpus):
         )
 
 
-class BigbioCorpus(Corpus, abc.ABC):
+# TODO: Adapt this following: https://github.com/flairNLP/flair/pull/3146
+class BigBioEntityLinkingCorpus(Corpus, abc.ABC):
+    """This class implements an adapter to data sets implemented in the BigBio framework:
+
+        https://github.com/bigscience-workshop/biomedical
+
+    The BigBio framework harmonizes over 120 biomedical data sets and provides a uniform
+    programming api to access them. This adapter allows to use all named entity recognition
+    data sets by using the bigbio_kb schema.
+    """
+
     def __init__(
         self,
         base_path: Optional[Union[str, Path]] = None,
@@ -2323,7 +2336,13 @@ class BigbioCorpus(Corpus, abc.ABC):
         return FlairDatapointDataset(all_sentences)
 
 
-class BIGBIO_NCBI_DISEASE(BigbioCorpus):
+class BIGBIO_NCBI_DISEASE(BigBioEntityLinkingCorpus):
+    """This class implents the adapter for the NCBI Disease corpus:
+
+    - Reference: https://www.sciencedirect.com/science/article/pii/S1532046413001974
+    - Link: https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/
+    """
+
     def __init__(self, base_path: Optional[Union[str, Path]] = None, label_type: str = "el-diseases", **kwargs) -> None:
         super().__init__(base_path, label_type, **kwargs)
 
@@ -2418,7 +2437,13 @@ class BIGBIO_NCBI_DISEASE(BigbioCorpus):
                 yield unified_example
 
 
-class BIGBIO_BC5CDR_CHEMICAL(BigbioCorpus):
+class BIGBIO_BC5CDR_CHEMICAL(BigBioEntityLinkingCorpus):
+    """This class implents the adapter for the BC5CDR corpus (only chemical annotations):
+
+    - Reference: https://academic.oup.com/database/article/doi/10.1093/database/baw068/2630414
+    - Link: https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/track-3-cdr/
+    """
+
     def __init__(self, base_path: Optional[Union[str, Path]] = None, label_type: str = "el-chemical", **kwargs) -> None:
         super().__init__(base_path, label_type, **kwargs)
 
@@ -2503,7 +2528,13 @@ class BIGBIO_BC5CDR_CHEMICAL(BigbioCorpus):
             yield data
 
 
-class BIGBIO_GNORMPLUS(BigbioCorpus):
+class BIGBIO_GNORMPLUS(BigBioEntityLinkingCorpus):
+    """This class implents the adapter for the GNormPlus corpus:
+
+    - Reference: https://www.hindawi.com/journals/bmri/2015/918710/
+    - Link: https://www.ncbi.nlm.nih.gov/research/bionlp/Tools/gnormplus/
+    """
+
     def __init__(self, base_path: Optional[Union[str, Path]] = None, label_type: str = "el-genes", **kwargs) -> None:
         self._re_tax_id = re.compile(r"(?P<db_id>\d+)\([tT]ax:(?P<tax_id>\d+)\)")
         super().__init__(base_path, label_type, norm_keys=["db_id"], **kwargs)
