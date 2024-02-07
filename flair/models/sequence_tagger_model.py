@@ -1050,6 +1050,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
         reproject_embeddings = False,
         weighted_loss: bool = True,
         last_layer_only: bool = False,
+        print_all_predictions = True,
         **seqtaggerargs
     ):
         """
@@ -1079,6 +1080,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
             )
         self.weighted_loss = weighted_loss
         self.last_layer_only = last_layer_only
+        self.print_all_predictions = print_all_predictions
 
         self.to(flair.device)
 
@@ -1447,7 +1449,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 store_embeddings(batch, embedding_storage_mode)
 
                 # make printout lines
-                if out_path and layer_idx==-1:
+                if out_path and layer_idx==-1 and self.print_all_predictions:
                     lines.extend(self._print_predictions(batch, gold_label_type))
 
             # convert true and predicted values to two span-aligned lists
@@ -1468,7 +1470,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 )
 
             # write all_predicted_values to out_file if set (per-epoch)
-            if out_path and layer_idx==-1:
+            if out_path and layer_idx==-1 and self.print_all_predictions:
                 epoch_log_path = str(out_path)[:-4]+'_'+str(self.model_card["training_parameters"]["epoch"])+'.tsv'
                 with open(Path(epoch_log_path), "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
@@ -1654,6 +1656,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
                     eval_line = (
                         f"{token.text} "
                         f"{gold} " # observed (noisy) label
+                        f"{clean} " # clean label
                         f"{pred} " # predicted label
                         f"{pred == gold} " # correct prediction flag
                         f"{gold != clean} " # noisy flag 
