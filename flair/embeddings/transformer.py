@@ -188,6 +188,8 @@ def document_mean_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths
     for i in torch.arange(sentence_hidden_states.shape[0]):
         result[i] = sentence_hidden_states[i, : sentence_lengths[i]].mean(dim=0)
 
+    return result
+
 
 @torch.jit.script_if_tracing
 def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor):
@@ -197,6 +199,19 @@ def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths:
 
     for i in torch.arange(sentence_hidden_states.shape[0]):
         result[i], _ = sentence_hidden_states[i, : sentence_lengths[i]].max(dim=0)
+
+    return result
+
+@torch.jit.script_if_tracing
+def document_first_last_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor):
+    result = torch.zeros(
+        sentence_hidden_states.shape[0], sentence_hidden_states.shape[2]*2, dtype=sentence_hidden_states.dtype
+    )
+
+    for i in torch.arange(sentence_hidden_states.shape[0]):
+        result[i] = torch.cat((sentence_hidden_states[i, 0], sentence_hidden_states[i, sentence_lengths[i]-1]), 0)
+
+    return result
 
 
 def _legacy_reconstruct_word_ids(
@@ -1049,7 +1064,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         self.token_embedding = is_token_embedding
         self.document_embedding = is_document_embedding
 
-        if self.document_embedding and cls_pooling not in ["cls", "max", "mean"]:
+        if self.document_embedding and cls_pooling not in ["cls", "max", "mean", "first_last"]:
             raise ValueError(f"Document Pooling operation `{cls_pooling}` is not defined for TransformerEmbedding")
 
         if self.token_embedding and subtoken_pooling not in ["first", "last", "first_last", "mean"]:
@@ -1324,6 +1339,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                     document_embeddings = document_mean_pooling(sentence_hidden_states, sub_token_lengths)
                 elif self.cls_pooling == "max":
                     document_embeddings = document_max_pooling(sentence_hidden_states, sub_token_lengths)
+                elif self.cls_pooling == "first_last":
+                    document_embeddings = document_first_last_pooling(sentence_hidden_states, sub_token_lengths)
                 else:
                     raise ValueError(f"cls pooling method: `{self.cls_pooling}` is not implemented")
             result["document_embeddings"] = document_embeddings
