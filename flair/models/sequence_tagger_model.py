@@ -1682,7 +1682,47 @@ class EarlyExitSequenceTagger(SequenceTagger):
         return lines
  
     
- 
+
+
+class DetachedEarlyExitSequenceTagger(EarlyExitSequenceTagger):
+    def __init__(
+        self,
+        **seqtaggerargs
+    ):
+        super().__init__(
+            **seqtaggerargs
+        )
+
+    def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):  # type: ignore[override]
+        """
+        Forward propagation through network.
+        :param sentence_tensor: A tensor representing the batch of sentences.
+        :param lengths: A IntTensor representing the lengths of the respective sentences.
+        """
+        scores = []
+        for i in range(self.n_layers):
+            sentence_layer_tensor = sentence_tensor[:, :, i, :]
+            if self.use_dropout:
+                sentence_layer_tensor = self.dropout(sentence_layer_tensor)
+            if self.use_word_dropout:
+                sentence_layer_tensor = self.word_dropout(sentence_layer_tensor)
+            if self.use_locked_dropout:
+                sentence_layer_tensor = self.locked_dropout(sentence_layer_tensor)
+
+            # linear map to tag space
+            if i < self.n_layers-1:
+                features = self.linear[i](sentence_layer_tensor.detach()) # if any layer but last .detach()
+            else:
+                features = self.linear[i](sentence_layer_tensor)
+            # think about having a factor for all other decoders
+
+            # -- A tensor of shape (aggregated sequence length for all sentences in batch, tagset size) for linear layer
+            layer_scores = self._get_scores_from_features(features, lengths)
+            scores.append(layer_scores)
+
+        return torch.stack(scores)
+
+
 class HybridEarlyExitSequenceTagger(EarlyExitSequenceTagger):
     def __init__(
         self,
