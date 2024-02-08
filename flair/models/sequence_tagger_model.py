@@ -2,7 +2,6 @@ import logging
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union, cast
-from urllib.error import HTTPError
 
 import torch
 import torch.nn
@@ -14,7 +13,7 @@ import flair.nn
 from flair.data import Dictionary, Label, Sentence, Span, get_spans_from_bio
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
-from flair.file_utils import cached_path, unzip_file
+from flair.file_utils import cached_path, hf_download, unzip_file
 from flair.models.sequence_tagger_utils.crf import CRF
 from flair.models.sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 from flair.training_utils import store_embeddings
@@ -764,8 +763,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         cache_dir = Path("models")
 
-        get_from_model_hub = False
-
         # check if model name is a valid local file
         if Path(model_name).exists():
             model_path = model_name
@@ -775,9 +772,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             # get mapped name
             hf_model_name = huggingface_model_map[model_name]
 
-            # use mapped name instead
-            model_name = hf_model_name
-            get_from_model_hub = True
+            model_path = hf_download(hf_model_name)
 
         # if not, check if model key is remapped to direct download location. If so, download model
         elif model_name in hu_model_map:
@@ -838,44 +833,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # for all other cases (not local file or special download location), use HF model hub
         else:
-            get_from_model_hub = True
-
-        # if not a local file, get from model hub
-        if get_from_model_hub:
-            hf_model_name = "pytorch_model.bin"
-            revision = "main"
-
-            if "@" in model_name:
-                model_name_split = model_name.split("@")
-                revision = model_name_split[-1]
-                model_name = model_name_split[0]
-
-            # use model name as subfolder
-            model_folder = model_name.split("/", maxsplit=1)[1] if "/" in model_name else model_name
-
-            # Lazy import
-            from huggingface_hub.file_download import hf_hub_download
-
-            try:
-                model_path = hf_hub_download(
-                    repo_id=model_name,
-                    filename=hf_model_name,
-                    revision=revision,
-                    library_name="flair",
-                    library_version=flair.__version__,
-                    cache_dir=flair.cache_root / "models" / model_folder,
-                )
-            except HTTPError:
-                # output information
-                log.error("-" * 80)
-                log.error(
-                    f"ERROR: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
-                )
-                log.error(" -> Please check https://huggingface.co/models?filter=flair for all available models.")
-                log.error(" -> Alternatively, point to a model file on your local drive.")
-                log.error("-" * 80)
-                Path(flair.cache_root / "models" / model_folder).rmdir()  # remove folder again if not valid
-                raise
+            model_path = hf_download(model_name)
 
         return model_path
 

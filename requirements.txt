@@ -27,3 +27,4 @@ transformers[sentencepiece]>=4.18.0,<5.0.0
 urllib3<2.0.0,>=1.0.0  # pin below 2 to make dependency resolution faster.
 wikipedia-api>=0.5.7
 semver<4.0.0,>=3.0.0
+bioc<3.0.0,>=2.0.0

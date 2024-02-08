@@ -206,6 +206,7 @@ def test_filter_nested_entities(caplog):
     dataset = InternalBioNerDataset(documents={}, entities_per_document=entities_per_document)
     caplog.set_level(logging.WARNING)
     filter_nested_entities(dataset)
+
     assert "WARNING: Corpus modified by filtering nested entities." in caplog.text
 
     for key, entities in dataset.entities_per_document.items():

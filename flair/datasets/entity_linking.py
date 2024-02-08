@@ -1,18 +1,471 @@
+import abc
+import bisect
 import csv
 import logging
 import os
+import re
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Union
 
 import requests
+from bioc import biocxml, pubtator
 
 import flair
-from flair.data import Corpus, MultiCorpus, Sentence
+from flair.data import Corpus, EntityCandidate, MultiCorpus, Sentence, Token
+from flair.datasets import FlairDatapointDataset
 from flair.datasets.sequence_labeling import ColumnCorpus, MultiFileColumnCorpus
 from flair.file_utils import cached_path, unpack_file
 from flair.splitter import SegtokSentenceSplitter, SentenceSplitter
 
 log = logging.getLogger("flair")
+
+
+class EntityLinkingDictionary:
+    """Base class for downloading and reading of dictionaries for entity entity linking.
+
+    A dictionary represents all entities of a knowledge base and their associated ids.
+    """
+
+    def __init__(
+        self,
+        candidates: Iterable[EntityCandidate],
+        dataset_name: Optional[str] = None,  # used as prefix to `EntityCandidate.concept_id`, e.g. NCBI Gene:2
+    ):
+        """Initialize the entity linking dictionary.
+
+        Args:
+            candidates: A iterable sequence of all Candidates contained in the knowledge base.
+            dataset_name: string to prefix concept IDs. To be used for custom dictionaries.
+        """
+        # this dataset name
+        if dataset_name is None:
+            dataset_name = self.__class__.__name__.lower()
+        self._dataset_name = dataset_name
+
+        candidates = list(candidates)
+
+        self._idx_to_candidates = {candidate.concept_id: candidate for candidate in candidates}
+
+        # one name can map to multiple concepts
+        self._text_to_index: Dict[str, List[str]] = {}
+        for candidate in candidates:
+            for text in [candidate.concept_name, *candidate.synonyms]:
+                if text not in self._text_to_index:
+                    self._text_to_index[text] = []
+                self._text_to_index[text].append(candidate.concept_id)
+
+    @property
+    def database_name(self) -> str:
+        """Name of the database represented by the dictionary."""
+        return self._dataset_name
+
+    @property
+    def text_to_index(self) -> Dict[str, List[str]]:
+        return self._text_to_index
+
+    @property
+    def candidates(self) -> List[EntityCandidate]:
+        return list(self._idx_to_candidates.values())
+
+    def __getitem__(self, item: str) -> EntityCandidate:
+        return self._idx_to_candidates[item]
+
+    def __contains__(self, item: str) -> bool:
+        return item in self._idx_to_candidates
+
+    def to_in_memory_dictionary(self) -> "InMemoryEntityLinkingDictionary":
+        return InMemoryEntityLinkingDictionary(list(self._idx_to_candidates.values()), self._dataset_name)
+
+
+# NOTE: EntityLinkingDictionary are lazy-loaded from a preprocessed file.
+# Use this class to load into memory all candidates
+class InMemoryEntityLinkingDictionary(EntityLinkingDictionary):
+    def __init__(self, candidates: List[EntityCandidate], dataset_name: str):
+        self._dataset_name = dataset_name
+        super().__init__(candidates, dataset_name=dataset_name)
+
+    def to_state(self) -> Dict[str, Any]:
+        return {
+            "dataset_name": self._dataset_name,
+            "candidates": [candidate.to_dict() for candidate in self._idx_to_candidates.values()],
+        }
+
+    @classmethod
+    def from_state(cls, state: Dict[str, Any]) -> "InMemoryEntityLinkingDictionary":
+        return cls(
+            dataset_name=state["dataset_name"],
+            candidates=[EntityCandidate(**candidate) for candidate in state["candidates"]],
+        )
+
+
+class HunerEntityLinkingDictionary(EntityLinkingDictionary):
+    """Base dictionary with data already in huner format.
+
+    Every line in the file must be formatted as follows:
+
+        concept_id||concept_name
+
+    If multiple concept ids are associated to a given name they have to be separated by a `|`, e.g.
+
+        7157||TP53|tumor protein p53
+    """
+
+    def __init__(self, path: Union[str, Path], dataset_name: str):
+        self.dataset_file = Path(path)
+        self._dataset_name = dataset_name
+        super().__init__(self._load_candidates(), dataset_name=dataset_name)
+
+    def _load_candidates(self):
+        with open(self.dataset_file) as fp:
+            for line in fp:
+                line = line.strip()
+                if line == "":
+                    continue
+                assert "||" in line, "Preprocessed EntityLinkingDictionary must have lines in the format: `cui||name`"
+                cui, name = line.split("||", 1)
+                cui, *additional_ids = cui.split("|")
+                yield EntityCandidate(
+                    concept_id=cui,
+                    concept_name=name,
+                    database_name=self._dataset_name,
+                    additional_ids=additional_ids,
+                )
+
+
+class CTD_DISEASES_DICTIONARY(EntityLinkingDictionary):
+    """Dictionary for named entity linking on diseases using the Comparative Toxicogenomics Database (CTD).
+
+    Fur further information can be found at https://ctdbase.org/
+    """
+
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+    ):
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        base_path = Path(base_path)
+
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        data_file = self.download_dictionary(data_folder)
+
+        super().__init__(self.parse_file(data_file), dataset_name="CTD-DISEASES")
+
+    def download_dictionary(self, data_dir: Path) -> Path:
+        result_file = data_dir / "CTD_diseases.tsv"
+        data_url = "https://ctdbase.org/reports/CTD_diseases.tsv.gz"
+
+        if not result_file.exists():
+            data_path = cached_path(data_url, data_dir)
+            unpack_file(data_path, unpack_to=result_file, keep=False)
+
+        return result_file
+
+    def parse_file(self, original_file: Path) -> Iterator[EntityCandidate]:
+        columns = [
+            "symbol",
+            "identifier",
+            "alternative_identifiers",
+            "definition",
+            "parent_identifiers",
+            "tree_numbers",
+            "parent_tree_numbers",
+            "synonyms",
+            "slim_mappings",
+        ]
+
+        with open(original_file, encoding="utf-8") as f:
+            reader = csv.DictReader(filter(lambda r: r[0] != "#", f), fieldnames=columns, delimiter="\t")
+
+            for row in reader:
+                identifier = row["identifier"]
+                additional_identifiers = [i for i in row.get("alternative_identifiers", "").split("|") if i != ""]
+
+                if any(i == "MESH:C" for i in [identifier, *additional_identifiers]):
+                    continue
+
+                symbol = row["symbol"]
+                synonyms = [s for s in row.get("synonyms", "").split("|") if s != ""]
+
+                yield EntityCandidate(
+                    concept_id=identifier,
+                    concept_name=symbol,
+                    database_name="CTD-DISEASES",
+                    additional_ids=additional_identifiers,
+                    synonyms=synonyms,
+                )
+
+
+class CTD_CHEMICALS_DICTIONARY(EntityLinkingDictionary):
+    """Dictionary for named entity linking on chemicals using the Comparative Toxicogenomics Database (CTD).
+
+    Fur further information can be found at https://ctdbase.org/
+    """
+
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+    ):
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        base_path = Path(base_path)
+
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        data_file = self.download_dictionary(data_folder)
+
+        super().__init__(self.parse_file(data_file), dataset_name="CTD-CHEMICALS")
+
+    def download_dictionary(self, data_dir: Path) -> Path:
+        result_file = data_dir / "CTD_chemicals.tsv"
+        data_url = "https://ctdbase.org/reports/CTD_chemicals.tsv.gz"
+
+        if not result_file.exists():
+            data_path = cached_path(data_url, data_dir)
+            unpack_file(data_path, unpack_to=result_file)
+
+        return result_file
+
+    def parse_file(self, original_file: Path) -> Iterator[EntityCandidate]:
+        columns = [
+            "symbol",
+            "identifier",
+            "casrn",
+            "definition",
+            "parent_identifiers",
+            "tree_numbers",
+            "parent_tree_numbers",
+            "synonyms",
+        ]
+
+        with open(original_file, encoding="utf-8") as f:
+            reader = csv.DictReader(filter(lambda r: r[0] != "#", f), fieldnames=columns, delimiter="\t")
+
+            for row in reader:
+                identifier = row["identifier"]
+                additional_identifiers = [i for i in row.get("alternative_identifiers", "").split("|") if i != ""]
+
+                # if identifier == "MESH:D013749":
+                #     # This MeSH ID was used by MeSH when this chemical was part of the MeSH controlled vocabulary.
+                #     continue
+
+                symbol = row["symbol"]
+                synonyms = [s for s in row.get("synonyms", "").split("|") if s != "" and s != symbol]
+
+                yield EntityCandidate(
+                    concept_id=identifier,
+                    concept_name=symbol,
+                    database_name="CTD-CHEMICALS",
+                    additional_ids=additional_identifiers,
+                    synonyms=synonyms,
+                )
+
+
+class NCBI_GENE_HUMAN_DICTIONARY(EntityLinkingDictionary):
+    """Dictionary for named entity linking on diseases using the NCBI Gene ontology.
+
+    Note that this dictionary only represents human genes - gene from different species
+    aren't included!
+
+    Fur further information can be found at https://www.ncbi.nlm.nih.gov/gene/
+    """
+
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+    ):
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        base_path = Path(base_path)
+
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        data_file = self.download_dictionary(data_folder)
+
+        super().__init__(self.parse_dictionary(data_file), dataset_name="NCBI-GENE-HUMAN")
+
+    def _is_invalid_name(self, name: Optional[str]) -> bool:
+        """Determine if a name should be skipped."""
+        if name is None:
+            return False
+        name = name.strip()
+        EMPTY_ENTRY_TEXT = [
+            "when different from all specified ones in Gene.",
+            "Record to support submission of GeneRIFs for a gene not in Gene",
+        ]
+
+        newentry = name == "NEWENTRY"
+        empty = name == ""
+        minus = name == "-"
+        text_comment = any(e in name for e in EMPTY_ENTRY_TEXT)
+
+        return any([newentry, empty, minus, text_comment])
+
+    def download_dictionary(self, data_dir: Path) -> Path:
+        result_file = data_dir / "Homo_sapiens.gene_info"
+        data_url = "https://ftp.ncbi.nih.gov/gene/DATA/GENE_INFO/Mammalia/Homo_sapiens.gene_info.gz"
+
+        if not result_file.exists():
+            data_path = cached_path(data_url, data_dir)
+            unpack_file(data_path, unpack_to=result_file)
+
+        return result_file
+
+    def parse_dictionary(self, original_file: Path) -> Iterator[EntityCandidate]:
+        synonym_fields = (
+            "Symbol_from_nomenclature_authority",
+            "Full_name_from_nomenclature_authority",
+            "description",
+            "Synonyms",
+            "Other_designations",
+        )
+        field_names = [
+            "tax_id",
+            "GeneID",
+            "Symbol",
+            "LocusTag",
+            "Synonyms",
+            "dbXrefs",
+            "chromosome",
+            "map_location",
+            "description",
+            "type_of_gene",
+            "Symbol_from_nomenclature_authority",
+            "Full_name_from_nomenclature_authority",
+            "Nomenclature_status",
+            "Other_designations",
+            "Modification_date",
+            "Feature_type",
+        ]
+
+        with open(original_file, encoding="utf-8") as f:
+            reader = csv.DictReader(filter(lambda r: r[0] != "#", f), fieldnames=field_names, delimiter="\t")
+
+            for row in reader:
+                identifier = row["GeneID"]
+                symbol = row["Symbol"]
+
+                if self._is_invalid_name(symbol):
+                    continue
+
+                synonyms = []
+                for synonym_field in synonym_fields:
+                    synonyms.extend([name.replace("'", "") for name in row.get(synonym_field, "").split("|")])
+                synonyms = sorted([sym for sym in set(synonyms) if not self._is_invalid_name(sym)])
+                if symbol in synonyms:
+                    synonyms.remove(symbol)
+
+                yield EntityCandidate(
+                    concept_id=identifier,
+                    concept_name=symbol,
+                    database_name="NCBI-GENE-HUMAN",
+                    synonyms=synonyms,
+                )
+
+
+class NCBI_TAXONOMY_DICTIONARY(EntityLinkingDictionary):
+    """Dictionary for named entity linking on organisms / species using the NCBI taxonomy ontology.
+
+    Further information about the ontology can be found at https://www.ncbi.nlm.nih.gov/taxonomy
+    """
+
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+    ):
+        if base_path is None:
+            base_path = flair.cache_root / "datasets"
+        base_path = Path(base_path)
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        data_file = self.download_dictionary(data_folder)
+
+        super().__init__(self.parse_dictionary(data_file), dataset_name="NCBI-TAXONOMY")
+
+    def download_dictionary(self, data_dir: Path) -> Path:
+        result_file = data_dir / "names.dmp"
+        data_url = "https://ftp.ncbi.nih.gov/pub/taxonomy/new_taxdump/new_taxdump.tar.gz"
+
+        if not result_file.exists():
+            data_path = cached_path(data_url, data_dir)
+            unpack_file(data_path, unpack_to=result_file.parent)
+
+        return result_file
+
+    def parse_dictionary(self, original_file: Path) -> Iterator[EntityCandidate]:
+        ncbi_taxonomy_synset = [
+            "genbank common name",
+            "common name",
+            "scientific name",
+            "equivalent name",
+            "synonym",
+            "acronym",
+            "blast name",
+            "genbank",
+            "genbank synonym",
+            "genbank acronym",
+            "includes",
+            "type material",
+        ]
+        main_field = "scientific name"
+        with open(original_file, encoding="utf-8") as f:
+            curr_identifier = None
+            curr_synonyms = []
+            curr_name = None
+
+            for line in f:
+                # parse line
+                parsed_line = {}
+                elements = [e.strip() for e in line.strip().split("|")]
+                parsed_line["identifier"] = elements[0]
+                parsed_line["name"] = elements[1] if elements[2] == "" else elements[2]
+                parsed_line["field"] = elements[3]
+
+                if parsed_line["name"] in ["all", "root"]:
+                    continue
+
+                if parsed_line["field"] in ["authority", "in-part", "type material"]:
+                    continue
+
+                if parsed_line["field"] not in ncbi_taxonomy_synset:
+                    raise ValueError(f"Field {parsed_line['field']} unknown!")
+
+                if curr_identifier is None:
+                    curr_identifier = parsed_line["identifier"]
+
+                if curr_identifier == parsed_line["identifier"]:
+                    synonym = parsed_line["name"]
+                    if parsed_line["field"] == main_field:
+                        curr_name = synonym
+                    else:
+                        curr_synonyms.append(synonym)
+
+                elif curr_identifier != parsed_line["identifier"]:
+                    assert curr_name is not None
+                    yield EntityCandidate(
+                        concept_id=curr_identifier,
+                        concept_name=curr_name,
+                        database_name="NCBI-TAXONOMY",
+                        synonyms=curr_synonyms,
+                    )
+
+                    curr_identifier = parsed_line["identifier"]
+                    curr_synonyms = []
+                    curr_name = None
+                    synonym = parsed_line["name"]
+                    if parsed_line["field"] == main_field:
+                        curr_name = synonym
+                    else:
+                        curr_synonyms.append(synonym)
 
 
 class ZELDA(MultiFileColumnCorpus):
@@ -1760,3 +2213,429 @@ class WSD_TRAINOMATIC(ColumnCorpus):
             banned_sentences=banned_sentences,
             sample_missing_splits=sample_missing_splits,
         )
+
+
+# TODO: Adapt this following: https://github.com/flairNLP/flair/pull/3146
+class BigBioEntityLinkingCorpus(Corpus, abc.ABC):
+    """This class implements an adapter to data sets implemented in the BigBio framework.
+
+    See: https://github.com/bigscience-workshop/biomedical
+
+    The BigBio framework harmonizes over 120 biomedical data sets and provides a uniform
+    programming api to access them. This adapter allows to use all named entity recognition
+    data sets by using the bigbio_kb schema.
+    """
+
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        label_type: str = "el",
+        norm_keys: List[str] = ["db_name", "db_id"],
+        **kwargs,
+    ) -> None:
+        self.label_type = label_type
+        self.norm_keys = norm_keys
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
+
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+        paths = self._download_dataset(data_folder)
+
+        super().__init__(
+            train=self._files_to_dataset(paths["train"]) if "train" in paths else None,
+            dev=self._files_to_dataset(paths["dev"]) if "dev" in paths else None,
+            test=self._files_to_dataset(paths["test"]) if "test" in paths else None,
+            **kwargs,
+        )
+
+    @abc.abstractmethod
+    def _download_dataset(self, data_folder: Path) -> Dict[str, Union[Path, List[Path]]]:
+        pass
+
+    @abc.abstractmethod
+    def _file_to_dicts(self, filepath: Path) -> Iterator[Dict[str, Any]]:
+        pass
+
+    def _dict_to_sentences(self, entry: Dict[str, Any]) -> List[Sentence]:
+        entities = [entity for entity in entry["entities"] if entity["normalized"]]
+
+        tokenized_passages = [
+            Sentence(passage["text"][0], start_position=passage["offsets"][0][0]) for passage in entry["passages"]
+        ]
+        start_ids = [
+            sentence.start_position + token.start_position for sentence in tokenized_passages for token in sentence
+        ]
+        end_ids = [
+            sentence.start_position + token.end_position for sentence in tokenized_passages for token in sentence
+        ]
+
+        for entity in entities:
+            for start, end in entity["offsets"]:
+                if start not in start_ids:
+                    assert start not in end_ids
+                    start_ids.append(start)
+                    end_ids.append(start)
+                if end not in end_ids:
+                    assert end not in start_ids
+                    end_ids.append(end)
+                    start_ids.append(end)
+        start_ids.sort()
+        end_ids.sort()
+        passage_sentences = []
+        n_tokens = len(start_ids)
+        for passage in entry["passages"]:
+            token_offset = passage["offsets"][0][0]
+            start_idx = bisect.bisect_left(start_ids, token_offset)
+            end_idx = bisect.bisect_right(end_ids, passage["offsets"][0][1])
+            offsets = zip(start_ids[start_idx:end_idx], end_ids[start_idx:end_idx])
+            passage_tokens = [
+                Token(passage["text"][0][start - token_offset : end - token_offset]) for start, end in offsets
+            ]
+            for i, idx in enumerate(range(start_idx, end_idx)):
+                if idx + 1 < n_tokens:
+                    passage_tokens[i].whitespace_after = start_ids[idx + 1] - end_ids[idx]
+            passage_sentences.append(Sentence(passage_tokens, start_position=token_offset))
+            for token, start, end in zip(
+                passage_sentences[-1], start_ids[start_idx:end_idx], end_ids[start_idx:end_idx]
+            ):
+                assert token.start_position + passage_sentences[-1].start_position == start
+                assert token.end_position + passage_sentences[-1].start_position == end
+
+        start_id_to_token = {
+            token.start_position + sentence.start_position: (sentence, i)
+            for sentence in passage_sentences
+            for i, token in enumerate(sentence)
+        }
+        end_id_to_token = {
+            token.end_position + sentence.start_position: (sentence, i)
+            for sentence in passage_sentences
+            for i, token in enumerate(sentence)
+        }
+        for entity in entities:
+            mention_ids = [":".join([n[key] for key in self.norm_keys]) for n in entity["normalized"]]
+            assert len(entity["offsets"]) == len(entity["text"])
+            for (start, end), text in zip(entity["offsets"], entity["text"]):
+                assert start in start_id_to_token
+                assert end in end_id_to_token
+                sent_s, start_token_idx = start_id_to_token[start]
+                sent_e, end_token_idx = end_id_to_token[end]
+                assert sent_s is sent_e
+
+                for mention_id in mention_ids:
+                    sent_s[start_token_idx : end_token_idx + 1].add_label(self.label_type, mention_id)
+        return passage_sentences
+
+    def _files_to_dataset(self, paths: Union[Path, List[Path]]) -> FlairDatapointDataset:
+        if isinstance(paths, Path):
+            paths = [paths]
+        all_sentences = []
+        for path in paths:
+            for entry in self._file_to_dicts(path):
+                all_sentences.extend(self._dict_to_sentences(entry))
+        return FlairDatapointDataset(all_sentences)
+
+
+class BIGBIO_EL_NCBI_DISEASE(BigBioEntityLinkingCorpus):
+    """This class implents the adapter for the NCBI Disease corpus.
+
+    See:
+    - Reference: https://www.sciencedirect.com/science/article/pii/S1532046413001974
+    - Link: https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/
+    """
+
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, label_type: str = "el-diseases", **kwargs) -> None:
+        super().__init__(base_path, label_type, **kwargs)
+
+    def _download_dataset(self, data_folder: Path) -> Dict[str, Union[Path, List[Path]]]:
+        download_urls = {
+            "train": (
+                "NCBItrainset_corpus.txt",
+                "https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/NCBItrainset_corpus.zip",
+            ),
+            "dev": (
+                "NCBIdevelopset_corpus.txt",
+                "https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/NCBIdevelopset_corpus.zip",
+            ),
+            "test": (
+                "NCBItestset_corpus.txt",
+                "https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/NCBItestset_corpus.zip",
+            ),
+        }
+        results_files: Dict[str, Union[Path, List[Path]]] = {}
+
+        for split, (filename, url) in download_urls.items():
+            result_path = data_folder / filename
+            results_files[split] = result_path
+
+            if result_path.exists():
+                continue
+
+            path = cached_path(url, data_folder)
+            unpack_file(path, data_folder)
+
+        return results_files
+
+    def _file_to_dicts(self, filepath: Path) -> Iterator[Dict[str, Any]]:
+        with open(filepath) as f:
+            for doc in pubtator.iterparse(f):
+                unified_example = {
+                    "id": doc.pmid,
+                    "document_id": doc.pmid,
+                    "passages": [
+                        {
+                            "text": [doc.title],
+                            "offsets": [[0, len(doc.title)]],
+                        },
+                        {
+                            "text": [doc.abstract],
+                            "offsets": [
+                                [
+                                    # +1 assumes the title and abstract will be joined by a space.
+                                    len(doc.title) + 1,
+                                    len(doc.title) + 1 + len(doc.abstract),
+                                ]
+                            ],
+                        },
+                    ],
+                }
+
+                unified_entities = []
+                for i, entity in enumerate(doc.annotations):
+                    # We need a unique identifier for this entity, so build it from the document id and entity id
+                    unified_entity_id = "_".join([doc.pmid, entity.id, str(i)])
+                    # The user can provide a callable that returns the database name.
+                    normalized = []
+
+                    for x in entity.id.split("|"):
+                        if x.startswith(("OMIM", "omim")):
+                            normalized.append({"db_name": "OMIM", "db_id": x.strip().split(":")[-1]})
+                        elif "+" in x:
+                            normalized.extend(
+                                [
+                                    {
+                                        "db_name": "MESH",
+                                        "db_id": y.split(":")[-1].strip(),
+                                    }
+                                    for y in x.split("+")
+                                ]
+                            )
+                        else:
+                            normalized.append({"db_name": "MESH", "db_id": x.split(":")[-1].strip()})
+
+                    unified_entities.append(
+                        {
+                            "id": unified_entity_id,
+                            "type": entity.type,
+                            "text": [entity.text],
+                            "offsets": [[entity.start, entity.end]],
+                            "normalized": normalized,
+                        }
+                    )
+
+                unified_example["entities"] = unified_entities
+
+                yield unified_example
+
+
+class BIGBIO_EL_BC5CDR_CHEMICAL(BigBioEntityLinkingCorpus):
+    """This class implents the adapter for the BC5CDR corpus (only chemical annotations).
+
+    See:
+    - Reference: https://academic.oup.com/database/article/doi/10.1093/database/baw068/2630414
+    - Link: https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/track-3-cdr/
+    """
+
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, label_type: str = "el-chemical", **kwargs) -> None:
+        super().__init__(base_path, label_type, **kwargs)
+
+    def _download_dataset(self, data_folder: Path) -> Dict[str, Union[Path, List[Path]]]:
+        url = "https://huggingface.co/datasets/bigbio/bc5cdr/resolve/main/CDR_Data.zip"
+
+        path = cached_path(url, data_folder)
+        data_path = data_folder / "CDR_Data" / "CDR.Corpus.v010516"
+        if not data_path.exists():
+            unpack_file(path, data_folder)
+            assert data_folder.exists()
+
+        results_files: Dict[str, Union[Path, List[Path]]] = {
+            "train": data_path / "CDR_TrainingSet.BioC.xml",
+            "dev": data_path / "CDR_DevelopmentSet.BioC.xml",
+            "test": data_path / "CDR_TestSet.BioC.xml",
+        }
+        return results_files
+
+    def _get_bioc_entity(self, span, db_id_key="MESH"):
+        offsets = [(loc.offset, loc.offset + loc.length) for loc in span.locations]
+
+        text = span.text
+
+        if len(offsets) > 1:
+            i = 0
+            texts = []
+            for start, end in offsets:
+                chunk_len = end - start
+                texts.append(text[i : chunk_len + i])
+                i += chunk_len
+                while i < len(text) and text[i] == " ":
+                    i += 1
+        else:
+            texts = [text]
+        db_ids = span.infons[db_id_key] if db_id_key else "-1"
+
+        # some entities are not linked and
+        # some entities are linked to multiple normalized ids
+        db_ids_list = [] if db_ids == "-1" else db_ids.split("|")
+
+        normalized = [{"db_name": db_id_key, "db_id": db_id} for db_id in db_ids_list]
+
+        return {
+            "id": span.id,
+            "offsets": offsets,
+            "text": texts,
+            "type": span.infons["type"],
+            "normalized": normalized,
+        }
+
+    def _file_to_dicts(self, filepath: Path) -> Iterator[Dict[str, Any]]:
+        reader = biocxml.BioCXMLDocumentReader(str(filepath))
+
+        for i, xdoc in enumerate(reader):
+            data = {
+                "document_id": xdoc.id,
+                "entities": [],
+                "passages": [],
+            }
+
+            char_start = 0
+            # passages must not overlap and spans must cover the entire document
+            for passage in xdoc.passages:
+                offsets = [[char_start, char_start + len(passage.text)]]
+                char_start = char_start + len(passage.text) + 1
+                data["passages"].append(
+                    {
+                        "type": passage.infons["type"],
+                        "text": [passage.text],
+                        "offsets": offsets,
+                    }
+                )
+
+            # entities
+            for passage in xdoc.passages:
+                for span in passage.annotations:
+                    ent = self._get_bioc_entity(span, db_id_key="MESH")
+                    if ent["type"].lower() == "chemical":
+                        data["entities"].append(ent)
+
+            yield data
+
+
+class BIGBIO_EL_GNORMPLUS(BigBioEntityLinkingCorpus):
+    """This class implents the adapter for the GNormPlus corpus.
+
+    See:
+    - Reference: https://www.hindawi.com/journals/bmri/2015/918710/
+    - Link: https://www.ncbi.nlm.nih.gov/research/bionlp/Tools/gnormplus/
+    """
+
+    def __init__(self, base_path: Optional[Union[str, Path]] = None, label_type: str = "el-genes", **kwargs) -> None:
+        self._re_tax_id = re.compile(r"(?P<db_id>\d+)\([tT]ax:(?P<tax_id>\d+)\)")
+        super().__init__(base_path, label_type, norm_keys=["db_id"], **kwargs)
+
+    def _download_dataset(self, data_folder: Path) -> Dict[str, Union[Path, List[Path]]]:
+        url = "https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/tmTools/download/GNormPlus/GNormPlusCorpus.zip"
+
+        path = cached_path(url, data_folder)
+        data_path = data_folder / "GNormPlusCorpus"
+        if not data_path.exists():
+            unpack_file(path, data_folder)
+            assert data_folder.exists()
+
+        results_files: Dict[str, Union[Path, List[Path]]] = {
+            "train": [data_path / "BC2GNtrain.BioC.xml", data_path / "NLMIAT.BioC.xml"],
+            "test": data_path / "BC2GNtest.BioC.xml",
+        }
+        return results_files
+
+    def _parse_bioc_entity(self, span, db_id_key="NCBIGene", insert_tax_id=False):
+        offsets = [(loc.offset, loc.offset + loc.length) for loc in span.locations]
+
+        text = span.text
+
+        if len(offsets) > 1:
+            i = 0
+            texts = []
+            for start, end in offsets:
+                chunk_len = end - start
+                texts.append(text[i : chunk_len + i])
+                i += chunk_len
+                while i < len(text) and text[i] == " ":
+                    i += 1
+        else:
+            texts = [text]
+        _type = span.infons["type"]
+
+        # parse db ids
+        normalized = []
+        if _type in span.infons:
+            for _id in span.infons[_type].split(","):
+                match = self._re_tax_id.match(_id)
+                if match:
+                    _id = match.group("db_id")
+
+                n = {"db_name": db_id_key, "db_id": _id}
+                if insert_tax_id:
+                    n["tax_id"] = match.group("tax_id") if match else None
+
+                normalized.append(n)
+        return {
+            "offsets": offsets,
+            "text": texts,
+            "type": _type,
+            "normalized": normalized,
+        }
+
+    def _adjust_entity_offsets(self, text: str, entities: List[Dict]):
+        for entity in entities:
+            start, end = entity["offsets"][0]
+            entity_mention = entity["text"][0]
+            if text[start:end] != entity_mention:
+                if text[start - 1 : end - 1] == entity_mention:
+                    entity["offsets"] = [(start - 1, end - 1)]
+                elif text[start : end - 1] == entity_mention:
+                    entity["offsets"] = [(start, end - 1)]
+
+    def _file_to_dicts(self, filepath: Path) -> Iterator[Dict[str, Any]]:
+        with filepath.open("r") as f:
+            collection = biocxml.load(f)
+
+            for document in collection.documents:
+                text = " ".join([passage.text for passage in document.passages])
+                entities = [
+                    self._parse_bioc_entity(entity) for passage in document.passages for entity in passage.annotations
+                ]
+
+                # Some of the entities have a off-by-one error. Correct these annotations!
+                self._adjust_entity_offsets(text, entities)
+
+                # passage offsets/lengths do not connect, recalculate them for this schema.
+                passage_spans = []
+                start = 0
+                for passage in document.passages:
+                    end = start + len(passage.text)
+                    passage_spans.append((start, end))
+                    start = end + 1
+
+                features = {
+                    "passages": [
+                        {
+                            "type": passage.infons["type"],
+                            "text": [passage.text],
+                            "offsets": [span],
+                        }
+                        for passage, span in zip(document.passages, passage_spans)
+                    ],
+                    "entities": entities,
+                }
+
+                yield features

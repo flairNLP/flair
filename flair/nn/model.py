@@ -13,6 +13,7 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
+from flair.class_utils import get_non_abstract_subclasses
 from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
@@ -137,7 +138,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         # if this class is abstract, go through all inheriting classes and try to fetch and load the model
         if inspect.isabstract(cls):
             # get all non-abstract subclasses
-            subclasses = get_non_abstract_subclasses(cls)
+            subclasses = list(get_non_abstract_subclasses(cls))
 
             # try to fetch the model for each subclass. if fetching is possible, load model and return it
             for model_cls in subclasses:
@@ -976,14 +977,3 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         from typing import cast
 
         return cast("DefaultClassifier", super().load(model_path=model_path))
-
-
-def get_non_abstract_subclasses(cls):
-    all_subclasses = []
-    for subclass in cls.__subclasses__():
-        all_subclasses.extend(get_non_abstract_subclasses(subclass))
-        if inspect.isabstract(subclass):
-            continue
-        all_subclasses.append(subclass)
-
-    return all_subclasses
