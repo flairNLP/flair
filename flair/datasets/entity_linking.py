@@ -2217,9 +2217,9 @@ class WSD_TRAINOMATIC(ColumnCorpus):
 
 # TODO: Adapt this following: https://github.com/flairNLP/flair/pull/3146
 class BigBioEntityLinkingCorpus(Corpus, abc.ABC):
-    """This class implements an adapter to data sets implemented in the BigBio framework:
+    """This class implements an adapter to data sets implemented in the BigBio framework.
 
-        https://github.com/bigscience-workshop/biomedical
+    See: https://github.com/bigscience-workshop/biomedical
 
     The BigBio framework harmonizes over 120 biomedical data sets and provides a uniform
     programming api to access them. This adapter allows to use all named entity recognition
@@ -2336,9 +2336,10 @@ class BigBioEntityLinkingCorpus(Corpus, abc.ABC):
         return FlairDatapointDataset(all_sentences)
 
 
-class BIGBIO_NCBI_DISEASE(BigBioEntityLinkingCorpus):
-    """This class implents the adapter for the NCBI Disease corpus:
+class BIGBIO_EL_NCBI_DISEASE(BigBioEntityLinkingCorpus):
+    """This class implents the adapter for the NCBI Disease corpus.
 
+    See:
     - Reference: https://www.sciencedirect.com/science/article/pii/S1532046413001974
     - Link: https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/
     """
@@ -2437,9 +2438,10 @@ class BIGBIO_NCBI_DISEASE(BigBioEntityLinkingCorpus):
                 yield unified_example
 
 
-class BIGBIO_BC5CDR_CHEMICAL(BigBioEntityLinkingCorpus):
-    """This class implents the adapter for the BC5CDR corpus (only chemical annotations):
+class BIGBIO_EL_BC5CDR_CHEMICAL(BigBioEntityLinkingCorpus):
+    """This class implents the adapter for the BC5CDR corpus (only chemical annotations).
 
+    See:
     - Reference: https://academic.oup.com/database/article/doi/10.1093/database/baw068/2630414
     - Link: https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/track-3-cdr/
     """
@@ -2528,9 +2530,10 @@ class BIGBIO_BC5CDR_CHEMICAL(BigBioEntityLinkingCorpus):
             yield data
 
 
-class BIGBIO_GNORMPLUS(BigBioEntityLinkingCorpus):
-    """This class implents the adapter for the GNormPlus corpus:
+class BIGBIO_EL_GNORMPLUS(BigBioEntityLinkingCorpus):
+    """This class implents the adapter for the GNormPlus corpus.
 
+    See:
     - Reference: https://www.hindawi.com/journals/bmri/2015/918710/
     - Link: https://www.ncbi.nlm.nih.gov/research/bionlp/Tools/gnormplus/
     """
