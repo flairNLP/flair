@@ -449,21 +449,45 @@ class ModelTrainer(Pluggable):
         # instantiate the optimizer
         kwargs["lr"] = learning_rate
         if decoder_learning_rate:
-            params = [
-                {
-                    "params": [param for name, param in self.model.named_parameters() if "embeddings" not in name],
-                    "lr": decoder_learning_rate,
-                },
-                {
-                    "params": [param for name, param in self.model.named_parameters() if "embeddings" in name],
-                    "lr": learning_rate,
-                },
-            ]
-            self.optimizer = optimizer(params=params, **kwargs)
-            log.info(
-                f"Modifying learning rate to {decoder_learning_rate} for the following "
-                f"parameters: {[name for name, param in self.model.named_parameters() if 'embeddings' not in name]}"
-            )
+
+            if not self.model.modify_last_decoder_lr: #only works if this parameter is set in the model
+                n_layers = self.model.n_layers
+                last_decoder_name = f'linear.{str(n_layers-1)}'
+
+                params = [
+                    {
+                        "params": [param for name, param in self.model.named_parameters() if (("embeddings" not in name) and (last_decoder_name not in name))],
+                        "lr": decoder_learning_rate,
+                    },
+                    {
+                        "params": [param for name, param in self.model.named_parameters() if (("embeddings" in name) or (last_decoder_name in name))],
+                        "lr": learning_rate,
+                    },
+                ]
+
+                self.optimizer = optimizer(params=params, **kwargs)
+                log.info(
+                    f"Modifying learning rate to {decoder_learning_rate} for the following "
+                    f"parameters: {[name for name, param in self.model.named_parameters() if (('embeddings' not in name) and (last_decoder_name not in name))]}"
+                )
+
+            else:
+                params = [
+                    {
+                        "params": [param for name, param in self.model.named_parameters() if "embeddings" not in name],
+                        "lr": decoder_learning_rate,
+                    },
+                    {
+                        "params": [param for name, param in self.model.named_parameters() if "embeddings" in name],
+                        "lr": learning_rate,
+                    },
+                ]
+                self.optimizer = optimizer(params=params, **kwargs)
+                log.info(
+                    f"Modifying learning rate to {decoder_learning_rate} for the following "
+                    f"parameters: {[name for name, param in self.model.named_parameters() if 'embeddings' not in name]}"
+                )
+
         else:
             self.optimizer = optimizer(params=self.model.parameters(), **kwargs)
 

@@ -1687,11 +1687,13 @@ class EarlyExitSequenceTagger(SequenceTagger):
 class DetachedEarlyExitSequenceTagger(EarlyExitSequenceTagger):
     def __init__(
         self,
+        modify_last_decoder_lr = True,
         **seqtaggerargs
     ):
         super().__init__(
             **seqtaggerargs
         )
+        self.modify_last_decoder_lr = modify_last_decoder_lr
 
     def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):  # type: ignore[override]
         """
