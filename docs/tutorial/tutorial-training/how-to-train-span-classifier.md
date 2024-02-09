@@ -70,7 +70,7 @@ trainer.fine_tune(
 As you can see, we use [`TransformerWordEmbeddings`](#flair.embeddings.token.TransformerWordEmbeddings) based on [bert-base-uncased](https://huggingface.co/bert-base-uncased) embeddings. We enable fine-tuning and set `use_context` to True.
 We use [Prototypical Networks](https://arxiv.org/abs/1703.05175), to generalize bettwer in the few-shot classification setting.
 Also, we set a `CandidateGenerator` in the [`SpanClassifier`](#flair.models.SpanClassifier).
-This way we limit the classification to a small set of candidates that are choosen depending on the text of the respective span.
+This way we limit the classification to a small set of candidates that are chosen depending on the text of the respective span.
 
 ## Loading a ColumnCorpus
 
@@ -149,7 +149,7 @@ from flair.embeddings import TransformerWordEmbeddings
 from flair.models import SequenceTagger, SpanClassifier
 from flair.models.entity_linker_model import CandidateGenerator
 from flair.trainers import ModelTrainer
-from flair.nn.decoder import PrototypicalDecoder
+from flair.nn import PrototypicalDecoder
 from flair.nn.multitask import make_multitask_model_and_corpus
 
 # 1. get the corpus
@@ -198,3 +198,36 @@ multitask_model, multicorpus = make_multitask_model_and_corpus(
 trainer = ModelTrainer(multitask_model, multicorpus)
 trainer.fine_tune(f"resources/taggers/zelda_with_mention")
 ```
+
+Here, the [make_multitask_model_and_corpus](#flair.nn.make_multitask_model_and_corpus) method creates a multitask model and a multicorpus where each sub-model is aligned for a sub-corpus.
+
+### Multitask with aligned training data
+
+If you have sentences with both annotations for ner and for nel, you might want to use a single corpus for both models.
+
+This means, that you need to manually the `multitask_id` to the sentences:
+
+```python
+from flair.data import Sentence
+
+def create_sentence(datapoint) -> Sentence:
+    tokens = ...  # calculate the tokens from your internal data structure (e.g. pandas dataframe or json dictionary)
+    spans = ...  # create a list of tuples (start_token, end_token, label) from your data structure
+    sentence = Sentence(tokens)
+    for (start, end, ner_label, nel_label) in spans:
+        sentence[start:end+1].add_label("ner", ner_label)
+        sentence[start:end+1].add_label("nel", nel_label)
+    sentence.add_label("multitask_id", "Task_0")  # Task_0 for the NER model
+    sentence.add_label("multitask_id", "Task_1")  # Task_1 for the NEL model
+```
+
+Then you can run the multitask training script with the exception that you create the [MultitaskModel](#flair.models.MultitaskModel) directly.
+
+```python
+...
+multitask_model = MultitaskModel([ner_model, nel_model], use_all_tasks=True)
+```
+
+Here, setting `use_all_tasks=True` means that we will jointly train on both tasks at the same time. This will save a lot of training time,
+as the shared embedding will be calculated once but used twice (once for each model).
+
