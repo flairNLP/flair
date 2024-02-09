@@ -13,9 +13,9 @@ from flair.models import SequenceTagger
 
 
 class PrefixedSentence(Sentence):
-    """An AugmentedSentence expresses that a sentence is augmented and compatible with the PrefixedSequenceTagger.
+    """An PrefixedSentence expresses that a sentence is augmented and compatible with the PrefixedSequenceTagger.
 
-    For inference, i.e. `predict` and `evaluate`, the AugmentedSentenceSequenceTagger internally encodes the sentences.
+    For inference, i.e. `predict` and `evaluate`, the PrefixedSequenceTagger internally encodes the sentences.
     Therefore, these functions work with the regular flair sentence objects.
     """
 
@@ -65,16 +65,16 @@ class SentenceAugmentationStrategy(ABC):
     def augment_dataset(
         self, dataset: Dataset[Sentence], annotation_layers: Optional[Union[str, List[str]]] = None
     ) -> FlairDatapointDataset[PrefixedSentence]:
-        """Transforms a dataset into a dataset containing augmented sentences specific to the `AugmentedSentenceSequenceTagger`.
+        """Transforms a dataset into a dataset containing augmented sentences specific to the `PrefixedSequenceTagger`.
 
         The returned dataset is stored in memory. For more information on the internal sentence transformation
-        procedure, see the :class:`AugmentedSentenceSequenceTagger` architecture.
+        procedure, see the :class:`PrefixedSequenceTagger` architecture.
 
         Args:
             dataset: A dataset of sentences to augment
             annotation_layers: Annotations which should be predicted.
 
-        Returns: A dataset of augmented sentences specific to the `AugmentedSentenceSequenceTagger`
+        Returns: A dataset of augmented sentences specific to the `PrefixedSequenceTagger`
         """
         data_loader: DataLoader = DataLoader(dataset, batch_size=1)
         original_sentences: List[Sentence] = [batch[0] for batch in iter(data_loader)]
@@ -86,16 +86,16 @@ class SentenceAugmentationStrategy(ABC):
     def augment_corpus(
         self, corpus: Corpus[Sentence], annotation_layers: Optional[Union[str, List[str]]] = None
     ) -> Corpus[PrefixedSentence]:
-        """Transforms a corpus into a corpus containing augmented sentences specific to the `AugmentedSentenceSequenceTagger`.
+        """Transforms a corpus into a corpus containing augmented sentences specific to the `PrefixedSequenceTagger`.
 
         The splits of the returned corpus are stored in memory. For more information on the internal
-        sentence augmentation procedure, see the :class:`AugmentedSentenceSequenceTagger`.
+        sentence augmentation procedure, see the :class:`PrefixedSequenceTagger`.
 
         Args:
             corpus: A corpus of sentences to augment
             annotation_layers: Annotations which should be predicted.
 
-        Returns: A corpus of encoded sentences specific to the `AugmentedSentenceSequenceTagger`
+        Returns: A corpus of encoded sentences specific to the `PrefixedSequenceTagger`
         """
         return Corpus(
             train=self.augment_dataset(corpus.train, annotation_layers) if corpus.train is not None else None,
@@ -221,7 +221,7 @@ class PrefixedSequenceTagger(SequenceTagger):
     def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "PrefixedSequenceTagger":
         from typing import cast
 
-        return cast("AugmentedSentenceSequenceTagger", super().load(model_path=model_path))
+        return cast("PrefixedSequenceTagger", super().load(model_path=model_path))
 
     def forward_loss(self, sentences: Union[List[Sentence], List[PrefixedSentence]]) -> Tuple[torch.Tensor, int]:
         # If all sentences are not augmented -> augment them
