@@ -927,9 +927,13 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         bio_base_repo = "hunflair"
         hf_model_map = {
             "gene-linker": f"{bio_base_repo}/biosyn-sapbert-bc2gn",
+            "gene-linker-no-ab3p": f"{bio_base_repo}/biosyn-sapbert-bc2gn-no-ab3p",
             "disease-linker": f"{bio_base_repo}/biosyn-sapbert-bc5cdr-disease",
+            "disease-linker-no-ab3p": f"{bio_base_repo}/biosyn-sapbert-bc5cdr-disease-no-ab3p",
             "chemical-linker": f"{bio_base_repo}/biosyn-sapbert-bc5cdr-chemical",
+            "chemical-linker-no-ab3p": f"{bio_base_repo}/biosyn-sapbert-bc5cdr-chemical-no-ab3p",
             "species-linker": f"{bio_base_repo}/sapbert-ncbi-taxonomy",
+            "species-linker-no-ab3p": f"{bio_base_repo}/sapbert-ncbi-taxonomy-no-ab3p",
         }
 
         if model_name in hf_model_map:
