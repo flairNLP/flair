@@ -700,9 +700,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         else:
             return torch.tensor(
                 [
-                    self.label_dictionary.get_idx_for_item(label[0])
-                    if len(label) > 0
-                    else self.label_dictionary.get_idx_for_item("O")
+                    (
+                        self.label_dictionary.get_idx_for_item(label[0])
+                        if len(label) > 0
+                        else self.label_dictionary.get_idx_for_item("O")
+                    )
                     for label in labels
                 ],
                 dtype=torch.long,
