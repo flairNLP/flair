@@ -1,5 +1,5 @@
 from flair.data import Sentence
-from flair.models.sequence_tagger_model import AugmentedSentence, EntityTypeTaskPromptAugmentationStrategy
+from flair.models.prefixed_tagger import AugmentedSentence, EntityTypeTaskPromptAugmentationStrategy
 
 
 def test_entity_type_task_prompt_augmentation_single_type():
