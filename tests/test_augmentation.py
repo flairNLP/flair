@@ -1,5 +1,5 @@
 from flair.data import Sentence
-from flair.models.prefixed_tagger import AugmentedSentence, EntityTypeTaskPromptAugmentationStrategy
+from flair.models.prefixed_tagger import EntityTypeTaskPromptAugmentationStrategy, PrefixedSentence
 
 
 def test_entity_type_task_prompt_augmentation_single_type():
@@ -8,7 +8,7 @@ def test_entity_type_task_prompt_augmentation_single_type():
     sent = Sentence("This is a test sentence.")
     aug_sent = strategy.augment_sentence(sent)
 
-    assert isinstance(aug_sent, AugmentedSentence)
+    assert isinstance(aug_sent, PrefixedSentence)
     assert aug_sent.text.startswith("[ Tag genes ] ")
     assert len(aug_sent) == 10
 
@@ -19,7 +19,7 @@ def test_entity_type_task_prompt_augmentation_two_types():
     sent = Sentence("This is a test sentence.")
     aug_sent = strategy.augment_sentence(sent)
 
-    assert isinstance(aug_sent, AugmentedSentence)
+    assert isinstance(aug_sent, PrefixedSentence)
     assert aug_sent.text.startswith("[ Tag genes and diseases ] ")
     assert len(aug_sent) == 12
 
@@ -30,7 +30,7 @@ def test_entity_type_task_prompt_augmentation_multiple_types():
     sent = Sentence("This is a test sentence.")
     aug_sent = strategy.augment_sentence(sent)
 
-    assert isinstance(aug_sent, AugmentedSentence)
+    assert isinstance(aug_sent, PrefixedSentence)
     assert aug_sent.text.startswith("[ Tag genes, diseases and chemicals ] ")
     assert len(aug_sent) == 13
 
@@ -44,7 +44,7 @@ def test_entity_type_task_prompt_augmentation_label_transfer():
 
     aug_sent = strategy.augment_sentence(sent, "ner")
 
-    assert isinstance(aug_sent, AugmentedSentence)
+    assert isinstance(aug_sent, PrefixedSentence)
     assert aug_sent.text.startswith("[ Tag genes ] ")
     assert len(aug_sent.get_labels("foo")) == 0
 

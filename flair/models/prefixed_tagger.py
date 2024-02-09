@@ -12,8 +12,8 @@ from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.models import SequenceTagger
 
 
-class AugmentedSentence(Sentence):
-    """An AugmentedSentence expresses that a sentence is augmented and compatible with the AugmentedSentenceSequenceTagger.
+class PrefixedSentence(Sentence):
+    """An AugmentedSentence expresses that a sentence is augmented and compatible with the PrefixedSequenceTagger.
 
     For inference, i.e. `predict` and `evaluate`, the AugmentedSentenceSequenceTagger internally encodes the sentences.
     Therefore, these functions work with the regular flair sentence objects.
@@ -26,7 +26,7 @@ class SentenceAugmentationStrategy(ABC):
     @abstractmethod
     def augment_sentence(
         self, sentence: Sentence, annotation_layers: Optional[Union[str, List[str]]] = None
-    ) -> AugmentedSentence:
+    ) -> PrefixedSentence:
         """Augments the given sentence text with additional instructions for working / predicting the task on the given annotations.
 
         Args:
@@ -64,7 +64,7 @@ class SentenceAugmentationStrategy(ABC):
 
     def augment_dataset(
         self, dataset: Dataset[Sentence], annotation_layers: Optional[Union[str, List[str]]] = None
-    ) -> FlairDatapointDataset[AugmentedSentence]:
+    ) -> FlairDatapointDataset[PrefixedSentence]:
         """Transforms a dataset into a dataset containing augmented sentences specific to the `AugmentedSentenceSequenceTagger`.
 
         The returned dataset is stored in memory. For more information on the internal sentence transformation
@@ -85,7 +85,7 @@ class SentenceAugmentationStrategy(ABC):
 
     def augment_corpus(
         self, corpus: Corpus[Sentence], annotation_layers: Optional[Union[str, List[str]]] = None
-    ) -> Corpus[AugmentedSentence]:
+    ) -> Corpus[PrefixedSentence]:
         """Transforms a corpus into a corpus containing augmented sentences specific to the `AugmentedSentenceSequenceTagger`.
 
         The splits of the returned corpus are stored in memory. For more information on the internal
@@ -128,9 +128,9 @@ class EntityTypeTaskPromptAugmentationStrategy(SentenceAugmentationStrategy):
 
     def augment_sentence(
         self, sentence: Sentence, annotation_layers: Optional[Union[str, List[str]]] = None
-    ) -> AugmentedSentence:
+    ) -> PrefixedSentence:
         # Prepend the task description prompt to the sentence text
-        augmented_sentence = AugmentedSentence(
+        augmented_sentence = PrefixedSentence(
             text=self.task_prompt + [t.text for t in sentence.tokens],
             use_tokenizer=False,
             language_code=sentence.language_code,
@@ -223,14 +223,14 @@ class PrefixedSequenceTagger(SequenceTagger):
 
         return cast("AugmentedSentenceSequenceTagger", super().load(model_path=model_path))
 
-    def forward_loss(self, sentences: Union[List[Sentence], List[AugmentedSentence]]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, sentences: Union[List[Sentence], List[PrefixedSentence]]) -> Tuple[torch.Tensor, int]:
         # If all sentences are not augmented -> augment them
         if all(isinstance(sentence, Sentence) for sentence in sentences):
             # mypy does not infer the type of "sentences" restricted by the if statement
             sentences = cast(List[Sentence], sentences)
 
             sentences = self.augment_sentences(sentences=sentences, annotation_layers=self.tag_type)
-        elif not all(isinstance(sentence, AugmentedSentence) for sentence in sentences):
+        elif not all(isinstance(sentence, PrefixedSentence) for sentence in sentences):
             raise ValueError("All passed sentences must be either uniformly augmented or not.")
 
         # mypy does not infer the type of "sentences" restricted by code above
@@ -240,7 +240,7 @@ class PrefixedSequenceTagger(SequenceTagger):
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence, List[AugmentedSentence], AugmentedSentence],
+        sentences: Union[List[Sentence], Sentence, List[PrefixedSentence], PrefixedSentence],
         mini_batch_size: int = 32,
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
@@ -257,7 +257,7 @@ class PrefixedSequenceTagger(SequenceTagger):
             sentences = [sentences]
 
         # If all sentences are already augmented (i.e. compatible with this class), just forward the sentences
-        if all(isinstance(sentence, AugmentedSentence) for sentence in sentences):
+        if all(isinstance(sentence, PrefixedSentence) for sentence in sentences):
             # mypy does not infer the type of "sentences" restricted by the if statement
             sentences = cast(List[Sentence], sentences)
 
@@ -312,7 +312,7 @@ class PrefixedSequenceTagger(SequenceTagger):
 
     def augment_sentences(
         self, sentences: Union[Sentence, List[Sentence]], annotation_layers: Optional[Union[str, List[str]]] = None
-    ) -> List[AugmentedSentence]:
+    ) -> List[PrefixedSentence]:
         if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
             sentences = [sentences]
 
