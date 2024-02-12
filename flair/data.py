@@ -1787,10 +1787,10 @@ class MultiCorpus(Corpus):
 
     def __str__(self) -> str:
         output = (
-            f"MultiCorpus: "  # type: ignore[arg-type]
-            f"{len(self.train) if self.train else 0} train + "
-            f"{len(self.dev) if self.dev else 0} dev + "
-            f"{len(self.test) if self.test else 0} test sentences\n - "
+            f"MultiCorpus: "
+            f"{_len_dataset(self.train) if self.train else 0} train + "
+            f"{_len_dataset(self.dev) if self.dev else 0} dev + "
+            f"{_len_dataset(self.test) if self.test else 0} test sentences\n - "
         )
         output += "\n - ".join([f"{type(corpus).__name__} {corpus!s} - {corpus.name}" for corpus in self.corpora])
         return output

@@ -394,6 +394,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             for sentence in sentences:
                 sentence_labels = ["O"] * len(sentence)
                 for label in sentence.get_labels(self.label_type):
+                    if label.value == "O":
+                        continue
+
                     span: Span = label.data_point
                     if self.tag_format == "BIOES":
                         if len(span) == 1:
