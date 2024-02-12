@@ -19,7 +19,7 @@ from flair.models.entity_linker_model import CandidateGenerator
 
 from pathlib import Path
 
-from flair.nn.wikidata_utils import get_wikidata_categories, get_sitelinks_of_entity
+from flair.nn.wikidata_utils import get_wikidata_categories, get_sitelinks_of_entity, get_pageviews_of_entity_precomputed
 
 log = logging.getLogger("flair")
 
@@ -32,6 +32,7 @@ class WikidataLabelVerbalizer:
                  max_verbalization_length: int = 16,
                  add_occupation: bool = True,
                  add_field_of_work: bool =False,
+                 delimiter: str = ";",
                  ):
 
         self.label_dictionary = label_dictionary
@@ -40,6 +41,7 @@ class WikidataLabelVerbalizer:
         self.use_wikidata_classes = use_wikidata_classes
         self.add_occupation = add_occupation
         self.add_field_of_work = add_field_of_work
+        self.delimiter = delimiter
 
         self.verbalized_labels = self.verbalize_all_labels(self, label_dictionary=self.label_dictionary, save_verbalizations=True)
         self.label_dict_list = self.label_dictionary.get_items()
@@ -50,23 +52,30 @@ class WikidataLabelVerbalizer:
             verbalized_labels_truncated = []
             for l in self.verbalized_labels:
                 s = flair.data.Sentence(l)
-                s.tokens = s.tokens[:self.max_verbalization_length]
-                verbalized_labels_truncated.append(s.text)
+                if len(s.tokens) <= self.max_verbalization_length:
+                    verbalized_labels_truncated.append(s.text)
+                else:
+                    for i in range(self.max_verbalization_length, len(s.tokens)-1):
+                        if f"{self.delimiter}" in s.tokens[i].text:
+                            s.tokens = s.tokens[:i]
+                            break
+                    verbalized_labels_truncated.append(s.text)
             self.verbalized_labels = verbalized_labels_truncated
 
     def verbalize_entity(self, entity):
         wikipedia_label = entity
         wikidata_info = get_wikidata_categories(wikipedia_label, method="only_one_level_up",
                                                 add_occupation=self.add_occupation,
-                                                add_field_of_work=self.add_field_of_work)
+                                                add_field_of_work=self.add_field_of_work,
+                                                add_country = False)
         wikidata_classes = wikidata_info["class_names"]
         wikidata_title = wikidata_info["wikidata_title"]
         wikidata_description = wikidata_info["wikibase_description"]
         verbalized = wikidata_title
         if self.use_wikidata_description:
-            verbalized += ", " + wikidata_description
+            verbalized += f"{self.delimiter} " + wikidata_description
         if self.use_wikidata_classes:
-            verbalized += ", " + ", ".join(wikidata_classes)
+            verbalized += f"{self.delimiter} " + f"{self.delimiter} ".join(wikidata_classes)
 
         return verbalized
 
@@ -208,7 +217,8 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         if self.add_popularity:
             if not self.popularity_save_path:
                 #self.popularity_save_path = "/tmp/wikipedia_sitelinks_dict.json"
-                self.popularity_save_path = "/vol/tmp/ruckersu/dual_encoder_entity_linking/sitelinks_dict.json"
+                #self.popularity_save_path = "/vol/tmp/ruckersu/dual_encoder_entity_linking/sitelinks_dict.json"
+                self.popularity_save_path = "/vol/tmp/ruckersu/dual_encoder_entity_linking/pageviews_dict.json"
 
             self._create_popularity_dict(self.label_dict_list)
 
@@ -283,43 +293,54 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
     def _create_popularity_dict(self, labels):
 
         with open(self.popularity_save_path, "r") as handle:
-            self.sitelinks_dict = json.load(handle)
+            self.popularity_dict = json.load(handle)
 
-        print(f"Found sitelinks_dict with {len(self.sitelinks_dict)} entries")
-        if not all(item in self.sitelinks_dict for item in labels):
+        print(f"Found popularity_dict with {len(self.popularity_dict)} entries")
+        use = "pageviews"  # "sitelinks"
+        if not all(item in self.popularity_dict for item in labels):
             for i, e in enumerate(self.label_dict_list):
-                if e not in self.sitelinks_dict:
-                    sitelinks = get_sitelinks_of_entity(e)
-                    self.sitelinks_dict[e] = {"sitelinks": sitelinks}
-                    print(i, e, self.sitelinks_dict[e]["sitelinks"])
+                if e not in self.popularity_dict:
+                    if use == "sitelinks":
+                        sitelinks = get_sitelinks_of_entity(e)
+                        self.popularity_dict[e] = {"popularity": sitelinks}
+                    if use == "pageviews":
+                        pageviews = get_pageviews_of_entity_precomputed(e,
+                                        "/vol/tmp/ruckersu/data/wikipedia_pageviews/en_wikipedia_ranking.txt"
+                                        )
+                        self.popularity_dict[e] = {"popularity": pageviews}
+
+                    print(i, e, self.popularity_dict[e]["popularity"])
 
                 if i % 100 == 0:
                     print("saving...")
                     with open(self.popularity_save_path, "w") as f:
-                        json.dump(self.sitelinks_dict, f)
+                        json.dump(self.popularity_dict, f)
 
             with open(self.popularity_save_path, "w") as f:
-                json.dump(self.sitelinks_dict, f)
+                json.dump(self.popularity_dict, f)
 
-        # get highest sitelinks value for normalizing
-        # max_sitelinks = 0
-        # for entity, info in self.sitelinks_dict.items():
-        #     if "sitelinks" in info:
-        #         sitelinks_count = int(info["sitelinks"])
-        #         if sitelinks_count > max_sitelinks:
-        #             max_sitelinks = sitelinks_count
+        # get highest popularity value for normalizing
+        # max_popularity = 0
+        # for entity, info in self.popularity_dict.items():
+        #     if "popularity" in info:
+        #         popularity_count = int(info["popularity"])
+        #         if popularity_count > max_popularity:
+        #             max_popularity = popularity_count
 
         # or just use N as max, so everything above N gets 1.0
-        max_sitelinks = 100
+        if use == "sitelinks":
+            max_popularity = 100
+        if use == "pageviews":
+            max_popularity = 10000000
 
         # now normalize:
-        for entity, info in self.sitelinks_dict.items():
-            if info["sitelinks"]:
-                self.sitelinks_dict[entity]["sitelinks_normalized"] = min(
-                    round(int(info["sitelinks"]) / max_sitelinks, 6), 1.0)
+        for entity, info in self.popularity_dict.items():
+            if info["popularity"]:
+                self.popularity_dict[entity]["popularity_normalized"] = min(
+                    round(int(info["popularity"]) / max_popularity, 6), 1.0)
             else:
-                self.sitelinks_dict[entity][
-                    "sitelinks_normalized"] = 0.0  # Dummy, if sitelinks was None (e.g. article was deleted)
+                self.popularity_dict[entity][
+                    "popularity_normalized"] = 0.0  # Dummy, if popularity was None (e.g. article was deleted)
 
         if self.add_popularity == "concatenate":
             # add a dense layer on token embeddings, to match dimension (+1)
@@ -341,13 +362,13 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                                        (0.75, 1.0): "Very High Popularity"
                                        }
 
-            for entity, info in self.sitelinks_dict.items():
+            for entity, info in self.popularity_dict.items():
                 for range_, label in self.popularity_mapping.items():
-                    if range_[0] <= self.sitelinks_dict[entity]["sitelinks_normalized"] <= range_[1]:
+                    if range_[0] <= self.popularity_dict[entity]["popularity_normalized"] <= range_[1]:
                         verbalization = label
-                self.sitelinks_dict[entity]["sitelinks_verbalized"] = verbalization
+                self.popularity_dict[entity]["popularity_verbalized"] = verbalization
 
-        print("done with preprocessing sitelinks info")
+        print("done with preprocessing popularity info")
 
     def _embed_labels_batchwise(self, batch_size=128, cpu = False, max_limit = None):
         print(f"Now creating label embeddings with limit {max_limit}...")
@@ -361,7 +382,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         used_labels = np.array(self.label_dict_list)[used_indices]
 
         if self.add_popularity == "verbalize":
-            popularities_verbalized = [self.sitelinks_dict[label]["sitelinks_verbalized"] for label in used_labels]
+            popularities_verbalized = [self.popularity_dict[label]["popularity_verbalized"] for label in used_labels]
 
         if self.custom_label_verbalizations:
             used_labels_verbalized = self.custom_label_verbalizations.verbalize_list_of_labels(used_labels)
@@ -396,7 +417,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                 s.clear_embeddings()
 
         if self.add_popularity == "concatenate":
-            popularities = torch.Tensor([self.sitelinks_dict[e]["sitelinks_normalized"] for e in used_labels])
+            popularities = torch.Tensor([self.popularity_dict[e]["popularity_normalized"] for e in used_labels])
             label_embeddings = torch.cat((label_embeddings, popularities.unsqueeze(1)), dim = 1)
 
         del used_labels
@@ -445,7 +466,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                 labels_ids = [self.label_dictionary.get_idx_for_item(l) for l in labels]
 
                 if self.add_popularity == "verbalize":
-                    popularities_verbalized = [self.sitelinks_dict[label]["sitelinks_verbalized"] for label in
+                    popularities_verbalized = [self.popularity_dict[label]["popularity_verbalized"] for label in
                                                labels]
 
                 if self.custom_label_verbalizations:
@@ -467,7 +488,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
                 if self.add_popularity == "concatenate":
                     popularities = torch.Tensor(
-                        [self.sitelinks_dict[e]["sitelinks_normalized"] for e in labels]).to(flair.device)
+                        [self.popularity_dict[e]["popularity_normalized"] for e in labels]).to(flair.device)
                     label_hidden_states_batch = torch.cat((label_hidden_states_batch, popularities.unsqueeze(1)), dim=1)
 
                 label_hidden_states = torch.zeros(len(self.label_dictionary), label_hidden_states_batch.shape[1],
@@ -515,7 +536,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             random_idx = random.sample(range(len(self.label_dictionary)), len(labels))
             random_labels = [self.label_dict_list[idx] for idx in random_idx]
             if self.add_popularity == "concatenate":
-                popularities.extend([self.sitelinks_dict[e]["sitelinks_normalized"] for e in random_labels])
+                popularities.extend([self.popularity_dict[e]["popularity_normalized"] for e in random_labels])
 
             if epoch_wise:
                 random_label_hidden_states = self.current_label_embeddings[random_idx]
@@ -523,7 +544,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             else:
 
                 if self.add_popularity == "verbalize":
-                    popularities_verbalized = [self.sitelinks_dict[label]["sitelinks_verbalized"] for label in
+                    popularities_verbalized = [self.popularity_dict[label]["popularity_verbalized"] for label in
                                                random_labels]
 
                 if self.custom_label_verbalizations:
@@ -574,7 +595,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             batch_labels_indices = [self.label_dictionary.get_idx_for_item(l) for l in labels]
 
             if self.add_popularity == "verbalize":
-                popularities_verbalized = [self.sitelinks_dict[label]["sitelinks_verbalized"] for label in
+                popularities_verbalized = [self.popularity_dict[label]["popularity_verbalized"] for label in
                                            labels]
 
             if self.custom_label_verbalizations:
@@ -596,7 +617,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                 [label.get_embedding() for label in labels_batch_verbalized])
 
             if self.add_popularity == "concatenate":
-                popularities = torch.Tensor([self.sitelinks_dict[e]["sitelinks_normalized"] for e in labels]).to(flair.device)
+                popularities = torch.Tensor([self.popularity_dict[e]["popularity_normalized"] for e in labels]).to(flair.device)
                 batch_labels_embeddings = torch.cat((batch_labels_embeddings, popularities.unsqueeze(1)), dim=1)
 
             if self.BCE_loss:
@@ -641,7 +662,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             labels_f = [self.label_dict_list[idx] for idx in hard_negative_indices_f]
 
             if self.add_popularity == "verbalize":
-                popularities_verbalized = [self.sitelinks_dict[label]["sitelinks_verbalized"] for label in
+                popularities_verbalized = [self.popularity_dict[label]["popularity_verbalized"] for label in
                                            labels_f]
 
             if self.custom_label_verbalizations:
@@ -668,7 +689,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         rt_hard_negatives_embeddings = torch.stack(rt_hard_negatives_embeddings, dim=0).to(flair.device)
 
         if self.add_popularity == "concatenate":
-            popularities = torch.Tensor([self.sitelinks_dict[e]["sitelinks_normalized"] for e in rt_hard_negatives_labels]).to(flair.device)
+            popularities = torch.Tensor([self.popularity_dict[e]["popularity_normalized"] for e in rt_hard_negatives_labels]).to(flair.device)
             rt_hard_negatives_embeddings = torch.cat((rt_hard_negatives_embeddings, popularities.unsqueeze(1)), dim=1)
 
         return rt_hard_negatives_embeddings
@@ -1057,7 +1078,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                     logits_sigmoided = torch.sigmoid(logits)
 
                     top_confidences, top_indices = torch.topk(logits_sigmoided, k=5, dim=1)
-                    top_confidences = [[round(float(tensor), 3) for tensor in inner_list] for inner_list in
+                    top_confidences = [[round(float(tensor), 5) for tensor in inner_list] for inner_list in
                                        top_confidences]
                     top_labels = [[self.label_dict_list[index] for index in indices] for indices in top_indices]
                     # take the highest one
@@ -1084,7 +1105,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
                     # just for inspection: get the top N (=5) most probable labels:
                     top_confidences, top_indices = torch.topk(similarity, k=5, dim=1)
-                    top_confidences = [[round(float(tensor), 3) for tensor in inner_list] for inner_list in
+                    top_confidences = [[round(float(tensor), 5) for tensor in inner_list] for inner_list in
                                       top_confidences]
 
                     top_labels = [[self.label_dict_list[index] for index in indices] for indices in top_indices]
@@ -1265,7 +1286,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
                 # just for inspection: get the top N (=5) most probable labels:
                 top_confidences, top_indices = torch.topk(similarity, k=5, dim=1)
-                top_confidences = [[round(float(tensor), 3) for tensor in inner_list] for inner_list in
+                top_confidences = [[round(float(tensor), 5) for tensor in inner_list] for inner_list in
                                    top_confidences]
 
                 top_labels = [[self.label_dict_list[index] for index in indices] for indices in top_indices]
