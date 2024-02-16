@@ -1107,7 +1107,9 @@ class Sentence(DataPoint):
         text = text.replace("\ufe0f", "")
         text = text.replace("\ufeff", "")
 
-        text = text.replace("\u2028", "")  # LINE SEPARATOR & PARAGRAPH SEPARATOR are usually used for wrapping & displaying texts,
+        text = text.replace(
+            "\u2028", ""
+        )  # LINE SEPARATOR & PARAGRAPH SEPARATOR are usually used for wrapping & displaying texts,
         text = text.replace("\u2029", "")  # but not for semantic meaning -> ignore them.
         return text
 
