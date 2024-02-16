@@ -111,7 +111,7 @@ corpus: Corpus = ColumnCorpus(data_folder, columns)
 ## constructing a dataset in memory
 
 If you have a pipeline where you need to construct your dataset from a different data source,
-you can always construct a [Corpus](#flair.data.Corpus) with [FlairDatapointDataset](#flair.datasets.FlairDatapointDataset) by hand.
+you can always construct a [Corpus](#flair.data.Corpus) with [FlairDatapointDataset](#flair.datasets.base.FlairDatapointDataset) by hand.
 Let's assume you create a function `create_datapoint(datapoint) -> Sentence` that looks somewhat like this:
 ```python
 from flair.data import Sentence
@@ -199,7 +199,7 @@ trainer = ModelTrainer(multitask_model, multicorpus)
 trainer.fine_tune(f"resources/taggers/zelda_with_mention")
 ```
 
-Here, the [make_multitask_model_and_corpus](#flair.nn.make_multitask_model_and_corpus) method creates a multitask model and a multicorpus where each sub-model is aligned for a sub-corpus.
+Here, the [make_multitask_model_and_corpus](#flair.nn.multitask.make_multitask_model_and_corpus) method creates a multitask model and a multicorpus where each sub-model is aligned for a sub-corpus.
 
 ### Multitask with aligned training data
 
