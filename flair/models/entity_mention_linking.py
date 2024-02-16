@@ -967,7 +967,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
     @classmethod
     def build(
         cls,
-        model_name_or_path: Union[str, Path],
+        model_name_or_path: str,
         label_type: str = "link",
         dictionary_name_or_path: Optional[Union[str, Path]] = None,
         hybrid_search: bool = True,
@@ -979,10 +979,21 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         dictionary: Optional[EntityLinkingDictionary] = None,
         dataset_name: Optional[str] = None,
     ) -> "EntityMentionLinker":
-        """Loads a model for biomedical named entity normalization."""
-        if not isinstance(model_name_or_path, str):
-            raise ValueError(f"String matching model name has to be an string (and not {type(model_name_or_path)}")
-        model_name_or_path = cast(str, model_name_or_path)
+        """Builds a model for biomedical named entity normalization.
+
+            Args:
+                model_name_or_path: the name to an transformer embedding model on the huggingface hub or "exact-string-match"
+                label_type: the label-type the predictions should be assigned to
+                dictionary_name_or_path: the name or path to a dictionary. If the model name is a common biomedical model, the dictionary name is asigned by default. Otherwise you can pass any of "gene", "species", "disease", "chemical" to get the respective biomedical dictionary.
+                hybrid_search: if True add a character-ngram-tfidf embedding on top of the transformer embedding model.
+                batch_size: the batch_size used when indexing the dictionary.
+                similarity_metric: the metric used to compare similarity between two embeddings.
+                preprocessor: The preprocessor used to preprocess. If None is passed, it used an AD3P processor.
+                sparse_weight: if hybrid_search is added, the sparse weight will weight the importance of the character-ngram-tfidf embedding. For the common models, this will be overwritten with a specific value.
+                entity_type: the entity type of the mentions
+                dictionary: the dictionary provided in memory. If None, the dictionary is loaded from dictionary_name_or_path.
+                dataset_name: the name to assign the dictionary for reference.
+        """
 
         if dictionary is None:
             if dictionary_name_or_path is None or isinstance(dictionary_name_or_path, str):
@@ -991,15 +1002,11 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
                 )
             dictionary = load_dictionary(dictionary_name_or_path, dataset_name=dataset_name)
 
-        if isinstance(model_name_or_path, str):
-            model_name_or_path, entity_type = cls.__get_model_path_and_entity_type(
-                model_name_or_path=model_name_or_path,
-                entity_type=entity_type,
-                hybrid_search=hybrid_search,
-            )
-        else:
-            assert entity_type is not None, "When using a custom model you must specify `entity_type`"
-            assert entity_type in ENTITY_TYPES, f"Invalid entity type `{entity_type}! Must be one of: {ENTITY_TYPES}"
+        model_name_or_path, entity_type = cls.__get_model_path_and_entity_type(
+            model_name_or_path=model_name_or_path,
+            entity_type=entity_type,
+            hybrid_search=hybrid_search,
+        )
 
         preprocessor = (
             preprocessor
