@@ -54,9 +54,14 @@ As we can see, the huflair-ner model resolved entities of several types, however
 - "neurodegenerative disease" refers to the "[Neurodegenerative Diseases](https://id.nlm.nih.gov/mesh/D019636.html)" 
 
 
-## Example 2: Extracting Ids for programmatic usage
+## Example 2: Structured handling of predictions
 
-While printing all labels is a nice way to just display :
+After the predictions, the flair sentence has multiple labels added to the sentence object.
+* Each NER prediction adds a span referenced by the `label_type` from the span tagger.
+* Each NEL prediction adds one or more labels (up to `k`) to the respective span. Those have the `label_type` from the entity mention linker. 
+* The NEL labels are ordered by their score. Depending on the exact implementation, it is possible that the order is ascending or descending, however the first one is always the best. 
+
+Therefore, an example to extract the information to a dictionary that could be used for further processing is the following:
 
 ```python
 from flair.models import EntityMentionLinker
@@ -75,8 +80,48 @@ ner_tagger = Classifier.load("hunflair")
 ner_tagger.predict(sentence)
 
 nen_tagger = EntityMentionLinker.load("disease-linker-no-ab3p")
-nen_tagger.predict(sentence)
 
-# TODO
+# top_k = 5 so that a span can have up to 5 labels assigned.
+nen_tagger.predict(sentence, top_k=5)
 
+result_mentions = []
+
+for span in sentence.get_spans(ner_tagger.label_type):
+    
+    # basic information about the span that is tagged.
+    span_data = {
+        "start": span.start_position + sentence.start_position,
+        "end": span.end_position + sentence.start_position,
+        "text": span.text,
+    }
+    
+    # add the ner label. We always have only one, so we can use `span.get_label(...)`
+    span_data["ner_label"] = span.get_label(ner_tagger.label_type).value
+    
+    mentions_found = []
+    
+    # since `top_k` is larger than 1, we need to handle multiple nen labels. Therefore we use `span.get_labels(...)`
+    for label in span.get_labels(nen_tagger.label_type):
+        mentions_found.append({
+            "id": label.value,
+            "score": label.score,
+        })
+        
+    # extract the most probable prediction if any prediction is found. 
+    if mentions_found:
+        span_data["nen_id"] = mentions_found[0]["id"]
+    else:
+        span_data["nen_id"] = None
+        
+    # add all found candidates with rating if you want to explore more than just the most probable prediction.
+    span_data["mention_candidates"] = mentions_found
+    
+    result_mentions.append(span_data)
+
+print(result_mentions)
+```
+
+```{note}
+  If you need more than the extracted ids, you can use `nen_tagger.dictionary[span_data["nen_id"]]`
+  to look up the [`flair.data.EntityCandidate`](#flair.data.EntityCandidate) which contains further information.
 ```
