@@ -1,6 +1,7 @@
 import inspect
 import logging
 import os
+import platform
 import re
 import stat
 import string
@@ -836,9 +837,13 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         if any(label in ["diseases", "genes", "species", "chemical"] for label in sentence.annotation_layers):
             if not self._warned_legacy_sequence_tagger:
                 logger.warning(
-                    "The tagger `Classifier.load('hunflair') is deprecated. Please update to: `Classifier.load('hunflair2')`."
+                    "It appears that the sentences have been annotated with HunFlair (version 1). "
+                    "Consider using HunFlair2 for improved extraction performance: Classifier.load('hunflair2')."
+                    "See https://github.com/flairNLP/flair/blob/master/resources/docs/HUNFLAIR2.md for further "
+                    "information."
                 )
                 self._warned_legacy_sequence_tagger = True
+
             entity_types = {e for sublist in entity_label_types.values() for e in sublist}
             entities_mentions = [
                 label for label in sentence.get_labels() if normalize_entity_type(label.value) in entity_types
@@ -934,6 +939,14 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
 
         if model_name in hf_model_map:
             model_name = hf_model_map[model_name]
+
+            if platform.system() == "Windows":
+                logger.warning(
+                    "You seem to run your application on a Windows system. Unfortunately, the abbreviation "
+                    "resolution of HunFlair2 is only available on Linux/Mac systems. Therefore, a model "
+                    "without abbreviation resolution is therefore loaded"
+                )
+                model_name += "-no-ab3p"
 
         return hf_download(model_name)
 
