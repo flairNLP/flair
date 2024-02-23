@@ -50,7 +50,7 @@ Span[9:12]: "Fragile X Syndrome" → Disease (1.0)
 ```
 
 #### Example 2: Biomedical NEN
-For improved integration and aggregation from multiple different documents normalizing the entities to 
+For improved integration and aggregation from multiple different documents linking / normalizing the entities to 
 standardized ontologies or knowledge bases is required. Let's perform entity normalization by using
 specialized models per entity type:
 ```python
@@ -120,8 +120,8 @@ You can find detailed evaluations and discussions in [our paper](https://arxiv.o
 
 ## Tutorials
 We provide a set of quick tutorials to get you started with *HunFlair2*:
-* [Tutorial 1: Tagging](HUNFLAIR_TUTORIAL_1_TAGGING.md)
-* [Tutorial 2: Training biomedical NER models](HUNFLAIR_TUTORIAL_2_TRAINING.md)
+* [Tutorial 1: Tagging biomedical named entities](HUNFLAIR2_TUTORIAL_1_TAGGING.md)
+* [Tutorial 2: Linking biomedical named entities](HUNFLAIR2_TUTORIAL_2_LINKING.md)
 
 ## Citing HunFlair2
 Please cite the following paper when using *HunFlair2*:

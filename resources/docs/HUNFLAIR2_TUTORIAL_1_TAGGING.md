@@ -1,8 +1,8 @@
-# HunFlair2 Tutorial 1: Tagging
+# HunFlair2 - Tutorial 1: Tagging
 
 This is part 1 of the tutorial, in which we show how to use our pre-trained *HunFlair2* models to tag your text.
 
-### Tagging with Pre-trained HunFlair-Models
+### Tagging with Pre-trained HunFlair2-Models
 Let's use the pre-trained *HunFlair2* model for biomedical named entity recognition (NER).
 This model was trained over multiple biomedical NER data sets and can recognize 5 different entity types,
 i.e. cell lines, chemicals, disease, gene / proteins and species.
@@ -117,4 +117,5 @@ Sentence[27]: "Autistic symptoms, e.g., altered social interaction and communica
 ~~~
 
 ### Next
-Now, let us look at how to [normalize the entities to standard ontologies](HUNFLAIR_TUTORIAL_2_TRAINING.md) in the second tutorial.
+Now, let us look at how to [link / normalize the entities to standard ontologies](HUNFLAIR2_TUTORIAL_2_LINKING.md) 
+in the second tutorial.
