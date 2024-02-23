@@ -781,7 +781,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         elif model_name in hu_model_map:
             model_path = cached_path(hu_model_map[model_name], cache_dir=cache_dir)
 
-            if model_name.startswith("hunflair"):
+            if model_name.startswith("hunflair-"):
                 log.warning(
                     "HunFlair (version 1) is deprecated. Consider using HunFlair2 for improved extraction performance: "
                     "Classifier.load('hunflair2')."

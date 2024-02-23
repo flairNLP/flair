@@ -260,7 +260,7 @@ class MultitaskModel(flair.nn.Classifier):
 
         cache_dir = Path("models")
         if model_name in model_map:
-            if model_name.startswith("hunflair") or model_name == "bioner":
+            if model_name in ["hunflair", "hunflair-paper", "bioner"]:
                 log.warning(
                     "HunFlair (version 1) is deprecated. Consider using HunFlair2 for improved extraction performance: "
                     "Classifier.load('hunflair2')."
