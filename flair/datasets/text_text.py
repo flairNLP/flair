@@ -991,8 +991,8 @@ class GLUE_STSB(DataPairCorpus):
 
             # rename test file to eval_dataset, since it has no labels
             os.rename(
-                str(data_folder / data_folder / "STS-B" / "test.tsv"),
-                str(data_folder / data_folder / "STS-B" / "eval_dataset.tsv"),
+                str(data_folder / "STS-B" / "test.tsv"),
+                str(data_folder / "STS-B" / "eval_dataset.tsv"),
             )
 
         super().__init__(
