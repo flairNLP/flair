@@ -1,5 +1,5 @@
 black[jupyter]>=23.3.0
-konoha<6.0.0
+konoha[janome]<6.0.0
 mypy>=1.2.0
 pytest>=7.3.1
 pytest-black-ng>=0.4.1

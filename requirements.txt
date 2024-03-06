@@ -6,7 +6,6 @@ ftfy>=6.1.0
 gdown>=4.4.0
 gensim>=4.2.0
 huggingface-hub>=0.10.0
-janome>=0.4.2
 langdetect>=1.0.9
 lxml>=4.8.0
 matplotlib>=2.2.3
