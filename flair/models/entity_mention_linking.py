@@ -927,9 +927,13 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         bio_base_repo = "hunflair"
         hf_model_map = {
             "gene-linker": f"{bio_base_repo}/biosyn-sapbert-bc2gn",
+            "gene-linker-no-ab3p": f"{bio_base_repo}/biosyn-sapbert-bc2gn-no-ab3p",
             "disease-linker": f"{bio_base_repo}/biosyn-sapbert-bc5cdr-disease",
+            "disease-linker-no-ab3p": f"{bio_base_repo}/biosyn-sapbert-bc5cdr-disease-no-ab3p",
             "chemical-linker": f"{bio_base_repo}/biosyn-sapbert-bc5cdr-chemical",
+            "chemical-linker-no-ab3p": f"{bio_base_repo}/biosyn-sapbert-bc5cdr-chemical-no-ab3p",
             "species-linker": f"{bio_base_repo}/sapbert-ncbi-taxonomy",
+            "species-linker-no-ab3p": f"{bio_base_repo}/sapbert-ncbi-taxonomy-no-ab3p",
         }
 
         if model_name in hf_model_map:
@@ -963,7 +967,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
     @classmethod
     def build(
         cls,
-        model_name_or_path: Union[str, Path],
+        model_name_or_path: str,
         label_type: str = "link",
         dictionary_name_or_path: Optional[Union[str, Path]] = None,
         hybrid_search: bool = True,
@@ -975,11 +979,21 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         dictionary: Optional[EntityLinkingDictionary] = None,
         dataset_name: Optional[str] = None,
     ) -> "EntityMentionLinker":
-        """Loads a model for biomedical named entity normalization."""
-        if not isinstance(model_name_or_path, str):
-            raise ValueError(f"String matching model name has to be an string (and not {type(model_name_or_path)}")
-        model_name_or_path = cast(str, model_name_or_path)
+        """Builds a model for biomedical named entity normalization.
 
+        Args:
+            model_name_or_path: the name to an transformer embedding model on the huggingface hub or "exact-string-match"
+            label_type: the label-type the predictions should be assigned to
+            dictionary_name_or_path: the name or path to a dictionary. If the model name is a common biomedical model, the dictionary name is asigned by default. Otherwise you can pass any of "gene", "species", "disease", "chemical" to get the respective biomedical dictionary.
+            hybrid_search: if True add a character-ngram-tfidf embedding on top of the transformer embedding model.
+            batch_size: the batch_size used when indexing the dictionary.
+            similarity_metric: the metric used to compare similarity between two embeddings.
+            preprocessor: The preprocessor used to preprocess. If None is passed, it used an AD3P processor.
+            sparse_weight: if hybrid_search is added, the sparse weight will weight the importance of the character-ngram-tfidf embedding. For the common models, this will be overwritten with a specific value.
+            entity_type: the entity type of the mentions
+            dictionary: the dictionary provided in memory. If None, the dictionary is loaded from dictionary_name_or_path.
+            dataset_name: the name to assign the dictionary for reference.
+        """
         if dictionary is None:
             if dictionary_name_or_path is None or isinstance(dictionary_name_or_path, str):
                 dictionary_name_or_path = cls.__get_dictionary_path(
@@ -987,15 +1001,11 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
                 )
             dictionary = load_dictionary(dictionary_name_or_path, dataset_name=dataset_name)
 
-        if isinstance(model_name_or_path, str):
-            model_name_or_path, entity_type = cls.__get_model_path_and_entity_type(
-                model_name_or_path=model_name_or_path,
-                entity_type=entity_type,
-                hybrid_search=hybrid_search,
-            )
-        else:
-            assert entity_type is not None, "When using a custom model you must specify `entity_type`"
-            assert entity_type in ENTITY_TYPES, f"Invalid entity type `{entity_type}! Must be one of: {ENTITY_TYPES}"
+        model_name_or_path, entity_type = cls.__get_model_path_and_entity_type(
+            model_name_or_path=model_name_or_path,
+            entity_type=entity_type,
+            hybrid_search=hybrid_search,
+        )
 
         preprocessor = (
             preprocessor
@@ -1032,10 +1042,10 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
 
     @staticmethod
     def __get_model_path_and_entity_type(
-        model_name_or_path: Union[str, Path],
+        model_name_or_path: str,
         entity_type: Optional[str] = None,
         hybrid_search: bool = False,
-    ) -> Tuple[Union[str, Path], str]:
+    ) -> Tuple[str, str]:
         """Try to figure out what model the user wants."""
         if model_name_or_path not in MODELS and model_name_or_path not in ENTITY_TYPES:
             raise ValueError(
@@ -1049,7 +1059,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
 
         if hybrid_search:
             # load model by entity_type
-            if isinstance(model_name_or_path, str) and model_name_or_path in ENTITY_TYPES:
+            if model_name_or_path in ENTITY_TYPES:
                 model_name_or_path = cast(str, model_name_or_path)
                 entity_type = model_name_or_path
 
@@ -1063,25 +1073,20 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
                         model_name_or_path,
                     )
                     model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
+            elif model_name_or_path not in PRETRAINED_HYBRID_MODELS:
+                logger.warning(
+                    "EntityMentionLinker: `hybrid_search=True` but model `%s` was not trained for hybrid search."
+                    " Results may be poor.",
+                    model_name_or_path,
+                )
+                assert (
+                    entity_type is not None
+                ), f"For non-hybrid model `{model_name_or_path}` with `hybrid_search=True` you must specify `entity_type`"
             else:
-                if model_name_or_path not in PRETRAINED_HYBRID_MODELS:
-                    logger.warning(
-                        "EntityMentionLinker: `hybrid_search=True` but model `%s` was not trained for hybrid search."
-                        " Results may be poor.",
-                        model_name_or_path,
-                    )
-                    assert (
-                        entity_type is not None
-                    ), f"For non-hybrid model `{model_name_or_path}` with `hybrid_search=True` you must specify `entity_type`"
-                else:
-                    model_name_or_path = cast(str, model_name_or_path)
-                    entity_type = PRETRAINED_HYBRID_MODELS[model_name_or_path]
-
-        else:
-            if isinstance(model_name_or_path, str):
                 model_name_or_path = cast(str, model_name_or_path)
-                if model_name_or_path in ENTITY_TYPES:
-                    model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
+                entity_type = PRETRAINED_HYBRID_MODELS[model_name_or_path]
+        elif model_name_or_path in ENTITY_TYPES:
+            model_name_or_path = ENTITY_TYPE_TO_DENSE_MODEL[model_name_or_path]
 
         assert (
             entity_type is not None

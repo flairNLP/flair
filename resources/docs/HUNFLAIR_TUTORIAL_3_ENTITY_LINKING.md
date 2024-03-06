@@ -3,7 +3,7 @@
 After adding named entity recognition tags to your sentence, you can run named entity linking on these annotations.
 
 ```python
-from flair.models.biomedical_entity_linking import EntityMentionLinker
+from flair.models import EntityMentionLinker
 from flair.nn import Classifier
 from flair.tokenization import SciSpacyTokenizer
 from flair.data import Sentence
@@ -56,7 +56,7 @@ a knowledge base or ontology. We have pre-configured combinations of models and 
 You can also provide your own model and dictionary:
 
 ```python
-from flair.models.biomedical_entity_linking import EntityMentionLinker
+from flair.models import EntityMentionLinker
 
 nen_tagger = EntityMentionLinker.build("name_or_path_to_your_model",
                                        dictionary_names_or_path="name_or_path_to_your_dictionary")
