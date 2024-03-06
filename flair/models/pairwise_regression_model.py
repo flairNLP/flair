@@ -257,7 +257,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
                 if not batch:
                     continue
 
-                data_point_tensor = self._encode_data_points(pairs)
+                data_point_tensor = self._encode_data_points(batch)
                 scores = self.decoder(data_point_tensor)
 
                 for sentence, score in zip(batch, scores.tolist()):
