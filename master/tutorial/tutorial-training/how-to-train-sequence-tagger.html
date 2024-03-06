@@ -426,6 +426,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="how-to-load-custom-dataset.html">How to load a custom dataset</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Train a sequence tagger</a></li>
 <li class="toctree-l3"><a class="reference internal" href="how-to-train-text-classifier.html">Train a text classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-train-span-classifier.html">Train a span classifier</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorial-embeddings/index.html">Tutorial 3: Embeddings</a></li>
@@ -526,7 +527,7 @@ part-of-speech (PoS) tagging.</p>
 <p>This tutorial section show you how to train state-of-the-art NER models and other taggers in Flair.</p>
 <section id="training-a-named-entity-recognition-ner-model-with-transformers">
 <h2>Training a named entity recognition (NER) model with transformers<a class="headerlink" href="#training-a-named-entity-recognition-ner-model-with-transformers" title="Permalink to this heading">#</a></h2>
-<p>For a state-of-the-art NER sytem you should fine-tune transformer embeddings, and use full document context
+<p>For a state-of-the-art NER system you should fine-tune transformer embeddings, and use full document context
 (see our <a class="reference external" href="https://arxiv.org/abs/2011.06993">FLERT</a> paper for details).</p>
 <p>Use the following script:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">CONLL_03</span>
