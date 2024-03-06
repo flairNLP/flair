@@ -51,7 +51,7 @@ from flair.trainers import ModelTrainer
 
 trainer: ModelTrainer = ModelTrainer(tagger, corpus)
 
-trainer.train(
+trainer.fine_tune(
     base_path="taggers/ncbi-disease",
     train_with_dev=False,
     max_epochs=16,
@@ -83,57 +83,120 @@ Women who smoke 20 cigarettes a day are four times more likely to develop breast
 ## Train a biomedical NER model from scratch with PrefixedSequenceTagger()
 
 Using the `PrefixedSequenceTagger()` class, we can train individual NER models capable on learning
-from multiple corpora with different entity types at the same time. We add a prefix in front of
+from multiple corpora with different entity types at the same time. We add a prefix string in front of
 each example `[Tag <entity-type-0>, <entity-type-1>, ...]` where `<entity-type-0>, <entity-type-1>, ... <entity-type-n>`
-denote the entity types present in a given corpus. The final model 
-Given the NCBI
-
-## Training HunFlair2 from scratch
-*HunFlair* consists of distinct models for the entity types cell line, chemical, disease, gene/protein
-and species. For each entity multiple corpora are used to train the model for the specific entity. The
-following code examples illustrates the training process of *HunFlair* for *cell line*:
+denote the entity types tagged in a given corpus.
 
 ```python
-from flair.datasets import HUNER_CELL_LINE
+# 1. get the corpora
+from flair.datasets.biomedical import HUNER_ALL_CDR, HUNER_CHEMICAL_NLM_CHEM
+corpora = (HUNER_ALL_CDR(), HUNER_CHEMICAL_NLM_CHEM())
 
-# 1. get all corpora for a specific entity type
-from flair.models import SequenceTagger
-corpus = HUNER_CELL_LINE()
+# 2. add prefixed strings to each corpus by prepending its tagged entity
+#    types "[Tag <entity-type-0>, <entity-type-1>, ...]"
+from flair.data import MultiCorpus
+from flair.models.prefixed_tagger import EntityTypeTaskPromptAugmentationStrategy
 
-# 2. initialize embeddings
-from flair.embeddings import WordEmbeddings, FlairEmbeddings, StackedEmbeddings
-embedding_types = [
-    WordEmbeddings("pubmed"),
-    FlairEmbeddings("pubmed-forward"),
-    FlairEmbeddings("pubmed-backward"),
+mapping = {
+    CELL_LINE_TAG: "cell lines",
+    CHEMICAL_TAG: "chemicals",
+    DISEASE_TAG: "diseases",
+    GENE_TAG: "genes",
+    SPECIES_TAG: "species",
+}
 
-]
+prefixed_corpora = []
+all_entity_types = set()
+for corpus in corpora:
+    entity_types = sorted(
+        set(
+            [
+                mapping[tag]
+                for tag in corpus.get_entity_type_mapping().values()
+            ]
+        )
+    )
+    all_entity_types.add(entity_types)
 
-embeddings = StackedEmbeddings(embeddings=embedding_types)
+    print(f"Entity types in {current_corpus}: {current_entity_types}")
 
-# 3. initialize sequence tagger
-tag_dictionary = corpus.make_label_dictionary(label_type="ner", add_unk=False)
+    augmentation_strategy = EntityTypeTaskPromptAugmentationStrategy(
+        current_entity_types
+    )
+    prefixed_corpora.append(
+        augmentation_strategy.augment_corpus(current_corpus)
+    )
 
-tagger = SequenceTagger(
+corpora = MultiCorpus(prefixed_corpora)
+all_entity_types = sorted(all_entity_types)
+
+# 3. make the tag dictionary from the corpus
+tag_dictionary = corpus.make_label_dictionary(label_type="ner")
+
+# 4. the default prefixed strings for the final model are the union of
+#    all entity types occurring in the individual corpora
+augmentation_strategy = EntityTypeTaskPromptAugmentationStrategy(
+    all_entity_types
+)
+
+# 5. initialize embeddings
+from flair.embeddings import TransformersWordEmbeddings
+
+embeddings: TransformerWordEmbeddings = TransformerWordEmbeddings(
+    "michiyasunaga/BioLinkBERT-base",
+    layers="-1",
+    subtoken_pooling="first",
+    fine_tune=True,
+    use_context=True,
+    model_max_length=512,
+)
+
+# 4. initialize sequence tagger
+from flair.models.prefixed_tagger import PrefixedSequenceTagger
+
+tagger: SequenceTagger = PrefixedSequenceTagger(
     hidden_size=256,
     embeddings=embeddings,
     tag_dictionary=tag_dictionary,
+    tag_format="BIOES",
     tag_type="ner",
-    use_crf=True,
-    locked_dropout=0.5
+    use_crf=False,
+    use_rnn=False,
+    reproject_embeddings=False,
+    augmentation_strategy=augmentation_strategy,
 )
 
-# 4. train the model
+# 5. initialize trainer
 from flair.trainers import ModelTrainer
-trainer = ModelTrainer(tagger, corpus)
 
-trainer.train(
-    base_path="taggers/hunflair-cell-line",
+trainer: ModelTrainer = ModelTrainer(tagger, corpus)
+
+trainer.fine_tune(
+    base_path="taggers/cdr_nlm_chem",
     train_with_dev=False,
-    max_epochs=200,
-    learning_rate=0.1,
-    mini_batch_size=32
+    max_epochs=16,
+    learning_rate=2.0e-5,
+    mini_batch_size=16,
+    shuffle=False,
 )
 ```
-Analogously, distinct models can be trained for chemicals, diseases, genes/proteins and species using
-`HUNER_CHEMICALS`, `HUNER_DISEASE`, `HUNER_GENE`, `HUNER_SPECIES` respectively.
+
+## Training HunFlair2 from scratch
+*HunFlair2* uses the `PrefixedSequenceTagger()` class as defined above but adds the following corpora to the training set instead:
+
+```python
+from flair.datasets.biomedical import (
+    HUNER_ALL_BIORED, HUNER_GENE_NLM_GENE,
+    HUNER_GENE_GNORMPLUS, HUNER_ALL_SCAI,
+    HUNER_CHEMICAL_NLM_CHEM, HUNER_SPECIES_LINNEAUS,
+    HUNER_SPECIES_S800, HUNER_DISEASE_NCBI
+)
+
+corpora = (
+    HUNER_ALL_BIORED(), HUNER_GENE_NLM_GENE(),
+    HUNER_GENE_GNORMPLUS(), HUNER_ALL_SCAI(),
+    HUNER_CHEMICAL_NLM_CHEM(), HUNER_SPECIES_LINNEAUS(),
+    HUNER_SPECIES_S800(), HUNER_DISEASE_NCBI()
+)
+
+```
