@@ -21,7 +21,7 @@ print(corpus)
 tag_dictionary = corpus.make_label_dictionary(label_type="ner", add_unk=False)
 
 # 3. initialize embeddings
-from flair.embeddings import TransformersWordEmbeddings
+from flair.embeddings import TransformerWordEmbeddings
 
 embeddings: TransformerWordEmbeddings = TransformerWordEmbeddings(
     "michiyasunaga/BioLinkBERT-base",
@@ -96,6 +96,14 @@ corpora = (HUNER_ALL_CDR(), HUNER_CHEMICAL_NLM_CHEM())
 #    types "[Tag <entity-type-0>, <entity-type-1>, ...]"
 from flair.data import MultiCorpus
 from flair.models.prefixed_tagger import EntityTypeTaskPromptAugmentationStrategy
+from flair.datasets.biomedical import (
+    BIGBIO_NER_CORPUS,
+    CELL_LINE_TAG,
+    CHEMICAL_TAG,
+    DISEASE_TAG,
+    GENE_TAG,
+    SPECIES_TAG,
+)
 
 mapping = {
     CELL_LINE_TAG: "cell lines",
@@ -116,15 +124,15 @@ for corpus in corpora:
             ]
         )
     )
-    all_entity_types.add(entity_types)
+    all_entity_types.update(set(entity_types))
 
-    print(f"Entity types in {current_corpus}: {current_entity_types}")
+    print(f"Entity types in {corpus}: {entity_types}")
 
     augmentation_strategy = EntityTypeTaskPromptAugmentationStrategy(
-        current_entity_types
+        entity_types
     )
     prefixed_corpora.append(
-        augmentation_strategy.augment_corpus(current_corpus)
+        augmentation_strategy.augment_corpus(corpus)
     )
 
 corpora = MultiCorpus(prefixed_corpora)
@@ -140,7 +148,7 @@ augmentation_strategy = EntityTypeTaskPromptAugmentationStrategy(
 )
 
 # 5. initialize embeddings
-from flair.embeddings import TransformersWordEmbeddings
+from flair.embeddings import TransformerWordEmbeddings
 
 embeddings: TransformerWordEmbeddings = TransformerWordEmbeddings(
     "michiyasunaga/BioLinkBERT-base",
