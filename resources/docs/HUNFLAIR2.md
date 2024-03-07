@@ -122,6 +122,8 @@ You can find detailed evaluations and discussions in [our paper](https://arxiv.o
 We provide a set of quick tutorials to get you started with *HunFlair2*:
 * [Tutorial 1: Tagging biomedical named entities](HUNFLAIR2_TUTORIAL_1_TAGGING.md)
 * [Tutorial 2: Linking biomedical named entities](HUNFLAIR2_TUTORIAL_2_LINKING.md)
+* [Tutorial 3: Training NER models](HUNFLAIR2_TUTORIAL_3_TRAINING_NER.md)
+* [Tutorial 4: Customizing linking](HUNFLAIR2_TUTORIAL_4_CUSTOMIZE_LINKING.md)
 
 ## Citing HunFlair2
 Please cite the following paper when using *HunFlair2*:
