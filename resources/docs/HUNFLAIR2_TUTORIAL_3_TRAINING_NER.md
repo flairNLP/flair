@@ -7,9 +7,11 @@ For this tutorial, we assume that you're familiar with the [base types](https://
 and how [transformers_word embeddings](https://flairnlp.github.io/docs/tutorial-training/how-to-train-sequence-tagger).
 You should also know how to [load a corpus](https://flairnlp.github.io/docs/tutorial-training/how-to-load-prepared-dataset).
 
-## Train a biomedical NER model from scratch
-Here is example code for a biomedical NER model trained over `NCBI_DISEASE` corpus using Transformer word embeddings
-and focusing on one entity type only.
+## Train a biomedical NER model from scratch: single entity type
+
+Here is example code for a biomedical NER model trained on the `NCBI_DISEASE` corpus using Transformer word embeddings.
+This will result in a tagger specialized for a single entity type, i.e. "Disease".
+
 ```python
 from flair.datasets import NCBI_DISEASE
 
@@ -60,8 +62,10 @@ trainer.fine_tune(
     shuffle=False,
 )
 ```
+
 Once the model is trained you can use it to predict tags for new sentences.
 Just call the predict method of the model.
+
 ```python
 # load the model you trained
 model = SequenceTagger.load("taggers/ncbi-disease/best-model.pt")
@@ -75,17 +79,21 @@ model.predict(sentence)
 
 print(sentence.to_tagged_string())
 ```
+
 If the model works well, it will correctly tag "breast cancer" as disease in this example:
-~~~
+
+```
 Women who smoke 20 cigarettes a day are four times more likely to develop breast <B-Disease> cancer <E-Disease> .
-~~~
+```
 
-## Train a biomedical NER model from scratch with PrefixedSequenceTagger()
+## Train a biomedical NER model: multiple entity types
 
-Using the `PrefixedSequenceTagger()` class, we can train individual NER models capable on learning
-from multiple corpora with different entity types at the same time. We add a prefix string in front of
-each example `[Tag <entity-type-0>, <entity-type-1>, ...]` where `<entity-type-0>, <entity-type-1>, ... <entity-type-n>`
-denote the entity types tagged in a given corpus.
+If you are dealing with multiple entity types, e.g. "Disease" and "Chemicals", you can opt
+to train a single model capable of handling multiple entity types at once.
+This can be achieved by using the  `PrefixedSequenceTagger()` class, which implements the method described in \[1\].
+This model uses prompting, i.e. it adds a prefix (hence the name) string in front of specifying the
+entity types requested for tagging: `[Tag <entity-type-0>, <entity-type-1>, ...]`.
+Thist is especially usefull for training, as it allows to combine multiple corpora even if they cover different subsets of entity types.
 
 ```python
 # 1. get the corpora
@@ -190,6 +198,7 @@ trainer.fine_tune(
 ```
 
 ## Training HunFlair2 from scratch
+
 *HunFlair2* uses the `PrefixedSequenceTagger()` class as defined above but adds the following corpora to the training set instead:
 
 ```python
@@ -208,3 +217,7 @@ corpora = (
 )
 
 ```
+
+## References
+
+\[1\] Luo, L., Wei, C. H., Lai, P. T., Leaman, R., Chen, Q., & Lu, Z. (2023). AIONER: all-in-one scheme-based biomedical named entity recognition using deep learning. Bioinformatics, 39(5), btad310.
