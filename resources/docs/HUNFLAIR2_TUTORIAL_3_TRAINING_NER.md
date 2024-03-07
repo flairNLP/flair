@@ -3,13 +3,13 @@
 This part of the tutorial shows how you can train your own biomedical named entity recognition models
 using state-of-the-art pretrained Transformers embeddings.
 
-For this tutorial, we assume that you're familiar with the [base types](/resources/docs/TUTORIAL_1_BASICS.md) of Flair
+For this tutorial, we assume that you're familiar with the [base types](https://flairnlp.github.io/docs/tutorial-basics/basic-types) of Flair
 and how [transformers_word embeddings](https://flairnlp.github.io/docs/tutorial-training/how-to-train-sequence-tagger).
-You should also know how to [load a corpus](/resources/docs/TUTORIAL_6_CORPUS.md).
+You should also know how to [load a corpus](https://flairnlp.github.io/docs/tutorial-training/how-to-load-prepared-dataset).
 
 ## Train a biomedical NER model from scratch
-Here is example code for a biomedical NER model trained over `NCBI_DISEASE` corpus, using word embeddings
-and flair embeddings based on biomedical abstracts from PubMed and full-texts from PMC.
+Here is example code for a biomedical NER model trained over `NCBI_DISEASE` corpus using Transformer word embeddings
+and focusing on one entity type only.
 ```python
 from flair.datasets import NCBI_DISEASE
 
@@ -141,8 +141,8 @@ all_entity_types = sorted(all_entity_types)
 # 3. make the tag dictionary from the corpus
 tag_dictionary = corpus.make_label_dictionary(label_type="ner")
 
-# 4. the default prefixed strings for the final model are the union of
-#    all entity types occurring in the individual corpora
+# 4. the final model will on default predict all the entity types seen
+#    in the training corpora, e.g., disease and chemicals here
 augmentation_strategy = EntityTypeTaskPromptAugmentationStrategy(
     all_entity_types
 )
