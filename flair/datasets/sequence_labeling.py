@@ -4839,6 +4839,59 @@ class NER_GERMAN_MOBIE(ColumnCorpus):
         )
 
 
+class NoisyNER_EST_Clean(ColumnCorpus):
+    data_url = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/patnlp/estner.cnll.zip"
+
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,   
+        column_format={0: "text", 3: "ner"},            
+        in_memory: bool = True,                         
+        **corpusargs,
+    ) -> None:
+        
+        data_folder, instances = self._load_data(base_path)
+        
+        train, dev, test = self._split_data(instances)
+   
+        self._write_instances(train, data_folder/"estner_clean_train.tsv")
+        self._write_instances(dev, data_folder/"estner_clean_dev.tsv")
+        self._write_instances(test, data_folder/"estner_clean_test.tsv")
+
+        super().__init__(                       
+            data_folder,                                    
+            column_format=column_format,
+            in_memory=in_memory,
+            **corpusargs,
+        )
+
+    @classmethod
+    def _load_data(cls, base_path) -> tuple[Path, list[str]]:                    
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
+        data_folder = base_path/"estner_clean"
+        unpack_file(cached_path(cls.data_url, data_folder), data_folder, "zip", False)        
+        with open(data_folder/"estner.cnll") as in_file:
+            instances = in_file.readlines()
+        instances = [instance.strip().split("\t") for instance in instances]
+        return data_folder, instances 
+
+    @classmethod
+    def _split_data(cls, instances) -> tuple[list[str], list[str], list[str]]:        
+        train = instances[:185708]
+        dev = instances[185708:208922]
+        test = instances[208922:]
+        return train, dev, test
+
+    @classmethod
+    def _write_instances(cls, instances, filepath):                 
+            # CoNLL format
+            column_separator = "\t"
+            with open(filepath, "w") as out_file:
+                for instance in instances:
+                    out_file.write(column_separator.join(instance))
+                    out_file.write("\n")
+
+
 class MASAKHA_POS(MultiCorpus):
     def __init__(
         self,
