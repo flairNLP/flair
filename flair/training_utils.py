@@ -80,12 +80,7 @@ class MetricRegression:
         return "\t_\t_\t_\t_"
 
     def __str__(self) -> str:
-        line = "mean squared error: {:.4f} - mean absolute error: {:.4f} - pearson: {:.4f} - spearman: {:.4f}".format(
-            self.mean_squared_error(),
-            self.mean_absolute_error(),
-            self.pearsonr(),
-            self.spearmanr(),
-        )
+        line = f"mean squared error: {self.mean_squared_error():.4f} - mean absolute error: {self.mean_absolute_error():.4f} - pearson: {self.pearsonr():.4f} - spearman: {self.spearmanr():.4f}"
         return line
 
 

@@ -318,9 +318,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
 
                     if out_path is not None:
                         for pair, prediction, true_value in zip(batch, results, true_values):
-                            eval_line = "{}\t{}\t{}\t{}\n".format(
-                                pair.first.to_original_text(), pair.second.to_original_text(), true_value, prediction
-                            )
+                            eval_line = f"{pair.first.to_original_text()}\t{pair.second.to_original_text()}\t{true_value}\t{prediction}\n"
                             out_file.write(eval_line)
 
                     store_embeddings(batch, embedding_storage_mode)
