@@ -4845,15 +4845,15 @@ class NoisyNER_EST_Clean(ColumnCorpus):
     def __init__(
         self,
         base_path: Optional[Union[str, Path]] = None,   
-        column_format={0: "text", 3: "ner"},            
+        column_format={0: "text", 1: "ner"},            
         in_memory: bool = True,                         
         **corpusargs,
     ) -> None:
-        
+
         data_folder, instances = self._load_data(base_path)
-        
+
         train, dev, test = self._split_data(instances)
-   
+
         self._write_instances(train, data_folder/"estner_clean_train.tsv")
         self._write_instances(dev, data_folder/"estner_clean_dev.tsv")
         self._write_instances(test, data_folder/"estner_clean_test.tsv")
@@ -4873,6 +4873,7 @@ class NoisyNER_EST_Clean(ColumnCorpus):
         with open(data_folder/"estner.cnll") as in_file:
             instances = in_file.readlines()
         instances = [instance.strip().split("\t") for instance in instances]
+        instances = [[instance[0], instance[len(instance)-1]] for instance in instances]
         return data_folder, instances 
 
     @classmethod
@@ -4884,12 +4885,12 @@ class NoisyNER_EST_Clean(ColumnCorpus):
 
     @classmethod
     def _write_instances(cls, instances, filepath):                 
-            # CoNLL format
-            column_separator = "\t"
-            with open(filepath, "w") as out_file:
-                for instance in instances:
-                    out_file.write(column_separator.join(instance))
-                    out_file.write("\n")
+        # CoNLL format
+        column_separator = "\t"
+        with open(filepath, "w") as out_file:
+            for instance in instances:
+                out_file.write(column_separator.join(instance))
+                out_file.write("\n")  
 
 
 class MASAKHA_POS(MultiCorpus):
