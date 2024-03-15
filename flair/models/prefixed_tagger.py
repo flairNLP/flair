@@ -10,7 +10,7 @@ import flair.data
 from flair.data import Corpus, Sentence, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.file_utils import hf_download
-from flair.models import SequenceTagger
+from flair.models.sequence_tagger_model import SequenceTagger
 
 
 class PrefixedSentence(Sentence):
