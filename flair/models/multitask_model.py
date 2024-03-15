@@ -245,7 +245,7 @@ class MultitaskModel(flair.nn.Classifier):
         return self._label_type
 
     @staticmethod
-    def _fetch_model(model_name: str) -> str:
+    def _fetch_model(model_name) -> str:
         model_map = {}
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
