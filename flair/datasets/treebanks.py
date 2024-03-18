@@ -35,7 +35,11 @@ class UniversalDependenciesCorpus(Corpus):
         dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
         # get train data
-        train = UniversalDependenciesDataset(train_file, in_memory=in_memory, split_multiwords=split_multiwords)
+        train = (
+            UniversalDependenciesDataset(train_file, in_memory=in_memory, split_multiwords=split_multiwords)
+            if train_file is not None
+            else None
+        )
 
         # get test data
         test = (
@@ -1657,5 +1661,29 @@ class UD_LITHUANIAN(UniversalDependenciesCorpus):
         cached_path(f"{web_path}/lt_alksnis-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/lt_alksnis-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/lt_alksnis-ud-train.conllu", Path("datasets") / dataset_name)
+
+        super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
+
+class UD_BAVARIAN_MAIBAAM(UniversalDependenciesCorpus):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+        revision: str = "dev",
+    ) -> None:
+        base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Bavarian-MaiBaam/{revision}"
+        cached_path(f"{web_path}/bar_maibaam-ud-test.conllu", Path("datasets") / dataset_name)
 
         super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
