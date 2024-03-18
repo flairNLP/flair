@@ -4862,6 +4862,7 @@ class NoisyNER_EST_Clean(ColumnCorpus):
             data_folder,                                    
             column_format=column_format,
             in_memory=in_memory,
+            column_delimiter = '\t',
             **corpusargs,
         )
 
