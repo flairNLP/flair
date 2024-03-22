@@ -154,7 +154,7 @@ from flair.nn.multitask import make_multitask_model_and_corpus
 
 # 1. get the corpus
 ner_corpus = NER_MULTI_WIKINER()
-nel_corpus = ZELDA(column_format={0: "text", 2: "ner"})  # need to set the label type to be the same as the ner one
+nel_corpus = ZELDA(column_format={0: "text", 2: "nel"})  # need to set the label type to be the same as the ner one
 
 # --- Embeddings that are shared by both models --- #
 shared_embeddings = TransformerWordEmbeddings("distilbert-base-uncased", fine_tune=True)
@@ -171,12 +171,13 @@ ner_model = SequenceTagger(
 )
 
 
-nel_label_dict = nel_corpus.make_label_dictionary("ner", add_unk=True)
+nel_label_dict = nel_corpus.make_label_dictionary("nel", add_unk=True)
 
 nel_model = SpanClassifier(
     embeddings=shared_embeddings,
     label_dictionary=nel_label_dict,
-    label_type="ner",
+    label_type="nel",
+    span_label_type="ner",
     decoder=PrototypicalDecoder(
         num_prototypes=len(nel_label_dict),
         embeddings_size=shared_embeddings.embedding_length * 2, # we use "first_last" encoding for spans
