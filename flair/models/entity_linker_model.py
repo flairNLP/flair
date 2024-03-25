@@ -94,6 +94,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
         label_dictionary: Dictionary,
         pooling_operation: str = "first_last",
         label_type: str = "nel",
+        span_label_type: Optional[str] = None,
         candidates: Optional[CandidateGenerator] = None,
         **classifierargs,
     ) -> None:
@@ -107,6 +108,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
                 text representation we take the average of the embeddings of the token in the mention.
                 `first_last` concatenates the embedding of the first and the embedding of the last token.
             label_type: name of the label you use.
+            span_label_type: name of the label you use for inputs of predictions.
             candidates: If provided, use a :class:`CandidateGenerator` for prediction candidates.
             **classifierargs: The arguments propagated to :meth:`flair.nn.DefaultClassifier.__init__`
         """
@@ -121,6 +123,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
 
         self.pooling_operation = pooling_operation
         self._label_type = label_type
+        self._span_label_type = span_label_type
 
         cases: Dict[str, Callable[[Span, List[str]], torch.Tensor]] = {
             "average": self.emb_mean,
@@ -153,6 +156,11 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
         return torch.mean(torch.stack([token.get_embedding(embedding_names) for token in span], 0), 0)
 
     def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Span]:
+        if self._span_label_type is not None:
+            spans = sentence.get_spans(self._span_label_type)
+            # only use span label type if there are predictions, otherwise search for output label type (training labels)
+            if spans:
+                return spans
         return sentence.get_spans(self.label_type)
 
     def _filter_data_point(self, data_point: Sentence) -> bool:
@@ -170,6 +178,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
             "pooling_operation": self.pooling_operation,
             "loss_weights": self.weight_dict,
             "candidates": self.candidates,
+            "span_label_type": self._span_label_type,
         }
         return model_state
 
