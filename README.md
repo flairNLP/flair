@@ -23,7 +23,7 @@ document embeddings, including our proposed [Flair embeddings](https://www.aclwe
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.13.1(https://github.com/flairNLP/flair/releases)!
+Now at [version 0.13.1](https://github.com/flairNLP/flair/releases)!
 
 
 ## State-of-the-Art Models
@@ -191,7 +191,7 @@ If you use our new "FLERT" models or approach, please cite [this paper](https://
 }
 ```
 
-If you use our TARS approach for few-shot and zero-shot learning, please cite [this paper](https://kishaloyhalder.github.io/pdfs/tars_coling2020.pdf/):
+If you use our TARS approach for few-shot and zero-shot learning, please cite [this paper](https://aclanthology.org/2020.coling-main.285/):
 
 ```
 @inproceedings{halder2020coling,

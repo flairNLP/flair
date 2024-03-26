@@ -485,5 +485,12 @@ def test_token_positions_when_creating_word_by_word():
     assert sentence.tokens[2].end_position == 13
 
 
+def test_line_separator_is_ignored():
+    with_separator = "Untersuchungs-\u2028ausschüsse"
+    without_separator = "Untersuchungs-ausschüsse"
+
+    assert Sentence(with_separator).to_original_text() == Sentence(without_separator).to_original_text()
+
+
 def no_op_tokenizer(text: str) -> List[str]:
     return [text]

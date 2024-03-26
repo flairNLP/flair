@@ -168,9 +168,7 @@ class ScalarMix(torch.nn.Module):
         """
         if len(tensors) != self.mixture_size:
             log.error(
-                "{} tensors were passed, but the module was initialized to mix {} tensors.".format(
-                    len(tensors), self.mixture_size
-                )
+                f"{len(tensors)} tensors were passed, but the module was initialized to mix {self.mixture_size} tensors."
             )
 
         normed_weights = torch.nn.functional.softmax(torch.cat(list(self.scalar_parameters)), dim=0)
