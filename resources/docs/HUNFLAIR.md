@@ -8,6 +8,9 @@ NER data sets](HUNFLAIR_CORPORA.md) and comes with a Flair language model ("pubm
 FastText embeddings ("pubmed") that were trained on roughly 3 million full texts and about
 25 million abstracts from the biomedical domain.
 
+**<span style="color:red">Using HunFlair (version 1) is deprecated, please refer to [HunFlair2](HUNFLAIR2.md)
+for an updated and improved version.</span>**
+
 <b>Content:</b>
 [Quick Start](#quick-start) |
 [BioNER-Tool Comparison](#comparison-to-other-biomedical-ner-tools) |
