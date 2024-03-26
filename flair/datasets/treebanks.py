@@ -711,30 +711,17 @@ class UD_CZECH(UniversalDependenciesCorpus):
         ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Czech-PDT/{revision}"
         cached_path(f"{ud_path}/cs_pdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/cs_pdt-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/cs_pdt-ud-train-c.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
-        cached_path(
-            f"{ud_path}/cs_pdt-ud-train-l.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
-        cached_path(
-            f"{ud_path}/cs_pdt-ud-train-m.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
-        cached_path(
-            f"{ud_path}/cs_pdt-ud-train-v.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
+
+        train_suffixes = ["ca", "ct", "la", "lt", "ma", "mt", "va"]
+
+        for train_suffix in train_suffixes:
+            cached_path(
+                f"{ud_path}/cs_pdt-ud-train-{train_suffix}.conllu",
+                Path("datasets") / dataset_name / "original",
+            )
         data_path = flair.cache_root / "datasets" / dataset_name
 
-        train_filenames = [
-            "cs_pdt-ud-train-c.conllu",
-            "cs_pdt-ud-train-l.conllu",
-            "cs_pdt-ud-train-m.conllu",
-            "cs_pdt-ud-train-v.conllu",
-        ]
+        train_filenames = [f"cs_pdt-ud-train-{train_suffix}.conllu" for train_suffix in train_suffixes]
 
         new_train_file: Path = data_path / "cs_pdt-ud-train-all.conllu"
 
@@ -1105,7 +1092,25 @@ class UD_RUSSIAN(UniversalDependenciesCorpus):
         ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Russian-SynTagRus/{revision}"
         cached_path(f"{ud_path}/ru_syntagrus-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ru_syntagrus-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(f"{ud_path}/ru_syntagrus-ud-train.conllu", Path("datasets") / dataset_name)
+
+        train_filenames = [
+            "ru_syntagrus-ud-train-a.conllu",
+            "ru_syntagrus-ud-train-b.conllu",
+            "ru_syntagrus-ud-train-c.conllu",
+        ]
+
+        for train_file in train_filenames:
+            cached_path(f"{ud_path}/{train_file}", Path("datasets") / dataset_name / "original")
+
+        data_path = flair.cache_root / "datasets" / dataset_name
+
+        new_train_file: Path = data_path / "ru_syntagrus-ud-train-all.conllu"
+
+        if not new_train_file.is_file():
+            with open(new_train_file, "w") as f_out:
+                for train_filename in train_filenames:
+                    with open(data_path / "original" / train_filename) as f_in:
+                        f_out.write(f_in.read())
 
         super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
@@ -1504,9 +1509,9 @@ class UD_OLD_FRENCH(UniversalDependenciesCorpus):
 
         # download data if necessary
         web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Old_French-SRCMF/{revision}"
-        cached_path(f"{web_path}/fro_srcmf-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(f"{web_path}/fro_srcmf-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(f"{web_path}/fro_srcmf-ud-train.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/fro_profiterole-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/fro_profiterole-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/fro_profiterole-ud-train.conllu", Path("datasets") / dataset_name)
 
         super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
