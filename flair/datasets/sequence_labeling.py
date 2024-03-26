@@ -4872,9 +4872,13 @@ class NoisyNER_EST_Clean(ColumnCorpus):
         data_folder = base_path/"estner_clean"
         unpack_file(cached_path(cls.data_url, data_folder), data_folder, "zip", False)        
         with open(data_folder/"estner.cnll") as in_file:
-            instances = in_file.readlines()
-        instances = [instance.strip().split("\t") for instance in instances]
-        instances = [[instance[0], instance[len(instance)-1]] for instance in instances]
+            preinstances = in_file.readlines()
+        preinstances = [instance.strip().split("\t") for instance in preinstances]
+        preinstances = [[instance[0], instance[len(instance)-1]] for instance in preinstances]
+        instances = []
+        for instance in preinstances:
+            if instance[0] != '--':
+                instances.append(instance)
         return data_folder, instances 
 
     @classmethod
