@@ -627,25 +627,9 @@ class Token(_PartOfSentence):
 class Span(_PartOfSentence):
     """This class represents one textual span consisting of Tokens."""
 
-    def __new__(self, tokens: List[Token]):
-        # check if the span already exists. If so, return it
-        unlabeled_identifier = self._make_unlabeled_identifier(tokens)
-        if unlabeled_identifier in tokens[0].sentence._known_spans:
-            span = tokens[0].sentence._known_spans[unlabeled_identifier]
-            return span
-
-        # else make a new span
-        else:
-            span = super().__new__(self)
-            span.initialized = False
-            tokens[0].sentence._known_spans[unlabeled_identifier] = span
-            return span
-
     def __init__(self, tokens: List[Token]) -> None:
-        if not self.initialized:
-            super().__init__(tokens[0].sentence)
-            self.tokens = tokens
-            self.initialized: bool = True
+        super().__init__(tokens[0].sentence)
+        self.tokens = tokens
 
     @property
     def start_position(self) -> int:
@@ -694,26 +678,10 @@ class Span(_PartOfSentence):
 
 
 class Relation(_PartOfSentence):
-    def __new__(self, first: Span, second: Span):
-        # check if the relation already exists. If so, return it
-        unlabeled_identifier = self._make_unlabeled_identifier(first, second)
-        if unlabeled_identifier in first.sentence._known_spans:
-            span = first.sentence._known_spans[unlabeled_identifier]
-            return span
-
-        # else make a new relation
-        else:
-            span = super().__new__(self)
-            span.initialized = False
-            first.sentence._known_spans[unlabeled_identifier] = span
-            return span
-
     def __init__(self, first: Span, second: Span) -> None:
-        if not self.initialized:
-            super().__init__(sentence=first.sentence)
-            self.first: Span = first
-            self.second: Span = second
-            self.initialized: bool = True
+        super().__init__(sentence=first.sentence)
+        self.first: Span = first
+        self.second: Span = second
 
     def __repr__(self) -> str:
         return str(self)
@@ -791,7 +759,7 @@ class Sentence(DataPoint):
         self.tokens: List[Token] = []
 
         # private field for all known spans
-        self._known_spans: Dict[str, _PartOfSentence] = {}
+        self._known_parts: Dict[str, _PartOfSentence] = {}
 
         self.language_code: Optional[str] = language_code
 
@@ -1045,8 +1013,7 @@ class Sentence(DataPoint):
         }
 
     def get_span(self, start: int, stop: int):
-        span_slice = slice(start, stop)
-        return self[span_slice]
+        return self[start:stop]
 
     @typing.overload
     def __getitem__(self, idx: int) -> Token: ...
@@ -1054,9 +1021,27 @@ class Sentence(DataPoint):
     @typing.overload
     def __getitem__(self, s: slice) -> Span: ...
 
+    @typing.overload
+    def __getitem__(self, s: typing.Tuple[Span, Span]) -> Relation:
+        ...
+
     def __getitem__(self, subscript):
-        if isinstance(subscript, slice):
-            return Span(self.tokens[subscript])
+        if isinstance(subscript, tuple):
+            first, second = subscript
+            identifier = ""
+            if isinstance(first, Span) and isinstance(second, Span):
+                identifier = Relation._make_unlabeled_identifier(first, second)
+                if identifier not in self._known_parts:
+                    self._known_parts[identifier] = Relation(first, second)
+
+            return self._known_parts[identifier]
+        elif isinstance(subscript, slice):
+            identifier = Span._make_unlabeled_identifier(self.tokens[subscript])
+
+            if identifier not in self._known_parts:
+                self._known_parts[identifier] = Span(self.tokens[subscript])
+
+            return self._known_parts[identifier]
         else:
             return self.tokens[subscript]
 
@@ -1207,11 +1192,11 @@ class Sentence(DataPoint):
             token.remove_labels(typename)
 
         # labels also need to be deleted at all known spans
-        for span in self._known_spans.values():
+        for span in self._known_parts.values():
             span.remove_labels(typename)
 
         # remove spans without labels
-        self._known_spans = {k: v for k, v in self._known_spans.items() if len(v.labels) > 0}
+        self._known_parts = {k: v for k, v in self._known_parts.items() if len(v.labels) > 0}
 
         # delete labels at object itself
         super().remove_labels(typename)
