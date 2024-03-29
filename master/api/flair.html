@@ -535,8 +535,9 @@ You can choose the path by setting the <cite>FLAIR_CACHE_ROOT</cite> environment
 <dt class="sig sig-object py" id="flair.device">
 <span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">device</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">device(type='cpu')</span></em><a class="headerlink" href="#flair.device" title="Permalink to this definition">#</a></dt>
 <dd><p>Flair is using a single device for everything. You can set this device by overwriting this variable.</p>
-<p>This value will be automatically set to the first found GPU if available and to CPU otherwise.
-You can choose a specific GPU, by setting the <cite>FLAIR_DEVICE</cite> environment variable to its index.</p>
+<p>The device will be automatically set to the first available GPU if a GPU is present and the ‘FLAIR_DEVICE’ environment
+variable is not set to ‘cpu’, otherwise it will default to the CPU, and a specific GPU can be chosen by setting the ‘FLAIR_DEVICE’
+environment variable to its index.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -548,7 +549,7 @@ You can choose a specific GPU, by setting the <cite>FLAIR_DEVICE</cite> environm
 
 <dl class="py function">
 <dt class="sig sig-object py" id="flair.set_seed">
-<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">set_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/__init__.py#L74-L83"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.set_seed" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">set_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/__init__.py#L75-L84"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.set_seed" title="Permalink to this definition">#</a></dt>
 <dd><p>Set the seed for all random generators used in training.</p>
 <p>Use this method to guarantee reproducibility of experiments.</p>
 <dl class="field-list simple">
