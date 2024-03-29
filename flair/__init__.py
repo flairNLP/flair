@@ -18,8 +18,8 @@ You can choose the path by setting the `FLAIR_CACHE_ROOT` environment variable.
 device: torch.device
 """Flair is using a single device for everything. You can set this device by overwriting this variable.
 
-The device will be automatically set to the first available GPU if a GPU is present and the 'FLAIR_DEVICE' environment 
-variable is not set to 'cpu', otherwise it will default to the CPU, and a specific GPU can be chosen by setting the 'FLAIR_DEVICE' 
+The device will be automatically set to the first available GPU if a GPU is present and the 'FLAIR_DEVICE' environment
+variable is not set to 'cpu', otherwise it will default to the CPU, and a specific GPU can be chosen by setting the 'FLAIR_DEVICE'
 environment variable to its index.
 """
 
