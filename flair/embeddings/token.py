@@ -204,7 +204,7 @@ class WordEmbeddings(TokenEmbeddings):
 
             self.__embedding_length: int = precomputed_word_embeddings.vector_size
 
-            vectors = np.row_stack(
+            vectors = np.vstack(
                 (
                     precomputed_word_embeddings.vectors,
                     np.zeros(self.__embedding_length, dtype="float"),
@@ -399,7 +399,7 @@ class WordEmbeddings(TokenEmbeddings):
         state.setdefault("field", None)
         if "precomputed_word_embeddings" in state:
             precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
-            vectors = np.row_stack(
+            vectors = np.vstack(
                 (
                     precomputed_word_embeddings.vectors,
                     np.zeros(precomputed_word_embeddings.vector_size, dtype="float"),
