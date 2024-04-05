@@ -1,7 +1,7 @@
 # Using and creating entity mention linker
 
 As of Flair 0.14 we ship the [entity mention linker](#flair.models.EntityMentionLinker) - the core framework behind the [Hunflair BioNEN approach](https://huggingface.co/hunflair)]. 
-You can read more at the [Hunflair2 tutorials](project:../tutorial-hunflair2)
+You can read more at the [Hunflair2 tutorials](project:../tutorial-hunflair2/overview.md)
 
 ## Example 1: Printing Entity linking outputs to console
 
