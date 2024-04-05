@@ -649,6 +649,8 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
                         emb = emb / torch.norm(emb)
                     dense_embeddings.append(emb.cpu().numpy())
                     sent.clear_embeddings()
+
+                # empty cuda cache if device is a cuda device
                 if flair.device.type == "cuda":
                     torch.cuda.empty_cache()
 
@@ -682,6 +684,11 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
                         emb = emb / torch.norm(emb)
                     query_embeddings["dense"].append(emb.cpu().numpy())
                     sent.clear_embeddings(self.embeddings["dense"].get_names())
+
+                # Sanity conversion: if flair.device was set as a string, convert to torch.device
+                if isinstance(flair.device, str):
+                    flair.device = torch.device(flair.device)
+
                 if flair.device.type == "cuda":
                     torch.cuda.empty_cache()
 
