@@ -1,14 +1,9 @@
+import importlib.util
 import inspect
 import logging
-import os
-import platform
 import re
-import stat
 import string
-import subprocess
-import tempfile
 from abc import ABC, abstractmethod
-from collections import defaultdict
 from enum import Enum, auto
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Type, Union, cast
@@ -33,7 +28,7 @@ from flair.datasets import (
 from flair.datasets.entity_linking import InMemoryEntityLinkingDictionary
 from flair.embeddings import DocumentEmbeddings, DocumentTFIDFEmbeddings, TransformerDocumentEmbeddings
 from flair.embeddings.base import load_embeddings
-from flair.file_utils import cached_path, hf_download
+from flair.file_utils import hf_download
 from flair.training_utils import Result
 
 logger = logging.getLogger("flair")
@@ -261,22 +256,19 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
 
     def __init__(
         self,
-        ab3p_path: Optional[Path] = None,
-        word_data_dir: Optional[Path] = None,
         preprocessor: Optional[EntityPreprocessor] = None,
     ) -> None:
         """Creates the mention pre-processor.
 
         Args:
-            ab3p_path: Path to the folder containing the Ab3P implementation
-            word_data_dir: Path to the word data directory
             preprocessor: Basic entity preprocessor
         """
-        if ab3p_path is not None and word_data_dir is not None:
-            self.ab3p_path = ab3p_path
-            self.word_data_dir = word_data_dir
-        else:
-            self.ab3p_path, self.word_data_dir = self._get_biosyn_ab3p_paths()
+        try:
+            import pyab3p
+        except ImportError:
+            raise ImportError("Please install pyab3p to use the `Ab3PEntityPreprocessor`")
+        self.ab3p = pyab3p.Ab3p()
+
         self.preprocessor = preprocessor
         self.abbreviation_dict: Dict[str, Dict[str, str]] = {}
 
@@ -298,7 +290,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         if self.preprocessor is not None:
             entity_mention = self.preprocessor.process_entity_name(entity_mention)
 
-        # NOTE: Avoid emtpy string if mentions are just punctutations (e.g. `-` or `(`)
+        # NOTE: Avoid emtpy string if mentions are just punctuations (e.g. `-` or `(`)
         entity_mention = original if len(entity_mention) == 0 else entity_mention
 
         return entity_mention
@@ -310,53 +302,6 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
             return self.preprocessor.process_entity_name(entity_name)
 
         return entity_name
-
-    def _get_biosyn_ab3p_paths(self) -> Tuple[Path, Path]:
-        data_dir = flair.cache_root / "ab3p_biosyn"
-        if not data_dir.exists():
-            data_dir.mkdir(parents=True)
-
-        word_data_dir = data_dir / "word_data"
-        if not word_data_dir.exists():
-            word_data_dir.mkdir()
-
-        ab3p_path = self._download_biosyn_ab3p(data_dir, word_data_dir)
-
-        return ab3p_path, word_data_dir
-
-    def _download_biosyn_ab3p(self, data_dir: Path, word_data_dir: Path) -> Path:
-        """Downloads the Ab3P tool and all necessary data files."""
-        # Download word data for Ab3P if not already downloaded
-        ab3p_url = "https://raw.githubusercontent.com/dmis-lab/BioSyn/master/Ab3P/WordData/"
-
-        ab3p_files = [
-            "Ab3P_prec.dat",
-            "Lf1chSf",
-            "SingTermFreq.dat",
-            "cshset_wrdset3.ad",
-            "cshset_wrdset3.ct",
-            "cshset_wrdset3.ha",
-            "cshset_wrdset3.nm",
-            "cshset_wrdset3.str",
-            "hshset_Lf1chSf.ad",
-            "hshset_Lf1chSf.ha",
-            "hshset_Lf1chSf.nm",
-            "hshset_Lf1chSf.str",
-            "hshset_stop.ad",
-            "hshset_stop.ha",
-            "hshset_stop.nm",
-            "hshset_stop.str",
-            "stop",
-        ]
-        for file in ab3p_files:
-            cached_path(ab3p_url + file, word_data_dir)
-
-        # Download Ab3P executable
-        ab3p_path = cached_path("https://github.com/dmis-lab/BioSyn/raw/master/Ab3P/identify_abbr", data_dir)
-
-        # Make Ab3P executable
-        ab3p_path.chmod(ab3p_path.stat().st_mode | stat.S_IXUSR)
-        return ab3p_path
 
     def _build_abbreviation_dict(self, sentences: List[flair.data.Sentence]) -> Dict[str, Dict[str, str]]:
         """Processes the given sentences with the Ab3P tool.
@@ -376,62 +321,13 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         Returns:
             abbreviation_dict: abbreviations and their resolution detected in each input sentence
         """
-        abbreviation_dict: Dict = defaultdict(dict)
+        abbreviation_dict: Dict[str, Dict[str, str]] = {}
 
-        # Create a temp file which holds the sentences we want to process with Ab3P
-        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8") as temp_file:
-            for sentence in sentences:
-                temp_file.write(sentence.to_original_text() + "\n")
-            temp_file.flush()
-
-            # Temporarily create path file in the current working directory for Ab3P
-            with open(os.path.join(os.getcwd(), "path_Ab3P"), "w") as path_file:
-                path_file.write(str(self.word_data_dir) + "/\n")
-
-            # Run Ab3P with the temp file containing the dataset
-            # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/subprocess-run-check.html
-            try:
-                result = subprocess.run(
-                    [self.ab3p_path, temp_file.name],
-                    capture_output=True,
-                    check=True,
-                )
-            except subprocess.CalledProcessError:
-                logger.error(
-                    """The abbreviation resolver Ab3P could not be run on your system. To ensure maximum accuracy, please
-                install Ab3P yourself. See https://github.com/ncbi-nlp/Ab3P"""
-                )
-            else:
-                line = result.stdout.decode("utf-8")
-                if "Path file for type cshset does not exist!" in line:
-                    logger.error(
-                        "Error when using Ab3P for abbreviation resolution. A file named path_Ab3p needs to exist in your current directory containing the path to the WordData directory for Ab3P to work!"
-                    )
-                elif "Cannot open" in line or "failed to open" in line:
-                    logger.error(
-                        "Error when using Ab3P for abbreviation resolution. Could not open the WordData directory for Ab3P!"
-                    )
-
-                lines = line.split("\n")
-                cur_sentence = None
-                for line in lines:
-                    if len(line.split("|")) == 3:
-                        if cur_sentence is None:
-                            continue
-
-                        sf, lf, _ = line.split("|")
-                        sf = sf.strip()
-                        lf = lf.strip()
-                        abbreviation_dict[cur_sentence][sf] = lf
-
-                    elif len(line.strip()) > 0:
-                        cur_sentence = line
-                    else:
-                        cur_sentence = None
-
-            finally:
-                # remove the path file
-                os.remove(os.path.join(os.getcwd(), "path_Ab3P"))
+        for sentence in sentences:
+            sentence_text = sentence.to_original_text()
+            abbreviation_dict[sentence_text] = {
+                abbr_out.short_form: abbr_out.long_form for abbr_out in self.ab3p.get_abbrs(sentence_text)
+            }
 
         return abbreviation_dict
 
@@ -951,11 +847,12 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         if model_name in hf_model_map:
             model_name = hf_model_map[model_name]
 
-            if platform.system() == "Windows":
+            if not model_name.endswith("-no-ab3p") and importlib.util.find_spec("pyab3p") is None:
                 logger.warning(
-                    "You seem to run your application on a Windows system. Unfortunately, the abbreviation "
-                    "resolution of HunFlair2 is only available on Linux/Mac systems. Therefore, a model "
-                    "without abbreviation resolution is therefore loaded"
+                    "'pyab3p' is not found, switching to a model without abbreviation resolution. "
+                    "This might impact the model performance. To reach full performance, please install"
+                    "pyab3p by running:"
+                    "   pip install pyab3p"
                 )
                 model_name += "-no-ab3p"
 
@@ -969,7 +866,6 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         label_type = state["label_type"]
         dictionary = InMemoryEntityLinkingDictionary.from_state(state["dictionary"])
         batch_size = state.get("batch_size", 128)
-
         return cls(candidate_generator, preprocessor, entity_label_types, label_type, dictionary, batch_size=batch_size)
 
     def _get_state_dict(self):
