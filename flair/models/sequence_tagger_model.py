@@ -781,6 +781,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         elif model_name in hu_model_map:
             model_path = cached_path(hu_model_map[model_name], cache_dir=cache_dir)
 
+            if model_name.startswith("hunflair-"):
+                log.warning(
+                    "HunFlair (version 1) is deprecated. Consider using HunFlair2 for improved extraction performance: "
+                    "Classifier.load('hunflair2')."
+                    "See https://github.com/flairNLP/flair/blob/master/resources/docs/HUNFLAIR2.md for further "
+                    "information."
+                )
+
         # special handling for the taggers by the @redewiegergabe project (TODO: move to model hub)
         elif model_name == "de-historic-indirect":
             model_file = flair.cache_root / cache_dir / "indirect" / "final-model.pt"
