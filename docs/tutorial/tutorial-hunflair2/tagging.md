@@ -2,7 +2,7 @@
 
 This is part 1 of the tutorial, in which we show how to use our pre-trained *HunFlair2* models to tag your text.
 
-### Tagging with Pre-trained HunFlair2-Models
+## Tagging with Pre-trained HunFlair2-Models
 Let's use the pre-trained *HunFlair2* model for biomedical named entity recognition (NER).
 This model was trained over multiple biomedical NER data sets and can recognize 5 different entity types,
 i.e. cell lines, chemicals, disease, gene / proteins and species.
@@ -57,7 +57,7 @@ This should print:
 }
 ```
 
-### Using a Biomedical Tokenizer
+## Using a Biomedical Tokenizer
 Tokenization, i.e. separating a text into tokens / words, is an important issue in natural language processing
 in general and biomedical text mining in particular. So far, we used a tokenizer for general domain text.
 This can be unfavourable if applied to biomedical texts.
@@ -79,7 +79,7 @@ sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fra
                     use_tokenizer=tokenizer)
 ```
 
-### Working with longer Texts
+## Working with longer Texts
 Often, we are concerned with complete scientific abstracts or full-texts when performing biomedical text mining, e.g.
 ```python
 abstract = "Fragile X syndrome (FXS) is a developmental disorder caused by a mutation in the X-linked FMR1 gene, " \

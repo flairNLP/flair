@@ -7,7 +7,7 @@ valid names for the gene “TP53” ([NCBI Gene:7157](https://www.ncbi.nlm.nih.g
 For improved integration and aggregation of entity mentions from multiple different documents linking / normalizing
 the entities to standardized ontologies or knowledge bases is required.
 
-### Linking with pre-trained HunFlair2 Models
+## Linking with pre-trained HunFlair2 Models
 
 After adding named entity recognition tags to your sentence, you can link the entities to standard ontologies
 using distinct, type-specific linking models:
@@ -74,7 +74,7 @@ of the entity mention and the ontology concept is given. For instance, the offic
 ontology and linking model used and can therefore only be compared and related to those using the exact same
 setup.
 
-### Overview of pre-trained Entity Linking Models
+## Overview of pre-trained Entity Linking Models
 
 HunFlair2 comes with the following pre-trained linking models:
 

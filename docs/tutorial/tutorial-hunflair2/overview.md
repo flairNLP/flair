@@ -5,15 +5,10 @@ models for genes/proteins, chemicals, diseases, species and cell lines. *HunFlai
 builds on pretrained domain-specific language models and outperforms other biomedical
 NER tools on unseen corpora.
 
-<b>Content:</b>
-[Quick Start](#quick-start) |
-[Tool Comparison](#comparison-to-other-biomedical-entity-extraction-tools) |
-[Citing HunFlair](#citing-hunflair2)
-
 ## Quick Start
 
 
-#### Example 1: Biomedical NER 
+### Example 1: Biomedical NER 
 Let's run named entity recognition (NER) over an example sentence. All you need to do is
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:
 ```python
@@ -42,7 +37,7 @@ Span[6:7]: "Mouse" → Species (1.0)
 Span[9:12]: "Fragile X Syndrome" → Disease (1.0)
 ```
 
-#### Example 2: Biomedical NEN
+### Example 2: Biomedical NEN
 For improved integration and aggregation from multiple different documents linking / normalizing the entities to 
 standardized ontologies or knowledge bases is required. Let's perform entity normalization by using
 specialized models per entity type:

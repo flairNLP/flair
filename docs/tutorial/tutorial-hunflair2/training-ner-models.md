@@ -3,9 +3,9 @@
 This part of the tutorial shows how you can train your own biomedical named entity recognition models
 using state-of-the-art pretrained Transformers embeddings.
 
-For this tutorial, we assume that you're familiar with the [base types](project:../tutorial-basics/basic-types) of Flair
-and how [transformers_word embeddings](project:../tutorial-training/how-to-train-sequence-tagger).
-You should also know how to [load a corpus](project:../tutorial-training/how-to-load-prepared-dataset).
+For this tutorial, we assume that you're familiar with the [base types](project:../tutorial-basics/basic-types.md) of Flair
+and how [transformers_word embeddings](project:../tutorial-training/how-to-train-sequence-tagger.md).
+You should also know how to [load a corpus](project:../tutorial-training/how-to-load-prepared-dataset.md).
 
 ## Train a biomedical NER model from scratch: single entity type
 
