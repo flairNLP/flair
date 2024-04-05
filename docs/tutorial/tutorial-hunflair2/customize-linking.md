@@ -28,7 +28,7 @@ for node in nodes:
         hpo[name].append(concept_id)  
 ```
 
-Then we can convert this mapping into a dictionary that can be used by our linking model:
+Then we can convert this mapping into a [`InMemoryEntityLinkingDictionary`](#flair.datasets.entity_linking.InMemoryEntityLinkingDictionary) that can be used by our linking model:
 
 ```python
 from flair.datasets.entity_linking import (
@@ -58,9 +58,10 @@ See the section below for that.
 
 ## Custom pre-trained model
 
-You can initialize a new linker model with both a custom model and  custom dictionary (see section above) like this:
+You can initialize a new [`EntityMentionLinker`](#flair.models.EntityMentionLinker) with both a custom model and custom dictionary (see section above) like this:
 
 ```python
+from flair.models import EntityMentionLinker
 pretrained_model="cambridgeltl/SapBERT-from-PubMedBERT-fulltext"
 linker = EntityMentionLinker.build(
                 pretrained_model,
@@ -76,7 +77,7 @@ Omitting the `dictionary` parameter will load the default dictionary for the spe
 
 In the default setup all linker models output their prediction into the same annotation category *link*.
 To record the NEN annotation in separate categories, you can use the `pred_label_type` parameter of the
-`predict()` method:
+[`predict()`](#flair.models.EntityMentionLinker.predict) method:
 
 ```python
 gene_linker.predict(sentence, pred_label_type="my-genes")
@@ -118,7 +119,7 @@ of the respective entity type:
 {'ner': {'disease'}}
 ```
 
-You can customize this by using the `entity_label_types` parameter of the `predict()` method:
+You can customize this by using the `entity_label_types` parameter of the [`predict()`](#flair.models.EntityMentionLinker.predict) method:
 
 ```python
 sentence = Sentence(

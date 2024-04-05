@@ -1,6 +1,6 @@
 # HunFlair2 - Tutorial 2: Entity Linking
 
-[Part 1](HUNFLAIR2_TUTORIAL_1_TAGGING.md) of the tutorial, showed how to use our pre-trained *HunFlair2* models to
+[Part 1](project:./tagging.md) of the tutorial, showed how to use our pre-trained *HunFlair2* models to
 tag biomedical entities in your text. However, documents from different biomedical (sub-) fields may use different
 terms to refer to the exact same concept, e.g., “_tumor protein p53_”, “_tumor suppressor p53_”, “_TRP53_” are all
 valid names for the gene “TP53” ([NCBI Gene:7157](https://www.ncbi.nlm.nih.gov/gene/7157)).
@@ -44,9 +44,11 @@ species_linker = EntityMentionLinker.load("species-linker")
 species_linker.predict(sentence)
 ```
 
-**Note**: the ontologies and knowledge bases used are pre-processed the first time the normalisation is executed,
+```{note}
+the ontologies and knowledge bases used are pre-processed the first time the normalisation is executed,
 which might takes a certain amount of time. All further calls are then based on this pre-processing and run
 much faster.
+```
 
 After running the code we can inspect and output the linked entities via:
 
@@ -85,4 +87,4 @@ HunFlair2 comes with the following pre-trained linking models:
 
 For detailed information concerning the different models and their integration please refer to [our paper](https://arxiv.org/abs/2402.12372).
 
-If you wish to customize the models and dictionaries please refer to the [dedicated tutorial](HUNFLAIR2_TUTORIAL_4_CUSTOMIZE_LINKING.md).
+If you wish to customize the models and dictionaries please refer to the [dedicated tutorial](project:./customize-linking.md).

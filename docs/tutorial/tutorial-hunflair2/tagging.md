@@ -69,12 +69,14 @@ pip install scispacy==0.5.1
 pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.1/en_core_sci_sm-0.5.1.tar.gz
 ~~~
 
-To use the tokenizer we just have to pass it as parameter to when instancing a sentence:
+Then we can use the [`SciSpacyTokenizer`](#flair.tokenization.SciSpacyTokenizer), we just have to pass it as parameter to when instancing a sentence:
 ```python
 from flair.tokenization import SciSpacyTokenizer
 
+tokenizer = SciSpacyTokenizer()
+
 sentence = Sentence("Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome",
-                    use_tokenizer=SciSpacyTokenizer())
+                    use_tokenizer=tokenizer)
 ```
 
 ### Working with longer Texts
@@ -88,7 +90,7 @@ abstract = "Fragile X syndrome (FXS) is a developmental disorder caused by a mut
 ```
 
 To work with complete abstracts or full-text, we first have to split them into separate sentences.
-Again we can apply the integration of the [SciSpaCy](https://allenai.github.io/scispacy/) library:
+We can apply the [`SciSpacySentenceSplitter`](#flair.splitter.SciSpacySentenceSplitter), an integration of the [SciSpaCy](https://allenai.github.io/scispacy/) library:
 ```python
 from flair.splitter import SciSpacySentenceSplitter
 
@@ -115,7 +117,3 @@ Sentence[23]: "FXS patients present several behavioral abnormalities, including 
 Sentence[27]: "Autistic symptoms, e.g., altered social interaction and communication, are also often observed: FXS is indeed the most common monogenic cause of autism." \
               → ["Autistic symptoms"/Disease, "altered social interaction and communication"/Disease, "FXS"/Disease, "autism"/Disease]
 ~~~
-
-### Next
-Now, let us look at how to [link / normalize the entities to standard ontologies](HUNFLAIR2_TUTORIAL_2_LINKING.md) 
-in the second tutorial.

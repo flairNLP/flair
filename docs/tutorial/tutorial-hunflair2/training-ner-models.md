@@ -3,13 +3,13 @@
 This part of the tutorial shows how you can train your own biomedical named entity recognition models
 using state-of-the-art pretrained Transformers embeddings.
 
-For this tutorial, we assume that you're familiar with the [base types](https://flairnlp.github.io/docs/tutorial-basics/basic-types) of Flair
-and how [transformers_word embeddings](https://flairnlp.github.io/docs/tutorial-training/how-to-train-sequence-tagger).
-You should also know how to [load a corpus](https://flairnlp.github.io/docs/tutorial-training/how-to-load-prepared-dataset).
+For this tutorial, we assume that you're familiar with the [base types](project:../tutorial-basics/basic-types) of Flair
+and how [transformers_word embeddings](project:../tutorial-training/how-to-train-sequence-tagger).
+You should also know how to [load a corpus](project:../tutorial-training/how-to-load-prepared-dataset).
 
 ## Train a biomedical NER model from scratch: single entity type
 
-Here is example code for a biomedical NER model trained on the `NCBI_DISEASE` corpus using Transformer word embeddings.
+Here is example code for a biomedical NER model trained on the [`NCBI_DISEASE`](#flair.datasets.biomedical.NCBI_DISEASE) corpus using Transformer word embeddings.
 This will result in a tagger specialized for a single entity type, i.e. "Disease".
 
 ```python
@@ -90,10 +90,10 @@ Women who smoke 20 cigarettes a day are four times more likely to develop breast
 
 If you are dealing with multiple entity types, e.g. "Disease" and "Chemicals", you can opt
 to train a single model capable of handling multiple entity types at once.
-This can be achieved by using the  `PrefixedSequenceTagger()` class, which implements the method described in \[1\].
+This can be achieved by using the  [`PrefixedSequenceTagger()`](#flair.models.PrefixedSequenceTagger) class, which implements the method described in \[1\].
 This model uses prompting, i.e. it adds a prefix (hence the name) string in front of specifying the
 entity types requested for tagging: `[Tag <entity-type-0>, <entity-type-1>, ...]`.
-Thist is especially usefull for training, as it allows to combine multiple corpora even if they cover different subsets of entity types.
+This is especially useful for training, as it allows to combine multiple corpora even if they cover different subsets of entity types.
 
 ```python
 # 1. get the corpora
