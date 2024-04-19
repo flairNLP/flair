@@ -1051,6 +1051,8 @@ class EarlyExitSequenceTagger(SequenceTagger):
         weighted_loss: bool = True,
         last_layer_only: bool = False,
         print_all_predictions = True,
+        modified_loss = False,
+        relabel_noisy = False,
         **seqtaggerargs
     ):
         """
@@ -1081,7 +1083,13 @@ class EarlyExitSequenceTagger(SequenceTagger):
         self.weighted_loss = weighted_loss
         self.last_layer_only = last_layer_only
         self.print_all_predictions = print_all_predictions
-
+        self.modified_loss=modified_loss
+        if self.modified_loss:
+            self.loss_function = (
+                ViterbiLoss(self.label_dictionary)
+                if use_crf
+                else torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction='none')
+            )
         self.to(flair.device)
 
     def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.LongTensor, torch.Tensor]:
@@ -1144,20 +1152,62 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         if self.last_layer_only:
             loss = self.loss_function(scores[-1], labels)
-        else:
+        elif self.modified_loss: 
             if self.weighted_loss:
+                
                 layer_weights = torch.arange(self.n_layers, device=flair.device)
                 layer_weighted_loss = 0
                 for i in range(self.n_layers):
                     layer_loss = self.loss_function(scores[i], labels)
                     layer_weighted_loss += layer_weights[i] * layer_loss
-                loss = layer_weighted_loss / sum(layer_weights)
+                loss = layer_weighted_loss / sum(layer_weights) #per-sample layer-weighted average loss
+            else: 
+                loss = 0
+                for i in range(1, self.n_layers):
+                    loss += self.loss_function(scores[i], labels)
+                loss = loss / (self.n_layers - 1) #per-sample layer average loss
+            
+            softmax_batch = F.softmax(scores, dim=2).detach()
+            
+            last_layer_prediction = torch.argmax(softmax_batch[-1,:,:], dim=-1)
+
+            max_pd_tensor  = torch.full(loss.size(), self.n_layers, device=flair.device, requires_grad=False)
+
+            pds = []
+            for i in range(softmax_batch.size()[1]):
+                pd = self._calculate_pd(softmax_batch[:, i, :])
+                pds.append(pd+1)
+            pds = torch.tensor(pds, device = flair.device, requires_grad=False) # get per-sample PDs
+
+            correct_prediction_indicator = torch.eq(last_layer_prediction, labels).int()
+            incorrect_prediction_indicator = torch.ones_like(correct_prediction_indicator) - correct_prediction_indicator
+
+            # per-sample loss - correct predictions weighted by PD
+            loss_correct = (max_pd_tensor * loss) / pds * correct_prediction_indicator # correct predictions -> downweigh high PD
+            # per-sample loss - incorrect predictions weighted by PD
+            loss_incorrect = (pds * loss) / max_pd_tensor * incorrect_prediction_indicator # incorrect predictions -> downweigh low PD
+
+            loss = loss_correct + loss_incorrect
+            loss = loss.sum() #sample-average loss
+        else:
+            if self.weighted_loss:
+                layer_weights = torch.arange(self.n_layers, device=flair.device)
+                
+                # 0.01 and 1 weights
+                #layer_weights = [0.01 for i in range(self.n_layers)]
+                #layer_weights[-1] = 1
+                #layer_weights = torch.tensor(layer_weights, dtype=torch.float, device=flair.device, requires_grad=False)
+
+                layer_weighted_loss = 0
+                for i in range(self.n_layers):
+                    layer_loss = self.loss_function(scores[i], labels)
+                    layer_weighted_loss += layer_weights[i] * layer_loss
+                loss = layer_weighted_loss / sum(layer_weights) # sample-sum layer-weighted average loss
             else:
                 loss = 0
                 for i in range(1, self.n_layers):
                     loss += self.loss_function(scores[i], labels)
-                loss = loss / (self.n_layers - 1)
-
+                loss = loss / (self.n_layers - 1) #sample-sum layer average loss
         return loss, len(labels)
 
     def _calculate_pd(self, scores: torch.Tensor, label_threshold=None) -> int:
