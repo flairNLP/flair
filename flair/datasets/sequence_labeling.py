@@ -4839,27 +4839,37 @@ class NER_GERMAN_MOBIE(ColumnCorpus):
         )
 
 
-class NoisyNER_EST_Clean(ColumnCorpus):
+class NOISY_NER_EST(ColumnCorpus):
     data_url = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/patnlp/estner.cnll.zip"
 
     def __init__(
         self,
-        base_path: Optional[Union[str, Path]] = None,   
+        version: int = 0,
+        base_path: Optional[Union[str, Path]] = None,
         column_format={0: "text", 1: "ner"},            
         in_memory: bool = True,                         
         **corpusargs,
     ) -> None:
 
-        data_folder, instances = self._load_data(base_path)
-
+        assert version in range(0,8)
+        base_path = self._set_path(base_path)
+        features = self._load_features(base_path)
+        if version == 0:
+            preinstances = self._process_clean_labels(features)
+        else:
+            rdcd_features = self._rmv_clean_labels(features)
+            preinstances = self._process_noisy_labels(base_path, version, rdcd_features)
+        instances = self._delete_empty_labels(version, preinstances)
         train, dev, test = self._split_data(instances)
+        self._write_instances(version, base_path, "train", train)
+        self._write_instances(version, base_path, "dev", dev)
+        self._write_instances(version, base_path, "test", test)
 
-        self._write_instances(train, data_folder/"estner_clean_train.tsv")
-        self._write_instances(dev, data_folder/"estner_clean_dev.tsv")
-        self._write_instances(test, data_folder/"estner_clean_test.tsv")
-
-        super().__init__(                       
-            data_folder,                                    
+        super().__init__(    
+            data_folder=base_path,                 
+            train_file=f"estner_noisy_labelset{version}_train.tsv", 
+            dev_file=f"estner_noisy_labelset{version}_dev.tsv",
+            test_file=f"estner_noisy_labelset{version}_test.tsv",                                   
             column_format=column_format,
             in_memory=in_memory,
             column_delimiter = '\t',
@@ -4867,35 +4877,80 @@ class NoisyNER_EST_Clean(ColumnCorpus):
         )
 
     @classmethod
-    def _load_data(cls, base_path) -> tuple[Path, list[str]]:                    
-        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
-        data_folder = base_path/"estner_clean"
-        unpack_file(cached_path(cls.data_url, data_folder), data_folder, "zip", False)        
-        with open(data_folder/"estner.cnll") as in_file:
-            preinstances = in_file.readlines()
-        preinstances = [instance.strip().split("\t") for instance in preinstances]
-        preinstances = [[instance[0], instance[len(instance)-1]] for instance in preinstances]
-        instances = []
-        for instance in preinstances:
-            if instance[0] != '--':
-                instances.append(instance)
-        return data_folder, instances 
+    def _set_path(cls, base_path) -> Path:
+        if not base_path:
+            base_path = flair.cache_root/"datasets"/"estner_clean"
+        else:
+            base_path = Path(base_path)
+        return base_path
 
+    @classmethod
+    def _load_features(cls, base_path) -> list[str]:
+        unpack_file(cached_path(cls.data_url, base_path), base_path, "zip", False)
+        with open(f"{base_path}/estner.cnll") as in_file:
+            prefeatures = in_file.readlines()
+        features = [feature.strip().split("\t") for feature in prefeatures]
+        return features
+
+    @classmethod
+    def _process_clean_labels(cls, features) -> list[str]:
+        preinstances = [[instance[0], instance[len(instance)-1]] for instance in features]
+        return preinstances
+
+    @classmethod
+    def _rmv_clean_labels(cls, features) -> list[str]:
+        rdcd_features = [feature[:-1] for feature in features]
+        return rdcd_features
+
+    @classmethod
+    def _process_noisy_labels(cls, base_path, version, rdcd_features) -> list[str]:
+        label_file_path = f"{base_path}/NoisyNER_labelset{version}.labels"
+        try:
+            with open(label_file_path) as in_file:
+                labels = in_file.read().splitlines()
+        except FileNotFoundError:
+            raise Exception("")                     
+         
+        instances = []
+        label_idx = 0
+        for feature in rdcd_features:
+            if len(feature) == 0:
+                instances.append("")
+            else:
+                assert label_idx < len(labels)
+                instance = [feature[0], labels[label_idx]]
+                instances.append(instance)
+                label_idx += 1
+        assert label_idx == len(labels)             
+        return instances
+
+    @classmethod
+    def _delete_empty_labels(cls, version, preinstances) -> list[str]:
+        instances = []
+        if version == 0:
+            for instance in preinstances:
+                if instance[0] != '--':
+                    instances.append(instance)
+        else:
+            for instance in preinstances:
+                if instance != '--':
+                    instances.append(instance)
+        return instances 
+    
     @classmethod
     def _split_data(cls, instances) -> tuple[list[str], list[str], list[str]]:        
         train = instances[:185708]
         dev = instances[185708:208922]
         test = instances[208922:]
         return train, dev, test
-
+    
     @classmethod
-    def _write_instances(cls, instances, filepath):                 
-        # CoNLL format
+    def _write_instances(cls, version, base_path, split, data):
         column_separator = "\t"
-        with open(filepath, "w") as out_file:
-            for instance in instances:
+        with open(f"{base_path}/estner_noisy_labelset{version}_{split}.tsv", "w") as out_file:
+            for instance in data:
                 out_file.write(column_separator.join(instance))
-                out_file.write("\n")  
+                out_file.write("\n")        
 
 
 class MASAKHA_POS(MultiCorpus):
