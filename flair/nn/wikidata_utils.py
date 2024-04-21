@@ -2,12 +2,14 @@ import time
 
 import mkwikidata  # https://pypi.org/project/mkwikidata/
 import requests
+from lxml import html
 import json
 import urllib
 
 
 # try out Wikidata Query Service:
 # https://query.wikidata.org/#SELECT%20%3Fitem%20%3FitemLabel%0AWHERE%0A%7B%0A%20%20wd%3AQ8880%20%28wdt%3AP31%2a%7Cwdt%3AP279%2a%29%20%3Fitem%20.%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22.%20%7D%0A%7D%0A%0ALIMIT%20100
+# https://query.wikidata.org/#SELECT%20%3Fitem%20%3FpropLabel%20%3FitemLabel%20%3Fsitelinks%20%3Foutcoming%0AWHERE%20%7B%0A%20%20BIND%28wd%3AQ142%20AS%20%3Fid%29%0A%20%20%0A%20%20VALUES%20%28%3Fprop%20%3FpropLabel%29%20%7B%0A%20%20%20%20%28wdt%3AP31%20%20%22IsA%22%29%0A%20%20%20%20%28wdt%3AP279%20%22IsATypeOf%22%29%0A%20%20%20%20%28wdt%3AP361%20%22IsPartOf%22%29%0A%20%20%20%20%28wdt%3AP17%20%20%22Country%22%29%0A%20%20%20%20%28wdt%3AP106%20%22Occupation%22%29%0A%20%20%7D%0A%20%20%0A%20%20%3Fid%20%3Fprop%20%3Fitem%20.%0A%20%20%20%20%0A%20%20%3Fitem%20wikibase%3Astatements%20%3Foutcoming%20.%0A%20%20%3Fitem%20wikibase%3Asitelinks%20%3Fsitelinks%20.%0A%20%20%0A%20%20SERVICE%20wikibase%3Alabel%20%7B%20bd%3AserviceParam%20wikibase%3Alanguage%20%22en%22.%20%7D%0A%7D%0A%0AGROUP%20BY%20%3Fitem%20%3FitemLabel%20%3FpropLabel%20%3Fsitelinks%20%3Foutcoming%0AORDER%20BY%20%3FpropLabel%20DESC%28%3Fsitelinks%29%0A%0ALIMIT%2050
 # Doc: https://www.wikidata.org/wiki/Wikidata:SPARQL_tutorial
 
 
@@ -151,6 +153,37 @@ def format_to_query(wikidata_id,
 
       """
 
+    if method == "with_property_labels":
+
+        query = f"""
+        SELECT ?item ?propLabel ?itemLabel ?sitelinks ?outcoming
+        WHERE {{
+            BIND(wd:{wikidata_id} AS ?id)
+  
+            VALUES (?prop ?propLabel) {{
+                         (wdt:P31  "")
+                         (wdt:P279 "type of: ")
+                         (wdt:P361 "part of: ")
+                         {'(wdt:P17  "country: ")' if add_country else ''}
+                         {'(wdt:P106 "occupation: ")' if add_occupation else ''}
+                         {'(edt:P101 "works in field: ")' if add_field_of_work else ''}
+                          
+                         }}
+  
+            ?id ?prop ?item .
+    
+            ?item wikibase:statements ?outcoming .
+            ?item wikibase:sitelinks ?sitelinks .
+  
+            SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+            }}
+
+        GROUP BY ?item ?itemLabel ?propLabel ?sitelinks ?outcoming
+        ORDER BY ?propLabel DESC(?sitelinks)
+
+        LIMIT 50
+        """
+
     return query
 
 
@@ -163,7 +196,11 @@ def extract_list_from_result(result):
         item_name = r["itemLabel"]["value"]
         if item_name not in already_added:
             links.append(item_link)
-            names.append(item_name)
+            if "propLabel" in r:
+                property_prefix = r["propLabel"]["value"]
+                names.append((property_prefix, item_name))
+            else:
+                names.append(item_name)
             already_added.append(item_name)
 
     return links, names
@@ -207,6 +244,7 @@ def get_url_from_pageID(pageID):
         'pageids': pageID,
         'inprop': 'url',
         'format': 'json',
+        'redirects': True,
         # 'exintro': True,
         # 'explaintext': True,
     }
@@ -228,7 +266,7 @@ def get_url_from_pageID(pageID):
 
     return entity_label
 
-def get_wikidata_categories(entity, method, add_occupation, add_field_of_work, add_country):
+def get_wikidata_categories(entity, method, add_occupation, add_field_of_work, add_country, only_description = False):
     wikidata_id = None
     wikibase_shortdesc = ""
 
@@ -251,6 +289,26 @@ def get_wikidata_categories(entity, method, add_occupation, add_field_of_work, a
         wikidata_id = pageprops.get("wikibase_item", None)
         wikibase_shortdesc = pageprops.get("wikibase-shortdesc", "")
 
+    if only_description: # shorter
+        if wikibase_shortdesc == "":
+            url = f"https://www.wikidata.org/w/api.php?action=wbgetentities&ids={wikidata_id}&format=json"
+            response = requests.get(url)
+            data = response.json()
+            data_dict = data.get("entities", {})
+            if wikidata_id in data_dict:
+                entity_data = data_dict[wikidata_id]
+                try:
+                    wikibase_shortdesc = entity_data["descriptions"]["en"]["value"]
+                except:
+                    wikibase_shortdesc = ""
+
+        return {"wikidata_id": wikidata_id,
+                "wikidata_url": None,
+                "class_names": None,
+                "wikidata_title": wikidata_title,
+                "wikibase_description": wikibase_shortdesc,
+                }
+
     if wikidata_id:
 
         wikidata_url = f"https://www.wikidata.org/wiki/{wikidata_id}"
@@ -262,7 +320,7 @@ def get_wikidata_categories(entity, method, add_occupation, add_field_of_work, a
                                 add_country=add_country,
                                 )
         try:
-            query_result = mkwikidata.run_query(query, params={})
+            query_result = mkwikidata.run_query(query, params={'redirects': True})
         except:
             time.sleep(10)
             query_result = mkwikidata.run_query(query, params={})
@@ -332,6 +390,46 @@ def get_sitelinks_of_entity(entity):
     except:
         return None # Fallback
 
+
+def get_wikipedia_first_paragraph(entity):
+    url = 'https://en.wikipedia.org/w/api.php'
+    params = {
+        'action': 'query',
+        'format': 'json',
+        'titles': entity,
+        'prop': 'extracts',
+        'explaintext': 1,
+        'redirects': True,
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+    page = next(iter(data['query']['pages'].values()))
+    wikidata_title = page["title"]
+    wikipedia_text = page["extract"]
+    first_paragraph = wikipedia_text.split("\n")[0]
+
+    """
+    response = requests.get(
+        'https://en.wikipedia.org/w/api.php',
+        params={
+            'action': 'parse',
+            'page': entity,
+            'format': 'json',
+        }).json()
+    raw_html = response['parse']['text']['*']
+    document = html.document_fromstring(raw_html)
+    paragraphs = document.xpath('//p')
+    for p in paragraphs:
+        text = p.text_content()
+        if len(text.strip()) >0:
+            intro_text = text
+            break
+    """
+
+    return wikidata_title, first_paragraph
+
+
 #### MAPPING THE WIKIDATA CLASSES TO OUR NER LABELS ####
 
 org_classes = ["organization", "political party", "political organization", "confederation", "sports club",
@@ -394,19 +492,20 @@ if __name__ == "__main__":
 
         # print("Nr of Sitelinks:", get_sitelinks_of_entity(e))
         #
-        # print("The list that we used:")
-        # item_info = get_wikidata_categories(e, method="strict", add_occupation=True, add_field_of_work=False)
-        # print(json.dumps(item_info, indent = 4))
-        #
-        # print("NER:", map_wikidata_list_to_ner(item_info["class_names"])[0])
+        print("The list that we used:")
+        #item_info = get_wikidata_categories(e, method="strict", add_occupation=True, add_field_of_work=False)
+        item_info = get_wikidata_categories(e, method="with_property_labels", add_occupation=True, add_field_of_work=False, add_country=False)
+
+        print(json.dumps(item_info, indent = 4))
+
+        print("NER:", map_wikidata_list_to_ner(item_info["class_names"])[0])
 
         #print("\ndifferent combinations of the relations, one lead to too many, one to too little:")
         #print(get_wikidata_categories(e, method= "only_one_level_up", add_occupation=True, add_field_of_work=False))
         #print(get_wikidata_categories(e, method= "allow_combination", add_occupation=True, add_field_of_work=False))
 
-        print(get_pageviews_of_entity_precomputed(e,
-                                                   "/vol/tmp/ruckersu/data/wikipedia_pageviews/en_wikipedia_ranking.txt"
-                                                   ))
+        #print(get_pageviews_of_entity_precomputed(e,
+        #                                           "/vol/tmp/ruckersu/data/wikipedia_pageviews/en_wikipedia_ranking.txt"))
 
-
+        print(get_wikipedia_first_paragraph(entity = e))
 
