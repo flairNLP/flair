@@ -1053,6 +1053,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
         print_all_predictions = True,
         modified_loss = False,
         relabel_noisy = False,
+        relabel_path = '',
         **seqtaggerargs
     ):
         """
@@ -1061,6 +1062,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
         over all the early-exit layers.
         :param last_layer_only: allows to use outputs of the last layer only to train the
         model (like in the case of the regular SequenceTagger).
+        :param relabel_noisy: allows for PD-based selection of noisy samples and their relabelling (default criterion is PD<2, incorrect prediction)
         """
         super().__init__(
             embeddings = embeddings,
@@ -1084,6 +1086,8 @@ class EarlyExitSequenceTagger(SequenceTagger):
         self.last_layer_only = last_layer_only
         self.print_all_predictions = print_all_predictions
         self.modified_loss=modified_loss
+        self.relabel_noisy = relabel_noisy
+        self.relabel_path = relabel_path
         if self.modified_loss:
             self.loss_function = (
                 ViterbiLoss(self.label_dictionary)
@@ -1144,6 +1148,76 @@ class EarlyExitSequenceTagger(SequenceTagger):
             scores.append(layer_scores)
 
         return torch.stack(scores)
+
+
+    def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
+        # if there are no sentences, there is no loss
+        if len(sentences) == 0:
+            return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
+
+        if self.relabel_noisy and int(self.model_card["training_parameters"]["epoch"])>1:
+            to_print = True
+            if to_print:
+                epoch_log_path = self.relabel_path +'/relabelled_'+str(self.model_card["training_parameters"]["epoch"])+'.tsv'
+                outfile = open(Path(epoch_log_path), "a+", encoding="utf-8")
+
+            for sentence in sentences:
+                # set gold token-level
+                output=False
+                token_scores = [ 1 for label in sentence.tokens]
+                new_token_bio_labels = []
+
+                for token in sentence:
+                    pd = token.get_label('PD').score
+                    pred = token.get_label('predicted_bio').value
+                    gold = token.get_label('gold_bio').value
+                    #print(pred)
+                    if pred != gold and int(pd) < 2:
+                        print('change')
+                        if not output:
+                            if to_print:
+                                outfile.write('old_sentence \n')
+                                outfile.write(sentence.text+'\n')
+                                outfile.write(str(sentence.get_labels('ner')))
+                                outfile.write('\n')
+                            output=True
+                        new_token_bio_labels.append(token.get_label('predicted_bio').value)
+                        token.set_label('gold_bio',token.get_label('predicted_bio').value)
+                    else:
+                        new_token_bio_labels.append(token.get_label('gold_bio').value)
+
+                for gold_label in sentence.get_labels('ner'): # ner is hardcoded for now
+                    gold_span: Span = gold_label.data_point
+                    gold_span.remove_labels('ner')        
+
+                updated_spans = get_spans_from_bio(new_token_bio_labels, token_scores)
+
+                for updated_span in updated_spans:
+                    span: Span = sentence[updated_span[0][0] : updated_span[0][-1] + 1]
+                    span.add_label('ner', value=updated_span[2], score=updated_span[1]) # ner is hardcoded for now
+            
+            if to_print:
+                if output:
+                    outfile.write('token labels\n')
+                    outfile.write(str(new_token_bio_labels))
+                    outfile.write('new_sentence \n')
+                    outfile.write(sentence.text+'\n')
+                    outfile.write(str(sentence.get_labels('ner')))
+                    outfile.write('\n')
+                    outfile.write('\n')
+                outfile.close()
+
+
+        sentences = sorted(sentences, key=len, reverse=True)
+
+        gold_labels = self._prepare_label_tensor(sentences)
+        sentence_tensor, lengths = self._prepare_tensors(sentences)
+
+        # forward pass to get scores
+        scores = self.forward(sentence_tensor, lengths)
+        # calculate loss given scores and labels
+        return self._calculate_loss(scores, gold_labels)
+
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.LongTensor) -> Tuple[torch.Tensor, int]:
 
