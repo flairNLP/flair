@@ -4851,16 +4851,22 @@ class NOISY_NER_EST(ColumnCorpus):
         **corpusargs,
     ) -> None:
 
-        assert version in range(0,8)
+        if not (version in range(0,8)):
+            raise Exception("Please choose a version (int) from 0 to 7. With v0 (default) you get the clean labelset for the data, while v1 to v7 provide different kinds of noisy labelsets. For details see https://ojs.aaai.org/index.php/AAAI/article/view/16938.")
+       
         base_path = self._set_path(base_path)
         features = self._load_features(base_path)
+        
         if version == 0:
             preinstances = self._process_clean_labels(features)
         else:
             rdcd_features = self._rmv_clean_labels(features)
             preinstances = self._process_noisy_labels(base_path, version, rdcd_features)
+        
         instances = self._delete_empty_labels(version, preinstances)
+        
         train, dev, test = self._split_data(instances)
+       
         self._write_instances(version, base_path, "train", train)
         self._write_instances(version, base_path, "dev", dev)
         self._write_instances(version, base_path, "test", test)
@@ -4909,7 +4915,7 @@ class NOISY_NER_EST(ColumnCorpus):
             with open(label_file_path) as in_file:
                 labels = in_file.read().splitlines()
         except FileNotFoundError:
-            raise Exception("")                     
+            raise Exception("Please download the noisy labelset file of your choice from https://github.com/uds-lsv/NoisyNER/tree/master/data/only_labels. Set the base_path argument to the path of the directory you saved the file in. Make sure, the version argument matches the file.")                     
          
         instances = []
         label_idx = 0
@@ -4921,7 +4927,7 @@ class NOISY_NER_EST(ColumnCorpus):
                 instance = [feature[0], labels[label_idx]]
                 instances.append(instance)
                 label_idx += 1
-        assert label_idx == len(labels)             
+        assert label_idx == len(labels), ""             
         return instances
 
     @classmethod
@@ -4946,11 +4952,11 @@ class NOISY_NER_EST(ColumnCorpus):
     
     @classmethod
     def _write_instances(cls, version, base_path, split, data):
-        column_separator = "\t"
+        column_separator = "\t"     # CoNLL format
         with open(f"{base_path}/estner_noisy_labelset{version}_{split}.tsv", "w") as out_file:
             for instance in data:
                 out_file.write(column_separator.join(instance))
-                out_file.write("\n")        
+                out_file.write("\n")      
 
 
 class MASAKHA_POS(MultiCorpus):
