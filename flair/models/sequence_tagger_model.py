@@ -589,7 +589,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         previous = 0
         for length in lengths:
             prob_tags_per_sentence.append(prob_all_tags[previous : previous + length])
-            previous = length
+            previous += length
         return prob_tags_per_sentence
 
     def _get_state_dict(self):
