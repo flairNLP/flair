@@ -13,7 +13,7 @@ setup(
     author="Alan Akbik",
     author_email="alan.akbik@gmail.com",
     url="https://github.com/flairNLP/flair",
-    packages=find_packages(exclude="tests"),  # same as name
+    packages=find_packages(exclude=["tests", "tests.*"]),  # same as name
     license="MIT",
     install_requires=required,
     include_package_data=True,
