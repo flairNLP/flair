@@ -1,6 +1,5 @@
 import logging
 import random
-import sys
 from collections import defaultdict
 from enum import Enum
 from functools import reduce
