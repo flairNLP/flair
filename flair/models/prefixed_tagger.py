@@ -9,7 +9,8 @@ from torch.utils.data import Dataset
 import flair.data
 from flair.data import Corpus, Sentence, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.models import SequenceTagger
+from flair.file_utils import hf_download
+from flair.models.sequence_tagger_model import SequenceTagger
 
 
 class PrefixedSentence(Sentence):
@@ -317,3 +318,21 @@ class PrefixedSequenceTagger(SequenceTagger):
             sentences = [sentences]
 
         return [self.augmentation_strategy.augment_sentence(sentence, annotation_layers) for sentence in sentences]
+
+    @staticmethod
+    def _fetch_model(model_name) -> str:
+        huggingface_model_map = {"hunflair2": "hunflair/hunflair2-ner"}
+
+        # check if model name is a valid local file
+        if Path(model_name).exists():
+            model_path = model_name
+
+        # check if model name is a pre-configured hf model
+        elif model_name in huggingface_model_map:
+            hf_model_name = huggingface_model_map[model_name]
+            return hf_download(hf_model_name)
+
+        else:
+            model_path = hf_download(model_name)
+
+        return model_path
