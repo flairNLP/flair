@@ -29,6 +29,7 @@ filterwarnings = [
     "ignore:pkg_resources",  # huggingface has deprecated calls.
     'ignore:Deprecated call to `pkg_resources',  # huggingface has deprecated calls.
     'ignore:distutils Version classes are deprecated.',  # faiss uses deprecated distutils.
+    'ignore:`resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.',  # transformers calls deprecated hf_hub
 ]
 markers = [
     "integration",
@@ -46,7 +47,7 @@ ignore_errors = true
 
 [tool.ruff]
 line-length = 120
-target-version = "py37"
+target-version = "py38"
 
 [tool.ruff.lint]
 #select = ["ALL"]    # Uncommit to autofix all the things
