@@ -18,15 +18,16 @@ You can choose the path by setting the `FLAIR_CACHE_ROOT` environment variable.
 device: torch.device
 """Flair is using a single device for everything. You can set this device by overwriting this variable.
 
-This value will be automatically set to the first found GPU if available and to CPU otherwise.
-You can choose a specific GPU, by setting the `FLAIR_DEVICE` environment variable to its index.
+The device will be automatically set to the first available GPU if a GPU is present and the 'FLAIR_DEVICE' environment
+variable is not set to 'cpu', otherwise it will default to the CPU, and a specific GPU can be chosen by setting the 'FLAIR_DEVICE'
+environment variable to its index.
 """
 
+# Get the device from the environment variable
+device_id = os.environ.get("FLAIR_DEVICE")
 
 # global variable: device
-if torch.cuda.is_available():
-    device_id = os.environ.get("FLAIR_DEVICE")
-
+if torch.cuda.is_available() and device_id != "cpu":
     # No need for correctness checks, torch is doing it
     device = torch.device(f"cuda:{device_id}") if device_id else torch.device("cuda:0")
 else:
