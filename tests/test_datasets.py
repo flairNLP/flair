@@ -822,11 +822,13 @@ def test_masakha_pos_corpus(tasks_base_path):
             "ibo",
             "kin",
             "lug",
+            "luo",
             "mos",
             "pcm",
             "nya",
             "sna",
             "swa",
+            "tsn",
             "twi",
             "wol",
             "xho",
@@ -835,7 +837,7 @@ def test_masakha_pos_corpus(tasks_base_path):
         ],
     }
 
-    africa_pos_stats = {
+    masakha_pos_stats = {
         "v1": {
             "bam": {"train": 775, "dev": 154, "test": 619},
             "bbj": {"train": 750, "dev": 149, "test": 599},
@@ -845,11 +847,13 @@ def test_masakha_pos_corpus(tasks_base_path):
             "ibo": {"train": 803, "dev": 160, "test": 642},
             "kin": {"train": 757, "dev": 151, "test": 604},
             "lug": {"train": 733, "dev": 146, "test": 586},
+            "luo": {"train": 758, "dev": 151, "test": 606},
             "mos": {"train": 757, "dev": 151, "test": 604},
             "pcm": {"train": 752, "dev": 150, "test": 600},
             "nya": {"train": 728, "dev": 145, "test": 582},
             "sna": {"train": 747, "dev": 149, "test": 596},
             "swa": {"train": 693, "dev": 138, "test": 553},
+            "tsn": {"train": 754, "dev": 150, "test": 602},
             "twi": {"train": 785, "dev": 157, "test": 628},
             "wol": {"train": 782, "dev": 156, "test": 625},
             "xho": {"train": 752, "dev": 150, "test": 601},
@@ -865,7 +869,7 @@ def test_masakha_pos_corpus(tasks_base_path):
         for language in supported_languages[version]:
             corpus = flair.datasets.MASAKHA_POS(languages=language, version=version)
 
-            gold_stats = africa_pos_stats[version][language]
+            gold_stats = masakha_pos_stats[version][language]
 
             check_number_sentences(len(corpus.train), gold_stats["train"], "train", language, version)
             check_number_sentences(len(corpus.dev), gold_stats["dev"], "dev", language, version)

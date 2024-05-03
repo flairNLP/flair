@@ -4887,11 +4887,13 @@ class MASAKHA_POS(MultiCorpus):
             "ibo",
             "kin",
             "lug",
+            "luo",
             "mos",
             "pcm",
             "nya",
             "sna",
             "swa",
+            "tsn",
             "twi",
             "wol",
             "xho",
@@ -4936,5 +4938,5 @@ class MASAKHA_POS(MultiCorpus):
             corpora.append(corp)
         super().__init__(
             corpora,
-            name="africa-pos-" + "-".join(languages),
+            name="masakha-pos-" + "-".join(languages),
         )
