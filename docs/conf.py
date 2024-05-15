@@ -26,19 +26,6 @@ html_context = {
     "conf_py_path": "/docs/",
 }  # dummy value that sphinx-github-style won't crash when run in temp folder.
 
-html_theme_options = {
-    "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"],
-    "github_url": linkcode_url,
-    "icon_links": [
-        {
-            "name": "PyPI",
-            "url": "https://pypi.org/project/flair",
-            "icon": "fas fa-box",
-        },
-    ],
-}
-
-
 def linkcode_resolve(*args):
     # use smv_current_version as the git url
     real_linkcode_url = linkcode_url + f"/blob/{smv_current_version}/" + "{filepath}#L{linestart}-L{linestop}"
@@ -64,7 +51,7 @@ extensions = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["_templates"]
+# templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -73,21 +60,17 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme_path = ["_themes"]
+html_theme_path = ["."]
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "flair"
+html_theme = "theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
-
-html_css_files = [
-    'css/custom.css',
-]
+# html_static_path = ["_static"]
 
 # Napoleon settings
 napoleon_include_init_with_doc = True
@@ -105,15 +88,6 @@ autodoc_default_options = {
 source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
-}
-
-html_sidebars = {
-    "**": [
-        "globaltoc.html",
-        "searchbox.html",
-        "versioning.html",
-    ],
-    "index": [],
 }
 
 smv_latest_version = importlib_metadata.version(project)
