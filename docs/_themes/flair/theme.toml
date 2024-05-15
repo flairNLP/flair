@@ -1,0 +1,8 @@
+[theme]
+inherit = "classic"
+stylesheets = [
+    "custom.css",
+]
+
+[options]
+variable = "default value"

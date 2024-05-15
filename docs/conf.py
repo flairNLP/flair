@@ -73,15 +73,21 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # -- Options for HTML output -------------------------------------------------
 
+html_theme_path = ["_themes"]
+
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "pydata_sphinx_theme"
+html_theme = "flair"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+html_css_files = [
+    'css/custom.css',
+]
 
 # Napoleon settings
 napoleon_include_init_with_doc = True
@@ -115,6 +121,7 @@ smv_latest_version = importlib_metadata.version(project)
 # Whitelist pattern for tags (set to None to ignore all tags)
 smv_tag_whitelist = r"^v\d+\.\d+\.\d+$"
 
+# TODO: Remove dev branch name
 # Whitelist pattern for branches (set to None to ignore all branches)
 smv_branch_whitelist = r"^master|documentation-bonanza$"
 
