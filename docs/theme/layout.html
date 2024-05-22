@@ -2,10 +2,28 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-    <link href="_static/styles/theme.css" rel="stylesheet" />
+    <title>{{ project }} Documentation</title>
+    <link rel="stylesheet" href="{{ pathto('static/my_custom.css', 1) }}">
+    {% block extrahead %}{% endblock %}
 </head>
-<body class="test">
-    TEST
+<body>
+    <header>
+        <h1>{{ project }} Documentation</h1>
+    </header>
+    <div class="container">
+        <aside>
+            {% block sidebar %}
+            {% include "templates/sidebar.html" %}
+            {% endblock %}
+        </aside>
+        <main>
+            {% block content %}
+            {% include "templates/content.html" %}
+            {% endblock %}
+        </main>
+    </div>
+    <footer>
+        <p>© {{ release }} {{ author }}. All rights reserved.</p>
+    </footer>
 </body>
 </html>

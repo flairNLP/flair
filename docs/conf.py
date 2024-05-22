@@ -17,6 +17,7 @@ top_level = project.replace("-", "_")
 linkcode_url = importlib_metadata.metadata(project)["Home-page"]
 html_show_sourcelink = True
 
+
 smv_current_version = ""  # will by overwritten by sphinx-multi-version to the name of the tag or branch.
 html_context = {
     "display_github": True,
@@ -51,7 +52,7 @@ extensions = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-# templates_path = ["_templates"]
+templates_path = ["source/_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -70,7 +71,7 @@ html_theme = "theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-# html_static_path = ["_static"]
+html_static_path = ["source/_static"]
 
 # Napoleon settings
 napoleon_include_init_with_doc = True
@@ -111,4 +112,4 @@ smv_outputdir_format = "{ref.name}"
 # Determines whether remote or local git branches/tags are preferred if their output dirs conflict
 smv_prefer_remote_refs = False
 
-html_favicon = "_static/favicon.ico"
+html_favicon = "source/_static/favicon.ico"

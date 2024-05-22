@@ -1,0 +1,5 @@
+<ul>
+    <li><a href="{{ pathto(master_doc) }}">Home</a></li>
+    {% set toctree_html = toctree(maxdepth=2, includehidden=True, titles_only=True) %}
+    {{ toctree_html }}
+</ul>
