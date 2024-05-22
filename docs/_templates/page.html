@@ -1,0 +1,19 @@
+{% extends "!page.html" %}
+{% block body %}
+{% if current_version and latest_version and current_version != latest_version and current_version != release and current_version.name != latest_version.release %}
+<p>
+  <strong>
+    {% if current_version.is_released %}
+        {% if latest_version.release.replace('v', '').split('.') | map('int') | list > current_version.name.replace('v', '').split('.') | map('int') | list  %}
+          You're reading an old version of this documentation.
+          If you want up-to-date information, please have a look at <a href="{{ vpathto(latest_version.name) }}">{{latest_version.name}}</a>.
+        {% endif %}
+    {% else %}
+    You're reading the documentation for a development version.
+    For the latest stable version, please have a look at <a href="{{ vpathto(latest_version.name) }}">{{latest_version.name}}</a>.
+    {% endif %}
+  </strong>
+</p>
+{% endif %}
+{{ super() }}
+{% endblock %}%
