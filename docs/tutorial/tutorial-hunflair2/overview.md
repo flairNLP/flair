@@ -1,26 +1,14 @@
-# HunFlair2
+# HunFlair2 - Overview
 
 *HunFlair2* is a state-of-the-art named entity tagger and linker for biomedical texts. It comes with
 models for genes/proteins, chemicals, diseases, species and cell lines. *HunFlair2*
 builds on pretrained domain-specific language models and outperforms other biomedical
 NER tools on unseen corpora.
 
-<b>Content:</b>
-[Quick Start](#quick-start) |
-[Tool Comparison](#comparison-to-other-biomedical-entity-extraction-tools) |
-[Tutorials](#tutorials) |
-[Citing HunFlair](#citing-hunflair2)
-
 ## Quick Start
 
-#### Requirements and Installation
-*HunFlair2* is based on Flair 0.14+ and Python 3.8+. If you do not have Python 3.8, install it first.
-Then, in your favorite virtual environment, simply do:
-```
-pip install flair
-```
 
-#### Example 1: Biomedical NER 
+### Example 1: Biomedical NER 
 Let's run named entity recognition (NER) over an example sentence. All you need to do is
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:
 ```python
@@ -36,7 +24,7 @@ tagger = Classifier.load("hunflair2")
 # tag sentence
 tagger.predict(sentence)
 ```
-Done! The Sentence now has entity annotations. Let's print the entities found by the tagger:
+Done! The [`Sentence`](#flair.data.Sentence) now has entity annotations. Let's print the entities found by the tagger:
 ```python
 for entity in sentence.get_labels():
     print(entity)
@@ -49,7 +37,7 @@ Span[6:7]: "Mouse" → Species (1.0)
 Span[9:12]: "Fragile X Syndrome" → Disease (1.0)
 ```
 
-#### Example 2: Biomedical NEN
+### Example 2: Biomedical NEN
 For improved integration and aggregation from multiple different documents linking / normalizing the entities to 
 standardized ontologies or knowledge bases is required. Let's perform entity normalization by using
 specialized models per entity type:
@@ -77,9 +65,12 @@ disease_linker.predict(sentence)
 species_linker = EntityMentionLinker.load("species-linker")
 species_linker.predict(sentence)
 ```
-**Note**, the ontologies and knowledge bases used are pre-processed the first time the normalisation is executed, 
+
+```{note}
+the ontologies and knowledge bases used are pre-processed the first time the normalisation is executed, 
 which might takes a certain amount of time. All further calls are then based on this pre-processing and run 
 much faster.
+```
 
 Done! The Sentence now has entity normalizations. Let's print the entity identifiers found by the linkers:
 ```python
@@ -101,7 +92,7 @@ topic, entity distribution, genre (e.g. patents vs. scientific articles) and tex
 vs. full text), which can lead to severe drops in performance.
 
 *HunFlair2* outperforms other biomedical entity extraction tools on corpora not used for training of neither 
-*HunFlair2* or any of the competitor tools.
+*HunFlair2* nor any of the competitor tools.
 
 | Corpus                                                                                       | Entity Type | BENT  | BERN2 | PubTator Central | SciSpacy | HunFlair    |
 |----------------------------------------------------------------------------------------------|-------------|-------|-------|------------------|----------|-------------|
@@ -117,13 +108,6 @@ using partial matching of predicted text offsets with the original char offsets 
 We allow a shift by max one character.</sub>
 
 You can find detailed evaluations and discussions in [our paper](https://arxiv.org/abs/2402.12372).
-
-## Tutorials
-We provide a set of quick tutorials to get you started with *HunFlair2*:
-* [Tutorial 1: Tagging biomedical named entities](HUNFLAIR2_TUTORIAL_1_TAGGING.md)
-* [Tutorial 2: Linking biomedical named entities](HUNFLAIR2_TUTORIAL_2_LINKING.md)
-* [Tutorial 3: Training NER models](HUNFLAIR2_TUTORIAL_3_TRAINING_NER.md)
-* [Tutorial 4: Customizing linking](HUNFLAIR2_TUTORIAL_4_CUSTOMIZE_LINKING.md)
 
 ## Citing HunFlair2
 Please cite the following paper when using *HunFlair2*:
