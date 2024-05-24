@@ -432,6 +432,7 @@ document.write(`
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorial-training/index.html">Tutorial 2: Training models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorial-embeddings/index.html">Tutorial 3: Embeddings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-hunflair2/index.html">Tutorial: HunFlair2</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API reference</a></li>
@@ -524,7 +525,8 @@ document.write(`
 
   <section id="using-and-creating-entity-mention-linker">
 <h1>Using and creating entity mention linker<a class="headerlink" href="#using-and-creating-entity-mention-linker" title="Permalink to this heading">#</a></h1>
-<p>As of Flair 0.14 we ship the <a class="reference internal" href="../../api/flair.models.html#flair.models.EntityMentionLinker" title="flair.models.EntityMentionLinker"><span class="xref myst py py-class">entity mention linker</span></a> - the core framework behind the <a class="reference external" href="https://huggingface.co/hunflair">Hunflair BioNEN aproach</a>].</p>
+<p>As of Flair 0.14 we ship the <a class="reference internal" href="../../api/flair.models.html#flair.models.EntityMentionLinker" title="flair.models.EntityMentionLinker"><span class="xref myst py py-class">entity mention linker</span></a> - the core framework behind the <a class="reference external" href="https://huggingface.co/hunflair">Hunflair BioNEN approach</a>].
+You can read more at the <a class="reference internal" href="../tutorial-hunflair2/overview.html"><span class="std std-doc">Hunflair2 tutorials</span></a></p>
 <section id="example-1-printing-entity-linking-outputs-to-console">
 <h2>Example 1: Printing Entity linking outputs to console<a class="headerlink" href="#example-1-printing-entity-linking-outputs-to-console" title="Permalink to this heading">#</a></h2>
 <p>To illustrate, let’s use the example the hunflair models on a biomedical sentence:</p>
@@ -540,7 +542,7 @@ document.write(`
     <span class="n">use_tokenizer</span><span class="o">=</span><span class="n">SciSpacyTokenizer</span><span class="p">()</span>
 <span class="p">)</span>
 
-<span class="n">ner_tagger</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s2">&quot;hunflair&quot;</span><span class="p">)</span>
+<span class="n">ner_tagger</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s2">&quot;hunflair2&quot;</span><span class="p">)</span>
 <span class="n">ner_tagger</span><span class="o">.</span><span class="kp">predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
 
 <span class="n">nen_tagger</span> <span class="o">=</span> <span class="n">EntityMentionLinker</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s2">&quot;disease-linker-no-ab3p&quot;</span><span class="p">)</span>
@@ -553,7 +555,7 @@ document.write(`
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Here we use the <code class="docutils literal notranslate"><span class="pre">disease-linker-no-ab3p</span></code> model, as it is the simplest model to run. You might get better results by using <code class="docutils literal notranslate"><span class="pre">disease-linker</span></code> instead,
-but under the hood ab3p uses an executeable that is only compiled for linux and therefore won’t run on every system.</p>
+but that would require you to install <code class="docutils literal notranslate"><span class="pre">pyab3p</span></code> via <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pyab3p</span></code>.</p>
 <p>Analogously to <code class="docutils literal notranslate"><span class="pre">disease</span></code> there are also linker for <code class="docutils literal notranslate"><span class="pre">chemical</span></code>, <code class="docutils literal notranslate"><span class="pre">species</span></code> and <code class="docutils literal notranslate"><span class="pre">gene</span></code>
 all work with the <code class="docutils literal notranslate"><span class="pre">{entity_type}-linker</span></code> or <code class="docutils literal notranslate"><span class="pre">{entity_type}-linker-no-ab3p</span></code> naming-schema</p>
 </div>
