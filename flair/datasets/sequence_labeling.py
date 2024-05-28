@@ -4891,7 +4891,8 @@ class NOISY_NER_EST(ColumnCorpus):
         return base_path
 
     @classmethod
-    def _load_features(cls, base_path) -> list[str]:
+    def _load_features(cls, base_path) -> List[str]:
+        print(base_path)
         unpack_file(cached_path(cls.data_url, base_path), base_path, "zip", False)
         with open(f"{base_path}/estner.cnll") as in_file:
             prefeatures = in_file.readlines()
@@ -4899,17 +4900,17 @@ class NOISY_NER_EST(ColumnCorpus):
         return features
 
     @classmethod
-    def _process_clean_labels(cls, features) -> list[str]:
+    def _process_clean_labels(cls, features) -> List[str]:
         preinstances = [[instance[0], instance[len(instance)-1]] for instance in features]
         return preinstances
 
     @classmethod
-    def _rmv_clean_labels(cls, features) -> list[str]:
+    def _rmv_clean_labels(cls, features) -> List[str]:
         rdcd_features = [feature[:-1] for feature in features]
         return rdcd_features
 
     @classmethod
-    def _process_noisy_labels(cls, base_path, version, rdcd_features) -> list[str]:
+    def _process_noisy_labels(cls, base_path, version, rdcd_features) -> List[str]:
         label_file_path = f"{base_path}/NoisyNER_labelset{version}.labels"
         try:
             with open(label_file_path) as in_file:
@@ -4931,7 +4932,7 @@ class NOISY_NER_EST(ColumnCorpus):
         return instances
 
     @classmethod
-    def _delete_empty_labels(cls, version, preinstances) -> list[str]:
+    def _delete_empty_labels(cls, version, preinstances) -> List[str]:
         instances = []
         if version == 0:
             for instance in preinstances:
@@ -4944,7 +4945,7 @@ class NOISY_NER_EST(ColumnCorpus):
         return instances 
     
     @classmethod
-    def _split_data(cls, instances) -> tuple[list[str], list[str], list[str]]:        
+    def _split_data(cls, instances) -> Tuple[List[str], List[str], List[str]]:        
         train = instances[:185708]
         dev = instances[185708:208922]
         test = instances[208922:]
