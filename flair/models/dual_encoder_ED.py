@@ -170,7 +170,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             self._negative_sampling_fn = self._negative_sampling_hard
         else:
             raise ValueError(f"Negative Sampling Strategy {negative_sampling_strategy} not supported.")
-        self.negative_sampling_factor = negative_sampling_factor
+        self._negative_sampling_factor = negative_sampling_factor
 
         self.to(flair.device)
 
@@ -447,7 +447,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             "label_type": self.label_type,
             "label_map": self.label_map,
             "known_labels": self.known_labels,
-            "negative_sampling_factor": self.negative_sampling_factor,
+            #"negative_sampling_factor": self._negative_sampling_factor,
             "negative_sampling_strategy": self.negative_sampling_strategy,
             "loss_function": self.loss_function,
 
@@ -464,7 +464,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             label_type = state.get("label_type"),
             label_map = state.get("label_map"),
             known_labels = state.get("known_labels"),
-            negative_sampling_factor = state.get("negative_sampling_factor"),
+            #negative_sampling_factor = state.get("negative_sampling_factor"),
             negative_sampling_strategy = state.get("negative_sampling_strategy"),
             loss_function = state.get("loss_function"),
 
