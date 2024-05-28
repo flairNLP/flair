@@ -47,7 +47,7 @@ class WikidataLabelVerbalizer:
         self.delimiter = delimiter
         self.add_property_prefixes = add_property_prefixes
 
-        self.verbalized_labels = self.verbalize_all_labels(label_dictionary=self.label_dictionary, save_verbalizations=True)
+        self.verbalized_labels = self.verbalize_all_labels(self, label_dictionary=self.label_dictionary, save_verbalizations=True)
         self.label_dict_list = self.label_dictionary.get_items()
 
         self.max_verbalization_length = max_verbalization_length
@@ -115,7 +115,7 @@ class WikidataLabelVerbalizer:
                     verbalized += f"{self.delimiter} " + f"{self.delimiter} ".join(wikidata_classes)
         return verbalized
 
-    #@staticmethod
+    @staticmethod
     def verbalize_all_labels(self, label_dictionary: Dictionary, save_verbalizations = True) -> List[Sentence]:
 
         if len(self.verbalizations_paths) > 0:
@@ -265,7 +265,6 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         self._label_type = label_type
 
         self.pooling_operation = pooling_operation
-        self._label_type = label_type
         self.custom_label_verbalizations = custom_label_verbalizations
         self.max_verbalization_length = self.custom_label_verbalizations.max_verbalization_length if self.custom_label_verbalizations else max_verbalization_length
         self.add_property_prefixes = self.custom_label_verbalizations.add_property_prefixes if self.custom_label_verbalizations else None
@@ -508,7 +507,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
     def _embed_batchwise_and_return_hidden_states(self, encoder,
                                                   data_to_embed, # labels or sentences
                                                   data_to_get_embeddings, # spans
-                                                  max_step_size : [None, int] = 32, clear_embeddings = True, return_stacked = True):
+                                                  max_step_size: Union[None, int] = 32, clear_embeddings = True, return_stacked = True):
 
         #if not self.training:
         #    max_step_size = None
@@ -601,20 +600,27 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
         if len(datapoints) == 0:
             return [], [], [], []
 
-        if self.training and len(datapoints) >= len(sentences) * 20:
-            print("Too many datapoints, so skipping:", len(datapoints))
+        if self.training and len(datapoints) >= 50: #len(sentences) * 20:
+            #print("Too many datapoints, so skipping:", len(datapoints))
             return [], [], [], []
 
         if self.training and self.train_greedy == "use_gold" and len(datapoints) <= 20:
-            # add a random part of gold labels (verbalizations) to the sentences, similar to in prediction, then embed and use those
-            datapoints_modified, new_sentences = self._add_already_predicted_label_verbalizations_to_sentences(sentences = sentences,
-                                                                                                               datapoints=datapoints,
-                                                                                                               use_gold=True,
-                                                                                                               leave_out_datapoints_to_be_predicted=True)
+            # adding some random gold label into the sentences, and deleting those datapoints (nr sentences stays the same, nr datapoints
+            #print("Before:", len(datapoints))
+            datapoints, sentences_with_some_gold_verbalizations = self._add_gold_label_verbalizations_to_sentences(sentences = sentences,
+                                                                                                                   datapoints = datapoints,
+                                                                                                                   also_add_in_context=True
+                                                                                                                   )
+
+            #print("After:", len(datapoints))
+            if len(datapoints) == 0:
+                return [], [], [], []
+
             span_hidden_states = self._embed_batchwise_and_return_hidden_states(encoder = self.token_encoder,
-                                                                                data_to_embed=new_sentences,
-                                                                                data_to_get_embeddings=datapoints_modified,
+                                                                                data_to_embed=sentences_with_some_gold_verbalizations,
+                                                                                data_to_get_embeddings=datapoints,
                                                                                 clear_embeddings=True,
+                                                                                max_step_size = None,
                                                                                 )
 
 
@@ -1103,9 +1109,12 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             self.is_first_batch_in_evaluation = True # set this to assure new embedding of labels in the following evaluation phase
 
         if self.is_first_batch_in_training:
+            if self.candidates:
+                MAX_LIMIT = 1000
+            else:
+                MAX_LIMIT = 10000 #todo was 10000
             self.current_label_embeddings, self.current_label_embeddings_indices = self._embed_labels_batchwise(cpu=True, max_limit=None if len(
-                self.label_dict_list) < 10000 else 10000)  # before training, necessary for negative sampling
-            #self.current_label_embeddings, self.current_label_embeddings_indices = self._embed_labels_batchwise(cpu=True, max_limit=200) # only use random sample of labels so hard negatoves are not too hard
+                self.label_dict_list) < MAX_LIMIT else MAX_LIMIT)  # before training, necessary for negative sampling
             self.is_first_batch_in_training = False
 
         if not [spans for sentence in sentences for spans in sentence.get_spans(self.label_type)]:
@@ -1138,13 +1147,202 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
         return masked_scores
 
+    def _add_gold_label_verbalizations_to_sentences(self,
+                                                    sentences,
+                                                    datapoints,
+                                                    max_labels_to_add = 10, # Todo
+                                                    also_add_in_context = True,          # TODO insert predicted verbalizations also in context sentences?
+                                                    method = "bracket_after_each_mention",#"concatenate_all_directly_after_mention", #"bracket_after_each_mention", #"concatenate_all_directly_after_mention", #"bracket_after_each_mention"
+                                                    cut_label_name=False,
+                                                    use_gibberish = False,
+                                                    ):
+        modified_sentences = []
+        modified_datapoints = [(d, None) for d in datapoints]
+
+        for s in sentences:
+            sentence_before = s.text
+            sentence_with_verbalization = sentence_before
+            datapoints_in_sentence = s.get_spans("nel")
+            use_number_of_datapoints = random.randint(0, len(datapoints_in_sentence))
+            use_datapoints_in_sentence = random.sample(datapoints_in_sentence, use_number_of_datapoints)
+
+            # new: delete all samples datapoints from datapoints!
+            for d in use_datapoints_in_sentence:
+                datapoints_in_sentence.remove(d)
+
+            use_datapoints_in_sentence.sort(key=lambda a: a.start_position)
+
+            added_characters = 0
+            modified_datapoints_offsets = [[d.start_position, d.end_position] for d in datapoints_in_sentence]
+
+            for i, l in enumerate(use_datapoints_in_sentence):
+                label = l.get_label("nel").value
+                if method == "bracket_after_each_mention":
+                    add_at_position = l.end_position + added_characters
+
+                if label not in self.label_dict_list:
+                    if self.custom_label_verbalizations:
+                        verbalization = self.custom_label_verbalizations.verbalizations[label]
+                        if cut_label_name:
+                            index_separator = verbalization.find(self.custom_label_verbalizations.delimiter)
+                            if index_separator != -1:
+                                verbalization = verbalization[index_separator + 2:]
+                    else:
+                        verbalization = label
+
+                else:
+                    label_idx = self.label_dictionary.get_idx_for_item(label)
+                    if self.custom_label_verbalizations:
+                        verbalization = self.custom_label_verbalizations.verbalized_labels[label_idx]
+                        if cut_label_name:
+                            index_separator = verbalization.find(self.custom_label_verbalizations.delimiter)
+                            if index_separator != -1:
+                                verbalization = verbalization[index_separator + 2:]
+                    else:
+                        verbalization = self.label_dict_list[label_idx]
+
+                if use_gibberish:
+                    import string
+                    verbalization = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(15))
+
+                sentence_with_verbalization = sentence_before[:add_at_position] + \
+                                              f'{" (" if method == "bracket_after_each_mention" or i == 0 else "| "}' \
+                                              + verbalization + \
+                                              f'{")" if method == "bracket_after_each_mention" or i == len(use_datapoints_in_sentence) - 1 else ""}' \
+                                              + sentence_before[add_at_position:]
+                added_just_now = len(sentence_with_verbalization) - len(sentence_before)
+                added_characters += added_just_now
+                sentence_before = sentence_with_verbalization
+
+                for counter, d in enumerate(datapoints_in_sentence):
+                    d_start_position = modified_datapoints_offsets[counter][0]
+                    d_end_position = modified_datapoints_offsets[counter][1]
+
+                    if d_start_position > add_at_position:
+                        d_start_position += added_just_now
+                        d_end_position += added_just_now
+                        modified_datapoints_offsets[counter][0] = d_start_position
+                        modified_datapoints_offsets[counter][1] = d_end_position
+
+            new_sentence = flair.data.Sentence(sentence_with_verbalization)
+
+            for d_i, d_s in enumerate(datapoints_in_sentence):
+                start, end = modified_datapoints_offsets[d_i]
+                d_start_token = [i for i, t in enumerate(new_sentence.tokens) if t.start_position == start]
+                d_end_token = [i for i, t in enumerate(new_sentence.tokens) if t.end_position == end]
+                for i, d in enumerate(datapoints):
+                    if d_s == d:
+                        new_span = flair.data.Span(new_sentence.tokens[d_start_token[0]:d_end_token[0] + 1])
+                        new_span.set_label(typename = self.label_type, value = d.get_label(self.label_type).value, score = d.get_label(self.label_type).score)
+                        modified_datapoints[i] = (d, new_span)
+
+            new_sentence.copy_context_from_sentence(s)
+
+            if also_add_in_context:
+                relevant_sentences_before = []
+                at_sentence = new_sentence
+                len_context_before = 0
+                while len_context_before <= self.token_encoder.context_length:
+                    if "DOCSTART" in at_sentence.text or not at_sentence._previous_sentence:
+                        break
+                    relevant_sentences_before.append(at_sentence._previous_sentence)
+                    at_sentence = at_sentence._previous_sentence
+                    len_context_before += len(at_sentence)
+
+                relevant_sentences_after = []
+                at_sentence = new_sentence
+                len_context_after = 0
+                while len_context_after <= self.token_encoder.context_length:
+                    if "DOCSTART" in at_sentence.text or not at_sentence._next_sentence:
+                        break
+                    relevant_sentences_after.append(at_sentence._next_sentence)
+                    at_sentence = at_sentence._next_sentence
+                    len_context_after += len(at_sentence)
+
+                context_sentences = relevant_sentences_before + relevant_sentences_after
+                context_sentences_left_modified = []
+                context_sentences_right_modified = []
+                for i, s in enumerate(context_sentences):
+                    datapoints_in_sentence = s.get_spans("nel")
+                    sentence_before = s.text
+                    sentence_with_verbalization = sentence_before
+                    datapoints_in_sentence = s.get_spans("nel")
+                    use_number_of_datapoints = random.randint(0, len(datapoints_in_sentence))
+                    use_datapoints_in_sentence = random.sample(datapoints_in_sentence, use_number_of_datapoints)
+
+                    use_datapoints_in_sentence.sort(key=lambda a: a.start_position)
+                    added_characters = 0
+                    modified_datapoints_offsets = [[d.start_position, d.end_position] for d in datapoints_in_sentence]
+
+                    for l in use_datapoints_in_sentence:
+                        label = l.get_label("nel").value
+                        if label not in self.label_dict_list:
+                            if self.custom_label_verbalizations:
+                                verbalization = self.custom_label_verbalizations.verbalizations[label]
+                                if cut_label_name:
+                                    index_separator = verbalization.find(self.custom_label_verbalizations.delimiter)
+                                    if index_separator != -1:
+                                        verbalization = verbalization[index_separator + 2:]
+                            else:
+                                verbalization = label
+
+                        else:
+                            label_idx = self.label_dictionary.get_idx_for_item(label)
+                            if self.custom_label_verbalizations:
+                                verbalization = self.custom_label_verbalizations.verbalized_labels[label_idx]
+                                if cut_label_name:
+                                    index_separator = verbalization.find(self.custom_label_verbalizations.delimiter)
+                                    if index_separator != -1:
+                                        verbalization = verbalization[index_separator + 2:]
+                            else:
+                                verbalization = self.label_dict_list[label_idx]
+
+                        if use_gibberish:
+                            import string
+                            verbalization = ''.join(
+                                random.choice(string.ascii_letters + string.digits) for _ in range(15))
+
+
+                        add_at_position = l.end_position + added_characters
+
+                        sentence_with_verbalization = sentence_before[:add_at_position] + \
+                                                      "(" + verbalization + ")" + \
+                                                      sentence_before[add_at_position:]
+                        added_just_now = len(sentence_with_verbalization) - len(sentence_before)
+                        added_characters += added_just_now
+                        sentence_before = sentence_with_verbalization
+
+                    new_context_sentence = flair.data.Sentence(sentence_with_verbalization)
+                    if i < len(relevant_sentences_before):
+                        context_sentences_left_modified.append(new_context_sentence)
+                    else:
+                        context_sentences_right_modified.append(new_context_sentence)
+
+                at_sentence = new_sentence
+                for context_sentence in context_sentences_left_modified:
+                    at_sentence._previous_sentence = context_sentence
+                    at_sentence = context_sentence
+
+                at_sentence = new_sentence
+                for context_sentence in context_sentences_right_modified:
+                    at_sentence._next_sentence = context_sentence
+                    at_sentence = context_sentence
+
+            modified_sentences.append(new_sentence)
+
+        remaining_datapoints = []
+        for i in modified_datapoints:
+            if i[1]:
+                remaining_datapoints.append(i[1])
+
+        return remaining_datapoints, modified_sentences
+
+
     def _add_already_predicted_label_verbalizations_to_sentences(self,
                                                                  sentences,
                                                                  datapoints,
                                                                  leave_out_datapoints_to_be_predicted: True,
                                                                  max_labels_to_add = 10, # Todo
-                                                                 use_gold = False,
-                                                                 use_gold_percentage = None, #0.9, #1.0, # todo
                                                                  also_add_in_context = True,          # TODO insert predicted verbalizations also in context sentences?
                                                                  method = "bracket_after_each_mention",#"concatenate_all_directly_after_mention", #"bracket_after_each_mention", #"concatenate_all_directly_after_mention", #"bracket_after_each_mention"
                                                                  cut_label_name=False,
@@ -1152,28 +1350,16 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                                                                  ):
         modified_sentences_per_datapoint = []
         datapoints_in_modified_sentences = [None for d in datapoints]
-# schnupsi was HERE!!!
+
         for d_i, datapoint in enumerate(datapoints):
             s = datapoint.sentence
             datapoints_in_sentence = s.get_spans("nel")
             sentence_before = s.text
             sentence_with_verbalization = sentence_before
-            if use_gold:
-                labels_already = s.get_spans("nel")
-                if leave_out_datapoints_to_be_predicted:
-                    if datapoint in labels_already:
-                        labels_already.remove(datapoint)
-                if use_gold_percentage:
-                    labels_already = random.sample(labels_already, int(len(labels_already)* use_gold_percentage)) # old
-                else:
-                    use_number_of_labels = random.randint(0, len(labels_already))
-                    labels_already = random.sample(labels_already, use_number_of_labels)
-
-            else:
-                labels_already = s.get_spans("predicted")
-                if leave_out_datapoints_to_be_predicted:
-                    if datapoint in labels_already:
-                        labels_already.remove(datapoint)
+            labels_already = s.get_spans("predicted")
+            if leave_out_datapoints_to_be_predicted:
+                if datapoint in labels_already:
+                    labels_already.remove(datapoint)
 
             if max_labels_to_add and len(labels_already) > max_labels_to_add:
                 random.sample(labels_already, max_labels_to_add) # TODO: good? For sentences with huge number of mentions
@@ -1182,10 +1368,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
             modified_datapoints_offsets = [[d.start_position, d.end_position] for d in datapoints_in_sentence]
 
             for i,l in enumerate(labels_already):
-                if use_gold:
-                    label = l.get_label("nel").value
-                else:
-                    label = l.get_label("predicted").value
+                label = l.get_label("predicted").value
 
                 if method == "bracket_after_each_mention":
                     add_at_position = l.end_position + added_characters
@@ -1275,16 +1458,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                     datapoints_in_sentence = s.get_spans("nel")
                     sentence_before = s.text
                     sentence_with_verbalization = sentence_before
-                    if use_gold:
-                        labels_already = s.get_spans("nel")
-                        if use_gold_percentage:
-                            labels_already = random.sample(labels_already,
-                                                           int(len(labels_already) * use_gold_percentage))  # old
-                        else:
-                            use_number_of_labels = random.randint(0, len(labels_already))
-                            labels_already = random.sample(labels_already, use_number_of_labels)
-                    else:
-                        labels_already = s.get_spans("predicted")
+                    labels_already = s.get_spans("predicted")
 
                     if max_labels_to_add and len(labels_already) > max_labels_to_add:
                         random.sample(labels_already, max_labels_to_add)
@@ -1293,10 +1467,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                     modified_datapoints_offsets = [[d.start_position, d.end_position] for d in datapoints_in_sentence]
 
                     for l in labels_already:
-                        if use_gold:
-                            label = l.get_label("nel").value
-                        else:
-                            label = l.get_label("predicted").value
+                        label = l.get_label("predicted").value
                         if label not in self.label_dict_list:
                             if self.custom_label_verbalizations:
                                 verbalization = self.custom_label_verbalizations.verbalizations[label]
@@ -1394,8 +1565,8 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                         indices_of_candidates = [self.label_dict_list.index(c) for c in candidates_for_batch if
                                                  c in self.label_dict_list]
 
-                        if len(indices_of_candidates) <= 1:
-                            print("here, len of candidates:", len(indices_of_candidates))
+                        #if len(indices_of_candidates) <= 1:
+                        #    print("here, len of candidates:", len(indices_of_candidates))
                         label_hidden_states = label_hidden_states[[indices_of_candidates]] # no need to compare to all labels
                         label_ordering = [self.label_dict_list[i] for i in indices_of_candidates]
 
@@ -1501,8 +1672,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                             else:
 
                                 datapoints_modified, new_sentences = self._add_already_predicted_label_verbalizations_to_sentences(
-                                    sentences, datapoints, leave_out_datapoints_to_be_predicted=True,
-                                    use_gold = False)
+                                    sentences, datapoints, leave_out_datapoints_to_be_predicted=True)
 
                                 #print("Nr sentences to embed:", len(new_sentences))
                                 still_to_predict_span_hidden_states = self._embed_batchwise_and_return_hidden_states(
@@ -1522,8 +1692,8 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
                                                                                     data_points=still_to_predict_datapoints,
                                                                                     label_order=label_ordering)
 
-                                if still_to_predict_similarity.shape[1] < 5:
-                                    print("here, len used labels:", len(label_ordering))
+                                #if still_to_predict_similarity.shape[1] < 5:
+                                #    print("here, len used labels:", len(label_ordering))
                                 still_to_predict_top_confidences, still_to_predict_top_indices = torch.topk(still_to_predict_similarity, k=min(5, still_to_predict_similarity.shape[1]), dim=1)
 
                                 still_to_predict_final_labels_indices = still_to_predict_top_indices[:, 0]
@@ -1580,7 +1750,7 @@ class DualEncoderSimilarityLoss(flair.nn.Classifier[Sentence]):
 
             if len(datapoints) > 0:
                 datapoints_modified, new_sentences = self._add_already_predicted_label_verbalizations_to_sentences(
-                    sentences, datapoints, leave_out_datapoints_to_be_predicted=True, use_gold = False)
+                    sentences, datapoints, leave_out_datapoints_to_be_predicted=True)
 
                 span_hidden_states = self._embed_batchwise_and_return_hidden_states(encoder=self.token_encoder,
                                                                                     data_to_embed=new_sentences,
