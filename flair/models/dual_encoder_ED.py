@@ -122,7 +122,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
     def __init__(self, token_encoder: TokenEmbeddings, label_encoder: DocumentEmbeddings, known_labels: List[str], gold_labels: List[str] = [], label_sample_negative_size: Union[int, None] = None, label_type: str = "nel", label_map: dict = {},
                  negative_sampling_strategy: Literal["shift", "random", "hard"] = "hard", negative_sampling_factor: int = 1,
-                 loss_function_name: Literal ["triplet", "binary_embedding"] = "triplet", label_embedding_batch_size: int = 128, *args, **kwargs):
+                 loss_function_name: Literal ["triplet", "binary_embedding"] = "triplet", label_embedding_batch_size: int = 128, sampled_label_embeddings_storage_device: torch.device = None, *args, **kwargs):
         """
         This model uses a dual encoder architecture where both inputs and labels (verbalized) are encoded with separate
         Transformers. It uses some kind of similarity loss to push datapoints and true labels nearer together while pushing negatives away
@@ -140,6 +140,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :param negative_sampling_factor: Number of negatives per positive, e.g. 1 (one negative sample per positive), 2 (two negative samples per positive).
         :param loss_function_name: Loss funtion to use, must be one of "triplet", "binary_embedding".
         :param label_embedding_batch_size: Batch size to use for embedding labels to avoid memory overflow.
+        :param sampled_label_embeddings_storage_device: Device to store the sampled label embeddings on. If None, uses flair.device
         :param args:
         :param kwargs:
         """
@@ -155,6 +156,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self._sampled_label_embeddings_need_update = False
         self._needs_label_resampling = True
         self._label_embedding_batch_size = label_embedding_batch_size
+        if not sampled_label_embeddings_storage_device:
+            sampled_label_embeddings_storage_device = flair.device
+        self._sampled_label_embeddings_storage_device = sampled_label_embeddings_storage_device
         if loss_function_name == "triplet":
             self.loss_function = DEEDTripletMarginLoss(margin=1.0)
         elif loss_function_name == "binary_embedding":
@@ -251,20 +255,27 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         return spans, torch.stack(embeddings, dim=0)
 
 
-    def _embed_labels_batchwise_return_stacked_embeddings(self, labels_sentence_objects: List[flair.data.Sentence], clear_embeddings: bool = True, use_tqdm: bool = True):
+    def _embed_labels_batchwise_return_stacked_embeddings(self, labels_sentence_objects: List[flair.data.Sentence], clear_embeddings: bool = True, use_tqdm: bool = True, device: torch.device = None):
         final_embeddings = []
         batch_size = self._label_embedding_batch_size
         batch_iterator = range(0, len(labels_sentence_objects), batch_size)
+
         if use_tqdm:
             batch_iterator = tqdm(batch_iterator)
 
         for i in batch_iterator:
-            self.label_encoder.embed(labels_sentence_objects[i:i + batch_size])
-            final_embeddings.extend([l.get_embedding() for l in labels_sentence_objects[i:i + batch_size]])
+            batch = labels_sentence_objects[i:i + batch_size]
+            self.label_encoder.embed(batch)
+            embeddings = torch.stack([l.get_embedding() for l in batch])
+            if device:
+                embeddings = embeddings.to(device)
+            final_embeddings.append(embeddings)
             if clear_embeddings:
-                [l.clear_embeddings() for l in labels_sentence_objects]
+                for l in batch:
+                    l.clear_embeddings()
 
-        final_embeddings = torch.stack(final_embeddings).to(flair.device)
+        final_embeddings = torch.cat(final_embeddings)
+
         return final_embeddings
 
 
@@ -273,12 +284,14 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         Updating the embeddings of the sampled labels. E.g. necessary after resampling or in the first epoch.
         """
         if self._sampled_label_embeddings_need_update:
-            print("Updating label embeddings...")
-            print(" - Creating label objects...")
-            all_labels_sentence_objects = [Sentence(self.label_map.get(l,l)) for l in tqdm(self._sampled_labels)]
-            print(" - Embedding label objects...")
-            self._sampled_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(all_labels_sentence_objects)
-            self._sampled_label_embeddings_need_update = False
+            with torch.no_grad():
+                print("Updating label embeddings...")
+                print(" - Creating label objects...")
+                all_labels_sentence_objects = [Sentence(self.label_map.get(l,l)) for l in tqdm(self._sampled_labels)]
+                print(" - Embedding label objects...")
+                self._sampled_label_embeddings = None  # give torch the opportunity to free memory
+                self._sampled_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(all_labels_sentence_objects, device=self._sampled_label_embeddings_storage_device)
+                self._sampled_label_embeddings_need_update = False
 
     def _negative_sampling_shift(self, span_embeddings: torch.Tensor, label_embeddings: torch.Tensor, batch_gold_labels: List[str]):
         """
@@ -310,6 +323,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :return:
         """
         with torch.no_grad():
+            span_embeddings = span_embeddings.to(self._sampled_label_embeddings_storage_device)
             similarity_spans_sampled_labels = -torch.cdist(span_embeddings, self._sampled_label_embeddings)
             for nr, label in enumerate(batch_gold_labels):
                 try:
