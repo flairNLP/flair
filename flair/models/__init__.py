@@ -13,7 +13,7 @@ from .tars_model import FewshotClassifier, TARSClassifier, TARSTagger
 from .text_classification_model import TextClassifier
 from .text_regression_model import TextRegressor
 from .word_tagger_model import TokenClassifier, WordTagger
-from .dual_encoder_similarity_loss import DualEncoderSimilarityLoss
+from .dual_encoder_ED import DualEncoderEntityDisambiguation, GreedyDualEncoderEntityDisambiguation
 
 __all__ = [
     "SpanClassifier",
@@ -34,5 +34,6 @@ __all__ = [
     "TextRegressor",
     "ClusteringModel",
     "MultitaskModel",
-    "DualEncoderSimilarityLoss"
+    "DualEncoderEntityDisambiguation",
+    "GreedyDualEncoderEntityDisambiguation"
 ]
