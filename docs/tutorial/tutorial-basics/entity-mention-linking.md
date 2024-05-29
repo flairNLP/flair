@@ -1,6 +1,7 @@
 # Using and creating entity mention linker
 
-As of Flair 0.14 we ship the [entity mention linker](#flair.models.EntityMentionLinker) - the core framework behind the [Hunflair BioNEN aproach](https://huggingface.co/hunflair)]. 
+As of Flair 0.14 we ship the [entity mention linker](#flair.models.EntityMentionLinker) - the core framework behind the [Hunflair BioNEN approach](https://huggingface.co/hunflair)]. 
+You can read more at the [Hunflair2 tutorials](project:../tutorial-hunflair2/overview.md)
 
 ## Example 1: Printing Entity linking outputs to console
 
@@ -19,7 +20,7 @@ sentence = Sentence(
     use_tokenizer=SciSpacyTokenizer()
 )
 
-ner_tagger = Classifier.load("hunflair")
+ner_tagger = Classifier.load("hunflair2")
 ner_tagger.predict(sentence)
 
 nen_tagger = EntityMentionLinker.load("disease-linker-no-ab3p")
@@ -31,7 +32,7 @@ for tag in sentence.get_labels():
 
 ```{note}
   Here we use the `disease-linker-no-ab3p` model, as it is the simplest model to run. You might get better results by using `disease-linker` instead,
-  but under the hood ab3p uses an executeable that is only compiled for linux and therefore won't run on every system.
+  but that would require you to install `pyab3p` via `pip install pyab3p`.
   
   Analogously to `disease` there are also linker for `chemical`, `species` and `gene`
   all work with the `{entity_type}-linker` or `{entity_type}-linker-no-ab3p` naming-schema 
