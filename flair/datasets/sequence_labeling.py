@@ -4850,7 +4850,8 @@ class NOISY_NER_EST(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ) -> None:
-        """
+        """Initialize the NoisyNER corpus.
+        
         :param version: Chooses the labelset for the data.
                         v0 (default): clean labels
                         v1 to v7: different kinds of noisy labelsets (details: https://ojs.aaai.org/index.php/AAAI/article/view/16938)
@@ -4859,8 +4860,7 @@ class NOISY_NER_EST(ColumnCorpus):
                           should not be necessary.
         :param in_memory: If True the dataset is kept in memory achieving speedups in training.
         """
-
-        if not (version in range(0, 8)):
+        if version not in range(8):
             raise Exception(
                 "Please choose a version (int) from 0 to 7. With v0 (default) you get the clean labelset for the data, while v1 to v7 provide different kinds of noisy labelsets. For details see https://ojs.aaai.org/index.php/AAAI/article/view/16938."
             )
@@ -4896,10 +4896,7 @@ class NOISY_NER_EST(ColumnCorpus):
 
     @classmethod
     def _set_path(cls, base_path) -> Path:
-        if not base_path:
-            base_path = flair.cache_root / "datasets" / "estner"
-        else:
-            base_path = Path(base_path)
+        base_path = flair.cache_root / "datasets" / "estner" if not base_path else base_path = Path(base_path)
         return base_path
 
     @classmethod
@@ -4971,8 +4968,7 @@ class NOISY_NER_EST(ColumnCorpus):
             for instance in data:
                 out_file.write(column_separator.join(instance))
                 out_file.write("\n")
-
-
+                
 
 class MASAKHA_POS(MultiCorpus):
     def __init__(
