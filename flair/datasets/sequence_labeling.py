@@ -4841,51 +4841,63 @@ class NER_GERMAN_MOBIE(ColumnCorpus):
 
 class NOISY_NER_EST(ColumnCorpus):
     data_url = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/patnlp/estner.cnll.zip"
+    label_url = "https://raw.githubusercontent.com/uds-lsv/NoisyNER/master/data/only_labels"
 
     def __init__(
         self,
         version: int = 0,
         base_path: Optional[Union[str, Path]] = None,
-        column_format={0: "text", 1: "ner"},            
-        in_memory: bool = True,                         
+        in_memory: bool = True,
         **corpusargs,
     ) -> None:
+        """
+        :param version: Chooses the labelset for the data.
+                        v0 (default): clean labels
+                        v1 to v7: different kinds of noisy labelsets (details: https://ojs.aaai.org/index.php/AAAI/article/view/16938)
+        :param base_path: Default is None, meaning the corpus gets automatically downloaded and saved.
+                          You can override this by passing a path to a directory containing the unprocessed files but typically this
+                          should not be necessary.
+        :param in_memory: If True the dataset is kept in memory achieving speedups in training.
+        """
 
-        if not (version in range(0,8)):
-            raise Exception("Please choose a version (int) from 0 to 7. With v0 (default) you get the clean labelset for the data, while v1 to v7 provide different kinds of noisy labelsets. For details see https://ojs.aaai.org/index.php/AAAI/article/view/16938.")
-       
+        if not (version in range(0, 8)):
+            raise Exception(
+                "Please choose a version (int) from 0 to 7. With v0 (default) you get the clean labelset for the data, while v1 to v7 provide different kinds of noisy labelsets. For details see https://ojs.aaai.org/index.php/AAAI/article/view/16938."
+            )
+
         base_path = self._set_path(base_path)
         features = self._load_features(base_path)
-        
+
         if version == 0:
             preinstances = self._process_clean_labels(features)
         else:
             rdcd_features = self._rmv_clean_labels(features)
-            preinstances = self._process_noisy_labels(base_path, version, rdcd_features)
-        
+            labels = self._load_noisy_labels(version, base_path)
+            preinstances = self._process_noisy_labels(rdcd_features, labels)
+
         instances = self._delete_empty_labels(version, preinstances)
-        
+
         train, dev, test = self._split_data(instances)
-       
+
         self._write_instances(version, base_path, "train", train)
         self._write_instances(version, base_path, "dev", dev)
         self._write_instances(version, base_path, "test", test)
 
-        super().__init__(    
-            data_folder=base_path,                 
-            train_file=f"estner_noisy_labelset{version}_train.tsv", 
+        super().__init__(
+            data_folder=base_path,
+            train_file=f"estner_noisy_labelset{version}_train.tsv",
             dev_file=f"estner_noisy_labelset{version}_dev.tsv",
-            test_file=f"estner_noisy_labelset{version}_test.tsv",                                   
-            column_format=column_format,
+            test_file=f"estner_noisy_labelset{version}_test.tsv",
+            column_format={0: "text", 1: "ner"},
             in_memory=in_memory,
-            column_delimiter = '\t',
+            column_delimiter="\t",
             **corpusargs,
         )
 
     @classmethod
     def _set_path(cls, base_path) -> Path:
         if not base_path:
-            base_path = flair.cache_root/"datasets"/"estner_clean"
+            base_path = flair.cache_root / "datasets" / "estner"
         else:
             base_path = Path(base_path)
         return base_path
@@ -4901,7 +4913,7 @@ class NOISY_NER_EST(ColumnCorpus):
 
     @classmethod
     def _process_clean_labels(cls, features) -> List[str]:
-        preinstances = [[instance[0], instance[len(instance)-1]] for instance in features]
+        preinstances = [[instance[0], instance[len(instance) - 1]] for instance in features]
         return preinstances
 
     @classmethod
@@ -4910,14 +4922,15 @@ class NOISY_NER_EST(ColumnCorpus):
         return rdcd_features
 
     @classmethod
-    def _process_noisy_labels(cls, base_path, version, rdcd_features) -> List[str]:
-        label_file_path = f"{base_path}/NoisyNER_labelset{version}.labels"
-        try:
-            with open(label_file_path) as in_file:
-                labels = in_file.read().splitlines()
-        except FileNotFoundError:
-            raise Exception("Please download the noisy labelset file of your choice from https://github.com/uds-lsv/NoisyNER/tree/master/data/only_labels. Set the base_path argument to the path of the directory you saved the file in. Make sure, the version argument matches the file.")                     
-         
+    def _load_noisy_labels(cls, version, base_path) -> List[str]:
+        file_name = f"NoisyNER_labelset{version}.labels"
+        cached_path(f"{cls.label_url}/{file_name}", base_path)
+        with open(f"{base_path}/{file_name}") as in_file:
+            labels = in_file.read().splitlines()
+        return labels
+
+    @classmethod
+    def _process_noisy_labels(cls, rdcd_features, labels) -> List[str]:
         instances = []
         label_idx = 0
         for feature in rdcd_features:
@@ -4928,7 +4941,7 @@ class NOISY_NER_EST(ColumnCorpus):
                 instance = [feature[0], labels[label_idx]]
                 instances.append(instance)
                 label_idx += 1
-        assert label_idx == len(labels), ""             
+        assert label_idx == len(labels), ""
         return instances
 
     @classmethod
@@ -4936,28 +4949,29 @@ class NOISY_NER_EST(ColumnCorpus):
         instances = []
         if version == 0:
             for instance in preinstances:
-                if instance[0] != '--':
+                if instance[0] != "--":
                     instances.append(instance)
         else:
             for instance in preinstances:
-                if instance != '--':
+                if instance != "--":
                     instances.append(instance)
-        return instances 
-    
+        return instances
+
     @classmethod
-    def _split_data(cls, instances) -> Tuple[List[str], List[str], List[str]]:        
+    def _split_data(cls, instances) -> Tuple[List[str], List[str], List[str]]:
         train = instances[:185708]
         dev = instances[185708:208922]
         test = instances[208922:]
         return train, dev, test
-    
+
     @classmethod
     def _write_instances(cls, version, base_path, split, data):
-        column_separator = "\t"     # CoNLL format
+        column_separator = "\t"  # CoNLL format
         with open(f"{base_path}/estner_noisy_labelset{version}_{split}.tsv", "w") as out_file:
             for instance in data:
                 out_file.write(column_separator.join(instance))
-                out_file.write("\n")      
+                out_file.write("\n")
+
 
 
 class MASAKHA_POS(MultiCorpus):
