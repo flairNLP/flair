@@ -4896,7 +4896,7 @@ class NOISY_NER_EST(ColumnCorpus):
 
     @classmethod
     def _set_path(cls, base_path) -> Path:
-        base_path = flair.cache_root / "datasets" / "estner" if not base_path else base_path = Path(base_path)
+        base_path = flair.cache_root/"datasets"/"estner" if not base_path else Path(base_path)
         return base_path
 
     @classmethod
