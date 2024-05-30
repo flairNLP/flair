@@ -226,7 +226,7 @@ class ViterbiDecoder:
         return tags, all_tags
 
     def _all_scores_for_token(
-        self, scores: torch.Tensor, tag_sequences: torch.IntTensor, lengths: torch.IntTensor, sentences: List[Sentence]
+        self, scores: torch.Tensor, tag_sequences: torch.Tensor, lengths: torch.IntTensor, sentences: List[Sentence]
     ):
         """Returns all scores for each tag in tag dictionary."""
         scores = scores.numpy()
