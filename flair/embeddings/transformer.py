@@ -331,6 +331,9 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         feature_extractor: Optional[FeatureExtractionMixin] = None,
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
+        use_raw_text_as_input: bool = False,
+        **kwargs,
+
     ) -> None:
         self.name = name
         super().__init__()
@@ -351,6 +354,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         self.feature_extractor = feature_extractor
         self.use_context_separator = use_context_separator
         self.cls_pooling = cls_pooling
+        self.use_raw_text_as_input = use_raw_text_as_input
 
         tokenizer_params = list(inspect.signature(self.tokenizer.__call__).parameters.keys())
         self.tokenizer_needs_ocr_boxes = "boxes" in tokenizer_params
@@ -394,6 +398,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             "feature_extractor": self.feature_extractor,
             "use_context_separator": self.use_context_separator,
             "cls_pooling": self.cls_pooling,
+            #"use_raw_text_as_input": self.use_raw_text_as_input,
         }
         if hasattr(self, "needs_manual_ocr"):
             args["needs_manual_ocr"] = self.needs_manual_ocr
@@ -523,8 +528,18 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         else:
             tokenizer_kwargs["is_split_into_words"] = True
 
+        if self.use_raw_text_as_input:
+            # use the raw text (use whitespace_after info if present)
+            tokenizer_kwargs["is_split_into_words"] = False
+            tokenizer_input = ["".join([t.text if t.whitespace_after == 0 else t.text + " " for t in tokens]) for tokens
+                                  in flair_tokens]
+
+        # use already tokenized sentences (lists of strings)
+        else:
+            tokenizer_input = [[t.text for t in tokens] for tokens in flair_tokens]
+
         batch_encoding = self.tokenizer(
-            [[t.text for t in tokens] for tokens in flair_tokens],
+            tokenizer_input,
             stride=self.stride,
             return_overflowing_tokens=self.allow_long_sentences,
             truncation=self.truncate,
@@ -586,7 +601,49 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             model_kwargs["token_lengths"] = torch.tensor(sentence_lengths, device=device)
 
             if self.tokenizer.is_fast:
-                word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
+
+                if self.use_raw_text_as_input:
+                    word_ids_list = []
+
+                    # get the offsets from the flair tokens to align later
+                    batch_flair_token_offsets = [[(t.start_position, t.end_position) for t in tokens] for tokens in flair_tokens]
+
+                    # todo not yet correct unfortunately!
+                    for s_i in range(input_ids.size()[0]):
+                        batch_encoding_offsets = batch_encoding[s_i].offsets
+                        flair_token_offsets = batch_flair_token_offsets[s_i]
+                        word_ids = []
+
+                        current_flair_token_id = 0
+                        for c, token_offset in enumerate(batch_encoding_offsets):
+                            # compare the offsets and add the flair token alignment to each token
+                            if token_offset == (0,0):
+                                word_ids.append(None)
+                            else:
+                                word_ids.append(current_flair_token_id)
+                                for i, flair_offset in enumerate(flair_token_offsets):
+                                    if i < current_flair_token_id:
+                                        continue
+                                    if token_offset[1] == flair_offset[1]:
+                                        current_flair_token_id = i +1
+
+                        word_ids_list.append(word_ids)
+                        # todo right now I only think about the case when the subtokens are part of flair tokens
+                        # todo: what about the other way around (one subtoken spans several flair tokens)? Cirrently, those tokens get zero-embedding
+                        # for token_id in range(len(flair_tokens[s_i])):
+                        #     if token_id not in word_ids:
+                        #         for b_t, id in zip(batch_encoding[s_i].tokens, word_ids):
+                        #             if not id == None:
+                        #                 flair_token = flair_tokens[s_i][id].text
+                        #             else:
+                        #                 flair_token = None
+                        #             print(b_t, id, flair_token)
+                        #         print("Here at least of the flair tokens was not assigned:", token_id)
+
+                else:
+                    # todo this returns something incorrect when using self.use_raw_text_as_input!
+                    word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
+
             else:
                 word_ids_list = _legacy_reconstruct_word_ids(
                     self,
@@ -697,6 +754,22 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         for token_embeddings, sentence in zip(sentence_embeddings, sentences):
             for token_embedding, token in zip(token_embeddings, sentence):
                 token.set_embedding(self.name, token_embedding)
+
+        if self.use_raw_text_as_input:
+            # when using the raw input and hence alignment, it can happen that a flair token did not get assigned an embedding
+            for token_embeddings, sentence in zip(sentence_embeddings, sentences):
+                previous_token_embedding = None
+                previous_token = None
+                for token_embedding, token in zip(token_embeddings, sentence):
+                    if torch.equal(token_embedding, torch.zeros(self.embedding_length_internal, dtype=token_embeddings.dtype, device=token_embeddings.device)) and previous_token_embedding is not None:
+                        # no embedding found for this token, using the previous one
+                        #print("No embedding for", token, "Using the previous embedding from", previous_token)
+                        token.set_embedding(self.name, previous_token_embedding)
+                    else:
+                        token.set_embedding(self.name, token_embedding)
+                        previous_token_embedding = token_embedding
+                        previous_token = token
+
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
         tensors = self.prepare_tensors(sentences, device=self.force_device)
@@ -1142,7 +1215,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             added = self.tokenizer.add_special_tokens({"additional_special_tokens": [SENTENCE_BOUNDARY_TAG]})
             transformer_model.resize_token_embeddings(transformer_model.config.vocab_size + added)
 
-        super().__init__(**self.to_args())
+        super().__init__(**self.to_args(), **kwargs)
 
         # most models have an initial BOS token, except for XLNet, T5 and GPT2
         self.initial_cls_token: bool = self._has_initial_cls_token()
