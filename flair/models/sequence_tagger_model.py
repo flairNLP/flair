@@ -1052,7 +1052,8 @@ class EarlyExitSequenceTagger(SequenceTagger):
         last_layer_only: bool = False,
         print_all_predictions = True,
         modified_loss = False,
-        relabel_noisy = False,
+        relabel_noisy_hard = False,
+        relabel_noisy_soft = False,
         relabel_path = '',
         **seqtaggerargs
     ):
@@ -1086,7 +1087,8 @@ class EarlyExitSequenceTagger(SequenceTagger):
         self.last_layer_only = last_layer_only
         self.print_all_predictions = print_all_predictions
         self.modified_loss=modified_loss
-        self.relabel_noisy = relabel_noisy
+        self.relabel_noisy_hard = relabel_noisy_hard
+        self.relabel_noisy_soft = relabel_noisy_soft
         self.relabel_path = relabel_path
         if self.modified_loss:
             self.loss_function = (
@@ -1094,6 +1096,8 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 if use_crf
                 else torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction='none')
             )
+         # if modified loss, then return per-sample losses
+        #TODO: add check for different variants of loss
         self.to(flair.device)
 
     def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.LongTensor, torch.Tensor]:
@@ -1222,12 +1226,109 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
 
 
+    def _prepare_soft_label_tensor(self, sentences: List[Sentence]):
+        
+        to_print = True
+
+        lista = [] 
+        layer_idx = -1
+        if to_print:
+            epoch_log_path = self.relabel_path +'/relabelled_'+str(self.model_card["training_parameters"]["epoch"])+'.tsv'
+            outfile = open(Path(epoch_log_path), "a+", encoding="utf-8")
+        i = 0
+
+        for sentence in sentences:
+            # set gold token-level
+            output=False
+            token_scores = [ 1 for label in sentence.tokens]
+            new_token_bio_labels = []
+            new_token_soft_labels = []
+
+            for token_ind, token in enumerate(sentence):
+                pd = token.get_label('PD').score
+                pred = token.get_label('predicted_bio').value
+                gold = token.get_label('gold_bio').value
+                clean = token.get_label('clean_bio').value
+
+                change = False
+
+                soft_labels = np.zeros(len(self.label_dictionary))
+                soft_labels[self.label_dictionary.get_idx_for_item(gold)] += pd / self.n_layers # high pd - keep gold
+                soft_labels[self.label_dictionary.get_idx_for_item(pred)] += 1 - pd / self.n_layers # low pd - keep pred
+
+                if soft_labels[self.label_dictionary.get_idx_for_item(pred)] > soft_labels[self.label_dictionary.get_idx_for_item(gold)]:
+                    change = True
+
+                if change:
+                    new_token_bio_labels.append(pred)
+                    if gold == clean:
+                        # clean sample
+                        # this means a clean sample was relabelled (always incorrectly)
+                        if to_print:
+                            outfile.write('clean \n')
+                            outfile.write('old_sentence \n')
+                            outfile.write(sentence.text+'\n')
+                            outfile.write(str(sentence.get_labels('ner'))+'\n')
+                            outfile.write('current token\n')
+                            outfile.write(str(token)+'\n')
+                        output=True
+                    elif pred == clean:
+                        # this means a noisy sample was relabelled correctly
+
+                        if to_print:
+                            outfile.write('noisy \n')
+                            outfile.write('old_sentence \n')
+                            outfile.write(sentence.text+'\n')
+                            outfile.write(str(sentence.get_labels('ner'))+'\n')
+                            outfile.write('current token\n')
+                            outfile.write(str(token)+'\n')
+                        output=True
+
+                    token.set_label('gold_bio',pred)
+                else:
+                    new_token_bio_labels.append(gold)
+
+                lista.append(soft_labels)
+                new_token_soft_labels.append(soft_labels)
+                i+=1
+
+            if output:
+                outfile.write("\n".join([str(x) for x in new_token_soft_labels]))
+                outfile.write("\n")
+
+                
+            for gold_label in sentence.get_labels('ner'): # ner is hardcoded for now
+                gold_span: Span = gold_label.data_point
+                gold_span.remove_labels('ner')        
+
+            updated_spans = get_spans_from_bio(new_token_bio_labels, token_scores)
+
+            for updated_span in updated_spans:
+                span: Span = sentence[updated_span[0][0] : updated_span[0][-1] + 1]
+                span.add_label('ner', value=updated_span[2], score=updated_span[1]) # ner is hardcoded for now
+
+            if to_print:
+                if output:
+                    outfile.write('token labels\n')
+                    outfile.write(str(new_token_bio_labels)+'\n')
+                    outfile.write('new_sentence \n')
+                    outfile.write(sentence.text+'\n')
+                    outfile.write(str(sentence.get_labels('ner')))
+                    outfile.write('\n')
+                    outfile.write('\n')
+        if to_print:    
+            outfile.close()
+
+        # labels = lista
+        lista = np.array(lista)
+        return torch.tensor(lista, device=flair.device, dtype=torch.float)
+
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
-        if self.relabel_noisy_hard and int(self.model_card["training_parameters"]["epoch"])>1:
+        if self.relabel_noisy_hard :  #and int(self.model_card["training_parameters"]["epoch"])>1
             self.hard_relabel(sentences)
 
         sentences = sorted(sentences, key=len, reverse=True)
@@ -1236,6 +1337,13 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         # forward pass to get scores
         scores = self.forward(sentence_tensor, lengths)
+        
+        if self.relabel_noisy_soft:# and int(self.model_card["training_parameters"]["epoch"])>1:
+            gold_labels = self._prepare_soft_label_tensor(sentences)#, scores)
+        else:
+            gold_labels = self._prepare_label_tensor(sentences)
+
+
         # calculate loss given scores and labels
         return self._calculate_loss(scores, gold_labels)
 
