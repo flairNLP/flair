@@ -4851,7 +4851,7 @@ class NOISY_NER_EST(ColumnCorpus):
         **corpusargs,
     ) -> None:
         """Initialize the NoisyNER corpus.
-        
+
         :param version: Chooses the labelset for the data.
                         v0 (default): clean labels
                         v1 to v7: different kinds of noisy labelsets (details: https://ojs.aaai.org/index.php/AAAI/article/view/16938)
@@ -4896,7 +4896,7 @@ class NOISY_NER_EST(ColumnCorpus):
 
     @classmethod
     def _set_path(cls, base_path) -> Path:
-        base_path = flair.cache_root/"datasets"/"estner" if not base_path else Path(base_path)
+        base_path = flair.cache_root / "datasets" / "estner" if not base_path else Path(base_path)
         return base_path
 
     @classmethod
@@ -4968,7 +4968,7 @@ class NOISY_NER_EST(ColumnCorpus):
             for instance in data:
                 out_file.write(column_separator.join(instance))
                 out_file.write("\n")
-                
+
 
 class MASAKHA_POS(MultiCorpus):
     def __init__(
