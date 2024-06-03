@@ -4927,12 +4927,12 @@ class NOISY_NER_EST(ColumnCorpus):
         return labels
 
     @classmethod
-    def _process_noisy_labels(cls, rdcd_features, labels) -> List[str]:
+    def _process_noisy_labels(cls, rdcd_features, labels) -> List[List[str]]:
         instances = []
         label_idx = 0
         for feature in rdcd_features:
             if len(feature) == 0:
-                instances.append("")
+                instances.append([""])
             else:
                 assert label_idx < len(labels)
                 instance = [feature[0], labels[label_idx]]
