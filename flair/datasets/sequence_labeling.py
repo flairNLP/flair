@@ -4900,7 +4900,7 @@ class NOISY_NER_EST(ColumnCorpus):
         return base_path
 
     @classmethod
-    def _load_features(cls, base_path) -> List[str]:
+    def _load_features(cls, base_path) -> List[List[str]]:
         print(base_path)
         unpack_file(cached_path(cls.data_url, base_path), base_path, "zip", False)
         with open(f"{base_path}/estner.cnll") as in_file:
@@ -4909,7 +4909,7 @@ class NOISY_NER_EST(ColumnCorpus):
         return features
 
     @classmethod
-    def _process_clean_labels(cls, features) -> List[str]:
+    def _process_clean_labels(cls, features) -> List[List[str]]:
         preinstances = [[instance[0], instance[len(instance) - 1]] for instance in features]
         return preinstances
 
