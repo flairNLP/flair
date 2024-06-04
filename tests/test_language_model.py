@@ -2,7 +2,7 @@ import pytest
 
 from flair.data import Dictionary, Sentence
 from flair.embeddings import FlairEmbeddings, TokenEmbeddings
-from flair.models import LanguageModel
+from flair.models import RecurrentLanguageModel
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 
 
@@ -12,7 +12,7 @@ def test_train_language_model(results_base_path, resources_path):
     dictionary: Dictionary = Dictionary.load("chars")
 
     # init forward LM with 128 hidden states and 1 layer
-    language_model: LanguageModel = LanguageModel(dictionary, is_forward_lm=True, hidden_size=128, nlayers=1)
+    language_model: RecurrentLanguageModel = RecurrentLanguageModel(dictionary, is_forward_lm=True, hidden_size=128, nlayers=1)
 
     # get the example corpus and process at character level in forward direction
     corpus: TextCorpus = TextCorpus(

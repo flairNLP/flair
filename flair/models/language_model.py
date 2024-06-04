@@ -11,7 +11,16 @@ from flair.data import Dictionary
 from flair.nn.recurrent import create_recurrent_layer
 
 
-class LanguageModel(nn.Module):
+class BaseLanguageModel(nn.Module):
+    """"Abstract base class for all downstream language model classes. Those
+    should be end to end language models that can be used for training and
+    inference.
+    """
+
+    def forward(self, input, *args, **kwargs):
+        raise NotImplementedError()
+
+class RecurrentLanguageModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
     def __init__(
@@ -469,3 +478,41 @@ class LanguageModel(nn.Module):
                 child_module._flat_weights_names = _flat_weights_names
 
             child_module._apply(fn)
+
+
+xlstm_cfg = """
+vocab_size: 50304
+mlstm_block:
+  mlstm:
+    conv1d_kernel_size: 4
+    qkv_proj_blocksize: 4
+    num_heads: 4
+slstm_block:
+  slstm:
+    backend: cuda
+    num_heads: 4
+    conv1d_kernel_size: 4
+    bias_init: powerlaw_blockdependent
+  feedforward:
+    proj_factor: 1.3
+    act_fn: gelu
+context_length: 256
+num_blocks: 7
+embedding_dim: 128
+slstm_at: [1]
+"""
+
+
+class xLSTMLanguageModel(BaseLanguageModel):
+    """For now I would consider xLSTM to not be a strict RNN type of LM"""
+
+    def __init__(self):
+        super(BaseLanguageModel, self).__init__()
+        from omegaconf import OmegaConf
+        from dacite import from_dict
+        from dacite import Config as DaciteConfig
+        from xlstm import xLSTMBlockStack, xLSTMBlockStackConfig
+
+        cfg = OmegaConf.create(xlstm_cfg)
+        cfg = from_dict(data_class=xLSTMBlockStackConfig, data=OmegaConf.to_container(cfg), config=DaciteConfig(strict=True))
+        xlstm_stack = xLSTMBlockStack(cfg)
