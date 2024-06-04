@@ -435,6 +435,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 output_dict=True,
                 labels=labels,
             )
+            confusion_matrix = sklearn.metrics.confusion_matrix(y_true,y_pred, labels=labels)
 
             # compute accuracy separately as it is not always in classification_report (e.. when micro avg exists)
             accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
@@ -477,6 +478,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
                 detailed_results=detailed_result,
                 classification_report=classification_report_dict,
+                conf_mat=confusion_matrix,
                 scores=scores,
             )
 
@@ -728,6 +730,16 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
     def _mask_scores(self, scores, data_points):
         return scores
+
+    def _get_metrics_for_batch(self, data_points):
+        last_preds = []
+        last_confs = []
+        true_labels = [] 
+        for data_point in data_points:
+            last_preds.append(int(data_point.get_label('last_prediction').value))
+            last_confs.append(float(data_point.get_label('last_confidence_sum').value))
+            true_labels.append(self.label_dictionary.get_idx_for_item(data_point.get_labels(self.label_type)[0].value)) # assumes one label, make it more general
+        return torch.tensor(last_preds,device=flair.device), torch.tensor(last_confs,device=flair.device)
 
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
         # make a forward pass to produce embedded data points and labels

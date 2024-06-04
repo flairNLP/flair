@@ -275,6 +275,7 @@ class DataPoint:
         self.annotation_layers: Dict[str, List[Label]] = {}
         self._embeddings: Dict[str, torch.Tensor] = {}
         self._metadata: Dict[str, typing.Any] = {}
+        self.metric_history: Dict[str, typing.Any] = {}
 
     @property
     @abstractmethod
@@ -362,6 +363,19 @@ class DataPoint:
             return self.labels
 
         return self.annotation_layers[typename] if typename in self.annotation_layers else []
+
+    def set_metric(self, typename: str, value: typing.Any):
+        self.metric_history[typename] = value
+        return self
+
+    def remove_metrics(self, typename: str):
+        if typename in self.metric_history.keys():
+            del self.metric_history[typename]
+
+    def get_metric(self, typename: str = None, zero_tag_value=-2):
+        if typename not in self.metric_history:
+            return zero_tag_value
+        return self.metric_history[typename]
 
     @property
     def labels(self) -> List[Label]:
@@ -1236,9 +1250,11 @@ class Corpus(typing.Generic[T_co]):
         test: Optional[Dataset[T_co]] = None,
         name: str = "corpus",
         sample_missing_splits: Union[bool, str] = True,
+        split_seed = None,
     ) -> None:
         # set name
         self.name: str = name
+        self.split_seed = split_seed
 
         # abort if no data is provided
         if not train and not dev and not test:
@@ -1249,7 +1265,7 @@ class Corpus(typing.Generic[T_co]):
             test_portion = 0.1
             train_length = _len_dataset(train)
             test_size: int = round(train_length * test_portion)
-            test, train = randomly_split_into_two_datasets(train, test_size)
+            test, train = randomly_split_into_two_datasets(train, test_size, split_seed)
             log.warning(
                 "No test split found. Using %.0f%% (i.e. %d samples) of the train split as test data",
                 test_portion,
@@ -1261,7 +1277,7 @@ class Corpus(typing.Generic[T_co]):
             dev_portion = 0.1
             train_length = _len_dataset(train)
             dev_size: int = round(train_length * dev_portion)
-            dev, train = randomly_split_into_two_datasets(train, dev_size)
+            dev, train = randomly_split_into_two_datasets(train, dev_size, split_seed)
             log.warning(
                 "No dev split found. Using %.0f%% (i.e. %d samples) of the train split as dev data",
                 dev_portion,
@@ -1293,13 +1309,13 @@ class Corpus(typing.Generic[T_co]):
         downsample_test=True,
     ):
         if downsample_train and self._train is not None:
-            self._train = self._downsample_to_proportion(self._train, percentage)
+            self._train = self._downsample_to_proportion(self._train, percentage, self.split_seed)
 
         if downsample_dev and self._dev is not None:
-            self._dev = self._downsample_to_proportion(self._dev, percentage)
+            self._dev = self._downsample_to_proportion(self._dev, percentage, self.split_seed)
 
         if downsample_test and self._test is not None:
-            self._test = self._downsample_to_proportion(self._test, percentage)
+            self._test = self._downsample_to_proportion(self._test, percentage, self.split_seed)
 
         return self
 
@@ -1396,9 +1412,9 @@ class Corpus(typing.Generic[T_co]):
         return [t.text for t in tokens]
 
     @staticmethod
-    def _downsample_to_proportion(dataset: Dataset, proportion: float):
+    def _downsample_to_proportion(dataset: Dataset, proportion: float, split_seed):
         sampled_size: int = round(_len_dataset(dataset) * proportion)
-        splits = randomly_split_into_two_datasets(dataset, sampled_size)
+        splits = randomly_split_into_two_datasets(dataset, sampled_size, split_seed)
         return splits[0]
 
     def obtain_statistics(self, label_type: Optional[str] = None, pretty_print: bool = True) -> Union[dict, str]:
@@ -1600,8 +1616,14 @@ class Corpus(typing.Generic[T_co]):
 
         corrupted_count = 0
         total_label_count = 0
+        
+        generated_ntm = np.zeros((len(list(labels)), len(list(labels))))
 
         if noise_transition_matrix:
+
+            # with a given NTM (or confusion matrix) with any noise share, generate a ntm for a given noise_share
+            new_noise_share, noise_transition_matrix = self.generate_NTM(noise_transition_matrix, noise_share)
+            
             ntm_labels = noise_transition_matrix.keys()
 
             if set(ntm_labels) != set(labels):
@@ -1628,6 +1650,7 @@ class Corpus(typing.Generic[T_co]):
                     if new_label != orig_label:
                         corrupted_count += 1
 
+                    generated_ntm[list(ntm_labels).index(orig_label),list(ntm_labels).index(new_label)] += 1
         else:
             if noise_share < 0 or noise_share > 1:
                 raise ValueError("noise_share must be between 0 and 1.")
@@ -1636,7 +1659,7 @@ class Corpus(typing.Generic[T_co]):
             other_label_p = noise_share / (len(labels) - 1)
 
             log.info("Generating noisy labels. Progress:")
-
+            ntm_labels = labels
             for data_point in Tqdm.tqdm(_iter_dataset(data)):
                 for label in data_point.get_labels(label_type):
                     total_label_count += 1
@@ -1653,10 +1676,67 @@ class Corpus(typing.Generic[T_co]):
                     if new_label != orig_label:
                         corrupted_count += 1
 
+                    generated_ntm[list(ntm_labels).index(orig_label),list(ntm_labels).index(new_label)] += 1
+
+            reindexing_array = [list(ntm_labels).index(x) for x in labels]
+            generated_ntm = generated_ntm[reindexing_array,:][:,reindexing_array]
         log.info(
             f"Total labels corrupted: {corrupted_count}. Resulting noise share: {round((corrupted_count / total_label_count) * 100, 2)}%."
         )
 
+        return round((corrupted_count / total_label_count) * 100, 2), generated_ntm
+
+    def print_noisy_dataset(self, label_type, path, split='train'):
+        log.info(path)
+        if split == "train":
+            assert self.train
+            datasets = [self.train]
+        elif split == "dev":
+            assert self.dev
+            datasets = [self.dev]
+        elif split == "test":
+            assert self.test
+            datasets = [self.test]
+        else:
+            raise ValueError("split must be either train, dev or test.")
+        import os
+        data: ConcatDataset = ConcatDataset(datasets)
+        filepath = path+os.sep+split+'_set.tsv'
+        outfile = open(filepath, 'w')
+        outfile.write(f"Text\tClean_label\tCorrupted_label\tNoise_mask\n")
+        for data_point in Tqdm.tqdm(_iter_dataset(data)):
+            for label in data_point.get_labels(label_type):
+                clean_label = label.data_point.get_label(label_type+'_clean')
+                outfile.write(f"{str(data_point.text)}\t{str(clean_label.value)}\t{str(label.value)}\t{str(clean_label.value!=label.value)}\n")
+        outfile.close()
+    
+    def generate_NTM(self, ntm, noise_share):
+        import numpy as np
+
+        labels = list(ntm.keys())
+        ntm_numpy = np.array(list(ntm.values()))
+        if ntm_numpy[0,0] < 1:
+            if ntm_numpy.sum() == len(labels):
+                original_ntm = ntm_numpy
+            else:
+                log.info('Error: provided NTM not valid')
+        else:
+            # this must be a test conf mat
+            original_ntm = ntm_numpy/ntm_numpy.sum(axis=1, keepdims=True)
+        train_class_distribution  = self.get_label_distribution()
+        posterior_class_probs = np.array([train_class_distribution[x] for x in labels])
+        
+        #calculate original noise share 
+        old_noise_share = np.sum((1 - original_ntm.diagonal())*posterior_class_probs)/posterior_class_probs.sum()
+
+        factor = old_noise_share/noise_share
+        new_ntm = original_ntm/factor
+        new_ntm_offdiagonals = new_ntm.sum(axis=1) - new_ntm.diagonal()
+        np.fill_diagonal(new_ntm, 1 - new_ntm_offdiagonals)
+        share = np.sum((1 - new_ntm.diagonal())*posterior_class_probs)/posterior_class_probs.sum()
+        log.info(f'ntm {dict(zip(labels,new_ntm))}')
+        return share, dict(zip(labels,new_ntm))
+        
     def get_label_distribution(self):
         class_to_count = defaultdict(lambda: 0)
         for sent in self.train:
@@ -1814,9 +1894,10 @@ def iob2(tags):
     return True
 
 
-def randomly_split_into_two_datasets(dataset, length_of_first):
+def randomly_split_into_two_datasets(dataset, length_of_first, split_seed=None):
     import random
-
+    if split_seed is not None:
+        random.seed(split_seed)
     indices = list(range(len(dataset)))
     random.shuffle(indices)
 

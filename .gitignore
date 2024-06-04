@@ -108,3 +108,5 @@ venv.bak/
 
 resources/taggers/
 regression_train/
+resources/noisy_classification/
+results/

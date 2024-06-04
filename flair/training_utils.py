@@ -25,6 +25,7 @@ class Result:
         main_score: float,
         detailed_results: str,
         classification_report: dict = {},
+        conf_mat: object = {},
         scores: dict = {},
     ) -> None:
         assert "loss" in scores, "No loss provided."
@@ -37,6 +38,7 @@ class Result:
     @property
     def loss(self):
         return self.scores["loss"]
+        self.conf_mat = conf_mat
 
     def __str__(self) -> str:
         return f"{self.detailed_results!s}\nLoss: {self.loss}'"

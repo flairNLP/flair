@@ -564,6 +564,8 @@ class ModelTrainer(Pluggable):
                 total_train_samples = 0
                 batch_count = 0
 
+                self.model.print_out_path = base_path
+
                 for epoch in range(epoch + 1, max_epochs + 1):
                     log_line(log)
 
