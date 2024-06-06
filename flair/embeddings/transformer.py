@@ -1321,7 +1321,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             model_kwargs["bbox"] = bbox
         if pixel_values is not None:
             model_kwargs["pixel_values"] = pixel_values
-        hidden_states = self.model(input_ids, **model_kwargs)[-1]
+        hidden_states = self.model(input_ids, **model_kwargs).hidden_states
         # make the tuple a tensor; makes working with it easier.
         hidden_states = torch.stack(hidden_states)
 
