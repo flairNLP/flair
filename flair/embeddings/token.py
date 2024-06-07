@@ -759,13 +759,15 @@ class FlairEmbeddings(TokenEmbeddings):
             elif not Path(model).exists():
                 raise ValueError(f'The given model "{model}" is not available or is not a valid path.')
 
-        from flair.models import LanguageModel
+        from flair.models import RecurrentLanguageModel as LanguageModel
+        from flair.models import xLSTMLanguageModel
 
         if isinstance(model, LanguageModel):
             self.lm: LanguageModel = model
             self.name = f"Task-LSTM-{self.lm.hidden_size}-{self.lm.nlayers}-{self.lm.is_forward_lm}"
         else:
-            self.lm = LanguageModel.load_language_model(model, has_decoder=has_decoder)
+            # self.lm = LanguageModel.load_language_model(model, has_decoder=has_decoder)
+            self.lm = xLSTMLanguageModel.load_language_model(model, has_decoder=has_decoder)
             self.name = str(model)
 
         if name is not None:
@@ -840,6 +842,7 @@ class FlairEmbeddings(TokenEmbeddings):
 
                     # offset mode that extracts at whitespace after last character
                     if self.with_whitespace:
+                        # [seq, batch, hidden]
                         embedding = all_hidden_states_in_lm[offset_with_whitespace, i, :]
                     # offset mode that extracts at last character
                     else:

@@ -168,6 +168,7 @@ class ModelTrainer(Pluggable):
         attach_default_scheduler: bool = True,
         **kwargs,
     ):
+        breakpoint()
         if plugins is None:
             plugins = []
 
@@ -489,7 +490,6 @@ class ModelTrainer(Pluggable):
         # Sanity conversion: if flair.device was set as a string, convert to torch.device
         if isinstance(flair.device, str):
             flair.device = torch.device(flair.device)
-
         # -- AmpPlugin -> wraps with AMP
         # -- AnnealingPlugin -> initialize schedulers (requires instantiated optimizer)
         with contextlib.ExitStack() as context_stack:
@@ -732,7 +732,7 @@ class ModelTrainer(Pluggable):
 
                     if save_best_model and current_epoch_has_best_model_so_far:
                         log.info("saving best model")
-                        self.model.save(base_path / "best-model.pt", checkpoint=save_optimizer_state)
+                        # self.model.save(base_path / "best-model.pt", checkpoint=save_optimizer_state)
 
                 # - SWAPlugin -> restores SGD weights from SWA
                 self.dispatch("after_training_loop")

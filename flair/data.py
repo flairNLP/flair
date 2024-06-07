@@ -46,6 +46,20 @@ class BoundingBox(NamedTuple):
     bottom: int
 
 
+class SubTokenDictionary:
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
+
+    @classmethod
+    def load(cls, tokenizer_name: str):
+        from transformers import AutoTokenizer
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+        return cls(tokenizer)
+
+    def __len__(self):
+        return len(self.tokenizer)
+
+
 class Dictionary:
     """This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings."""
 

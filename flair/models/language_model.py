@@ -1,3 +1,4 @@
+import copy
 import math
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
@@ -10,6 +11,14 @@ import flair
 from flair.data import Dictionary
 from flair.nn.recurrent import create_recurrent_layer
 
+try:
+    from omegaconf import OmegaConf
+    from dacite import from_dict
+    from dacite import Config as DaciteConfig
+    from xlstm import xLSTMLMModel, xLSTMLMModelConfig
+except ImportError:
+    raise ImportError("To use the xLSTM model, please install the `xlstm` (https://github.com/NX-AI/xlstm) package.")
+
 
 class BaseLanguageModel(nn.Module):
     """"Abstract base class for all downstream language model classes. Those
@@ -17,11 +26,29 @@ class BaseLanguageModel(nn.Module):
     inference.
     """
 
+    lm_type = "base"
+
+    def __init__(self):
+        super(BaseLanguageModel, self).__init__()
+        assert self.lm_type != "base", "BaseLanguageModel should not be instantiated directly"
+
     def forward(self, input, *args, **kwargs):
+        raise NotImplementedError()
+
+    def generate_text(
+        self,
+        prefix: str = "\n",
+        number_of_characters: int = 1000,
+        temperature: float = 1.0,
+        break_on_suffix=None,
+    ) -> Tuple[str, float]:
         raise NotImplementedError()
 
 class RecurrentLanguageModel(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
+
+    lm_type = "recurrent"
+
 
     def __init__(
         self,
@@ -36,6 +63,7 @@ class RecurrentLanguageModel(nn.Module):
         recurrent_type="LSTM",
         has_decoder=True,
     ) -> None:
+        self.lm_type = recurrent_type.lower()
         super().__init__()
 
         self.dictionary = dictionary
@@ -166,6 +194,7 @@ class RecurrentLanguageModel(nn.Module):
         output_parts = []
         for batch in batches:
             batch = batch.transpose(0, 1)
+            breakpoint()
             rnn_output, hidden = self.forward(batch, hidden, decode=False)
             output_parts.append(rnn_output)
 
@@ -481,7 +510,6 @@ class RecurrentLanguageModel(nn.Module):
 
 
 xlstm_cfg = """
-vocab_size: 50304
 mlstm_block:
   mlstm:
     conv1d_kernel_size: 4
@@ -502,17 +530,322 @@ embedding_dim: 128
 slstm_at: [1]
 """
 
+xlstm_cfg1 = """
+mlstm_block:
+  mlstm:
+    conv1d_kernel_size: 4
+    qkv_proj_blocksize: 4
+    num_heads: 4
+slstm_block: {}
+context_length: 256
+num_blocks: 7
+embedding_dim: 256
+slstm_at: []
+"""
+
+
+xlstm10_cfg = """
+num_blocks: 4
+embedding_dim: 256
+mlstm_block:
+  mlstm:
+    num_heads: 2
+slstm_block: {}
+slstm_at: []
+context_length: 512
+"""
+
+
+xlstm10_medium_cfg = """
+num_blocks: 4
+embedding_dim: 512
+mlstm_block:
+  mlstm:
+    num_heads: 1
+slstm_block: {}
+slstm_at: []
+context_length: 512
+"""
+
+
+xlstm01_cfg = """
+num_blocks: 2
+embedding_dim: 256
+mlstm_block:
+    mlstm:
+      num_heads: 1
+slstm_block:
+    slstm:
+      num_heads: 1
+slstm_at: [0, 1]
+context_length: 256
+"""
+
 
 class xLSTMLanguageModel(BaseLanguageModel):
     """For now I would consider xLSTM to not be a strict RNN type of LM"""
+    lm_type = "xlstm"
 
-    def __init__(self):
+    def __init__(self,
+        dictionary: Dictionary,
+        is_forward_lm: bool, 
+        xlstm_cfg: Union[str, dict] = xlstm10_cfg,
+        document_delimiter: str = "\n",
+        **kwargs
+    ):
         super(BaseLanguageModel, self).__init__()
-        from omegaconf import OmegaConf
-        from dacite import from_dict
-        from dacite import Config as DaciteConfig
-        from xlstm import xLSTMBlockStack, xLSTMBlockStackConfig
-
+        self.dictionary = dictionary
+        self.document_delimiter = document_delimiter
+        self.is_forward_lm: bool = is_forward_lm
+        self.xlstm_cfg = xlstm_cfg
         cfg = OmegaConf.create(xlstm_cfg)
-        cfg = from_dict(data_class=xLSTMBlockStackConfig, data=OmegaConf.to_container(cfg), config=DaciteConfig(strict=True))
-        xlstm_stack = xLSTMBlockStack(cfg)
+        cfg["vocab_size"] = len(dictionary)
+        self.xlstm_stack = xLSTMLMModel(
+            from_dict(
+                data_class=xLSTMLMModelConfig,
+                data=OmegaConf.to_container(cfg),
+                config=DaciteConfig(strict=True)
+            )
+        )
+        print(sum(p.numel() for p in self.xlstm_stack.parameters()))
+
+    
+    @classmethod
+    def from_config(cls, cfg: dict):
+        dictionary = cfg.pop("dictionary")
+        is_forward_lm = cfg.pop("is_forward_lm")
+        document_delimiter = cfg.pop("document_delimiter")
+        xlstm_cfg = cfg.pop("xlstm_cfg")
+        return cls(dictionary=dictionary, is_forward_lm=is_forward_lm, xlstm_cfg=xlstm_cfg, document_delimiter=document_delimiter)
+
+    def forward(self, input, *args, **kwargs):
+        """Full forward pass through whole sequence"""
+        return self.xlstm_stack(input), None, None
+
+    def step(self, input, hidden=None) -> tuple[torch.Tensor, dict[str, dict[str, tuple[torch.Tensor, ...]]]]:
+        """This is a single step that contains the hidden state for a time step"""
+        return self.xlstm_stack.step(input, hidden)
+
+    def init_hidden(self, bsz):
+        """Not needed, xLSTM handles hidden states internally"""
+        return None
+
+    def save(self, file: Union[Path, str]):
+        model_state = {
+            "state_dict": self.state_dict(),
+            "dictionary": self.dictionary,
+            "is_forward_lm": self.is_forward_lm,
+            "document_delimiter": self.document_delimiter,
+            "xlstm_cfg": self.xlstm_cfg,
+        }
+
+        torch.save(model_state, str(file), pickle_protocol=4)
+
+    @classmethod
+    def load_language_model(cls, model_file: Union[Path, str], has_decoder=True):
+        state = torch.load(str(model_file), map_location=flair.device)
+
+        state_dict = state.pop("state_dict")
+
+        model = cls.from_config(state)
+        model.load_state_dict(state_dict)
+        model.eval()
+        model.to(flair.device)
+
+        return model
+
+    def generate_text(
+        self,
+        prefix: str = "\n",
+        number_of_characters: int = 100,
+        temperature: float = 1.0,
+        break_on_suffix=None,
+    ) -> Tuple[str, float]:
+
+        if hasattr(self.dictionary, "tokenizer"):
+            return self.generate_text_token_level(prefix, 100, temperature, break_on_suffix)
+
+        return self.generate_text_char_level(prefix, 1000, temperature, break_on_suffix)
+
+    def generate_text_token_level(
+        self,
+        prefix: str = "\n",
+        number_of_characters: int = 100,
+        temperature: float = 1.0,
+        break_on_suffix=None,
+        ) -> Tuple[str, float]:
+        """Generate text like one would with a transformer"""
+        # Ensure model is in evaluation mode
+        self.xlstm_stack.eval()
+
+        # Tokenize the initial prompt
+        input_ids = self.dictionary.tokenizer(prefix, return_tensors='pt').input_ids
+
+        # If using GPU, move input_ids to the appropriate device
+        device = next(self.xlstm_stack.parameters()).device
+        input_ids = input_ids.to(device)
+
+        num_samples = 2
+
+        # Generate text
+        generated_texts = []
+        with torch.no_grad():
+            for _ in range(num_samples):
+                # Copy the initial input_ids
+                sample_input_ids = input_ids.clone()
+                for _ in range(number_of_characters):
+                    # Forward pass to get logits
+                    outputs = self.xlstm_stack(sample_input_ids)
+                    logits = outputs[:, -1, :] / temperature
+
+                    probabilities = torch.softmax(logits, dim=-1)
+                    next_token = torch.multinomial(probabilities, 1)
+
+                    # Append predicted token to input_ids
+                    sample_input_ids = torch.cat([sample_input_ids, next_token], dim=-1)
+
+                    # Stop if end-of-sequence token is generated
+                    if next_token.item() == self.dictionary.tokenizer.eos_token_id:
+                        break
+
+                # Decode generated sequence
+                generated_text = self.dictionary.tokenizer.decode(sample_input_ids[0], skip_special_tokens=True)
+                generated_texts.append(generated_text)
+
+        return generated_texts
+
+
+    def generate_text_char_level(
+        self,
+        prefix: str = "\n",
+        number_of_characters: int = 1000,
+        temperature: float = 1.0,
+        break_on_suffix=None,
+    ) -> Tuple[str, float]:
+        if prefix == "":
+            prefix = "\n"
+
+        with torch.no_grad():
+            characters = []
+
+            idx2item = self.dictionary.idx2item
+
+            # initial hidden state
+            hidden = None
+
+            if len(prefix) > 1:
+                char_tensors = []
+                for character in prefix[:-1]:
+                    char_tensors.append(
+                        torch.tensor(self.dictionary.get_idx_for_item(character)).unsqueeze(0).unsqueeze(0)
+                    )
+
+                input = torch.cat(char_tensors).to(flair.device)
+
+                prediction, hidden = self.step(input, hidden)
+
+            input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
+            log_prob = torch.zeros(1, device=flair.device)
+
+            for _i in range(number_of_characters):
+                input = input.to(flair.device)
+                
+                # get predicted weights
+                prediction, hidden = self.step(input, hidden)
+                prediction = prediction.squeeze().detach()
+                decoder_output = prediction
+
+                # divide by temperature
+                prediction = prediction.div(temperature)
+
+                # to prevent overflow problem with small temperature values, substract largest value from all
+                # this makes a vector in which the largest value is 0
+                max = torch.max(prediction)
+                prediction -= max
+
+                # compute word weights with exponential function
+                word_weights = prediction.exp().cpu()
+
+                # try sampling multinomial distribution for next character
+                try:
+                    word_idx = torch.multinomial(word_weights, 1)[0]
+                except:  # noqa: E722 TODO: figure out exception type
+                    word_idx = torch.tensor(0)
+
+                # print(word_idx)
+                prob = decoder_output[word_idx] - logsumexp(decoder_output, dim=0)
+                log_prob += prob
+
+                input = word_idx.detach().unsqueeze(0).unsqueeze(0)
+                word = idx2item[word_idx].decode("UTF-8")
+                characters.append(word)
+
+                if break_on_suffix is not None and "".join(characters).endswith(break_on_suffix):
+                    break
+
+            text = prefix + "".join(characters)
+
+            log_prob_float = log_prob.item()
+            log_prob_float /= len(characters)
+
+            if not self.is_forward_lm:
+                text = text[::-1]
+
+            return text, -log_prob_float
+
+    def get_representation(
+        self,
+        strings: List[str],
+        start_marker: str,
+        end_marker: str,
+        chars_per_chunk: int = 512,
+    ):
+        """xlstm"""
+        len_longest_str: int = len(max(strings, key=len))
+
+        # pad strings with whitespaces to longest sentence
+        padded_strings: List[str] = []
+
+        for string in strings:
+            if not self.is_forward_lm:
+                string = string[::-1]
+
+            padded = f"{start_marker}{string}{end_marker}"
+            padded_strings.append(padded)
+
+        # cut up the input into chunks of max charlength = chunk_size
+        chunks = []
+        splice_begin = 0
+        longest_padded_str: int = len_longest_str + len(start_marker) + len(end_marker)
+        for splice_end in range(chars_per_chunk, longest_padded_str, chars_per_chunk):
+            chunks.append([text[splice_begin:splice_end] for text in padded_strings])
+            splice_begin = splice_end
+
+        chunks.append([text[splice_begin:longest_padded_str] for text in padded_strings])
+        hidden = None
+
+        padding_char_index = self.dictionary.get_idx_for_item(" ")
+
+        batches: List[torch.Tensor] = []
+        # push each chunk through the RNN language model
+        for chunk in chunks:
+            len_longest_chunk: int = len(max(chunk, key=len))
+            sequences_as_char_indices: List[List[int]] = []
+            for string in chunk:
+                char_indices = self.dictionary.get_idx_for_items(list(string))
+                char_indices += [padding_char_index] * (len_longest_chunk - len(string))
+
+                sequences_as_char_indices.append(char_indices)
+            t = torch.tensor(sequences_as_char_indices, dtype=torch.long).to(device=flair.device, non_blocking=True)
+            batches.append(t)
+
+        output_parts = []
+        for batch in batches:
+            # rnn_output, hidden = self.forward(batch, hidden)
+            rnn_output, _, _ = self.forward(batch)
+            output_parts.append(rnn_output)
+
+        # concatenate all chunks to make final output -> [seq_len, batch_size, hidden_size]
+        output = torch.cat(output_parts, dim=1).permute(1, 0, 2)
+
+        return output

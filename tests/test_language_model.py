@@ -2,11 +2,11 @@ import pytest
 
 from flair.data import Dictionary, Sentence
 from flair.embeddings import FlairEmbeddings, TokenEmbeddings
-from flair.models import RecurrentLanguageModel
+from flair.models import RecurrentLanguageModel, xLSTMLanguageModel
 from flair.trainers.language_model_trainer import LanguageModelTrainer, TextCorpus
 
 
-@pytest.mark.integration()
+# @pytest.mark.integration()
 def test_train_language_model(results_base_path, resources_path):
     # get default dictionary
     dictionary: Dictionary = Dictionary.load("chars")
@@ -35,6 +35,39 @@ def test_train_language_model(results_base_path, resources_path):
     text, likelihood = language_model.generate_text(number_of_characters=100)
     assert text is not None
     assert len(text) >= 100
+
+    # clean up results directory
+    del trainer, language_model, corpus, char_lm_embeddings
+
+def test_train_xlstm_language_model(results_base_path, resources_path):
+    # get default dictionary
+    dictionary: Dictionary = Dictionary.load("chars")
+
+    # init forward LM with 128 hidden states and 1 layer
+    language_model: xLSTMLanguageModel = xLSTMLanguageModel(dictionary, is_forward_lm=True, hidden_size=128, nlayers=1)
+
+    # get the example corpus and process at character level in forward direction
+    corpus: TextCorpus = TextCorpus(
+        resources_path / "corpora/lorem_ipsum",
+        # resources_path / "corpora/wikitext2",
+        dictionary,
+        language_model.is_forward_lm,
+        character_level=True,
+    )
+
+    # train the language model
+    trainer: LanguageModelTrainer = LanguageModelTrainer(language_model, corpus, test_mode=True)
+
+    trainer.train(results_base_path, sequence_length=256, mini_batch_size=10, max_epochs=1, learning_rate=0.1)
+
+    # use the character LM as embeddings to embed the example sentence 'I love Berlin'
+    char_lm_embeddings: TokenEmbeddings = FlairEmbeddings(str(results_base_path / "best-lm.pt"))
+    # sentence = Sentence("I love Berlin")
+    # char_lm_embeddings.embed(sentence)
+
+    # text, likelihood = language_model.generate_text(number_of_characters=100)
+    # assert text is not None
+    # assert len(text) >= 100
 
     # clean up results directory
     del trainer, language_model, corpus, char_lm_embeddings

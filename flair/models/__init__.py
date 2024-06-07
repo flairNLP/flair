@@ -1,7 +1,7 @@
 from .clustering import ClusteringModel
 from .entity_linker_model import SpanClassifier
 from .entity_mention_linking import EntityMentionLinker
-from .language_model import LanguageModel
+from .language_model import RecurrentLanguageModel, BaseLanguageModel, xLSTMLanguageModel
 from .lemmatizer_model import Lemmatizer
 from .multitask_model import MultitaskModel
 from .pairwise_classification_model import TextPairClassifier
@@ -19,7 +19,9 @@ from .word_tagger_model import TokenClassifier, WordTagger
 __all__ = [
     "EntityMentionLinker",
     "SpanClassifier",
-    "LanguageModel",
+    "RecurrentLanguageModel",
+    "BaseLanguageModel",
+    "xLSTMLanguageModel",
     "Lemmatizer",
     "TextPairClassifier",
     "TextPairRegressor",

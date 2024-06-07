@@ -19,7 +19,6 @@ scikit-learn>=1.0.2
 segtok>=1.5.11
 sqlitedict>=2.0.0
 tabulate>=0.8.10
-torch>=1.5.0,!=1.8
 tqdm>=4.63.0
 transformer-smaller-training-vocab>=0.2.3
 transformers[sentencepiece]>=4.18.0,<5.0.0
@@ -27,4 +26,3 @@ urllib3<2.0.0,>=1.0.0  # pin below 2 to make dependency resolution faster.
 wikipedia-api>=0.5.7
 semver<4.0.0,>=3.0.0
 bioc<3.0.0,>=2.0.0
-xlstm>=1.0.3

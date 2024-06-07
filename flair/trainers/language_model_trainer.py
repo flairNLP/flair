@@ -15,7 +15,8 @@ from torch.utils.data import DataLoader, Dataset
 
 import flair
 from flair.data import Dictionary
-from flair.models import LanguageModel
+from flair.data import SubTokenDictionary
+from flair.models import BaseLanguageModel
 from flair.optim import SGDW, ReduceLRWDOnPlateau
 from flair.training_utils import add_file_handler
 
@@ -96,6 +97,63 @@ class TextDataset(Dataset):
             line = line.upper()
         return line
 
+class SubTokenTextDataset(Dataset):
+
+    def __init__(
+        self,
+        path: Union[str, Path],
+        dictionary: SubTokenDictionary,
+        expand_vocab: bool = False,
+        forward: bool = True,
+        split_onr_char: bool = True,
+        random_case_flip: bool = True,
+        document_delimiter: str = "\n",
+        shuffle: bool = True,
+    ) -> None:
+        path = Path(path)
+        assert path.exists()
+
+        self.path = path
+        self.dictionary = dictionary
+        self.forward = forward
+        self.random_case_flip = random_case_flip
+        self.expand_vocab = expand_vocab
+        self.document_delimiter = document_delimiter
+        self.shuffle = shuffle
+
+        if path.is_dir():
+            self.files = sorted([f for f in path.iterdir() if f.exists()])
+        else:
+            self.files = [path]
+
+    def __len__(self) -> int:
+        return len(self.files)
+
+    def __getitem__(self, index=0) -> torch.Tensor:
+        """Tokenizes a text file on character basis."""
+        if isinstance(self.files[index], str):
+            self.files[index] = Path(self.files[index])
+        assert self.files[index].exists()
+
+        with self.files[index].open("r", encoding="utf-8") as fin:
+            text_lines: list[str] = [
+                doc + self.document_delimiter for doc in fin.read().split(self.document_delimiter) if doc
+            ]
+            # lines = [list(line) if self.split_on_char else line.split() for line in text_lines]
+            lines = "".join(text_lines)
+
+
+        # ids = torch.tensor(
+        #     [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars],
+        #     dtype=torch.long,
+        # )
+    
+        ids = self.dictionary.tokenizer(lines, return_tensors="pt").input_ids.flatten()
+
+        if not self.forward:
+            ids = ids.flip(0)
+        return ids
+
 
 class TextCorpus:
     def __init__(
@@ -114,8 +172,12 @@ class TextCorpus:
         self.document_delimiter: str = document_delimiter
 
         path = Path(path)
+        if isinstance(dictionary, SubTokenDictionary):
+            TextDatasetClass = SubTokenTextDataset
+        else:
+            TextDatasetClass = TextDataset
 
-        self.train = TextDataset(
+        self.train = TextDatasetClass(
             path / "train",
             dictionary,
             False,
@@ -128,7 +190,7 @@ class TextCorpus:
 
         # TextDataset returns a list. valid and test are only one file,
         # so return the first element
-        self.valid = TextDataset(
+        self.valid = TextDatasetClass(
             path / "valid.txt",
             dictionary,
             False,
@@ -138,7 +200,7 @@ class TextCorpus:
             document_delimiter=document_delimiter,
             shuffle=False,
         )[0]
-        self.test = TextDataset(
+        self.test = TextDatasetClass(
             path / "test.txt",
             dictionary,
             False,
@@ -153,7 +215,7 @@ class TextCorpus:
 class LanguageModelTrainer:
     def __init__(
         self,
-        model: LanguageModel,
+        model: BaseLanguageModel,
         corpus: TextCorpus,
         optimizer: Type[Optimizer] = SGD,
         test_mode: bool = False,
@@ -163,7 +225,7 @@ class LanguageModelTrainer:
         optimizer_state: Optional[Dict[str, Any]] = None,
         scaler_state: Optional[Dict[str, Any]] = None,
     ) -> None:
-        self.model: LanguageModel = model
+        self.model: BaseLanguageModel = model.to(flair.device)
         self.optimizer: Type[Optimizer] = optimizer
         self.corpus: TextCorpus = corpus
         self.test_mode: bool = test_mode
@@ -239,13 +301,14 @@ class LanguageModelTrainer:
                 # through corpus one
                 if epoch > 0:
                     training_generator = DataLoader(self.corpus.train, shuffle=True, num_workers=num_workers)
-                    self.model.save_checkpoint(
-                        base_path / f"epoch_{epoch}.pt",
-                        optimizer,
-                        epoch,
-                        0,
-                        best_val_loss,
-                    )
+                    if checkpoint:
+                        self.model.save_checkpoint(
+                            base_path / f"epoch_{epoch}.pt",
+                            optimizer,
+                            epoch,
+                            0,
+                            best_val_loss,
+                        )
 
                 # iterate through training data, starting at
                 # self.split (for checkpointing)
@@ -257,7 +320,11 @@ class LanguageModelTrainer:
                     split_start_time = time.time()
                     # off by one for printing
                     curr_split += 1
-                    train_data = self._batchify(train_slice.flatten(), mini_batch_size)
+                    if self.model.lm_type in ["rnn", "lstm"]:
+                        train_data = self._batchify(train_slice.flatten(), mini_batch_size)
+                    else:
+                        train_data = train_slice.flatten()
+
 
                     log.info("Split %d" % curr_split + f"\t - ({datetime.datetime.now():%H:%M:%S})")
 
@@ -275,9 +342,23 @@ class LanguageModelTrainer:
 
                     total_loss = torch.zeros(1, device=flair.device)
                     start_time = time.time()
+                    if self.model.lm_type in ["rnn", "lstm"]:
+                        tokens_per_batch = sequence_length
+                    else:
+                        tokens_per_batch = sequence_length * mini_batch_size
+                        train_data = train_data[: len(train_data) - (len(train_data) % tokens_per_batch - 1)]
 
-                    for batch, i in enumerate(range(0, train_data.size(0) - 1, sequence_length)):
-                        data, targets = self._get_batch(train_data, i, sequence_length)
+                    for batch, i in enumerate(range(0, train_data.size(0) - 1, tokens_per_batch)):
+                        if self.model.lm_type in ["rnn", "lstm"]:
+                            data, targets = self._get_batch(train_data, i, sequence_length)
+                        else:
+
+                            data = train_data[i : i + tokens_per_batch].view(mini_batch_size, -1).to(flair.device)
+                            targets = train_data[i + 1 : i + 1 + tokens_per_batch].view(-1).to(flair.device)
+
+                            if data.size(1) < sequence_length:
+                                log.info("Skipping remainder of batch; not enough data")
+                                continue
 
                         if not data.is_cuda and cuda.is_available():
                             log.info("Batch %d is not on CUDA, training will be very slow" % (batch))
@@ -286,11 +367,13 @@ class LanguageModelTrainer:
                         self.model.zero_grad()
                         optimizer.zero_grad()
                         with torch.autocast(device_type=flair.device.type, enabled=use_amp):
+
                             # do the forward pass in the model
                             output, rnn_output, hidden = self.model.forward(data, hidden)
 
                             # try to predict the targets
                             loss = self.loss_function(output.view(-1, ntokens), targets)
+
                         # Backward
                         scaler.scale(loss).backward()
 
@@ -308,7 +391,8 @@ class LanguageModelTrainer:
                         # previously produced.
                         # If we didn't, the model would try backpropagating
                         # all the way to start of the dataset.
-                        hidden = self._repackage_hidden(hidden)
+                        if hidden:
+                            hidden = self._repackage_hidden(hidden)
 
                         # explicitly remove loss to clear up memory
                         del loss, output, rnn_output
@@ -316,8 +400,10 @@ class LanguageModelTrainer:
                         if batch % self.log_interval == 0 and batch > 0:
                             cur_loss = total_loss.item() / self.log_interval
                             elapsed = time.time() - start_time
+                            # num_tokens = len(train_data[int(self.model.lm_type not in ["rnn", "lstm"])])
+                            num_batches = len(train_data) // tokens_per_batch
                             log.info(
-                                f"| split {curr_split:3d}/{number_of_splits:3d} | {batch:5d}/{len(train_data) // sequence_length:5d} batches "
+                                f"| split {curr_split:3d}/{number_of_splits:3d} | {batch:5d}/{num_batches:5d} batches "
                                 f"| ms/batch {elapsed * 1000 / self.log_interval:5.2f} | loss {cur_loss:5.4f} | ppl {math.exp(cur_loss):5.4f}"
                             )
                             total_loss = torch.zeros(1, device=flair.device)
@@ -338,8 +424,11 @@ class LanguageModelTrainer:
                     scheduler.step(val_loss)
 
                     log.info(f"best loss so far {best_val_loss:5.8f}")
-
+                    # try: 
                     log.info(self.model.generate_text())
+                    # except Exception as e:
+                    #     log.info("Could not generate text")
+                    #     log.info(e)
 
                     if checkpoint:
                         self.model.save_checkpoint(
@@ -406,7 +495,8 @@ class LanguageModelTrainer:
                 prediction, rnn_output, hidden = self.model.forward(data, hidden)
                 output_flat = prediction.view(-1, ntokens)
                 total_loss += len(data) * self.loss_function(output_flat, targets).data
-                hidden = self._repackage_hidden(hidden)
+                if hidden:
+                    hidden = self._repackage_hidden(hidden)
             return total_loss.item() / len(data_source)
 
     @staticmethod
