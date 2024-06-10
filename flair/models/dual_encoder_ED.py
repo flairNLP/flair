@@ -100,24 +100,39 @@ class DEEDTripletMarginLoss(torch.nn.TripletMarginLoss):
 
 
 class DEEDEuclideanEmbeddingLoss(torch.nn.Module):
-    def __init__(self, margin=10.0):
+    def __init__(self, mode: str = "margin",
+                       margin: float =10.0):
         """
         Similar to pytorch's CosineEmbeddingLoss (https://pytorch.org/docs/stable/generated/torch.nn.CosineEmbeddingLoss.html) with negatives, but using euclidean distance.
         :param margin: Margin to push the negatives away from the anchor.
+        :param mode: Using the margin as fixed ('margin') or considering margin from positive ('using_positive')
         """
         super().__init__()
+        self.mode = mode
         self.margin = margin
+
 
     def forward(self, anchor, positive,  negative):
         # handle positives
         # euclidean distance between anchor and positive embeddings
-        positive_loss = torch.sqrt(torch.sum(torch.square(anchor - positive), dim=-1))
+        #positive_loss = torch.sqrt(torch.sum(torch.square(anchor - positive), dim=-1))
+        positive_loss = torch.nn.functional.pairwise_distance(anchor, positive) # same as above
 
         # handle negatives
         # calculate the euclidean distance between the anchor and each batch of negatives
         dist = torch.nn.functional.pairwise_distance(anchor, negative)
         # loss is distance after margin is applied
-        negative_loss = torch.max(torch.tensor(0.0), self.margin - dist)
+
+        # a) using fixed margin:
+        if self.mode == "margin":
+            negative_loss = torch.max(torch.tensor(0.0), self.margin - dist)
+
+        # b) using positive loss (--> similar to triplet loss, but with positive loss included)
+        elif self.mode == "using_positive":
+            negative_loss = torch.max(torch.tensor(0.0), positive_loss - dist) # no margin: negative must just be further than positive
+            #negative_loss = torch.max(torch.tensor(0.0), positive_loss - dist + self.margin) # negative must be >= margin from positive
+        else:
+            raise ValueError
 
         # take mean over both losses
         # todo If negatives factor > 1, we weigh the negative losses more. Do we want that?
@@ -125,6 +140,27 @@ class DEEDEuclideanEmbeddingLoss(torch.nn.Module):
         # positive_loss = positive_loss.expand(negative_loss.shape)
         losses = torch.cat([positive_loss.unsqueeze(0), negative_loss])
         return torch.mean(losses)
+
+
+class DEEDCrossEntropyLoss(torch.nn.CrossEntropyLoss):
+
+    def forward(self, anchor, positive, negative):
+        #factor = negative.shape[0]
+
+        ## version a) using all negatives as negatives for all spans
+        #positive_negative = torch.cat([positive.unsqueeze(1), negative.permute(1,0,2)], dim=0).squeeze(1)
+        #similarities = -torch.cdist(anchor, positive_negative)
+        #target = torch.tensor(range(anchor.shape[0])).to(flair.device)
+
+        ## version b) using only the correct negatives per span:
+        positive_negative = torch.cat([positive.unsqueeze(1), negative.permute(1,0,2)], dim=1)
+        similarities = -torch.cdist(anchor.unsqueeze(1), positive_negative).squeeze(1)
+        #similarities = torch.softmax(similarities, dim = 1) # Cross Entropy expects raw logits, not probabilities!
+        target = torch.zeros(anchor.shape[0], dtype=torch.int64).to(flair.device)
+
+        loss = super(DEEDCrossEntropyLoss, self).forward(similarities, target)
+
+        return loss
 
 
 class LabelList:
@@ -151,7 +187,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
     def __init__(self, token_encoder: TokenEmbeddings, label_encoder: DocumentEmbeddings, known_labels: List[str], gold_labels: List[str] = [], label_sample_negative_size: Union[int, None] = None, label_type: str = "nel", label_map: dict = {},
                  negative_sampling_strategy: Literal["shift", "random", "hard"] = "hard", negative_sampling_factor: int = 1,
-                 loss_function_name: Literal ["triplet", "binary_embedding"] = "triplet", label_embedding_batch_size: int = 128, sampled_label_embeddings_storage_device: torch.device = None, *args, **kwargs):
+                 loss_function_name: Literal ["triplet", "binary_embedding", "cross_entropy"] = "triplet", label_embedding_batch_size: int = 128, sampled_label_embeddings_storage_device: torch.device = None, *args, **kwargs):
         """
         This model uses a dual encoder architecture where both inputs and labels (verbalized) are encoded with separate
         Transformers. It uses some kind of similarity loss to push datapoints and true labels nearer together while pushing negatives away
@@ -167,7 +203,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :param label_map: Mapping of label values to more descriptive verbalizations, used for embedding the labels.
         :param negative_sampling_strategy: Strategy to search for negative samples. Must be one of "hard", "shift", "random".
         :param negative_sampling_factor: Number of negatives per positive, e.g. 1 (one negative sample per positive), 2 (two negative samples per positive).
-        :param loss_function_name: Loss funtion to use, must be one of "triplet", "binary_embedding".
+        :param loss_function_name: Loss funtion to use, must be one of "triplet", "binary_embedding", "cross_entropy".
         :param label_embedding_batch_size: Batch size to use for embedding labels to avoid memory overflow.
         :param sampled_label_embeddings_storage_device: Device to store the sampled label embeddings on. If None, uses flair.device
         :param args:
@@ -192,6 +228,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             self.loss_function = DEEDTripletMarginLoss(margin=1.0)
         elif loss_function_name == "binary_embedding":
             self.loss_function = DEEDEuclideanEmbeddingLoss()
+        elif loss_function_name == "cross_entropy":
+            self.loss_function = DEEDCrossEntropyLoss()
         else:
             raise ValueError(f"Loss {loss_function_name} not recognized.")
         self.negative_sampling_strategy = negative_sampling_strategy
@@ -379,7 +417,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         #gettrace = getattr(sys, "gettrace", None)
         #if gettrace is not None and gettrace():
 
-        if self._iteration_count % 800 == 0:
+        if self._iteration_count % 2000 == 0:
             most_similar_labels_per_span = [[(self._sampled_label_at(i), similarity_spans_sampled_labels[j,i].item()) for i in most_similar_label_index[j,:]] for j in range(most_similar_label_index.shape[0])]
             print("At iteration:", self._iteration_count)
             for i, (sp, gold, gold_sim) in enumerate(zip(spans, batch_gold_labels, gold_label_similatity)):
