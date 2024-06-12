@@ -79,29 +79,72 @@ def insert_verbalizations_into_sentence(sentence: Sentence, label_type: str, lab
 
 
 
+class SimilarityMetric:
+    def __init__(self, metric_to_use):
+        self.metric_to_use = metric_to_use
+
+    #def __call__(self, tensor_a, tensor_b):
+    #    return self.distance(tensor_a, tensor_b)
+
+    def distance(self, tensor_a, tensor_b):
+        sim = self.similarity(tensor_a, tensor_b)
+        if self.metric_to_use == "cosine":
+            return 1-sim
+        else:
+            return -sim
+
+    def similarity(self, tensor_a, tensor_b):
+
+        if self.metric_to_use == "euclidean":
+            return -torch.cdist(tensor_a, tensor_b)
+
+        elif self.metric_to_use == "cosine":
+            tensor_a_normalized = F.normalize(tensor_a, p=2, dim=-1)
+            tensor_b_normalized = F.normalize(tensor_b, p=2, dim=-1)
+
+            #if tensor_b_normalized.dim() == 2:
+            return torch.matmul(tensor_a_normalized, tensor_b_normalized.transpose(-2,-1))
+            #elif tensor_b_normalized.dim() == 3:
+            #    return torch.matmul(tensor_a_normalized, tensor_b_normalized.transpose(1,2))
+
+        elif self.metric_to_use == "mm":
+            #if tensor_b.dim() == 2:
+            #    return torch.mm(tensor_a, tensor_b.t())
+            #elif tensor_b.dim() == 3:
+            return torch.matmul(tensor_a, tensor_b.transpose(-2, -1))
+
+        else:
+            raise ValueError(f"Unsupported metric to use: {self.metric_to_use}")
 
 
+# class DEEDTripletMarginLoss(torch.nn.TripletMarginLoss):
+#     def __init__(self, similarity_metric: SimilarityMetric = SimilarityMetric("euclidean"), **kwargs):
+#     #    kwargs["reduction"] = "none"
+#         super(DEEDTripletMarginLoss, self).__init__(**kwargs)
+#         self.similarity_metric = similarity_metric
+#
+#     def forward(self, anchor, positive, negative):
+#
+#         positive_negative = torch.cat([positive.unsqueeze(0), negative]).unsqueeze(2)
+#         similarities = self.similarity_metric.similarity(anchor.unsqueeze(1), positive_negative).squeeze()
+#         pos_cosine_sim, neg_cosine_sim = similarities[0].unsqueeze(0), similarities[1::]
+#         losses = F.relu(neg_cosine_sim - pos_cosine_sim + self.margin)
+#         return losses.mean()
 
-class DEEDTripletMarginLoss(torch.nn.TripletMarginLoss):
-    #def __init__(self, **kwargs):
-    #    kwargs["reduction"] = "none"
-    #    super(DEEDTripletMarginLoss, self).__init__(**kwargs)
+class DEEDTripletMarginLoss(torch.nn.TripletMarginWithDistanceLoss):
+    def __init__(self, similarity_metric: SimilarityMetric = SimilarityMetric("euclidean"), **kwargs):
+        kwargs["reduction"] = "none"
+        super(DEEDTripletMarginLoss, self).__init__(distance_function=similarity_metric.distance, **kwargs)
 
     def forward(self, anchor, positive, negative):
-        factor = negative.shape[0]
-        losses = [super(DEEDTripletMarginLoss, self).forward(anchor, positive, negative[i]) for i in range(factor)]
-        #distance = torch.nn.functional.pairwise_distance(anchor, positive)
-        #for i in range(len(losses)):
-        #    losses_i = losses[i]
-        #    losses[i] = torch.where(losses_i > 0, losses_i, distance)
-
-        losses = torch.stack(losses, dim=0)
-        return torch.mean(losses)
+        loss = super(DEEDTripletMarginLoss, self).forward(anchor.unsqueeze(1), positive.unsqueeze(1), negative.transpose(0,1))
+        return loss.mean()
 
 
 class DEEDEuclideanEmbeddingLoss(torch.nn.Module):
     def __init__(self, mode: str = "margin",
-                       margin: float =10.0):
+                       margin: float =10.0,
+                       similarity_metric: SimilarityMetric = SimilarityMetric("euclidean")):
         """
         Similar to pytorch's CosineEmbeddingLoss (https://pytorch.org/docs/stable/generated/torch.nn.CosineEmbeddingLoss.html) with negatives, but using euclidean distance.
         :param margin: Margin to push the negatives away from the anchor.
@@ -110,12 +153,13 @@ class DEEDEuclideanEmbeddingLoss(torch.nn.Module):
         super().__init__()
         self.mode = mode
         self.margin = margin
-
+        self.similarity_metric = similarity_metric # todo use this!
+        if self.similarity_metric.metric_to_use != "euclidean":
+            raise NotImplementedError
 
     def forward(self, anchor, positive,  negative):
         # handle positives
         # euclidean distance between anchor and positive embeddings
-        #positive_loss = torch.sqrt(torch.sum(torch.square(anchor - positive), dim=-1))
         positive_loss = torch.nn.functional.pairwise_distance(anchor, positive) # same as above
 
         # handle negatives
@@ -144,18 +188,23 @@ class DEEDEuclideanEmbeddingLoss(torch.nn.Module):
 
 class DEEDCrossEntropyLoss(torch.nn.CrossEntropyLoss):
 
+    def __init__(self, similarity_metric: SimilarityMetric = SimilarityMetric("euclidean")):
+        super().__init__()
+        self.similarity_metric = similarity_metric
+
     def forward(self, anchor, positive, negative):
         #factor = negative.shape[0]
 
         ## version a) using all negatives as negatives for all spans
         #positive_negative = torch.cat([positive.unsqueeze(1), negative.permute(1,0,2)], dim=0).squeeze(1)
         #similarities = -torch.cdist(anchor, positive_negative)
+        #similarities = self.similarity_metric.similarity(anchor.unsqueeze(1), positive_negative).squeeze(1)
         #target = torch.tensor(range(anchor.shape[0])).to(flair.device)
 
         ## version b) using only the correct negatives per span:
         positive_negative = torch.cat([positive.unsqueeze(1), negative.permute(1,0,2)], dim=1)
-        similarities = -torch.cdist(anchor.unsqueeze(1), positive_negative).squeeze(1)
-        #similarities = torch.softmax(similarities, dim = 1) # Cross Entropy expects raw logits, not probabilities!
+        #similarities = -torch.cdist(anchor.unsqueeze(1), positive_negative).squeeze(1)
+        similarities = self.similarity_metric.similarity(anchor.unsqueeze(1), positive_negative).squeeze(1)
         target = torch.zeros(anchor.shape[0], dtype=torch.int64).to(flair.device)
 
         loss = super(DEEDCrossEntropyLoss, self).forward(similarities, target)
@@ -180,14 +229,16 @@ class LabelList:
             self._item2idx[item] = len(self._item2idx)
 
     def index_for(self, item: str):
-        return self._item2idx[item]
+        return self._item2idx.get(item, None)
 
 
 class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
     def __init__(self, token_encoder: TokenEmbeddings, label_encoder: DocumentEmbeddings, known_labels: List[str], gold_labels: List[str] = [], label_sample_negative_size: Union[int, None] = None, label_type: str = "nel", label_map: dict = {},
                  negative_sampling_strategy: Literal["shift", "random", "hard"] = "hard", negative_sampling_factor: int = 1,
-                 loss_function_name: Literal ["triplet", "binary_embedding", "cross_entropy"] = "triplet", label_embedding_batch_size: int = 128, sampled_label_embeddings_storage_device: torch.device = None, *args, **kwargs):
+                 loss_function_name: Literal["triplet", "binary_embedding", "cross_entropy"] = "cross_entropy",
+                 similarity_metric_name: Literal ["euclidean", "cosine", "mm"] = "euclidean", constant_updating: bool = False,
+                 label_embedding_batch_size: int = 128, sampled_label_embeddings_storage_device: torch.device = None, *args, **kwargs):
         """
         This model uses a dual encoder architecture where both inputs and labels (verbalized) are encoded with separate
         Transformers. It uses some kind of similarity loss to push datapoints and true labels nearer together while pushing negatives away
@@ -204,6 +255,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :param negative_sampling_strategy: Strategy to search for negative samples. Must be one of "hard", "shift", "random".
         :param negative_sampling_factor: Number of negatives per positive, e.g. 1 (one negative sample per positive), 2 (two negative samples per positive).
         :param loss_function_name: Loss funtion to use, must be one of "triplet", "binary_embedding", "cross_entropy".
+        :param similarity_metric_name: Similarity metric to use, must be one of "euclidean", "cosine", "mm".
+        :param constant_updating: Updating the label embeddings for every embedded label (positive and negative).
         :param label_embedding_batch_size: Batch size to use for embedding labels to avoid memory overflow.
         :param sampled_label_embeddings_storage_device: Device to store the sampled label embeddings on. If None, uses flair.device
         :param args:
@@ -224,14 +277,21 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         if not sampled_label_embeddings_storage_device:
             sampled_label_embeddings_storage_device = flair.device
         self._sampled_label_embeddings_storage_device = sampled_label_embeddings_storage_device
+        if similarity_metric_name in ["euclidean", "cosine", "mm"]:
+            self.similarity_metric = SimilarityMetric(metric_to_use = similarity_metric_name)
+        else:
+            raise ValueError(f"Similarity metric {similarity_metric_name} not recognized.")
+
         if loss_function_name == "triplet":
-            self.loss_function = DEEDTripletMarginLoss(margin=1.0)
+            self.loss_function = DEEDTripletMarginLoss(similarity_metric= self.similarity_metric, margin = 0.5 if similarity_metric_name == "cosine" else 1.0)
         elif loss_function_name == "binary_embedding":
-            self.loss_function = DEEDEuclideanEmbeddingLoss()
+            self.loss_function = DEEDEuclideanEmbeddingLoss(similarity_metric= self.similarity_metric)
         elif loss_function_name == "cross_entropy":
-            self.loss_function = DEEDCrossEntropyLoss()
+            self.loss_function = DEEDCrossEntropyLoss(similarity_metric= self.similarity_metric)
         else:
             raise ValueError(f"Loss {loss_function_name} not recognized.")
+
+        self.constant_updating = constant_updating
         self.negative_sampling_strategy = negative_sampling_strategy
         if negative_sampling_strategy == "shift":
             self._negative_sampling_fn = self._negative_sampling_shift
@@ -265,6 +325,26 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
     def _sampled_label_idx(self, label: str):
         return self._sampled_label_dict.index_for(label)
+
+    def _update_some_label_embeddings(self, labels, new_label_embeddings):
+        if self._sampled_label_embeddings is None:
+            # using this just to make sure self._sampled_label_dict and self._sampled_label_embeddings get created if not yet there
+            _ = self.get_sampled_label_embeddings()
+
+        with torch.no_grad():
+            indices = [self._sampled_label_idx(label) for label in labels]
+            invalid_items = [i for i, id in enumerate(indices) if id is None]
+            valid_indices = [id for id in indices if id is not None]
+
+            if len(invalid_items) !=0:
+                mask = torch.ones(new_label_embeddings.size(0), dtype=torch.bool)
+                for i in invalid_items:
+                    mask[i] = False
+                new_label_embeddings = new_label_embeddings[mask]
+
+            if len(valid_indices) !=0:
+                valid_indices = torch.tensor(valid_indices)
+                self._sampled_label_embeddings[valid_indices] = new_label_embeddings
 
     @property
     def label_type(self):
@@ -334,7 +414,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         return spans, torch.stack(embeddings, dim=0)
 
 
-    def _embed_labels_batchwise_return_stacked_embeddings(self, labels_sentence_objects: List[flair.data.Sentence], clear_embeddings: bool = True, use_tqdm: bool = True, device: torch.device = None):
+    def _embed_labels_batchwise_return_stacked_embeddings(self, labels: List[str], labels_sentence_objects: List[flair.data.Sentence],
+                                                          clear_embeddings: bool = True, update_these_embeddings: bool = True,
+                                                          use_tqdm: bool = True, device: torch.device = None):
         final_embeddings = []
         batch_size = self._label_embedding_batch_size
         batch_iterator = range(0, len(labels_sentence_objects), batch_size)
@@ -354,6 +436,10 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                     l.clear_embeddings()
 
         final_embeddings = torch.cat(final_embeddings)
+
+        if update_these_embeddings:
+            if self.constant_updating:
+                self._update_some_label_embeddings(labels=labels, new_label_embeddings=final_embeddings)
 
         return final_embeddings
 
@@ -381,7 +467,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
          negative_labels = [self._sampled_label_at(i) for f in negative_samples_indices for i in f]
          negative_labels_sentence_objects = [Sentence(self.label_map.get(l, l)) for l in negative_labels]
 
-         stacked = self._embed_labels_batchwise_return_stacked_embeddings(negative_labels_sentence_objects,
+         stacked = self._embed_labels_batchwise_return_stacked_embeddings(labels = negative_labels,
+                                                                          labels_sentence_objects = negative_labels_sentence_objects,
                                                                           use_tqdm=False)
 
          # return tensor of dimension factor x num_spans x embedding_size
@@ -398,13 +485,12 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         with torch.no_grad():
             #self._sampled_label_embeddings = None # testing
             span_embeddings = span_embeddings.to(self._sampled_label_embeddings_storage_device)
-            similarity_spans_sampled_labels = -torch.cdist(span_embeddings, self.get_sampled_label_embeddings())
+            #similarity_spans_sampled_labels = -torch.cdist(span_embeddings, self.get_sampled_label_embeddings())
+            similarity_spans_sampled_labels = self.similarity_metric.similarity(span_embeddings, self.get_sampled_label_embeddings())
             gold_label_similatity = []
             for nr, label in enumerate(batch_gold_labels):
-                try:
-                    # idx = self._sampled_labels.index(label)
-                    idx = self._sampled_label_idx(label)
-                except Exception as e:
+                idx = self._sampled_label_idx(label)
+                if idx is None:
                     #print(e)
                     #print("Could not find", label)
                     gold_label_similatity.append(-torch.inf)
@@ -433,7 +519,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         most_similar_labels = [self._sampled_label_at(i) for i in most_similar_label_index]
         most_similar_labels_sentence_objects = [Sentence(self.label_map.get(l,l)) for l in most_similar_labels]
 
-        stacked = self._embed_labels_batchwise_return_stacked_embeddings(most_similar_labels_sentence_objects, use_tqdm = False)
+        stacked = self._embed_labels_batchwise_return_stacked_embeddings(labels = most_similar_labels,
+                                                                         labels_sentence_objects = most_similar_labels_sentence_objects,
+                                                                         use_tqdm = False)
 
         # return tensor of dimension factor x num_spans x embedding_size
         return torch.reshape(stacked, (self._negative_sampling_factor, *span_embeddings.shape))
@@ -449,8 +537,10 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                 print(" - Creating label objects...")
                 all_labels_sentence_objects = [Sentence(self.label_map.get(l, l)) for l in tqdm(self._sampled_label_dict.items, position=0, leave=True)]
                 print(" - Embedding label objects...")
-                self._sampled_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(
-                    all_labels_sentence_objects, device=self._sampled_label_embeddings_storage_device)
+                self._sampled_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = [l for l in self._sampled_label_dict.items],
+                                                                                                        labels_sentence_objects = all_labels_sentence_objects,
+                                                                                                        update_these_embeddings = False,
+                                                                                                        device=self._sampled_label_embeddings_storage_device)
         return self._sampled_label_embeddings
 
     #@torch.compile
@@ -474,7 +564,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         labels_sentence_objects = [Sentence(self.label_map.get(l,l)) for l in labels]
         #self.label_encoder.embed(labels_sentence_objects)
         #label_embeddings = torch.stack([l.get_embedding() for l in labels_sentence_objects], dim = 0)
-        label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels_sentence_objects, use_tqdm= False)
+        label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = labels,
+                                                                                  labels_sentence_objects = labels_sentence_objects,
+                                                                                  use_tqdm= False)
 
         # sample negative labels
         negative_samples = self._negative_sampling_fn(spans, span_embeddings, labels, label_embeddings)
@@ -523,7 +615,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                 self._next_prediction_needs_updated_label_embeddings = False
             sampled_label_embeddings = self.get_sampled_label_embeddings().to(flair.device)
             # Choosing the most similar label from the set of sampled_labels (might not include the true gold label)
-            similarity_span_all_labels = -torch.cdist(span_embeddings, sampled_label_embeddings)
+            #similarity_span_all_labels = -torch.cdist(span_embeddings, sampled_label_embeddings)
+            similarity_span_all_labels = self.similarity_metric.similarity(span_embeddings, sampled_label_embeddings)
+
             most_similar_label_similarity, most_similar_label_index = torch.max(similarity_span_all_labels, dim=1)
 
             for i, sp in enumerate(spans):
@@ -564,6 +658,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             #"negative_sampling_factor": self._negative_sampling_factor,
             "negative_sampling_strategy": self.negative_sampling_strategy,
             "loss_function": self.loss_function,
+            "similarity_metric": self.similarity_metric
 
         }
         return model_state
@@ -581,6 +676,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             #negative_sampling_factor = state.get("negative_sampling_factor"),
             negative_sampling_strategy = state.get("negative_sampling_strategy"),
             loss_function = state.get("loss_function"),
+            similarity_metric = state.get("similarity_metric"),
 
             **kwargs,
         )
