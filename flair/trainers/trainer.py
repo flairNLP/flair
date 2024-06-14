@@ -801,6 +801,9 @@ class ModelTrainer(Pluggable):
                 self.return_values["test_score"] = test_results.main_score
 
             else:
+                if (base_path / "best-model.pt").exists():
+                    log.info("Loading model from best epoch ...")
+                    self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
                 self.return_values["test_score"] = 0
                 log.info("Test data not provided setting final score to 0")
 
