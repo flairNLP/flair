@@ -608,7 +608,6 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                     # get the offsets from the flair tokens to align later
                     batch_flair_token_offsets = [[(t.start_position, t.end_position) for t in tokens] for tokens in flair_tokens]
 
-                    # todo not yet correct unfortunately!
                     for s_i in range(input_ids.size()[0]):
                         batch_encoding_offsets = batch_encoding[s_i].offsets
                         flair_token_offsets = batch_flair_token_offsets[s_i]
@@ -624,12 +623,14 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                                 for i, flair_offset in enumerate(flair_token_offsets):
                                     if i < current_flair_token_id:
                                         continue
+                                    # if the end offset corresponds to the flair end offset, make sure the next one will be used next
                                     if token_offset[1] == flair_offset[1]:
                                         current_flair_token_id = i +1
 
                         word_ids_list.append(word_ids)
-                        # todo right now I only think about the case when the subtokens are part of flair tokens
-                        # todo: what about the other way around (one subtoken spans several flair tokens)? Cirrently, those tokens get zero-embedding
+                        # todo right now the (more common) case when the subtokens are part of flair tokens is accounted for
+                        #  the other way around (one subtoken spans several flair tokens) is not really accounted for. These flair tokens (their ids) do not appear in word_ids_list.
+                        #  As a hot fix, they later get the repeated embeddings from the previous token. See __extract_token_embeddings
                         # for token_id in range(len(flair_tokens[s_i])):
                         #     if token_id not in word_ids:
                         #         for b_t, id in zip(batch_encoding[s_i].tokens, word_ids):
@@ -641,7 +642,6 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                         #         print("Here at least of the flair tokens was not assigned:", token_id)
 
                 else:
-                    # todo this returns something incorrect when using self.use_raw_text_as_input!
                     word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
 
             else:
