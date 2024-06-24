@@ -9,7 +9,7 @@ import torch
 import torch.nn.functional as F
 
 import flair
-from flair.data import DT, Dictionary, Optional, Sentence, Span, Union
+from flair.data import DT, Dictionary, Optional, Sentence, Span, Union, Token
 from flair.embeddings import DocumentEmbeddings, TokenEmbeddings
 
 log = logging.getLogger("flair")
@@ -399,16 +399,49 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         """
         spans = []
         sentences_to_embed = []
+        use_special_token = False
+        if use_special_token:
+            spans_special = []
         for s in sentences:
             sentence_spans = s.get_spans(self.label_type)
             if sentence_spans:
                 spans.extend(sentence_spans)
-                sentences_to_embed.append(s)
+                if use_special_token:
+                    start_token, end_token = None, self.token_encoder.tokenizer.special_tokens_map["mask_token"]
+                    new_tokens = [ t.text for t in s.tokens ]
+                    adjustment = 0
+                    spans_token_offsets = sorted([(sp.tokens[0].idx-1, sp.tokens[-1].idx) for sp in sentence_spans])
+                    new_offsets = []
+                    for start, end in spans_token_offsets:
+                        start += adjustment
+                        end += adjustment
+                        if start_token is not None and end_token is not None:
+                            new_tokens = new_tokens[:start] + [start_token] + new_tokens[start:end] + [end_token] + new_tokens[end:]
+                            new_offsets.append((start+1, end+1))
+                            adjustment += 2
+                        elif start_token is None and end_token is not None:
+                            new_tokens = new_tokens[:start] + new_tokens[start:end] + [end_token] + new_tokens[end:]
+                            new_offsets.append((start, end+1))
+                            adjustment += 1
+                        elif start_token is not None and end_token is None:
+                            new_tokens = new_tokens[:start] + new_tokens[start:end] + new_tokens[end:]
+                            new_offsets.append((start+1, end))
+                            adjustment += 1
+                    new_s = flair.data.Sentence(new_tokens)
+                    spans_special.extend([flair.data.Span(new_s.tokens[s:e]) for s,e in new_offsets])
+                    sentences_to_embed.append(new_s)
+                else:
+                    sentences_to_embed.append(s)
         if not spans:
             return None, None
 
         self.token_encoder.embed(sentences_to_embed)
-        embeddings = [torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0) for span in spans]
+        if use_special_token:
+            #embeddings = [torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0) for span in spans_special] # use the mean still
+            embeddings = [token.get_embedding() for s in sentences_to_embed for token in s.tokens if token.text == end_token] # use the special start/end token
+
+        else:
+            embeddings = [torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0) for span in spans]
         for s in sentences_to_embed:
             s.clear_embeddings()
         return spans, torch.stack(embeddings, dim=0)
@@ -485,6 +518,12 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         with torch.no_grad():
             #self._sampled_label_embeddings = None # testing
             span_embeddings = span_embeddings.to(self._sampled_label_embeddings_storage_device)
+
+            # reembed the labels every N step to have more recent embeddings
+            if self.constant_updating and self._iteration_count % 20000 == 0 and self._iteration_count > 0:
+                print(f"At step {self._iteration_count}, updating label embeddings...")
+                self._sampled_label_embeddings = None
+
             #similarity_spans_sampled_labels = -torch.cdist(span_embeddings, self.get_sampled_label_embeddings())
             similarity_spans_sampled_labels = self.similarity_metric.similarity(span_embeddings, self.get_sampled_label_embeddings())
             gold_label_similatity = []
@@ -503,13 +542,13 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         #gettrace = getattr(sys, "gettrace", None)
         #if gettrace is not None and gettrace():
 
-        if self._iteration_count % 2000 == 0:
-            most_similar_labels_per_span = [[(self._sampled_label_at(i), similarity_spans_sampled_labels[j,i].item()) for i in most_similar_label_index[j,:]] for j in range(most_similar_label_index.shape[0])]
-            print("At iteration:", self._iteration_count)
-            for i, (sp, gold, gold_sim) in enumerate(zip(spans, batch_gold_labels, gold_label_similatity)):
-                label_strings = map(lambda x: f"{x[0]} ({x[1]:.4f})", most_similar_labels_per_span[i])
-                print(sp.text, "-->", gold, "(", f"{gold_sim:.4f}", ")", ": ", " | ".join(label_strings))
-            print("--")
+        # if self._iteration_count % 2000 == 0:
+        #     most_similar_labels_per_span = [[(self._sampled_label_at(i), similarity_spans_sampled_labels[j,i].item()) for i in most_similar_label_index[j,:]] for j in range(most_similar_label_index.shape[0])]
+        #     print("At iteration:", self._iteration_count)
+        #     for i, (sp, gold, gold_sim) in enumerate(zip(spans, batch_gold_labels, gold_label_similatity)):
+        #         label_strings = map(lambda x: f"{x[0]} ({x[1]:.4f})", most_similar_labels_per_span[i])
+        #         print(sp.text, "-->", gold, "(", f"{gold_sim:.4f}", ")", ": ", " | ".join(label_strings))
+        #     print("--")
 
         # flatten to a list
         # the order is (n + n ... +n) = factor*n where n is the number of span embeddings
@@ -597,7 +636,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         Predicts labels for the spans in sentences. Adds them to the spans under label_name.
         :return:
         """
-        self._iteration_count = 0
+        #self._iteration_count = 0
         with torch.no_grad():
 
             (spans, span_embeddings) = self._embed_spans(sentences)
