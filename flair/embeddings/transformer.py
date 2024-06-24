@@ -636,7 +636,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                         #  the other way around (one subtoken spans several flair tokens) is not really accounted for. These flair tokens (their ids) do not appear in word_ids_list.
                         #  As a hot fix, they later get the repeated embeddings from the previous token. See __extract_token_embeddings
                         for token_id in range(len(flair_tokens[s_i])):
-                            if token_id not in [e for l in word_ids for e in l if l is not None]:
+                            if token_id not in [e for l in word_ids if l is not None for e in l ]:
                                 for b_t, id in zip(batch_encoding[s_i].tokens, word_ids):
                                     if not id == None:
                                         flair_token = flair_tokens[s_i][id].text
