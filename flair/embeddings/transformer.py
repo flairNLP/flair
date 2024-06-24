@@ -613,7 +613,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                         flair_token_offsets = batch_flair_token_offsets[s_i]
                         word_ids = []
 
-                        current_flair_token_id = 0
+                        current_flair_token_id = [0]
                         for c, token_offset in enumerate(batch_encoding_offsets):
                             # compare the offsets and add the flair token alignment to each token
                             if token_offset == (0,0):
@@ -621,25 +621,29 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                             else:
                                 word_ids.append(current_flair_token_id)
                                 for i, flair_offset in enumerate(flair_token_offsets):
-                                    if i < current_flair_token_id:
+                                    if i < current_flair_token_id[-1]:
                                         continue
+                                    if token_offset[0] == flair_offset[0]:
+                                        if i not in current_flair_token_id:
+                                            current_flair_token_id.append(i) # todo check if this is correct, also: accomodate for list afterwards!
+
                                     # if the end offset corresponds to the flair end offset, make sure the next one will be used next
                                     if token_offset[1] == flair_offset[1]:
-                                        current_flair_token_id = i +1
+                                        current_flair_token_id = [i +1]
 
                         word_ids_list.append(word_ids)
                         # todo right now the (more common) case when the subtokens are part of flair tokens is accounted for
                         #  the other way around (one subtoken spans several flair tokens) is not really accounted for. These flair tokens (their ids) do not appear in word_ids_list.
                         #  As a hot fix, they later get the repeated embeddings from the previous token. See __extract_token_embeddings
-                        # for token_id in range(len(flair_tokens[s_i])):
-                        #     if token_id not in word_ids:
-                        #         for b_t, id in zip(batch_encoding[s_i].tokens, word_ids):
-                        #             if not id == None:
-                        #                 flair_token = flair_tokens[s_i][id].text
-                        #             else:
-                        #                 flair_token = None
-                        #             print(b_t, id, flair_token)
-                        #         print("Here at least of the flair tokens was not assigned:", token_id)
+                        for token_id in range(len(flair_tokens[s_i])):
+                            if token_id not in [e for l in word_ids for e in l if l is not None]:
+                                for b_t, id in zip(batch_encoding[s_i].tokens, word_ids):
+                                    if not id == None:
+                                        flair_token = flair_tokens[s_i][id].text
+                                    else:
+                                        flair_token = None
+                                    print(b_t, id, flair_token)
+                                print("Here at least of the flair tokens was not assigned:", token_id)
 
                 else:
                     word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
@@ -1213,7 +1217,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         self.use_context_separator = use_context_separator
         if use_context_separator:
             added = self.tokenizer.add_special_tokens(
-                {"additional_special_tokens": [SENTENCE_BOUNDARY_TAG]}, replace_additional_special_tokens=False
+                {"additional_special_tokens": [SENTENCE_BOUNDARY_TAG]}, #replace_additional_special_tokens=False
             )
             transformer_model.resize_token_embeddings(transformer_model.config.vocab_size + added)
 
