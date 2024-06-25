@@ -303,6 +303,22 @@ def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens
     return word_ids
 
 
+def map_offsets(first_list: List[Tuple[int]], second_list: List[Tuple[int]]):
+    mapping = []
+
+    for i, (start1, end1) in enumerate(first_list):
+        if start1 == 0 and end1 == 0:
+            mapping.append(None)
+        else:
+            indices = []
+            for j, (start2, end2) in enumerate(second_list):
+                if start1 < end2 and end1 > start2:  # check if ranges overlap
+                    indices.append(j)
+            mapping.append(indices)
+
+    return mapping
+
+
 class TransformerBaseEmbeddings(Embeddings[Sentence]):
     """Base class for all TransformerEmbeddings.
 
@@ -611,25 +627,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                     for s_i in range(input_ids.size()[0]):
                         batch_encoding_offsets = batch_encoding[s_i].offsets
                         flair_token_offsets = batch_flair_token_offsets[s_i]
-                        word_ids = []
 
-                        current_flair_token_id = [0]
-                        for c, token_offset in enumerate(batch_encoding_offsets):
-                            # compare the offsets and add the flair token alignment to each token
-                            if token_offset == (0,0):
-                                word_ids.append(None)
-                            else:
-                                word_ids.append(current_flair_token_id)
-                                for i, flair_offset in enumerate(flair_token_offsets):
-                                    if i < current_flair_token_id[-1]:
-                                        continue
-                                    if token_offset[0] == flair_offset[0]:
-                                        if i not in current_flair_token_id:
-                                            current_flair_token_id.append(i) # todo check if this is correct, also: accomodate for list afterwards!
-
-                                    # if the end offset corresponds to the flair end offset, make sure the next one will be used next
-                                    if token_offset[1] == flair_offset[1]:
-                                        current_flair_token_id = [i +1]
+                        word_ids = map_offsets(batch_encoding_offsets, flair_token_offsets)
 
                         word_ids_list.append(word_ids)
                         # todo right now the (more common) case when the subtokens are part of flair tokens is accounted for
@@ -637,12 +636,12 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                         #  As a hot fix, they later get the repeated embeddings from the previous token. See __extract_token_embeddings
                         for token_id in range(len(flair_tokens[s_i])):
                             if token_id not in [e for l in word_ids if l is not None for e in l ]:
-                                for b_t, id in zip(batch_encoding[s_i].tokens, word_ids):
-                                    if not id == None:
-                                        flair_token = flair_tokens[s_i][id].text
+                                for b_t, ids in zip(batch_encoding[s_i].tokens, word_ids):
+                                    if not ids == None:
+                                        flair_equivalents = [ flair_tokens[s_i][id].text for id in ids ]
                                     else:
-                                        flair_token = None
-                                    print(b_t, id, flair_token)
+                                        flair_equivalents = None
+                                    print(b_t, ids, flair_equivalents)
                                 print("Here at least of the flair tokens was not assigned:", token_id)
 
                 else:
@@ -667,16 +666,19 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                     offsets = new_offsets
                     sentence_lengths = new_lengths
 
-                word_ids = torch.tensor(
-                    [
+                if not self.use_raw_text_as_input:
+                    word_ids = torch.tensor(
                         [
-                            -100 if (val is None or val < offset or val >= offset + length) else val - offset
-                            for val in _word_ids
-                        ]
-                        for _word_ids, offset, length in zip(word_ids_list, offsets, sentence_lengths)
-                    ],
-                    device=device,
-                )
+                            [
+                                -100 if (val is None or val < offset or val >= offset + length) else val - offset
+                                for val in _word_ids
+                            ]
+                            for _word_ids, offset, length in zip(word_ids_list, offsets, sentence_lengths)
+                        ],
+                        device=device,
+                    )
+                else:
+                    word_ids = word_ids_list# todo
                 model_kwargs["word_ids"] = word_ids
             if self.needs_manual_ocr:
                 bbox = [
@@ -1423,6 +1425,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                 hidden_states, overflow_to_sample_mapping, self.stride // 2, self.tokenizer.model_max_length, 0
             )
             if self.tokenizer.is_fast and self.token_embedding:
+                # todo here the problem is
                 word_ids = combine_strided_tensors(
                     word_ids, overflow_to_sample_mapping, self.stride // 2, self.tokenizer.model_max_length, -100
                 )
