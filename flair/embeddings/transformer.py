@@ -304,19 +304,26 @@ def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens
 
 
 def map_offsets(first_list: List[Tuple[int]], second_list: List[Tuple[int]]):
-    mapping = []
+    full_mapping = []
 
     for i, (start1, end1) in enumerate(first_list):
         if start1 == 0 and end1 == 0:
-            mapping.append(None)
+            full_mapping.append([None])
         else:
             indices = []
             for j, (start2, end2) in enumerate(second_list):
                 if start1 < end2 and end1 > start2:  # check if ranges overlap
                     indices.append(j)
-            mapping.append(indices)
+            full_mapping.append(indices)
 
-    return mapping
+    # just using the main alignments, so that logic for subtoken_pooling with word_ids works fine:
+    simple_list = [e[0] for e in full_mapping]
+
+    # the mappings of the remaining not aligned tokens, used in __extract_token_embeddings
+    # e.g. [13, 14] means that token 14 should be assigned the embedding from token 13 (or mean of 13 and 14, if 14 already has some embedding)
+
+    mappings = [e for e in full_mapping if len(e)>1]
+    return simple_list, mappings
 
 
 class TransformerBaseEmbeddings(Embeddings[Sentence]):
@@ -567,6 +574,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         input_ids = batch_encoding["input_ids"].to(device, non_blocking=True)
         model_kwargs = {"input_ids": input_ids}
 
+        sentence_token_mappings = []
+
         # Models such as FNet do not have an attention_mask
         if "attention_mask" in batch_encoding:
             model_kwargs["attention_mask"] = batch_encoding["attention_mask"].to(device, non_blocking=True)
@@ -620,7 +629,6 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
                 if self.use_raw_text_as_input:
                     word_ids_list = []
-
                     # get the offsets from the flair tokens to align later
                     batch_flair_token_offsets = [[(t.start_position, t.end_position) for t in tokens] for tokens in flair_tokens]
 
@@ -628,21 +636,10 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                         batch_encoding_offsets = batch_encoding[s_i].offsets
                         flair_token_offsets = batch_flair_token_offsets[s_i]
 
-                        word_ids = map_offsets(batch_encoding_offsets, flair_token_offsets)
+                        word_ids, mappings = map_offsets(batch_encoding_offsets, flair_token_offsets)
 
                         word_ids_list.append(word_ids)
-                        # todo right now the (more common) case when the subtokens are part of flair tokens is accounted for
-                        #  the other way around (one subtoken spans several flair tokens) is not really accounted for. These flair tokens (their ids) do not appear in word_ids_list.
-                        #  As a hot fix, they later get the repeated embeddings from the previous token. See __extract_token_embeddings
-                        for token_id in range(len(flair_tokens[s_i])):
-                            if token_id not in [e for l in word_ids if l is not None for e in l ]:
-                                for b_t, ids in zip(batch_encoding[s_i].tokens, word_ids):
-                                    if not ids == None:
-                                        flair_equivalents = [ flair_tokens[s_i][id].text for id in ids ]
-                                    else:
-                                        flair_equivalents = None
-                                    print(b_t, ids, flair_equivalents)
-                                print("Here at least of the flair tokens was not assigned:", token_id)
+                        sentence_token_mappings.append(mappings)
 
                 else:
                     word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
@@ -666,19 +663,16 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                     offsets = new_offsets
                     sentence_lengths = new_lengths
 
-                if not self.use_raw_text_as_input:
-                    word_ids = torch.tensor(
+                word_ids = torch.tensor(
+                    [
                         [
-                            [
-                                -100 if (val is None or val < offset or val >= offset + length) else val - offset
-                                for val in _word_ids
-                            ]
-                            for _word_ids, offset, length in zip(word_ids_list, offsets, sentence_lengths)
-                        ],
-                        device=device,
-                    )
-                else:
-                    word_ids = word_ids_list# todo
+                            -100 if (val is None or val < offset or val >= offset + length) else val - offset
+                            for val in _word_ids
+                        ]
+                        for _word_ids, offset, length in zip(word_ids_list, offsets, sentence_lengths)
+                    ],
+                    device=device,
+                )
                 model_kwargs["word_ids"] = word_ids
             if self.needs_manual_ocr:
                 bbox = [
@@ -699,7 +693,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             else:
                 model_kwargs["pixel_values"] = image_encodings
 
-        return model_kwargs
+        return model_kwargs, sentence_token_mappings
 
     def __gather_flair_tokens(self, sentences: List[Sentence]) -> Tuple[List[List[Token]], List[int], List[int]]:
         offsets = []
@@ -756,29 +750,26 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         for document_emb, sentence in zip(sentence_hidden_states, sentences):
             sentence.set_embedding(self.name, document_emb)
 
-    def __extract_token_embeddings(self, sentence_embeddings, sentences):
+    def __extract_token_embeddings(self, sentence_embeddings, sentences, sentence_token_mapping=[]):
         for token_embeddings, sentence in zip(sentence_embeddings, sentences):
             for token_embedding, token in zip(token_embeddings, sentence):
                 token.set_embedding(self.name, token_embedding)
 
-        if self.use_raw_text_as_input:
-            # when using the raw input and hence alignment, it can happen that a flair token did not get assigned an embedding
-            for token_embeddings, sentence in zip(sentence_embeddings, sentences):
-                previous_token_embedding = None
-                previous_token = None
-                for token_embedding, token in zip(token_embeddings, sentence):
-                    if torch.equal(token_embedding, torch.zeros(self.embedding_length_internal, dtype=token_embeddings.dtype, device=token_embeddings.device)) and previous_token_embedding is not None:
-                        # no embedding found for this token, using the previous one
-                        #print("No embedding for", token, "Using the previous embedding from", previous_token)
-                        token.set_embedding(self.name, previous_token_embedding)
+        # if sentence_token_mapping, these indicate where tokens with so far missing embeddings can get their embedding from
+        for sentence_nr, token_mappings in enumerate(sentence_token_mapping):
+            for mapping in token_mappings:
+                source_embedding = sentences[sentence_nr][mapping[0]].get_embedding(self.name)
+                for target_token in mapping[1:]:
+                    # if already some embedding attached, use the mean:
+                    if torch.count_nonzero(sentences[sentence_nr][target_token].get_embedding(self.name)) > 0:
+                        avg_embedding = torch.mean(torch.stack([sentences[sentence_nr][target_token].get_embedding(self.name), source_embedding]), dim=0)
+                        sentences[sentence_nr][target_token].set_embedding(self.name, avg_embedding)
+                    # else, use the embedding from the source token:
                     else:
-                        token.set_embedding(self.name, token_embedding)
-                        previous_token_embedding = token_embedding
-                        previous_token = token
-
+                        sentences[sentence_nr][target_token].set_embedding(self.name, source_embedding)
 
     def _add_embeddings_internal(self, sentences: List[Sentence]):
-        tensors = self.prepare_tensors(sentences, device=self.force_device)
+        tensors, sentence_token_mappings = self.prepare_tensors(sentences, device=self.force_device)
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
         with gradient_context:
             embeddings = self._forward_tensors(tensors)
@@ -789,7 +780,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         if self.token_embedding:
             token_embedding = embeddings["token_embeddings"]
-            self.__extract_token_embeddings(token_embedding, sentences)
+            self.__extract_token_embeddings(token_embedding, sentences, sentence_token_mappings)
 
 
 @register_embeddings
@@ -1425,7 +1416,6 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                 hidden_states, overflow_to_sample_mapping, self.stride // 2, self.tokenizer.model_max_length, 0
             )
             if self.tokenizer.is_fast and self.token_embedding:
-                # todo here the problem is
                 word_ids = combine_strided_tensors(
                     word_ids, overflow_to_sample_mapping, self.stride // 2, self.tokenizer.model_max_length, -100
                 )
