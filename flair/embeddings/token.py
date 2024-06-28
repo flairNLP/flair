@@ -454,7 +454,7 @@ class CharacterEmbeddings(TokenEmbeddings):
         path_to_char_dict: Optional[Union[str, Dictionary]] = None,
         char_embedding_dim: int = 25,
         hidden_size_char: int = 25,
-        name: str = "Char"
+        name: str = "Char",
     ) -> None:
         """Instantiates a bidirectional lstm layer toi encode words by their character representation.
 
