@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, Iterable, List, NamedTuple, Optional, Union, cast
+from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union, cast
 
 import torch
 from deprecated.sphinx import deprecated
@@ -1354,10 +1354,10 @@ class Corpus(typing.Generic[T_co]):
     def downsample(
         self,
         percentage: float = 0.1,
-        random_seed: Optional[int] = None,
         downsample_train: bool = True,
         downsample_dev: bool = True,
         downsample_test: bool = True,
+        random_seed: Optional[int] = None,
     ):
         """Reduce all datasets in corpus proportionally to the given percentage."""
         if downsample_train and self._train is not None:
@@ -1884,7 +1884,7 @@ def iob2(tags):
 
 def randomly_split_into_two_datasets(
     dataset: Dataset, length_of_first: int, random_seed: Optional[int] = None
-) -> tuple[Subset, Subset]:
+) -> Tuple[Subset, Subset]:
     """Shuffles a dataset and splits into two subsets.
 
     The length of the first is specified and the remaining samples go into the second subset.
