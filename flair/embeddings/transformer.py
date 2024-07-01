@@ -997,11 +997,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         force_max_length: bool = False,
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
-        transformers_tokenizer_kwargs: Dict[str, Any] = dict(),
-        transformers_config_kwargs: Dict[str, Any] = dict(),
-        transformers_model_kwargs: Dict[str, Any] = dict(),
+        transformers_tokenizer_kwargs: Dict[str, Any] = {},
+        transformers_config_kwargs: Dict[str, Any] = {},
+        transformers_model_kwargs: Dict[str, Any] = {},
         peft_config: Optional[Dict[str, Any]] = None,
-        peft_gradient_checkpointing_kwargs: Optional[Dict[str, Any]] = dict(),
+        peft_gradient_checkpointing_kwargs: Optional[Dict[str, Any]] = {},
         **kwargs,
     ) -> None:
         """Instantiate transformers embeddings.
@@ -1028,7 +1028,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             force_max_length: If True, the tokenizer will always pad the sequences to maximum length.
             needs_manual_ocr: If True, bounding boxes will be calculated manually. This is used for models like `layoutlm <https://huggingface.co/docs/transformers/model_doc/layoutlm>`_ where the tokenizer doesn't compute the bounding boxes itself.
             use_context_separator: If True, the embedding will hold an additional token to allow the model to distingulish between context and prediction.
-            peft_config: If set, the model will be trained using adapters:
+            transformers_tokenizer_kwargs: Further values forwarded to the initialization of the transformers tokenizer
+            transformers_config_kwargs: Further values forwarded to the initialization of the transformers config
+            transformers_model_kwargs: Further values forwarded to the initialization of the transformers model
+            peft_gradient_checkpointing_kwargs: Further values used when preparing the model for kbit training. Only used if peft_config is set.
+            peft_config: If set, the model will be trained using adapters and optionally QLoRA
             **kwargs: Further values forwarded to the transformers config
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -1110,8 +1114,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                 raise
 
             if not isinstance(peft_config, PeftConfig):
-                peft_config = PeftConfig(**peft_config)
-            # peft_config.task_type should be set to TaskType.FEATURE_EXTRACTION. Could be checked or even enforced here.
+                if peft_config.get("task_type") is None:
+                    peft_config["task_type"] = TaskType.FEATURE_EXTRACTION
+                peft_config: PeftConfig = PeftConfig(**peft_config)
+            if peft_config.task_type != TaskType.FEATURE_EXTRACTION:
+                log.warn("The task type for PEFT should be set to FEATURE_EXTRACTION, as it is the only supported type")
             if (
                 kwargs.get("load_in_4bit", False)
                 or transformers_model_kwargs.get("load_in_4bit", False)
