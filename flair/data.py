@@ -1271,7 +1271,7 @@ class DataTriple(DataPoint, typing.Generic[DT, DT2, DT3]):
         self.second.to(device, pin_memory)
         self.third.to(device, pin_memory)
 
-    def clear_embeddings(self, embedding_names: List[str] = None):
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         self.first.clear_embeddings(embedding_names)
         self.second.clear_embeddings(embedding_names)
         self.third.clear_embeddings(embedding_names)
