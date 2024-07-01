@@ -13,6 +13,7 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
+from flair.class_utils import get_non_abstract_subclasses
 from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
@@ -137,7 +138,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         # if this class is abstract, go through all inheriting classes and try to fetch and load the model
         if inspect.isabstract(cls):
             # get all non-abstract subclasses
-            subclasses = get_non_abstract_subclasses(cls)
+            subclasses = list(get_non_abstract_subclasses(cls))
 
             # try to fetch the model for each subclass. if fetching is possible, load model and return it
             for model_cls in subclasses:
@@ -339,7 +340,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             true_values_span_aligned = []
             predicted_values_span_aligned = []
             for span in all_spans:
-                list_of_gold_values_for_span = all_true_values[span] if span in all_true_values else ["O"]
+                list_of_gold_values_for_span = all_true_values.get(span, ["O"])
                 # delete exluded labels if exclude_labels is given
                 for excluded_label in exclude_labels:
                     if excluded_label in list_of_gold_values_for_span:
@@ -348,9 +349,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 if not list_of_gold_values_for_span:
                     continue
                 true_values_span_aligned.append(list_of_gold_values_for_span)
-                predicted_values_span_aligned.append(
-                    all_predicted_values[span] if span in all_predicted_values else ["O"]
-                )
+                predicted_values_span_aligned.append(all_predicted_values.get(span, ["O"]))
 
             # write all_predicted_values to out_file if set
             if out_path:
@@ -700,9 +699,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         else:
             return torch.tensor(
                 [
-                    self.label_dictionary.get_idx_for_item(label[0])
-                    if len(label) > 0
-                    else self.label_dictionary.get_idx_for_item("O")
+                    (
+                        self.label_dictionary.get_idx_for_item(label[0])
+                        if len(label) > 0
+                        else self.label_dictionary.get_idx_for_item("O")
+                    )
                     for label in labels
                 ],
                 dtype=torch.long,
@@ -976,14 +977,3 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         from typing import cast
 
         return cast("DefaultClassifier", super().load(model_path=model_path))
-
-
-def get_non_abstract_subclasses(cls):
-    all_subclasses = []
-    for subclass in cls.__subclasses__():
-        all_subclasses.extend(get_non_abstract_subclasses(subclass))
-        if inspect.isabstract(subclass):
-            continue
-        all_subclasses.append(subclass)
-
-    return all_subclasses

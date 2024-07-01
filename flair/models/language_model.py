@@ -215,9 +215,9 @@ class LanguageModel(nn.Module):
     def load_checkpoint(cls, model_file: Union[Path, str]):
         state = torch.load(str(model_file), map_location=flair.device)
 
-        epoch = state["epoch"] if "epoch" in state else None
-        split = state["split"] if "split" in state else None
-        loss = state["loss"] if "loss" in state else None
+        epoch = state.get("epoch")
+        split = state.get("split")
+        loss = state.get("loss")
         document_delimiter = state.get("document_delimiter", "\n")
 
         optimizer_state_dict = state.get("optimizer_state_dict")

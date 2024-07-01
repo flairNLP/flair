@@ -471,7 +471,7 @@ class ColumnDataset(FlairDataset):
         Args:
             path_to_column_file: path to the file with the column-formatted data
             column_name_map: a map specifying the column format
-            column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t" to split only on tabs
+            column_delimiter: default is to split on any separator, but you can overwrite for instance with "\t" to split only on tabs
             comment_symbol: if set, lines that begin with this symbol are treated as comments
             in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
             document_separator_token: If provided, sentences that function as document boundaries are so marked
@@ -2762,14 +2762,12 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
             with (data_folder / "train.txt").open("w", encoding="utf-8") as train, (data_folder / "test.txt").open(
                 "w", encoding="utf-8"
             ) as test, (data_folder / "dev.txt").open("w", encoding="utf-8") as dev:
-                k = 0
-                for line in file.readlines():
-                    k += 1
+                for k, line in enumerate(file.readlines(), start=1):
                     if k <= train_len:
                         train.write(line)
-                    elif k > train_len and k <= (train_len + test_len):
+                    elif train_len < k <= (train_len + test_len):
                         test.write(line)
-                    elif k > (train_len + test_len) and k <= num_lines:
+                    elif (train_len + test_len) < k <= num_lines:
                         dev.write(line)
 
 
@@ -4889,11 +4887,13 @@ class MASAKHA_POS(MultiCorpus):
             "ibo",
             "kin",
             "lug",
+            "luo",
             "mos",
             "pcm",
             "nya",
             "sna",
             "swa",
+            "tsn",
             "twi",
             "wol",
             "xho",
@@ -4938,5 +4938,5 @@ class MASAKHA_POS(MultiCorpus):
             corpora.append(corp)
         super().__init__(
             corpora,
-            name="africa-pos-" + "-".join(languages),
+            name="masakha-pos-" + "-".join(languages),
         )

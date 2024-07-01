@@ -801,6 +801,9 @@ class ModelTrainer(Pluggable):
                 self.return_values["test_score"] = test_results.main_score
 
             else:
+                if (base_path / "best-model.pt").exists():
+                    log.info("Loading model from best epoch ...")
+                    self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
                 self.return_values["test_score"] = 0
                 log.info("Test data not provided setting final score to 0")
 
@@ -816,7 +819,7 @@ class ModelTrainer(Pluggable):
 
     def _get_current_lr_and_momentum(self, batch_count):
         current_learning_rate = [group["lr"] for group in self.optimizer.param_groups]
-        momentum = [group["momentum"] if "momentum" in group else 0 for group in self.optimizer.param_groups]
+        momentum = [group.get("momentum", 0) for group in self.optimizer.param_groups]
         lr_info = " - lr: " + ",".join([f"{m:.6f}" for m in current_learning_rate])
         momentum_info = " - momentum: " + ",".join([f"{m:.6f}" for m in momentum])
         self._record(MetricRecord.scalar_list("learning_rate", current_learning_rate, batch_count))

@@ -1,10 +1,12 @@
 from .clustering import ClusteringModel
 from .entity_linker_model import SpanClassifier
+from .entity_mention_linking import EntityMentionLinker
 from .language_model import LanguageModel
 from .lemmatizer_model import Lemmatizer
 from .multitask_model import MultitaskModel
 from .pairwise_classification_model import TextPairClassifier
 from .pairwise_regression_model import TextPairRegressor
+from .prefixed_tagger import PrefixedSequenceTagger  # This import has to be after SequenceTagger!
 from .regexp_tagger import RegexpTagger
 from .relation_classifier_model import RelationClassifier
 from .relation_extractor_model import RelationExtractor
@@ -15,6 +17,7 @@ from .text_regression_model import TextRegressor
 from .word_tagger_model import TokenClassifier, WordTagger
 
 __all__ = [
+    "EntityMentionLinker",
     "SpanClassifier",
     "LanguageModel",
     "Lemmatizer",
@@ -24,6 +27,7 @@ __all__ = [
     "RelationExtractor",
     "RegexpTagger",
     "SequenceTagger",
+    "PrefixedSequenceTagger",
     "TokenClassifier",
     "WordTagger",
     "FewshotClassifier",

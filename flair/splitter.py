@@ -25,8 +25,16 @@ class SentenceSplitter(ABC):
     the sentence splitter's configuration.
     """
 
+    def split(self, text: str, link_sentences: Optional[bool] = True) -> List[Sentence]:
+        sentences = self._perform_split(text)
+        if not link_sentences:
+            return sentences
+
+        Sentence.set_context_for_sentences(sentences)
+        return sentences
+
     @abstractmethod
-    def split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> List[Sentence]:
         raise NotImplementedError
 
     @property
@@ -54,7 +62,7 @@ class SegtokSentenceSplitter(SentenceSplitter):
         super().__init__()
         self._tokenizer = tokenizer
 
-    def split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> List[Sentence]:
         plain_sentences: List[str] = split_multi(text)
         sentence_offset = 0
 
@@ -125,7 +133,7 @@ class SpacySentenceSplitter(SentenceSplitter):
         else:
             self._tokenizer = tokenizer
 
-    def split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> List[Sentence]:
         document = self.model(text)
 
         sentences = [
@@ -184,7 +192,7 @@ class TagSentenceSplitter(SentenceSplitter):
         self._tokenizer = tokenizer
         self.tag = tag
 
-    def split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> List[Sentence]:
         plain_sentences = text.split(self.tag)
 
         sentences = []
@@ -244,7 +252,7 @@ class NoSentenceSplitter(SentenceSplitter):
         super().__init__()
         self._tokenizer = tokenizer
 
-    def split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> List[Sentence]:
         return [Sentence(text=text, use_tokenizer=self._tokenizer, start_position=0)]
 
     @property

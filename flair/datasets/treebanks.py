@@ -35,7 +35,11 @@ class UniversalDependenciesCorpus(Corpus):
         dev_file, test_file, train_file = find_train_dev_test_files(data_folder, dev_file, test_file, train_file)
 
         # get train data
-        train = UniversalDependenciesDataset(train_file, in_memory=in_memory, split_multiwords=split_multiwords)
+        train = (
+            UniversalDependenciesDataset(train_file, in_memory=in_memory, split_multiwords=split_multiwords)
+            if train_file is not None
+            else None
+        )
 
         # get test data
         test = (
@@ -223,6 +227,7 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -232,7 +237,7 @@ class UD_ENGLISH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_English-EWT/{revision}"
         cached_path(f"{web_path}/en_ewt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/en_ewt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/en_ewt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -246,6 +251,7 @@ class UD_GALICIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -255,7 +261,7 @@ class UD_GALICIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Galician-TreeGal/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Galician-TreeGal/{revision}"
         cached_path(f"{web_path}/gl_treegal-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/gl_treegal-ud-train.conllu", Path("datasets") / dataset_name)
 
@@ -268,6 +274,7 @@ class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -277,7 +284,7 @@ class UD_ANCIENT_GREEK(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Ancient_Greek-PROIEL/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Ancient_Greek-PROIEL/{revision}"
         cached_path(f"{web_path}/grc_proiel-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/grc_proiel-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/grc_proiel-ud-train.conllu", Path("datasets") / dataset_name)
@@ -291,6 +298,7 @@ class UD_KAZAKH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -300,7 +308,7 @@ class UD_KAZAKH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Kazakh-KTB/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Kazakh-KTB/{revision}"
         cached_path(f"{web_path}/kk_ktb-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/kk_ktb-ud-train.conllu", Path("datasets") / dataset_name)
 
@@ -313,6 +321,7 @@ class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -322,7 +331,7 @@ class UD_OLD_CHURCH_SLAVONIC(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Old_Church_Slavonic-PROIEL/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Old_Church_Slavonic-PROIEL/{revision}"
         cached_path(f"{web_path}/cu_proiel-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/cu_proiel-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/cu_proiel-ud-train.conllu", Path("datasets") / dataset_name)
@@ -336,6 +345,7 @@ class UD_ARMENIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -345,7 +355,7 @@ class UD_ARMENIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Armenian-ArmTDP/master/"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Armenian-ArmTDP/{revision}/"
         cached_path(f"{web_path}/hy_armtdp-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/hy_armtdp-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/hy_armtdp-ud-train.conllu", Path("datasets") / dataset_name)
@@ -359,6 +369,7 @@ class UD_ESTONIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -368,7 +379,7 @@ class UD_ESTONIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Estonian-EDT/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Estonian-EDT/{revision}"
         cached_path(f"{web_path}/et_edt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/et_edt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/et_edt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -382,6 +393,7 @@ class UD_GERMAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -391,7 +403,7 @@ class UD_GERMAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_German-GSD/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_German-GSD/{revision}"
         cached_path(f"{ud_path}/de_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/de_gsd-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/de_gsd-ud-train.conllu", Path("datasets") / dataset_name)
@@ -405,6 +417,7 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         split_multiwords: bool = True,
+        revision: str = "dev",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -414,7 +427,7 @@ class UD_GERMAN_HDT(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_German-HDT/dev"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_German-HDT/{revision}"
         cached_path(f"{ud_path}/de_hdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/de_hdt-ud-test.conllu", Path("datasets") / dataset_name)
 
@@ -447,6 +460,7 @@ class UD_DUTCH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -456,7 +470,7 @@ class UD_DUTCH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Dutch-Alpino/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Dutch-Alpino/{revision}"
         cached_path(f"{ud_path}/nl_alpino-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/nl_alpino-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/nl_alpino-ud-train.conllu", Path("datasets") / dataset_name)
@@ -468,7 +482,7 @@ class UD_FAROESE(UniversalDependenciesCorpus):
     """This treebank includes the Faroese treebank dataset.
 
     The data is obtained from the following link:
-    https://github.com/UniversalDependencies/UD_Faroese-FarPaHC/tree/master
+    https://github.com/UniversalDependencies/UD_Faroese-FarPaHC/tree/{revision}
 
     Faronese is a small Western Scandinavian language with 60.000-100.000, related to Icelandic and Old Norse.
     """
@@ -478,6 +492,7 @@ class UD_FAROESE(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -487,7 +502,7 @@ class UD_FAROESE(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Faroese-FarPaHC/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Faroese-FarPaHC/{revision}"
         cached_path(f"{web_path}/fo_farpahc-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/fo_farpahc-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/fo_farpahc-ud-train.conllu", Path("datasets") / dataset_name)
@@ -501,6 +516,7 @@ class UD_FRENCH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -510,7 +526,7 @@ class UD_FRENCH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_French-GSD/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_French-GSD/{revision}"
         cached_path(f"{ud_path}/fr_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/fr_gsd-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/fr_gsd-ud-train.conllu", Path("datasets") / dataset_name)
@@ -523,6 +539,7 @@ class UD_ITALIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -532,7 +549,7 @@ class UD_ITALIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Italian-ISDT/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Italian-ISDT/{revision}"
         cached_path(f"{ud_path}/it_isdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/it_isdt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/it_isdt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -545,6 +562,7 @@ class UD_LATIN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -554,7 +572,7 @@ class UD_LATIN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Latin-LLCT/master/"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Latin-LLCT/{revision}/"
         cached_path(f"{web_path}/la_llct-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/la_llct-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/la_llct-ud-train.conllu", Path("datasets") / dataset_name)
@@ -568,6 +586,7 @@ class UD_SPANISH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -577,7 +596,7 @@ class UD_SPANISH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Spanish-GSD/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Spanish-GSD/{revision}"
         cached_path(f"{ud_path}/es_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/es_gsd-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/es_gsd-ud-train.conllu", Path("datasets") / dataset_name)
@@ -590,6 +609,7 @@ class UD_PORTUGUESE(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -599,7 +619,7 @@ class UD_PORTUGUESE(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Portuguese-Bosque/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Portuguese-Bosque/{revision}"
         cached_path(f"{ud_path}/pt_bosque-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/pt_bosque-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/pt_bosque-ud-train.conllu", Path("datasets") / dataset_name)
@@ -612,6 +632,7 @@ class UD_ROMANIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -621,7 +642,7 @@ class UD_ROMANIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Romanian-RRT/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Romanian-RRT/{revision}"
         cached_path(f"{ud_path}/ro_rrt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ro_rrt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ro_rrt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -634,6 +655,7 @@ class UD_CATALAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -643,7 +665,7 @@ class UD_CATALAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Catalan-AnCora/{revision}"
         cached_path(f"{ud_path}/ca_ancora-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ca_ancora-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ca_ancora-ud-train.conllu", Path("datasets") / dataset_name)
@@ -656,6 +678,7 @@ class UD_POLISH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -665,7 +688,7 @@ class UD_POLISH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Polish-LFG/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Polish-LFG/{revision}"
         cached_path(f"{ud_path}/pl_lfg-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/pl_lfg-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/pl_lfg-ud-train.conllu", Path("datasets") / dataset_name)
@@ -679,6 +702,7 @@ class UD_CZECH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -688,33 +712,20 @@ class UD_CZECH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Czech-PDT/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Czech-PDT/{revision}"
         cached_path(f"{ud_path}/cs_pdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/cs_pdt-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(
-            f"{ud_path}/cs_pdt-ud-train-c.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
-        cached_path(
-            f"{ud_path}/cs_pdt-ud-train-l.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
-        cached_path(
-            f"{ud_path}/cs_pdt-ud-train-m.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
-        cached_path(
-            f"{ud_path}/cs_pdt-ud-train-v.conllu",
-            Path("datasets") / dataset_name / "original",
-        )
+
+        train_suffixes = ["ca", "ct", "la", "lt", "ma", "mt", "va"]
+
+        for train_suffix in train_suffixes:
+            cached_path(
+                f"{ud_path}/cs_pdt-ud-train-{train_suffix}.conllu",
+                Path("datasets") / dataset_name / "original",
+            )
         data_path = flair.cache_root / "datasets" / dataset_name
 
-        train_filenames = [
-            "cs_pdt-ud-train-c.conllu",
-            "cs_pdt-ud-train-l.conllu",
-            "cs_pdt-ud-train-m.conllu",
-            "cs_pdt-ud-train-v.conllu",
-        ]
+        train_filenames = [f"cs_pdt-ud-train-{train_suffix}.conllu" for train_suffix in train_suffixes]
 
         new_train_file: Path = data_path / "cs_pdt-ud-train-all.conllu"
 
@@ -732,6 +743,7 @@ class UD_SLOVAK(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -741,7 +753,7 @@ class UD_SLOVAK(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Slovak-SNK/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Slovak-SNK/{revision}"
         cached_path(f"{ud_path}/sk_snk-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sk_snk-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sk_snk-ud-train.conllu", Path("datasets") / dataset_name)
@@ -755,6 +767,7 @@ class UD_SWEDISH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -764,7 +777,7 @@ class UD_SWEDISH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Swedish-Talbanken/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Swedish-Talbanken/{revision}"
         cached_path(f"{ud_path}/sv_talbanken-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sv_talbanken-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sv_talbanken-ud-train.conllu", Path("datasets") / dataset_name)
@@ -778,6 +791,7 @@ class UD_DANISH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -787,7 +801,7 @@ class UD_DANISH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Danish-DDT/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Danish-DDT/{revision}"
         cached_path(f"{ud_path}/da_ddt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/da_ddt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/da_ddt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -801,6 +815,7 @@ class UD_NORWEGIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -810,7 +825,7 @@ class UD_NORWEGIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Norwegian-Bokmaal/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Norwegian-Bokmaal/{revision}"
         cached_path(f"{ud_path}/no_bokmaal-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/no_bokmaal-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/no_bokmaal-ud-train.conllu", Path("datasets") / dataset_name)
@@ -824,6 +839,7 @@ class UD_FINNISH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -833,7 +849,7 @@ class UD_FINNISH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Finnish-TDT/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Finnish-TDT/{revision}"
         cached_path(f"{ud_path}/fi_tdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/fi_tdt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/fi_tdt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -847,6 +863,7 @@ class UD_SLOVENIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -856,7 +873,7 @@ class UD_SLOVENIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Slovenian-SSJ/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Slovenian-SSJ/{revision}"
         cached_path(f"{ud_path}/sl_ssj-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sl_ssj-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sl_ssj-ud-train.conllu", Path("datasets") / dataset_name)
@@ -870,6 +887,7 @@ class UD_CROATIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -879,7 +897,7 @@ class UD_CROATIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Croatian-SET/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Croatian-SET/{revision}"
         cached_path(f"{ud_path}/hr_set-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/hr_set-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/hr_set-ud-train.conllu", Path("datasets") / dataset_name)
@@ -893,6 +911,7 @@ class UD_SERBIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -902,7 +921,7 @@ class UD_SERBIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Serbian-SET/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Serbian-SET/{revision}"
         cached_path(f"{ud_path}/sr_set-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sr_set-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/sr_set-ud-train.conllu", Path("datasets") / dataset_name)
@@ -916,6 +935,7 @@ class UD_BULGARIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -925,7 +945,7 @@ class UD_BULGARIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Bulgarian-BTB/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Bulgarian-BTB/{revision}"
         cached_path(f"{ud_path}/bg_btb-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/bg_btb-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/bg_btb-ud-train.conllu", Path("datasets") / dataset_name)
@@ -939,6 +959,7 @@ class UD_ARABIC(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -948,7 +969,7 @@ class UD_ARABIC(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Arabic-PADT/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Arabic-PADT/{revision}"
         cached_path(f"{ud_path}/ar_padt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ar_padt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ar_padt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -961,6 +982,7 @@ class UD_HEBREW(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -970,7 +992,7 @@ class UD_HEBREW(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Hebrew-HTB/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Hebrew-HTB/{revision}"
         cached_path(f"{ud_path}/he_htb-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/he_htb-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/he_htb-ud-train.conllu", Path("datasets") / dataset_name)
@@ -983,6 +1005,7 @@ class UD_TURKISH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -995,7 +1018,7 @@ class UD_TURKISH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Turkish-IMST/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Turkish-IMST/{revision}"
         cached_path(f"{ud_path}/tr_imst-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/tr_imst-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/tr_imst-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1005,7 +1028,11 @@ class UD_TURKISH(UniversalDependenciesCorpus):
 
 class UD_UKRAINIAN(UniversalDependenciesCorpus):
     def __init__(
-        self, base_path: Optional[Union[str, Path]] = None, in_memory: bool = True, split_multiwords: bool = True
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1015,7 +1042,7 @@ class UD_UKRAINIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Ukrainian-IU/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Ukrainian-IU/{revision}"
         cached_path(f"{ud_path}/uk_iu-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/uk_iu-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/uk_iu-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1029,6 +1056,7 @@ class UD_PERSIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1041,7 +1069,7 @@ class UD_PERSIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Persian-Seraji/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Persian-Seraji/{revision}"
         cached_path(f"{ud_path}/fa_seraji-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/fa_seraji-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/fa_seraji-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1055,6 +1083,7 @@ class UD_RUSSIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1064,10 +1093,28 @@ class UD_RUSSIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Russian-SynTagRus/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Russian-SynTagRus/{revision}"
         cached_path(f"{ud_path}/ru_syntagrus-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ru_syntagrus-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(f"{ud_path}/ru_syntagrus-ud-train.conllu", Path("datasets") / dataset_name)
+
+        train_filenames = [
+            "ru_syntagrus-ud-train-a.conllu",
+            "ru_syntagrus-ud-train-b.conllu",
+            "ru_syntagrus-ud-train-c.conllu",
+        ]
+
+        for train_file in train_filenames:
+            cached_path(f"{ud_path}/{train_file}", Path("datasets") / dataset_name / "original")
+
+        data_path = flair.cache_root / "datasets" / dataset_name
+
+        new_train_file: Path = data_path / "ru_syntagrus-ud-train-all.conllu"
+
+        if not new_train_file.is_file():
+            with open(new_train_file, "w") as f_out:
+                for train_filename in train_filenames:
+                    with open(data_path / "original" / train_filename) as f_in:
+                        f_out.write(f_in.read())
 
         super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
@@ -1078,6 +1125,7 @@ class UD_HINDI(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1087,7 +1135,7 @@ class UD_HINDI(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Hindi-HDTB/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Hindi-HDTB/{revision}"
         cached_path(f"{ud_path}/hi_hdtb-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/hi_hdtb-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/hi_hdtb-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1101,6 +1149,7 @@ class UD_INDONESIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1110,7 +1159,7 @@ class UD_INDONESIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Indonesian-GSD/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Indonesian-GSD/{revision}"
         cached_path(f"{ud_path}/id_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/id_gsd-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/id_gsd-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1124,6 +1173,7 @@ class UD_JAPANESE(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1133,7 +1183,7 @@ class UD_JAPANESE(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Japanese-GSD/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Japanese-GSD/{revision}"
         cached_path(f"{ud_path}/ja_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ja_gsd-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ja_gsd-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1147,6 +1197,7 @@ class UD_CHINESE(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1156,7 +1207,7 @@ class UD_CHINESE(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Chinese-GSD/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Chinese-GSD/{revision}"
         cached_path(f"{ud_path}/zh_gsd-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/zh_gsd-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/zh_gsd-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1170,6 +1221,7 @@ class UD_KOREAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1179,7 +1231,7 @@ class UD_KOREAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Korean-Kaist/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Korean-Kaist/{revision}"
         cached_path(f"{ud_path}/ko_kaist-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ko_kaist-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/ko_kaist-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1193,6 +1245,7 @@ class UD_BASQUE(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1202,7 +1255,7 @@ class UD_BASQUE(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        ud_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Basque-BDT/master"
+        ud_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Basque-BDT/{revision}"
         cached_path(f"{ud_path}/eu_bdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/eu_bdt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{ud_path}/eu_bdt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1216,6 +1269,7 @@ class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1225,7 +1279,7 @@ class UD_CHINESE_KYOTO(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Classical_Chinese-Kyoto/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Classical_Chinese-Kyoto/{revision}"
         cached_path(f"{web_path}/lzh_kyoto-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/lzh_kyoto-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/lzh_kyoto-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1239,6 +1293,7 @@ class UD_GREEK(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1248,7 +1303,7 @@ class UD_GREEK(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Greek-GDT/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Greek-GDT/{revision}"
         cached_path(f"{web_path}/el_gdt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/el_gdt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/el_gdt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1262,6 +1317,7 @@ class UD_NAIJA(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1271,7 +1327,7 @@ class UD_NAIJA(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Naija-NSC/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Naija-NSC/{revision}"
         cached_path(f"{web_path}//pcm_nsc-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}//pcm_nsc-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}//pcm_nsc-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1285,6 +1341,7 @@ class UD_LIVVI(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1294,7 +1351,7 @@ class UD_LIVVI(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Livvi-KKPP/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Livvi-KKPP/{revision}"
         cached_path(f"{web_path}/olo_kkpp-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/olo_kkpp-ud-train.conllu", Path("datasets") / dataset_name)
 
@@ -1307,6 +1364,7 @@ class UD_BURYAT(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1316,7 +1374,7 @@ class UD_BURYAT(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Buryat-BDT/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Buryat-BDT/{revision}"
         cached_path(f"{web_path}/bxr_bdt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/bxr_bdt-ud-train.conllu", Path("datasets") / dataset_name)
 
@@ -1329,6 +1387,7 @@ class UD_NORTH_SAMI(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1338,7 +1397,7 @@ class UD_NORTH_SAMI(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_North_Sami-Giella/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_North_Sami-Giella/{revision}"
         cached_path(f"{web_path}/sme_giella-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/sme_giella-ud-train.conllu", Path("datasets") / dataset_name)
 
@@ -1351,6 +1410,7 @@ class UD_MARATHI(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1360,7 +1420,7 @@ class UD_MARATHI(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Marathi-UFAL/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Marathi-UFAL/{revision}"
         cached_path(f"{web_path}/mr_ufal-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/mr_ufal-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/mr_ufal-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1374,6 +1434,7 @@ class UD_MALTESE(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1381,7 +1442,7 @@ class UD_MALTESE(UniversalDependenciesCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         data_folder = base_path / dataset_name
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Maltese-MUDT/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Maltese-MUDT/{revision}"
         cached_path(f"{web_path}/mt_mudt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/mt_mudt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/mt_mudt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1395,6 +1456,7 @@ class UD_AFRIKAANS(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1402,7 +1464,7 @@ class UD_AFRIKAANS(UniversalDependenciesCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         data_folder = base_path / dataset_name
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Afrikaans-AfriBooms/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Afrikaans-AfriBooms/{revision}"
         cached_path(f"{web_path}/af_afribooms-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/af_afribooms-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/af_afribooms-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1416,6 +1478,7 @@ class UD_GOTHIC(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1425,7 +1488,7 @@ class UD_GOTHIC(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Gothic-PROIEL/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Gothic-PROIEL/{revision}"
         cached_path(f"{web_path}/got_proiel-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/got_proiel-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/got_proiel-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1439,6 +1502,7 @@ class UD_OLD_FRENCH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1448,10 +1512,11 @@ class UD_OLD_FRENCH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Old_French-SRCMF/master"
-        cached_path(f"{web_path}/fro_srcmf-ud-dev.conllu", Path("datasets") / dataset_name)
-        cached_path(f"{web_path}/fro_srcmf-ud-test.conllu", Path("datasets") / dataset_name)
-        cached_path(f"{web_path}/fro_srcmf-ud-train.conllu", Path("datasets") / dataset_name)
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Old_French-SRCMF/{revision}"
+
+        cached_path(f"{web_path}/fro_profiterole-ud-dev.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/fro_profiterole-ud-test.conllu", Path("datasets") / dataset_name)
+        cached_path(f"{web_path}/fro_profiterole-ud-train.conllu", Path("datasets") / dataset_name)
 
         super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
@@ -1462,6 +1527,7 @@ class UD_WOLOF(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1469,7 +1535,7 @@ class UD_WOLOF(UniversalDependenciesCorpus):
         dataset_name = self.__class__.__name__.lower()
 
         data_folder = base_path / dataset_name
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Wolof-WTB/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Wolof-WTB/{revision}"
         cached_path(f"{web_path}/wo_wtb-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/wo_wtb-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/wo_wtb-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1483,6 +1549,7 @@ class UD_BELARUSIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1492,7 +1559,7 @@ class UD_BELARUSIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Belarusian-HSE/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Belarusian-HSE/{revision}"
         cached_path(f"{web_path}/be_hse-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/be_hse-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/be_hse-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1506,6 +1573,7 @@ class UD_COPTIC(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1515,7 +1583,7 @@ class UD_COPTIC(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Coptic-Scriptorium/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Coptic-Scriptorium/{revision}"
         cached_path(f"{web_path}/cop_scriptorium-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(
             f"{web_path}/cop_scriptorium-ud-test.conllu",
@@ -1535,6 +1603,7 @@ class UD_IRISH(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1544,7 +1613,7 @@ class UD_IRISH(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Irish-IDT/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Irish-IDT/{revision}"
         cached_path(f"{web_path}/ga_idt-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/ga_idt-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/ga_idt-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1558,6 +1627,7 @@ class UD_LATVIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1567,7 +1637,7 @@ class UD_LATVIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Latvian-LVTB/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Latvian-LVTB/{revision}"
         cached_path(f"{web_path}/lv_lvtb-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/lv_lvtb-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/lv_lvtb-ud-train.conllu", Path("datasets") / dataset_name)
@@ -1581,6 +1651,7 @@ class UD_LITHUANIAN(UniversalDependenciesCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         split_multiwords: bool = True,
+        revision: str = "master",
     ) -> None:
         base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
 
@@ -1592,9 +1663,33 @@ class UD_LITHUANIAN(UniversalDependenciesCorpus):
         data_folder = base_path / dataset_name
 
         # download data if necessary
-        web_path = "https://raw.githubusercontent.com/UniversalDependencies/UD_Lithuanian-ALKSNIS/master"
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Lithuanian-ALKSNIS/{revision}"
         cached_path(f"{web_path}/lt_alksnis-ud-dev.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/lt_alksnis-ud-test.conllu", Path("datasets") / dataset_name)
         cached_path(f"{web_path}/lt_alksnis-ud-train.conllu", Path("datasets") / dataset_name)
+
+        super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
+
+class UD_BAVARIAN_MAIBAAM(UniversalDependenciesCorpus):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+        revision: str = "dev",
+    ) -> None:
+        base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # default dataset folder is the cache root
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Bavarian-MaiBaam/{revision}"
+        cached_path(f"{web_path}/bar_maibaam-ud-test.conllu", Path("datasets") / dataset_name)
 
         super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
