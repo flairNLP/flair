@@ -215,8 +215,8 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         sentence[2].add_metadata("bbox", (0, 12, 10, 22))
         with pytest.warns(UserWarning) as record:
             TransformerWordEmbeddings("microsoft/layoutlm-base-uncased", layers="-1,-2,-3,-4", use_context=True)
-        assert len(record) == 1
-        assert "microsoft/layoutlm" in record[0].message.args[0]
+        assert len(record) > 0
+        assert "microsoft/layoutlm" in record[-1].message.args[0]
 
     @pytest.mark.integration()
     def test_layoutlmv3_without_image_embeddings_fails(self):

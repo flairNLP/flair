@@ -217,8 +217,6 @@ class ReduceLRWDOnPlateau(ReduceLROnPlateau):
             with no improvement, and will only decrease the LR after the
             3rd epoch if the loss still hasn't improved then.
             Default: 10.
-        verbose (bool): If ``True``, prints a message to stdout for
-            each update. Default: ``False``.
         threshold (float): Threshold for measuring the new optimum,
             to only focus on significant changes. Default: 1e-4.
         threshold_mode (str): One of `rel`, `abs`. In `rel` mode,

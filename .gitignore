@@ -108,3 +108,4 @@ venv.bak/
 
 resources/taggers/
 regression_train/
+/doc_build/

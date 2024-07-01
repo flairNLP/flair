@@ -12,6 +12,7 @@ and showcases various models we ship with Flair.
    tagging-entities
    tagging-sentiment
    entity-linking
+   entity-mention-linking
    part-of-speech-tagging
    other-models
    how-to-tag-corpus

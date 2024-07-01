@@ -11,3 +11,4 @@ Tutorials
    tutorial-basics/index
    tutorial-training/index
    tutorial-embeddings/index
+   tutorial-hunflair2/index
