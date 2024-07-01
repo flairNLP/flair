@@ -1891,7 +1891,7 @@ def randomly_split_into_two_datasets(
     """
     import random
 
-    indices = list(range(len(dataset)))
+    indices = list(range(_len_dataset(dataset)))
     if random_seed is None:
         random.shuffle(indices)
     else:
