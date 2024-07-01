@@ -221,16 +221,16 @@ class ViterbiDecoder:
             )
 
         if probabilities_for_all_classes:
-            all_tags = self._all_scores_for_token(scores.cpu(), tag_seq, lengths, sentences)
+            all_tags = self._all_scores_for_token(scores.cpu(), decoded.cpu(), lengths, sentences)
 
         return tags, all_tags
 
     def _all_scores_for_token(
-        self, scores: torch.Tensor, tag_seq: torch.IntTensor, lengths: torch.IntTensor, sentences: List[Sentence]
+        self, scores: torch.Tensor, tag_sequences: torch.Tensor, lengths: torch.IntTensor, sentences: List[Sentence]
     ):
         """Returns all scores for each tag in tag dictionary."""
         scores = scores.numpy()
-        for i_batch, batch in enumerate(scores):
+        for i_batch, (batch, tag_seq) in enumerate(zip(scores, tag_sequences)):
             for i, (tag_id, tag_scores) in enumerate(zip(tag_seq, batch)):
                 tag_id_int = tag_id if isinstance(tag_id, int) else int(tag_id.item())
 
