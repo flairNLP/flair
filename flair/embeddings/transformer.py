@@ -1116,7 +1116,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if not isinstance(peft_config, PeftConfig):
                 if peft_config.get("task_type") is None:
                     peft_config["task_type"] = TaskType.FEATURE_EXTRACTION
-                peft_config: PeftConfig = PeftConfig(**peft_config)
+                peft_config = PeftConfig(**peft_config)
             if peft_config.task_type != TaskType.FEATURE_EXTRACTION:
                 log.warn("The task type for PEFT should be set to FEATURE_EXTRACTION, as it is the only supported type")
             if (
