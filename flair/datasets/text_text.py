@@ -463,10 +463,10 @@ class DataTripleCorpus(Corpus):
         separator: str = "\t",
         encoding: str = "utf-8",
     ):
-        """
-        Corpus for tasks involving triplets of sentences or paragraphs. The data files are expected to be in column format where each line has columns
-        for the first sentence/paragraph, the second sentence/paragraph, the third sentence/paragraph, and the labels, respectively.
-        The columns must be separated by a given separator (default: '\t').
+        r"""Corpus for tasks involving triples of sentences or paragraphs.
+
+        The data files are expected to be in column format where each line has a column
+        for the first sentence/paragraph, the second sentence/paragraph, the third sentence/paragraph and the labels, respectively. The columns must be separated by a given separator (default: '\t').
 
         :param data_folder: base folder with the task data
         :param columns: List that indicates the columns for the first sentence (first entry in the list),
@@ -488,7 +488,6 @@ class DataTripleCorpus(Corpus):
 
         :return: a Corpus with annotated train, dev, and test data
         """
-
         # find train, dev, and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(
             data_folder,
@@ -551,7 +550,7 @@ class DataTripleCorpus(Corpus):
             else None
         )
 
-        super(DataTripleCorpus, self).__init__(
+        super().__init__(
             train,
             dev,
             test,
@@ -575,11 +574,12 @@ class DataTripleDataset(FlairDataset):
         encoding: str = "utf-8",
         label: bool = True,
     ):
-        """
-        Creates a Dataset for triplets of sentences/paragraphs. The file needs to be in a column format,
-        where each line has columns for the first sentence/paragraph, the second sentence/paragraph,
-        the third sentence/paragraph, and the label separated by e.g. '\t'.
-        For each data triplet, we create a flair.data.DataTriple object.
+        r"""Creates a Dataset for triples of sentences/paragraphs.
+
+        The file needs to be in a column format,
+        where each line has a column for the first sentence/paragraph, the second sentence/paragraph, the third sentence/paragraph and the label
+        seperated by e.g. '\t' (just like in the glue RTE-dataset https://gluebenchmark.com/tasks) .
+        For each data triple we create a flair.data.DataTriple object.
 
         :param path_to_data: path to the data file
         :param columns: list of integers that indicate the respective columns. The first entry is the column
@@ -595,7 +595,6 @@ class DataTripleDataset(FlairDataset):
         :param encoding: Encoding of the data file
         :param label: If False, the dataset expects unlabeled data
         """
-
         path_to_data = Path(path_to_data)
 
         # stop if the file does not exist
