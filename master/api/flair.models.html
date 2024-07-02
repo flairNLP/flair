@@ -428,6 +428,7 @@ document.write(`
 <li class="toctree-l3"><a class="reference internal" href="#flair.models.LanguageModel"><code class="docutils literal notranslate"><span class="pre">LanguageModel</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.models.Lemmatizer"><code class="docutils literal notranslate"><span class="pre">Lemmatizer</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.models.TextPairClassifier"><code class="docutils literal notranslate"><span class="pre">TextPairClassifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flair.models.TextTripleClassifier"><code class="docutils literal notranslate"><span class="pre">TextTripleClassifier</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.models.TextPairRegressor"><code class="docutils literal notranslate"><span class="pre">TextPairRegressor</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.models.RelationClassifier"><code class="docutils literal notranslate"><span class="pre">RelationClassifier</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flair.models.RelationExtractor"><code class="docutils literal notranslate"><span class="pre">RelationExtractor</span></code></a></li>
@@ -1099,6 +1100,56 @@ If any label’s weight is unspecified it will default to 1.0</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.TextPairClassifier.get_used_tokens">
 <span class="sig-name descname"><span class="pre">get_used_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corpus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_document_boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/pairwise_classification_model.py#L117-L126"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TextPairClassifier.get_used_tokens" title="Permalink to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.models.TextTripleClassifier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.models.</span></span><span class="sig-name descname"><span class="pre">TextTripleClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_separately</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifierargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/triple_classification_model.py#L11-L134"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TextTripleClassifier" title="Permalink to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="flair.nn.html#flair.nn.DefaultClassifier" title="flair.nn.model.DefaultClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultClassifier</span></code></a>[<a class="reference internal" href="flair.data.html#flair.data.DataTriple" title="flair.data.DataTriple"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTriple</span></code></a>[<a class="reference internal" href="flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>, <a class="reference internal" href="flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>, <a class="reference internal" href="flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>], <a class="reference internal" href="flair.data.html#flair.data.DataTriple" title="flair.data.DataTriple"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTriple</span></code></a>[<a class="reference internal" href="flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>, <a class="reference internal" href="flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>, <a class="reference internal" href="flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]]</p>
+<p>Text Triple Classification Model for tasks such as Query-Ad Matching, build upon TextPairClassifier.</p>
+<p>The model takes document embeddings and puts resulting text representation(s) into a linear layer to get the
+actual class label. We provide two ways to embed the DataPairs: Either by embedding both DataPoints
+and concatenating the resulting vectors (“embed_separately=True”) or by concatenating the DataPoints and embedding
+the resulting vector (“embed_separately=False”).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.models.TextTripleClassifier.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_separately</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifierargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/triple_classification_model.py#L20-L66"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TextTripleClassifier.__init__" title="Permalink to this definition">#</a></dt>
+<dd><p>Initializes a TextTripleClassifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – label_type: name of the label</p></li>
+<li><p><strong>embed_separately</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if True, the sentence embeddings will be concatenated,
+if False both sentences will be combined and newly embedded.</p></li>
+<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="embeddings/base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></span>) – embeddings used to embed each data point</p></li>
+<li><p><strong>label_dictionary</strong> – dictionary of labels you want to predict</p></li>
+<li><p><strong>multi_label</strong> – auto-detected by default, but you can set this to True to force multi-label prediction
+or False to force single-label prediction</p></li>
+<li><p><strong>multi_label_threshold</strong> – If multi-label you can set the threshold to make predictions</p></li>
+<li><p><strong>loss_weights</strong> – Dictionary of weights for labels for the loss function.
+If any label’s weight is unspecified it will default to 1.0</p></li>
+<li><p><strong>**classifierargs</strong> – The arguments propagated to <code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.nn.DefaultClassifier.__init__()</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.models.TextTripleClassifier.label_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label_type</span></span><a class="headerlink" href="#flair.models.TextTripleClassifier.label_type" title="Permalink to this definition">#</a></dt>
+<dd><p>Each model predicts labels of a certain type.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.models.TextTripleClassifier.get_used_tokens">
+<span class="sig-name descname"><span class="pre">get_used_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corpus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_document_boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/triple_classification_model.py#L122-L134"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TextTripleClassifier.get_used_tokens" title="Permalink to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span></p>
@@ -2804,6 +2855,12 @@ assignment for this batch is randomly chosen.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.TextPairClassifier.__init__"><code class="docutils literal notranslate"><span class="pre">TextPairClassifier.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.TextPairClassifier.label_type"><code class="docutils literal notranslate"><span class="pre">TextPairClassifier.label_type</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.TextPairClassifier.get_used_tokens"><code class="docutils literal notranslate"><span class="pre">TextPairClassifier.get_used_tokens()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.TextTripleClassifier"><code class="docutils literal notranslate"><span class="pre">TextTripleClassifier</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.TextTripleClassifier.__init__"><code class="docutils literal notranslate"><span class="pre">TextTripleClassifier.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.TextTripleClassifier.label_type"><code class="docutils literal notranslate"><span class="pre">TextTripleClassifier.label_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.TextTripleClassifier.get_used_tokens"><code class="docutils literal notranslate"><span class="pre">TextTripleClassifier.get_used_tokens()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.models.TextPairRegressor"><code class="docutils literal notranslate"><span class="pre">TextPairRegressor</span></code></a><ul class="nav section-nav flex-column">

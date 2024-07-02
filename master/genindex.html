@@ -780,6 +780,10 @@ document.write(`
 </li>
         <li><a href="api/datasets/text_text.html#flair.datasets.text_text.DataPairDataset.__init__">(flair.datasets.text_text.DataPairDataset method)</a>
 </li>
+        <li><a href="api/datasets/text_text.html#flair.datasets.text_text.DataTripleCorpus.__init__">(flair.datasets.text_text.DataTripleCorpus method)</a>
+</li>
+        <li><a href="api/datasets/text_text.html#flair.datasets.text_text.DataTripleDataset.__init__">(flair.datasets.text_text.DataTripleDataset method)</a>
+</li>
         <li><a href="api/datasets/text_text.html#flair.datasets.text_text.GLUE_MNLI.__init__">(flair.datasets.text_text.GLUE_MNLI method)</a>
 </li>
         <li><a href="api/datasets/text_text.html#flair.datasets.text_text.GLUE_MRPC.__init__">(flair.datasets.text_text.GLUE_MRPC method)</a>
@@ -871,6 +875,8 @@ document.write(`
         <li><a href="api/flair.models.html#flair.models.TextPairClassifier.__init__">(flair.models.TextPairClassifier method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.TextPairRegressor.__init__">(flair.models.TextPairRegressor method)</a>
+</li>
+        <li><a href="api/flair.models.html#flair.models.TextTripleClassifier.__init__">(flair.models.TextTripleClassifier method)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.TokenClassifier.__init__">(flair.models.TokenClassifier method)</a>
 </li>
@@ -1232,6 +1238,8 @@ document.write(`
       <ul>
         <li><a href="api/flair.data.html#flair.data.DataPoint.clear_embeddings">(flair.data.DataPoint method)</a>
 </li>
+        <li><a href="api/flair.data.html#flair.data.DataTriple.clear_embeddings">(flair.data.DataTriple method)</a>
+</li>
         <li><a href="api/flair.data.html#flair.data.Sentence.clear_embeddings">(flair.data.Sentence method)</a>
 </li>
       </ul></li>
@@ -1339,6 +1347,12 @@ document.write(`
 </li>
       <li><a href="api/flair.data.html#flair.data.ConcatFlairDataset.datasets">datasets (flair.data.ConcatFlairDataset attribute)</a>
 </li>
+      <li><a href="api/flair.data.html#flair.data.DataTriple">DataTriple (class in flair.data)</a>
+</li>
+      <li><a href="api/datasets/text_text.html#flair.datasets.text_text.DataTripleCorpus">DataTripleCorpus (class in flair.datasets.text_text)</a>
+</li>
+      <li><a href="api/datasets/text_text.html#flair.datasets.text_text.DataTripleDataset">DataTripleDataset (class in flair.datasets.text_text)</a>
+</li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.DECA">DECA (class in flair.datasets.biomedical)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.Lemmatizer.decode">decode() (flair.models.Lemmatizer method)</a>
@@ -1397,12 +1411,12 @@ document.write(`
         <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.MIRNA.download_and_prepare_train">(flair.datasets.biomedical.MIRNA class method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.KaewphanCorpusHelper.download_cll_dataset">download_cll_dataset() (flair.datasets.biomedical.KaewphanCorpusHelper static method)</a>
 </li>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.BioBertHelper.download_corpora">download_corpora() (flair.datasets.biomedical.BioBertHelper static method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/datasets/biomedical.html#flair.datasets.biomedical.ANAT_EM.download_corpus">download_corpus() (flair.datasets.biomedical.ANAT_EM static method)</a>
 
       <ul>
@@ -1523,6 +1537,8 @@ document.write(`
 
       <ul>
         <li><a href="api/flair.data.html#flair.data.DataPoint.embedding">(flair.data.DataPoint property)</a>
+</li>
+        <li><a href="api/flair.data.html#flair.data.DataTriple.embedding">(flair.data.DataTriple property)</a>
 </li>
         <li><a href="api/flair.data.html#flair.data.Image.embedding">(flair.data.Image property)</a>
 </li>
@@ -1699,6 +1715,8 @@ document.write(`
 
       <ul>
         <li><a href="api/flair.data.html#flair.data.DataPoint.end_position">(flair.data.DataPoint property)</a>
+</li>
+        <li><a href="api/flair.data.html#flair.data.DataTriple.end_position">(flair.data.DataTriple property)</a>
 </li>
         <li><a href="api/flair.data.html#flair.data.Image.end_position">(flair.data.Image property)</a>
 </li>
@@ -2376,6 +2394,8 @@ document.write(`
 </li>
         <li><a href="api/flair.models.html#flair.models.TextRegressor.get_used_tokens">(flair.models.TextRegressor method)</a>
 </li>
+        <li><a href="api/flair.models.html#flair.models.TextTripleClassifier.get_used_tokens">(flair.models.TextTripleClassifier method)</a>
+</li>
         <li><a href="api/flair.nn.html#flair.nn.Classifier.get_used_tokens">(flair.nn.Classifier method)</a>
 </li>
       </ul></li>
@@ -2673,8 +2693,6 @@ document.write(`
 </li>
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.MetricRecord.is_histogram">is_histogram (flair.trainers.plugins.MetricRecord property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.data.html#flair.data.FlairDataset.is_in_memory">is_in_memory() (flair.data.FlairDataset method)</a>
 
       <ul>
@@ -2698,6 +2716,8 @@ document.write(`
 </li>
         <li><a href="api/datasets/text_text.html#flair.datasets.text_text.DataPairDataset.is_in_memory">(flair.datasets.text_text.DataPairDataset method)</a>
 </li>
+        <li><a href="api/datasets/text_text.html#flair.datasets.text_text.DataTripleDataset.is_in_memory">(flair.datasets.text_text.DataTripleDataset method)</a>
+</li>
         <li><a href="api/datasets/text_text.html#flair.datasets.text_text.ParallelTextCorpus.is_in_memory">(flair.datasets.text_text.ParallelTextCorpus method)</a>
 </li>
         <li><a href="api/datasets/text_text.html#flair.datasets.text_text.ParallelTextDataset.is_in_memory">(flair.datasets.text_text.ParallelTextDataset method)</a>
@@ -2705,6 +2725,8 @@ document.write(`
         <li><a href="api/datasets/treebanks.html#flair.datasets.treebanks.UniversalDependenciesDataset.is_in_memory">(flair.datasets.treebanks.UniversalDependenciesDataset method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.MetricRecord.is_scalar">is_scalar (flair.trainers.plugins.MetricRecord property)</a>
 </li>
       <li><a href="api/flair.trainers.plugins.html#flair.trainers.plugins.MetricRecord.is_scalar_list">is_scalar_list (flair.trainers.plugins.MetricRecord property)</a>
@@ -2793,6 +2815,8 @@ document.write(`
         <li><a href="api/flair.models.html#flair.models.TextPairRegressor.label_type">(flair.models.TextPairRegressor property)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.TextRegressor.label_type">(flair.models.TextRegressor property)</a>
+</li>
+        <li><a href="api/flair.models.html#flair.models.TextTripleClassifier.label_type">(flair.models.TextTripleClassifier property)</a>
 </li>
         <li><a href="api/flair.models.html#flair.models.TokenClassifier.label_type">(flair.models.TokenClassifier property)</a>
 </li>
@@ -3713,6 +3737,8 @@ document.write(`
       <ul>
         <li><a href="api/flair.data.html#flair.data.DataPoint.start_position">(flair.data.DataPoint property)</a>
 </li>
+        <li><a href="api/flair.data.html#flair.data.DataTriple.start_position">(flair.data.DataTriple property)</a>
+</li>
         <li><a href="api/flair.data.html#flair.data.Image.start_position">(flair.data.Image property)</a>
 </li>
         <li><a href="api/flair.data.html#flair.data.Relation.start_position">(flair.data.Relation property)</a>
@@ -3783,6 +3809,8 @@ document.write(`
       <ul>
         <li><a href="api/flair.data.html#flair.data.DataPoint.text">(flair.data.DataPoint property)</a>
 </li>
+        <li><a href="api/flair.data.html#flair.data.DataTriple.text">(flair.data.DataTriple property)</a>
+</li>
         <li><a href="api/flair.data.html#flair.data.Image.text">(flair.data.Image property)</a>
 </li>
         <li><a href="api/flair.data.html#flair.data.Relation.text">(flair.data.Relation property)</a>
@@ -3806,12 +3834,16 @@ document.write(`
 </li>
       <li><a href="api/flair.models.html#flair.models.TextRegressor">TextRegressor (class in flair.models)</a>
 </li>
+      <li><a href="api/flair.models.html#flair.models.TextTripleClassifier">TextTripleClassifier (class in flair.models)</a>
+</li>
       <li><a href="api/datasets/base.html#flair.datasets.base.DataLoader.timeout">timeout (flair.datasets.base.DataLoader attribute)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.DataPair.to">to() (flair.data.DataPair method)</a>
 
       <ul>
         <li><a href="api/flair.data.html#flair.data.DataPoint.to">(flair.data.DataPoint method)</a>
+</li>
+        <li><a href="api/flair.data.html#flair.data.DataTriple.to">(flair.data.DataTriple method)</a>
 </li>
         <li><a href="api/flair.data.html#flair.data.Sentence.to">(flair.data.Sentence method)</a>
 </li>
@@ -3964,12 +3996,12 @@ document.write(`
 </li>
       <li><a href="api/datasets/entity_linking.html#flair.datasets.entity_linking.InMemoryEntityLinkingDictionary.to_state">to_state() (flair.datasets.entity_linking.InMemoryEntityLinkingDictionary method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.data.html#flair.data.Sentence.to_tagged_string">to_tagged_string() (flair.data.Sentence method)</a>
 </li>
       <li><a href="api/flair.data.html#flair.data.Sentence.to_tokenized_string">to_tokenized_string() (flair.data.Sentence method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/flair.data.html#flair.data.Token">Token (class in flair.data)</a>
 </li>
       <li><a href="api/flair.models.html#flair.models.TokenClassifier">TokenClassifier (class in flair.models)</a>
@@ -4314,6 +4346,8 @@ document.write(`
 
       <ul>
         <li><a href="api/flair.data.html#flair.data.DataPoint.unlabeled_identifier">(flair.data.DataPoint property)</a>
+</li>
+        <li><a href="api/flair.data.html#flair.data.DataTriple.unlabeled_identifier">(flair.data.DataTriple property)</a>
 </li>
         <li><a href="api/flair.data.html#flair.data.Image.unlabeled_identifier">(flair.data.Image property)</a>
 </li>
