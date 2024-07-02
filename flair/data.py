@@ -495,6 +495,7 @@ class EntityCandidate:
 
 DT = typing.TypeVar("DT", bound=DataPoint)
 DT2 = typing.TypeVar("DT2", bound=DataPoint)
+DT3 = typing.TypeVar("DT3", bound=DataPoint)
 
 
 class _PartOfSentence(DataPoint, ABC):
@@ -1256,6 +1257,50 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
 
 
 TextPair = DataPair[Sentence, Sentence]
+
+
+class DataTriple(DataPoint, typing.Generic[DT, DT2, DT3]):
+    def __init__(self, first: DT, second: DT2, third: DT3):
+        super().__init__()
+        self.first = first
+        self.second = second
+        self.third = third
+
+    def to(self, device: str, pin_memory: bool = False):
+        self.first.to(device, pin_memory)
+        self.second.to(device, pin_memory)
+        self.third.to(device, pin_memory)
+
+    def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
+        self.first.clear_embeddings(embedding_names)
+        self.second.clear_embeddings(embedding_names)
+        self.third.clear_embeddings(embedding_names)
+
+    @property
+    def embedding(self):
+        return torch.cat([self.first.embedding, self.second.embedding, self.third.embedding])
+
+    def __len__(self):
+        return len(self.first) + len(self.second) + len(self.third)
+
+    @property
+    def unlabeled_identifier(self):
+        return f"DataTriple: '{self.first.unlabeled_identifier}' + '{self.second.unlabeled_identifier}' + '{self.third.unlabeled_identifier}'"
+
+    @property
+    def start_position(self) -> int:
+        return self.first.start_position
+
+    @property
+    def end_position(self) -> int:
+        return self.first.end_position
+
+    @property
+    def text(self):
+        return self.first.text + " || " + self.second.text + "||" + self.third.text
+
+
+TextTriple = DataTriple[Sentence, Sentence, Sentence]
 
 
 class Image(DataPoint):
