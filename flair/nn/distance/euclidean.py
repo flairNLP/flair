@@ -40,9 +40,7 @@ class EuclideanDistance(nn.Module):
             distance matrix of shape (n_1, n_2)
 
         """
-        _dist = [torch.sum((mat_1 - mat_2[i]) ** 2, dim=1) for i in range(mat_2.size(0))]
-        dist = torch.stack(_dist, dim=1)
-        return dist
+        return torch.cdist(mat_1, mat_2).pow(2)
 
 
 class EuclideanMean(nn.Module):
