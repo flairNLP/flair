@@ -1031,8 +1031,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             transformers_tokenizer_kwargs: Further values forwarded to the initialization of the transformers tokenizer
             transformers_config_kwargs: Further values forwarded to the initialization of the transformers config
             transformers_model_kwargs: Further values forwarded to the initialization of the transformers model
-            peft_gradient_checkpointing_kwargs: Further values used when preparing the model for kbit training. Only used if peft_config is set.
             peft_config: If set, the model will be trained using adapters and optionally QLoRA. Should be of type "PeftConfig" or subtype
+            peft_gradient_checkpointing_kwargs: Further values used when preparing the model for kbit training. Only used if peft_config is set.
             **kwargs: Further values forwarded to the transformers config
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
