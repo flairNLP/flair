@@ -1000,7 +1000,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         transformers_tokenizer_kwargs: Dict[str, Any] = {},
         transformers_config_kwargs: Dict[str, Any] = {},
         transformers_model_kwargs: Dict[str, Any] = {},
-        peft_config_kwargs: Optional[Dict[str, Any]] = None,
+        peft_config=None,
         peft_gradient_checkpointing_kwargs: Optional[Dict[str, Any]] = {},
         **kwargs,
     ) -> None:
@@ -1032,7 +1032,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             transformers_config_kwargs: Further values forwarded to the initialization of the transformers config
             transformers_model_kwargs: Further values forwarded to the initialization of the transformers model
             peft_gradient_checkpointing_kwargs: Further values used when preparing the model for kbit training. Only used if peft_config is set.
-            peft_config_kwargs: If set, the model will be trained using adapters and optionally QLoRA
+            peft_config: If set, the model will be trained using adapters and optionally QLoRA. Should be of type "PeftConfig" or subtype
             **kwargs: Further values forwarded to the transformers config
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
@@ -1100,11 +1100,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if "Please use the model as it is" not in str(e):
                 raise e
 
-        if peft_config_kwargs is not None:
+        if peft_config is not None:
             # add adapters for finetuning
             try:
                 from peft import (
-                    PeftConfig,
                     TaskType,
                     get_peft_model,
                     prepare_model_for_kbit_training,
@@ -1112,10 +1111,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             except ImportError:
                 log.error("You cannot use the PEFT finetuning without peft being installed")
                 raise
-
-            if peft_config_kwargs.get("task_type") is None:
-                peft_config_kwargs["task_type"] = TaskType.FEATURE_EXTRACTION
-            peft_config = PeftConfig(**peft_config_kwargs)
+            # peft_config: PeftConfig
+            if peft_config.task_type is None:
+                peft_config.task_type = TaskType.FEATURE_EXTRACTION
             if peft_config.task_type != TaskType.FEATURE_EXTRACTION:
                 log.warn("The task type for PEFT should be set to FEATURE_EXTRACTION, as it is the only supported type")
             if (
