@@ -153,7 +153,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
     def _filter_data_point(self, pair: TextPair) -> bool:
         return len(pair) > 0
 
-    def _encode_data_points(self, data_points: List[TextPair]):
+    def _encode_data_points(self, data_points: List[TextPair]) -> torch.Tensor:
         # get a tensor of data points
         data_point_tensor = torch.stack([self._get_embedding_for_data_point(data_point) for data_point in data_points])
 
