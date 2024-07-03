@@ -1090,7 +1090,8 @@ class Sentence(DataPoint):
 
             try:
                 self.language_code = langdetect.detect(self.to_plain_string())
-            except Exception:
+            except Exception as e:
+                log.debug(e)
                 self.language_code = "en"
 
         return self.language_code
@@ -1668,7 +1669,9 @@ class Corpus(typing.Generic[T_co]):
                 [f"'{label[0]}' (in {label[1]} sentences)" for label in sentence_label_type_counter.most_common()]
             )
             log.error(f"ERROR: The corpus contains the following label types: {contained_labels}")
-            raise Exception
+            raise ValueError(
+                f"You specified a label type ({label_type}) that is not contained in the corpus:\n{contained_labels}"
+            )
 
         log.info(
             f"Dictionary created for label '{label_type}' with {len(label_dictionary)} "
