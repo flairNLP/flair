@@ -1223,6 +1223,7 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
         super().__init__()
         self.first = first
         self.second = second
+        self.concatenated_data: Optional[Union[DT, DT2]] = None
 
     def to(self, device: str, pin_memory: bool = False):
         self.first.to(device, pin_memory)
@@ -1231,6 +1232,8 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
     def clear_embeddings(self, embedding_names: Optional[List[str]] = None):
         self.first.clear_embeddings(embedding_names)
         self.second.clear_embeddings(embedding_names)
+        if self.concatenated_data is not None:
+            self.concatenated_data.clear_embeddings(embedding_names)
 
     @property
     def embedding(self):
