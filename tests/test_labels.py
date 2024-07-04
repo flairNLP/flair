@@ -189,9 +189,9 @@ def test_relation_tags():
     sentence = Sentence("Humboldt Universität zu Berlin is located in Berlin .")
 
     # create two relation label
-    Relation(sentence[0:4], sentence[7:8]).add_label("rel", "located in")
-    Relation(sentence[0:2], sentence[3:4]).add_label("rel", "university of")
-    Relation(sentence[0:2], sentence[3:4]).add_label("syntactic", "apposition")
+    sentence[sentence[0:4], sentence[7:8]].add_label("rel", "located in")
+    sentence[sentence[0:2], sentence[3:4]].add_label("rel", "university of")
+    sentence[sentence[0:2], sentence[3:4]].add_label("syntactic", "apposition")
 
     # there should be two relation labels
     labels: List[Label] = sentence.get_labels("rel")
