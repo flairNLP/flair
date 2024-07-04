@@ -4903,7 +4903,7 @@ class NOISY_NER_EST(ColumnCorpus):
     def _load_features(cls, base_path) -> List[List[str]]:
         print(base_path)
         unpack_file(cached_path(cls.data_url, base_path), base_path, "zip", False)
-        with open(f"{base_path}/estner.cnll") as in_file:
+        with open(f"{base_path}/estner.cnll", encoding="utf-8") as in_file:
             prefeatures = in_file.readlines()
         features = [feature.strip().split("\t") for feature in prefeatures]
         return features
@@ -4922,7 +4922,7 @@ class NOISY_NER_EST(ColumnCorpus):
     def _load_noisy_labels(cls, version, base_path) -> List[str]:
         file_name = f"NoisyNER_labelset{version}.labels"
         cached_path(f"{cls.label_url}/{file_name}", base_path)
-        with open(f"{base_path}/{file_name}") as in_file:
+        with open(f"{base_path}/{file_name}", encoding="utf-8") as in_file:
             labels = in_file.read().splitlines()
         return labels
 
@@ -4964,7 +4964,7 @@ class NOISY_NER_EST(ColumnCorpus):
     @classmethod
     def _write_instances(cls, version, base_path, split, data):
         column_separator = "\t"  # CoNLL format
-        with open(f"{base_path}/estner_noisy_labelset{version}_{split}.tsv", "w") as out_file:
+        with open(f"{base_path}/estner_noisy_labelset{version}_{split}.tsv", "w", encoding="utf-8") as out_file:
             for instance in data:
                 out_file.write(column_separator.join(instance))
                 out_file.write("\n")
