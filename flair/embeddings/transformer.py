@@ -1117,9 +1117,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if peft_config.task_type != TaskType.FEATURE_EXTRACTION:
                 log.warn("The task type for PEFT should be set to FEATURE_EXTRACTION, as it is the only supported type")
             if (
-                "load_in_4bit" in kwargs | transformers_model_kwargs
-                or "load_in_8bit" in kwargs | transformers_model_kwargs
-                or "quantization_config" in kwargs | transformers_model_kwargs
+                "load_in_4bit" in {**kwargs, **transformers_model_kwargs}
+                or "load_in_8bit" in {**kwargs, **transformers_model_kwargs}
+                or "quantization_config" in {**kwargs, **transformers_model_kwargs}
             ):
                 transformer_model = prepare_model_for_kbit_training(
                     transformer_model,
