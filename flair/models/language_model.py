@@ -17,6 +17,9 @@ class LanguageModelTokenizer:
     def encode(self, texts: List[str]) -> torch.Tensor:
         pass
 
+    def decode(self, id: int) -> str:
+        pass
+
     def vocab_size(self) -> int:
         pass
 
@@ -40,6 +43,11 @@ class CharacterTokenizer(LanguageModelTokenizer):
 
     def vocab_size(self) -> int:
         return len(self.dictionary)
+
+    def decode(self, id: int) -> str:
+
+        word = self.dictionary.get_item_for_index(id)
+        return word
 
 
 class SubwordTokenizer(LanguageModelTokenizer):
@@ -166,7 +174,7 @@ class LanguageModel(nn.Module):
     ):
         len_longest_str: int = len(max(strings, key=len))
 
-        # pad strings with whitespaces to longest sentence
+        # pad strings with whitespaces to the longest sentence
         padded_strings: List[str] = []
 
         for string in strings:
@@ -187,16 +195,18 @@ class LanguageModel(nn.Module):
         chunks.append([text[splice_begin:longest_padded_str] for text in padded_strings])
         hidden = self.init_hidden(len(chunks[0]))
 
-        padding_char_index = self.dictionary.get_idx_for_item(" ")
-
         batches: List[torch.Tensor] = []
         # push each chunk through the RNN language model
         for chunk in chunks:
+            print(chunks)
+
             len_longest_chunk: int = len(max(chunk, key=len))
+            print(len_longest_chunk)
             sequences_as_char_indices: List[List[int]] = []
+            print(len_longest_chunk)
             for string in chunk:
                 char_indices = self.dictionary.get_idx_for_items(list(string))
-                char_indices += [padding_char_index] * (len_longest_chunk - len(string))
+                char_indices += [self.dictionary.get_idx_for_item(" ")] * (len_longest_chunk - len(string))
 
                 sequences_as_char_indices.append(char_indices)
             t = torch.tensor(sequences_as_char_indices, dtype=torch.long).to(device=flair.device, non_blocking=True)
@@ -241,8 +251,11 @@ class LanguageModel(nn.Module):
 
         document_delimiter = state.get("document_delimiter", "\n")
         has_decoder = state.get("has_decoder", True) and has_decoder
+
+        tokenizer = state.get("tokenizer", CharacterTokenizer(state["dictionary"]))
+
         model = cls(
-            tokenizer=state["tokenizer"],
+            tokenizer=tokenizer,
             is_forward_lm=state["is_forward_lm"],
             hidden_size=state["hidden_size"],
             nlayers=state["nlayers"],
@@ -303,7 +316,7 @@ class LanguageModel(nn.Module):
     ):
         model_state = {
             "state_dict": self.state_dict(),
-            "dictionary": self.dictionary,
+            "tokenizer": self.tokenizer,
             "is_forward_lm": self.is_forward_lm,
             "hidden_size": self.hidden_size,
             "nlayers": self.nlayers,
@@ -351,26 +364,18 @@ class LanguageModel(nn.Module):
         with torch.no_grad():
             characters = []
 
-            # idx2item = self.dictionary.idx2item
-
             # initial hidden state
             hidden = self.init_hidden(1)
 
-            input = self.tokenizer.encode([prefix]).to(flair.device).unsqueeze(0)
+            input = self.tokenizer.encode([prefix]).to(flair.device).unsqueeze(0).transpose(0, 1)
 
-            print(input.size())
-            print(input)
-            asd
+            if input.size(0) > 1:
 
-            if input.size(1) > 1:
-
-                all_until_last = input[0, :-1]
-                print(all_until_last.size())
+                all_until_last = input[:-1]
 
                 prediction, _, hidden = self.forward(all_until_last, hidden)
 
-            input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
-
+            input = input[-1].unsqueeze(0)
             log_prob = torch.zeros(1, device=flair.device)
 
             for _i in range(number_of_characters):
@@ -403,7 +408,7 @@ class LanguageModel(nn.Module):
                 log_prob += prob
 
                 input = word_idx.detach().unsqueeze(0).unsqueeze(0)
-                word = idx2item[word_idx].decode("UTF-8")
+                word = self.tokenizer.decode(word_idx)
                 characters.append(word)
 
                 if break_on_suffix is not None and "".join(characters).endswith(break_on_suffix):
