@@ -196,6 +196,9 @@ class LanguageModelTrainer:
 
         val_data = self._batchify(self.corpus.valid, mini_batch_size)
 
+        if isinstance(flair.device, str):
+            flair.device = torch.device(flair.device)
+
         # error message if the validation dataset is too small
         if val_data.size(0) == 1:
             raise RuntimeError(
@@ -282,7 +285,7 @@ class LanguageModelTrainer:
 
                         self.model.zero_grad()
                         optimizer.zero_grad()
-                        with torch.autocast(device_type=flair.device, enabled=use_amp):
+                        with torch.autocast(device_type=flair.device.type, enabled=use_amp):
                             # do the forward pass in the model
                             output, rnn_output, hidden = self.model.forward(data, hidden)
 
