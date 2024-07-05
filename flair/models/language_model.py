@@ -17,7 +17,7 @@ class LanguageModelTokenizer:
     def encode(self, texts: List[str]) -> torch.Tensor:
         pass
 
-    def decode(self, id: int) -> str:
+    def decode(self, ids: List[int]) -> str:
         pass
 
     def vocab_size(self) -> int:
@@ -44,10 +44,10 @@ class CharacterTokenizer(LanguageModelTokenizer):
     def vocab_size(self) -> int:
         return len(self.dictionary)
 
-    def decode(self, id: int) -> str:
+    def decode(self, ids: List[int]) -> str:
 
-        word = self.dictionary.get_item_for_index(id)
-        return word
+        words = [self.dictionary.get_item_for_index(id) for id in ids]
+        return "".join(words)
 
 
 class SubwordTokenizer(LanguageModelTokenizer):
@@ -65,6 +65,10 @@ class SubwordTokenizer(LanguageModelTokenizer):
 
     def vocab_size(self) -> int:
         return len(self.subtokenizer)
+
+    def decode(self, ids: List[int]) -> str:
+        words = self.subtokenizer.decode(ids, clean_up_tokenization_spaces=False)
+        return words
 
 
 class LanguageModel(nn.Module):
@@ -198,18 +202,11 @@ class LanguageModel(nn.Module):
         batches: List[torch.Tensor] = []
         # push each chunk through the RNN language model
         for chunk in chunks:
-            print(chunks)
 
-            len_longest_chunk: int = len(max(chunk, key=len))
-            print(len_longest_chunk)
-            sequences_as_char_indices: List[List[int]] = []
-            print(len_longest_chunk)
+            sequences_as_char_indices = []
             for string in chunk:
-                char_indices = self.dictionary.get_idx_for_items(list(string))
-                char_indices += [self.dictionary.get_idx_for_item(" ")] * (len_longest_chunk - len(string))
-
-                sequences_as_char_indices.append(char_indices)
-            t = torch.tensor(sequences_as_char_indices, dtype=torch.long).to(device=flair.device, non_blocking=True)
+                sequences_as_char_indices.append(self.tokenizer.encode([string]).unsqueeze(0))
+            t = torch.cat(sequences_as_char_indices).to(flair.device)
             batches.append(t)
 
         output_parts = []
@@ -249,10 +246,12 @@ class LanguageModel(nn.Module):
     def load_language_model(cls, model_file: Union[Path, str], has_decoder=True):
         state = torch.load(str(model_file), map_location=flair.device)
 
+        print(state.keys())
+
         document_delimiter = state.get("document_delimiter", "\n")
         has_decoder = state.get("has_decoder", True) and has_decoder
 
-        tokenizer = state.get("tokenizer", CharacterTokenizer(state["dictionary"]))
+        tokenizer = state.get("tokenizer", CharacterTokenizer(state.get("dictionary", "chars")))
 
         model = cls(
             tokenizer=tokenizer,
@@ -362,7 +361,7 @@ class LanguageModel(nn.Module):
             prefix = "\n"
 
         with torch.no_grad():
-            characters = []
+            decoded_ids: List[int] = []
 
             # initial hidden state
             hidden = self.init_hidden(1)
@@ -408,16 +407,12 @@ class LanguageModel(nn.Module):
                 log_prob += prob
 
                 input = word_idx.detach().unsqueeze(0).unsqueeze(0)
-                word = self.tokenizer.decode(word_idx)
-                characters.append(word)
+                decoded_ids.append(input.item())
 
-                if break_on_suffix is not None and "".join(characters).endswith(break_on_suffix):
-                    break
-
-            text = prefix + "".join(characters)
+            text = prefix + self.tokenizer.decode(decoded_ids)
 
             log_prob_float = log_prob.item()
-            log_prob_float /= len(characters)
+            log_prob_float /= len(decoded_ids)
 
             if not self.is_forward_lm:
                 text = text[::-1]
