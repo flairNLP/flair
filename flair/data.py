@@ -157,6 +157,18 @@ class Dictionary:
             self.__dict__["add_unk"] = b"<unk>" in self.__dict__["idx2item"]
 
     @classmethod
+    def load_subtoken_dictionary(cls, tokenizer):
+
+        dictionary: Dictionary = Dictionary(add_unk=False)
+
+        sorted_vocab = {k: v for k, v in sorted(tokenizer.get_vocab().items(), key=lambda item: item[1])}
+
+        for item in sorted_vocab:
+            dictionary.add_item(item)
+
+        return dictionary
+
+    @classmethod
     def load_from_file(cls, filename: Union[str, Path]):
         import pickle
 

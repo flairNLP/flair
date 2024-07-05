@@ -5,10 +5,58 @@ from typing import List, Optional, Tuple, Union
 import torch
 from torch import logsumexp, nn
 from torch.optim import Optimizer
+from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
 import flair
 from flair.data import Dictionary
 from flair.nn.recurrent import create_recurrent_layer
+
+
+class LanguageModelTokenizer:
+
+    def encode(self, texts: List[str]) -> torch.Tensor:
+        pass
+
+    def vocab_size(self) -> int:
+        pass
+
+
+class CharacterTokenizer(LanguageModelTokenizer):
+
+    def __init__(self, dictionary: Union[str, Dictionary] = "chars"):
+
+        if isinstance(dictionary, str):
+            self.dictionary: Dictionary = Dictionary.load(dictionary)
+        else:
+            self.dictionary: Dictionary = dictionary
+
+    def encode(self, texts: List[str]) -> torch.Tensor:
+        lines = [list(line) for line in texts]
+        ids = torch.tensor(
+            [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars],
+            dtype=torch.long,
+        )
+        return ids
+
+    def vocab_size(self) -> int:
+        return len(self.dictionary)
+
+
+class SubwordTokenizer(LanguageModelTokenizer):
+    def __init__(self, subtokenizer: Union[str, PreTrainedTokenizerBase]):
+
+        if isinstance(subtokenizer, str):
+            self.subtokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(subtokenizer)
+        else:
+            self.subtokenizer = subtokenizer
+
+    def encode(self, texts: List[str]) -> torch.Tensor:
+        lines = "".join(texts)
+        ids = self.subtokenizer(lines, return_tensors="pt").input_ids.flatten()
+        return ids
+
+    def vocab_size(self) -> int:
+        return len(self.subtokenizer)
 
 
 class LanguageModel(nn.Module):
@@ -16,7 +64,7 @@ class LanguageModel(nn.Module):
 
     def __init__(
         self,
-        dictionary: Dictionary,
+        tokenizer: LanguageModelTokenizer,
         is_forward_lm: bool,
         hidden_size: int,
         nlayers: int,
@@ -29,7 +77,7 @@ class LanguageModel(nn.Module):
     ) -> None:
         super().__init__()
 
-        self.dictionary = dictionary
+        self.tokenizer = tokenizer
         self.document_delimiter = document_delimiter
         self.is_forward_lm: bool = is_forward_lm
 
@@ -39,7 +87,7 @@ class LanguageModel(nn.Module):
         self.nlayers = nlayers
 
         self.drop = nn.Dropout(dropout)
-        self.encoder = nn.Embedding(len(dictionary), embedding_size)
+        self.encoder = nn.Embedding(self.tokenizer.vocab_size(), embedding_size)
 
         self.rnn, self.state_count = create_recurrent_layer(
             recurrent_type, embedding_size, hidden_size, nlayers, dropout
@@ -55,7 +103,7 @@ class LanguageModel(nn.Module):
         else:
             self.proj = None
         if has_decoder:
-            self.decoder: Optional[nn.Linear] = nn.Linear(hidden_size, len(dictionary))
+            self.decoder: Optional[nn.Linear] = nn.Linear(hidden_size, self.tokenizer.vocab_size())
         else:
             self.decoder = None
 
@@ -194,7 +242,7 @@ class LanguageModel(nn.Module):
         document_delimiter = state.get("document_delimiter", "\n")
         has_decoder = state.get("has_decoder", True) and has_decoder
         model = cls(
-            dictionary=state["dictionary"],
+            tokenizer=state["tokenizer"],
             is_forward_lm=state["is_forward_lm"],
             hidden_size=state["hidden_size"],
             nlayers=state["nlayers"],
@@ -276,7 +324,7 @@ class LanguageModel(nn.Module):
     def save(self, file: Union[Path, str]):
         model_state = {
             "state_dict": self.state_dict(),
-            "dictionary": self.dictionary,
+            "tokenizer": self.tokenizer,
             "is_forward_lm": self.is_forward_lm,
             "hidden_size": self.hidden_size,
             "nlayers": self.nlayers,
@@ -303,21 +351,22 @@ class LanguageModel(nn.Module):
         with torch.no_grad():
             characters = []
 
-            idx2item = self.dictionary.idx2item
+            # idx2item = self.dictionary.idx2item
 
             # initial hidden state
             hidden = self.init_hidden(1)
 
-            if len(prefix) > 1:
-                char_tensors = []
-                for character in prefix[:-1]:
-                    char_tensors.append(
-                        torch.tensor(self.dictionary.get_idx_for_item(character)).unsqueeze(0).unsqueeze(0)
-                    )
+            input = self.tokenizer.encode([prefix]).to(flair.device).unsqueeze(0)
 
-                input = torch.cat(char_tensors).to(flair.device)
+            print(input.size())
+            print(input)
 
-                prediction, _, hidden = self.forward(input, hidden)
+            if input.size(1) > 1:
+
+                all_until_last = input[0, :-1]
+                print(all_until_last.size())
+
+                prediction, _, hidden = self.forward(all_until_last, hidden)
 
             input = torch.tensor(self.dictionary.get_idx_for_item(prefix[-1])).unsqueeze(0).unsqueeze(0)
 

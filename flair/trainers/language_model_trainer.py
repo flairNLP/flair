@@ -4,7 +4,7 @@ import math
 import random
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional, Type, Union
+from typing import Any, Dict, Iterable, Optional, Type, Union, List
 
 import torch
 from torch import cuda
@@ -12,10 +12,12 @@ from torch.optim import AdamW, Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim.sgd import SGD
 from torch.utils.data import DataLoader, Dataset
+from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 import flair
 from flair.data import Dictionary
 from flair.models import LanguageModel
+from flair.models.language_model import LanguageModelTokenizer
 from flair.optim import SGDW, ReduceLRWDOnPlateau
 from flair.training_utils import add_file_handler
 
@@ -26,10 +28,9 @@ class TextDataset(Dataset):
     def __init__(
         self,
         path: Union[str, Path],
-        dictionary: Dictionary,
+        tokenizer: LanguageModelTokenizer,
         expand_vocab: bool = False,
         forward: bool = True,
-        split_on_char: bool = True,
         random_case_flip: bool = True,
         document_delimiter: str = "\n",
         shuffle: bool = True,
@@ -38,13 +39,12 @@ class TextDataset(Dataset):
         assert path.exists()
 
         self.path = path
-        self.dictionary = dictionary
-        self.split_on_char = split_on_char
         self.forward = forward
         self.random_case_flip = random_case_flip
         self.expand_vocab = expand_vocab
         self.document_delimiter = document_delimiter
         self.shuffle = shuffle
+        self.tokenizer = tokenizer
 
         if path.is_dir():
             self.files = sorted([f for f in path.iterdir() if f.exists()])
@@ -61,28 +61,30 @@ class TextDataset(Dataset):
         assert self.files[index].exists()
 
         with self.files[index].open("r", encoding="utf-8") as fin:
-            text_lines: Iterable[str] = (
+            text_lines: List[str] = [
                 doc + self.document_delimiter for doc in fin.read().split(self.document_delimiter) if doc
-            )
+            ]
             if self.random_case_flip:
-                text_lines = map(self.random_casechange, text_lines)
-            lines = [list(line) if self.split_on_char else line.split() for line in text_lines]
+                text_lines = [self.random_casechange(line) for line in text_lines]
 
-        log.info(f"read text file with {len(lines)} lines")
+        log.info(f"read text file with {len(text_lines)} texts, delimited by {self.document_delimiter}")
 
         if self.shuffle:
-            random.shuffle(lines)
+            random.shuffle(text_lines)
             log.info("shuffled")
 
-        if self.expand_vocab:
-            for chars in lines:
-                for char in chars:
-                    self.dictionary.add_item(char)
+        ids = self.tokenizer.encode(text_lines)
 
-        ids = torch.tensor(
-            [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars],
-            dtype=torch.long,
-        )
+        # if self.tokenizer == "Char":
+        #     lines = [list(line) for line in text_lines]
+        #     ids = torch.tensor(
+        #         [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars],
+        #         dtype=torch.long,
+        #     )
+        # if isinstance(self.tokenizer, PreTrainedTokenizerBase):
+        #     lines = "".join(text_lines)
+        #     ids = self.tokenizer(lines, return_tensors="pt").input_ids.flatten()
+
         if not self.forward:
             ids = ids.flip(0)
         return ids
@@ -101,27 +103,24 @@ class TextCorpus:
     def __init__(
         self,
         path: Union[Path, str],
-        dictionary: Dictionary,
+        tokenizer: LanguageModelTokenizer,
         forward: bool = True,
-        character_level: bool = True,
         random_case_flip: bool = True,
         document_delimiter: str = "\n",
     ) -> None:
-        self.dictionary: Dictionary = dictionary
         self.forward = forward
-        self.split_on_char = character_level
+        self.tokenizer = tokenizer
         self.random_case_flip = random_case_flip
         self.document_delimiter: str = document_delimiter
 
         path = Path(path)
 
         self.train = TextDataset(
-            path / "train",
-            dictionary,
-            False,
-            self.forward,
-            self.split_on_char,
-            self.random_case_flip,
+            path=path / "train",
+            tokenizer=self.tokenizer,
+            expand_vocab=False,
+            forward=self.forward,
+            random_case_flip=self.random_case_flip,
             document_delimiter=self.document_delimiter,
             shuffle=True,
         )
@@ -130,23 +129,21 @@ class TextCorpus:
         # so return the first element
         self.valid = TextDataset(
             path / "valid.txt",
-            dictionary,
-            False,
-            self.forward,
-            self.split_on_char,
-            self.random_case_flip,
-            document_delimiter=document_delimiter,
-            shuffle=False,
+            tokenizer=self.tokenizer,
+            expand_vocab=False,
+            forward=self.forward,
+            random_case_flip=self.random_case_flip,
+            document_delimiter=self.document_delimiter,
+            shuffle=True,
         )[0]
         self.test = TextDataset(
             path / "test.txt",
-            dictionary,
-            False,
-            self.forward,
-            self.split_on_char,
-            self.random_case_flip,
-            document_delimiter=document_delimiter,
-            shuffle=False,
+            tokenizer=self.tokenizer,
+            expand_vocab=False,
+            forward=self.forward,
+            random_case_flip=self.random_case_flip,
+            document_delimiter=self.document_delimiter,
+            shuffle=True,
         )[0]
 
 
@@ -271,7 +268,7 @@ class LanguageModelTrainer:
                     hidden = self.model.init_hidden(mini_batch_size)
 
                     # not really sure what this does
-                    ntokens = len(self.corpus.dictionary)
+                    ntokens = self.corpus.tokenizer.vocab_size()
 
                     total_loss = torch.zeros(1, device=flair.device)
                     start_time = time.time()
@@ -279,13 +276,13 @@ class LanguageModelTrainer:
                     for batch, i in enumerate(range(0, train_data.size(0) - 1, sequence_length)):
                         data, targets = self._get_batch(train_data, i, sequence_length)
 
-                        if not data.is_cuda and cuda.is_available():
-                            log.info("Batch %d is not on CUDA, training will be very slow" % (batch))
-                            raise Exception("data isnt on cuda")
+                        # if not data.is_cuda and cuda.is_available():
+                        #     log.info("Batch %d is not on CUDA, training will be very slow" % (batch))
+                        # raise Exception("data isnt on cuda")
 
                         self.model.zero_grad()
                         optimizer.zero_grad()
-                        with torch.autocast(device_type=flair.device.type, enabled=use_amp):
+                        with torch.autocast(device_type=flair.device, enabled=use_amp):
                             # do the forward pass in the model
                             output, rnn_output, hidden = self.model.forward(data, hidden)
 
@@ -397,7 +394,7 @@ class LanguageModelTrainer:
 
         with torch.no_grad():
             total_loss = 0
-            ntokens = len(self.corpus.dictionary)
+            ntokens = self.corpus.tokenizer.vocab_size()
 
             hidden = self.model.init_hidden(eval_batch_size)
 
