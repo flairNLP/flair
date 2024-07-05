@@ -360,6 +360,7 @@ class LanguageModel(nn.Module):
 
             print(input.size())
             print(input)
+            asd
 
             if input.size(1) > 1:
 
