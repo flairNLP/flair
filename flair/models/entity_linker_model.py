@@ -164,9 +164,8 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
         return sentence.get_spans(self.label_type)
 
     def _filter_data_point(self, data_point: Sentence) -> bool:
-        if self._span_label_type is not None:
-            if bool(data_point.get_labels(self._span_label_type)):
-                return True
+        if self._span_label_type is not None and bool(data_point.get_labels(self._span_label_type)):
+            return True
         return bool(data_point.get_labels(self.label_type))
 
     def _get_embedding_for_data_point(self, prediction_data_point: Span) -> torch.Tensor:
