@@ -73,7 +73,7 @@ class TextDataset(Dataset):
             random.shuffle(text_lines)
             log.info("shuffled")
 
-        ids = self.tokenizer.encode(text_lines)
+        ids = self.tokenizer.encode_as_sequence(text_lines)
 
         # if self.tokenizer == "Char":
         #     lines = [list(line) for line in text_lines]

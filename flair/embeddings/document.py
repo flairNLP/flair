@@ -581,7 +581,7 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         # convert to plain strings, embedded in a list for the encode function
         sentences_plain_text = [sentence.to_plain_string() for sentence in sentences]
 
-        embeddings = self.model.encode(sentences_plain_text, convert_to_numpy=False)
+        embeddings = self.model.encode_as_sequence(sentences_plain_text, convert_to_numpy=False)
         for sentence, embedding in zip(sentences, embeddings):
             sentence.set_embedding(self.name, embedding)
 

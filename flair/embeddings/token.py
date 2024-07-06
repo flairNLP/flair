@@ -781,7 +781,7 @@ class FlairEmbeddings(TokenEmbeddings):
         self.chars_per_chunk: int = chars_per_chunk
 
         # embed a dummy sentence to determine embedding_length
-        dummy_sentence: Sentence = Sentence("hello")
+        dummy_sentence: Sentence = Sentence("hello world")
         embedded_dummy = self.embed(dummy_sentence)
         self.__embedding_length: int = len(embedded_dummy[0][0].get_embedding())
 
@@ -824,34 +824,37 @@ class FlairEmbeddings(TokenEmbeddings):
 
             # take first or last hidden states from language model as word representation
             for i, sentence in enumerate(sentences):
-                sentence_text = sentence.to_tokenized_string() if self.tokenized_lm else sentence.to_plain_string()
 
-                offset_forward: int = len(start_marker)
-                offset_backward: int = len(sentence_text) + len(start_marker)
+                sequences = []
+                tokens = []
+
+                text = text_sentences[i]
+                encoded = self.lm.tokenizer.encode_as_sequence([f"{start_marker}{text}{end_marker}"])
+                # print(encoded)
+                for j in range(encoded.size(0)):
+                    sequences.append(self.lm.tokenizer.decode(encoded[:j]))
+                # print(sequences)
 
                 for token in sentence.tokens:
-                    offset_forward += len(token.text)
-                    if self.is_forward_lm:
-                        offset_with_whitespace = offset_forward
-                        offset_without_whitespace = offset_forward - 1
+                    sequence = self.lm.tokenizer.encode_as_sequence([token.text])
+                    token_text = self.lm.tokenizer.decode(sequence)
+                    tokens.append(token_text)
+
+                current_token = tokens.pop(0)
+                current_token_id = 0
+                current_sequence = sequences.pop(0)
+                current_index = 0
+                while True:
+                    if current_sequence.endswith(current_token):
+                        # print("FOUND:", current_token, current_index)
+                        sentence[current_token_id].set_embedding(self.name, all_hidden_states_in_lm[current_index, i, :])
+                        if len(tokens) == 0:
+                            break
+                        current_token = tokens.pop(0)
+                        current_token_id += 1
                     else:
-                        offset_with_whitespace = offset_backward
-                        offset_without_whitespace = offset_backward - 1
-
-                    # offset mode that extracts at whitespace after last character
-                    if self.with_whitespace:
-                        embedding = all_hidden_states_in_lm[offset_with_whitespace, i, :]
-                    # offset mode that extracts at last character
-                    else:
-                        embedding = all_hidden_states_in_lm[offset_without_whitespace, i, :]
-
-                    if self.tokenized_lm or token.whitespace_after > 0:
-                        offset_forward += 1
-                        offset_backward -= 1
-
-                    offset_backward -= len(token.text)
-
-                    token.set_embedding(self.name, embedding)
+                        current_sequence = sequences.pop(0)
+                        current_index += 1
 
             del all_hidden_states_in_lm
 
@@ -867,7 +870,7 @@ class FlairEmbeddings(TokenEmbeddings):
             "is_lower": self.is_lower,
             "tokenized_lm": self.tokenized_lm,
             "model_params": {
-                "dictionary": self.lm.dictionary,
+                "tokenizer": self.lm.tokenizer,
                 "is_forward_lm": self.lm.is_forward_lm,
                 "hidden_size": self.lm.hidden_size,
                 "nlayers": self.lm.nlayers,

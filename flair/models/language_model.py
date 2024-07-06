@@ -14,7 +14,10 @@ from flair.nn.recurrent import create_recurrent_layer
 
 class LanguageModelTokenizer:
 
-    def encode(self, texts: List[str]) -> torch.Tensor:
+    def encode_as_sequence(self, texts: List[str]) -> torch.Tensor:
+        pass
+
+    def encode_as_batch(self, texts: List[str]) -> torch.Tensor:
         pass
 
     def decode(self, ids: List[int]) -> str:
@@ -33,7 +36,7 @@ class CharacterTokenizer(LanguageModelTokenizer):
         else:
             self.dictionary: Dictionary = dictionary
 
-    def encode(self, texts: List[str]) -> torch.Tensor:
+    def encode_as_sequence(self, texts: List[str]) -> torch.Tensor:
         lines = [list(line) for line in texts]
         ids = torch.tensor(
             [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars],
@@ -58,7 +61,12 @@ class SubwordTokenizer(LanguageModelTokenizer):
         else:
             self.subtokenizer = subtokenizer
 
-    def encode(self, texts: List[str]) -> torch.Tensor:
+    def encode_as_batch(self, texts: List[str]) -> torch.Tensor:
+        self.subtokenizer.pad_token = self.subtokenizer.eos_token
+        ids = self.subtokenizer(texts, return_tensors="pt", padding=True).input_ids
+        return ids
+
+    def encode_as_sequence(self, texts: List[str]) -> torch.Tensor:
         lines = "".join(texts)
         ids = self.subtokenizer(lines, return_tensors="pt").input_ids.flatten()
         return ids
@@ -67,7 +75,7 @@ class SubwordTokenizer(LanguageModelTokenizer):
         return len(self.subtokenizer)
 
     def decode(self, ids: List[int]) -> str:
-        words = self.subtokenizer.decode(ids, clean_up_tokenization_spaces=False)
+        words = self.subtokenizer.decode(ids)
         return words
 
 
@@ -176,7 +184,6 @@ class LanguageModel(nn.Module):
         end_marker: str,
         chars_per_chunk: int = 512,
     ):
-        len_longest_str: int = len(max(strings, key=len))
 
         # pad strings with whitespaces to the longest sentence
         padded_strings: List[str] = []
@@ -188,37 +195,13 @@ class LanguageModel(nn.Module):
             padded = f"{start_marker}{string}{end_marker}"
             padded_strings.append(padded)
 
-        # cut up the input into chunks of max charlength = chunk_size
-        chunks = []
-        splice_begin = 0
-        longest_padded_str: int = len_longest_str + len(start_marker) + len(end_marker)
-        for splice_end in range(chars_per_chunk, longest_padded_str, chars_per_chunk):
-            chunks.append([text[splice_begin:splice_end] for text in padded_strings])
-            splice_begin = splice_end
+        encoded = self.tokenizer.encode_as_batch(padded_strings).to(flair.device)
 
-        chunks.append([text[splice_begin:longest_padded_str] for text in padded_strings])
-        hidden = self.init_hidden(len(chunks[0]))
+        hidden = self.init_hidden(encoded.size(0))
 
-        batches: List[torch.Tensor] = []
-        # push each chunk through the RNN language model
-        for chunk in chunks:
-
-            sequences_as_char_indices = []
-            for string in chunk:
-                sequences_as_char_indices.append(self.tokenizer.encode([string]).unsqueeze(0))
-            t = torch.cat(sequences_as_char_indices).to(flair.device)
-            batches.append(t)
-
-        output_parts = []
-        for batch in batches:
-            batch = batch.transpose(0, 1)
-            rnn_output, hidden = self.forward(batch, hidden, decode=False)
-            output_parts.append(rnn_output)
-
-        # concatenate all chunks to make final output
-        output = torch.cat(output_parts)
-
-        return output
+        batch = encoded.transpose(0, 1)
+        rnn_output, hidden = self.forward(batch, hidden, decode=False)
+        return rnn_output
 
     def get_output(self, text: str):
         char_indices = [self.dictionary.get_idx_for_item(char) for char in text]
@@ -352,13 +335,13 @@ class LanguageModel(nn.Module):
 
     def generate_text(
         self,
-        prefix: str = "\n",
+        prefix: str = "",
         number_of_characters: int = 1000,
         temperature: float = 1.0,
         break_on_suffix=None,
     ) -> Tuple[str, float]:
         if prefix == "":
-            prefix = "\n"
+            prefix = self.document_delimiter
 
         with torch.no_grad():
             decoded_ids: List[int] = []
@@ -366,7 +349,9 @@ class LanguageModel(nn.Module):
             # initial hidden state
             hidden = self.init_hidden(1)
 
-            input = self.tokenizer.encode([prefix]).to(flair.device).unsqueeze(0).transpose(0, 1)
+            print(prefix)
+            input = self.tokenizer.encode_as_batch([prefix]).to(flair.device).unsqueeze(0).transpose(0, 1)
+            print(input)
 
             if input.size(0) > 1:
 
