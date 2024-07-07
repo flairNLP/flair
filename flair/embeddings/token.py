@@ -196,7 +196,7 @@ class WordEmbeddings(TokenEmbeddings):
         super().__init__()
 
         if embeddings_path is not None:
-            KeyedVectors = lazy_import("gensim", "gensim.models", "KeyedVectors")
+            KeyedVectors, = lazy_import("gensim", "gensim.models", "KeyedVectors")
             if embeddings_path.suffix in [".bin", ".txt"]:
                 precomputed_word_embeddings = KeyedVectors.load_word2vec_format(
                     str(embeddings_path), binary=embeddings_path.suffix == ".bin", no_header=no_header
@@ -400,7 +400,7 @@ class WordEmbeddings(TokenEmbeddings):
         state.setdefault("fine_tune", False)
         state.setdefault("field", None)
         if "precomputed_word_embeddings" in state:
-            KeyedVectors = lazy_import("gensim", "gensim.models", "KeyedVectors")
+            KeyedVectors, = lazy_import("gensim", "gensim.models", "KeyedVectors")
 
             precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
             vectors = np.vstack(
