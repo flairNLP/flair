@@ -7,16 +7,14 @@ from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-import gensim
 import numpy as np
 import torch
 from bpemb import BPEmb
 from deprecated.sphinx import deprecated
-from gensim.models import KeyedVectors
-from gensim.models.fasttext import FastTextKeyedVectors, load_facebook_vectors
 from torch import nn
 
 import flair
+from flair.class_utils import lazy_import
 from flair.data import Corpus, Dictionary, Sentence, _iter_dataset
 from flair.embeddings.base import TokenEmbeddings, load_embeddings, register_embeddings
 from flair.embeddings.transformer import (
@@ -165,6 +163,9 @@ class WordEmbeddings(TokenEmbeddings):
 
         Constructor downloads required files if not there.
 
+        Note:
+            When loading a new embedding, you need to have `flair[gensim]` installed.
+
         Args:
             embeddings: one of: 'glove', 'extvec', 'crawl' or two-letter language code or a path to a custom embedding
             field: if given, the word-embeddings embed the data for the specific label-type instead of the plain text.
@@ -195,12 +196,13 @@ class WordEmbeddings(TokenEmbeddings):
         super().__init__()
 
         if embeddings_path is not None:
+            KeyedVectors = lazy_import("gensim", "gensim.models", "KeyedVectors")
             if embeddings_path.suffix in [".bin", ".txt"]:
-                precomputed_word_embeddings = gensim.models.KeyedVectors.load_word2vec_format(
+                precomputed_word_embeddings = KeyedVectors.load_word2vec_format(
                     str(embeddings_path), binary=embeddings_path.suffix == ".bin", no_header=no_header
                 )
             else:
-                precomputed_word_embeddings = gensim.models.KeyedVectors.load(str(embeddings_path))
+                precomputed_word_embeddings = KeyedVectors.load(str(embeddings_path))
 
             self.__embedding_length: int = precomputed_word_embeddings.vector_size
 
@@ -398,6 +400,8 @@ class WordEmbeddings(TokenEmbeddings):
         state.setdefault("fine_tune", False)
         state.setdefault("field", None)
         if "precomputed_word_embeddings" in state:
+            KeyedVectors = lazy_import("gensim", "gensim.models", "KeyedVectors")
+
             precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
             vectors = np.vstack(
                 (
@@ -1015,6 +1019,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
 
 @register_embeddings
+@deprecated(reason="The FastTextEmbeddings are no longer supported and will be removed at version 0.16.0", version="0.14.0")
 class FastTextEmbeddings(TokenEmbeddings):
     """FastText Embeddings with oov functionality."""
 
@@ -1047,6 +1052,8 @@ class FastTextEmbeddings(TokenEmbeddings):
         self.name: str = str(embeddings_path)
 
         self.static_embeddings = True
+
+        FastTextKeyedVectors, load_facebook_vectors = lazy_import("gensim", "gensim.models.fasttext", "FastTextKeyedVectors", "load_facebook_vectors")
 
         if embeddings_path.suffix == ".bin":
             self.precomputed_word_embeddings: FastTextKeyedVectors = load_facebook_vectors(str(embeddings_path))

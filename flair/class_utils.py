@@ -1,5 +1,6 @@
+import importlib
 import inspect
-from typing import Iterable, Optional, Type, TypeVar
+from typing import Iterable, Optional, Type, TypeVar, Any, List
 
 T = TypeVar("T")
 
@@ -17,3 +18,14 @@ def get_state_subclass_by_name(cls: Type[T], cls_name: Optional[str]) -> Type[T]
         if sub_cls.__name__ == cls_name:
             return sub_cls
     raise ValueError(f"Could not find any class with name '{cls_name}'")
+
+
+def lazy_import(group: str, module: str, *symbols: List[str]) -> List[Any]:
+    try:
+        imported_module = importlib.import_module(module)
+    except ImportError:
+        raise ImportError(f"Could not import {module}. Please install the optional '{group}' dependency. Via 'pip install flair[{group}]'")
+    if not symbols:
+        return imported_module
+
+    return [getattr(imported_module, symbol) for symbol in symbols]

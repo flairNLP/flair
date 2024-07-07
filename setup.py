@@ -16,6 +16,9 @@ setup(
     packages=find_packages(exclude=["tests", "tests.*"]),  # same as name
     license="MIT",
     install_requires=required,
+    extras_require={
+        "gensim": ["gensim>=4.2.0"],
+    },
     include_package_data=True,
     python_requires=">=3.8",
 )
