@@ -1,6 +1,6 @@
 import importlib
 import inspect
-from typing import Iterable, Optional, Type, TypeVar, Any, List
+from typing import Any, Iterable, List, Optional, Type, TypeVar
 
 T = TypeVar("T")
 
@@ -24,7 +24,9 @@ def lazy_import(group: str, module: str, *symbols: List[str]) -> List[Any]:
     try:
         imported_module = importlib.import_module(module)
     except ImportError:
-        raise ImportError(f"Could not import {module}. Please install the optional '{group}' dependency. Via 'pip install flair[{group}]'")
+        raise ImportError(
+            f"Could not import {module}. Please install the optional '{group}' dependency. Via 'pip install flair[{group}]'"
+        )
     if not symbols:
         return imported_module
 

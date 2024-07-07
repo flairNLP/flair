@@ -196,7 +196,7 @@ class WordEmbeddings(TokenEmbeddings):
         super().__init__()
 
         if embeddings_path is not None:
-            KeyedVectors, = lazy_import("gensim", "gensim.models", "KeyedVectors")
+            (KeyedVectors,) = lazy_import("gensim", "gensim.models", "KeyedVectors")
             if embeddings_path.suffix in [".bin", ".txt"]:
                 precomputed_word_embeddings = KeyedVectors.load_word2vec_format(
                     str(embeddings_path), binary=embeddings_path.suffix == ".bin", no_header=no_header
@@ -400,7 +400,7 @@ class WordEmbeddings(TokenEmbeddings):
         state.setdefault("fine_tune", False)
         state.setdefault("field", None)
         if "precomputed_word_embeddings" in state:
-            KeyedVectors, = lazy_import("gensim", "gensim.models", "KeyedVectors")
+            (KeyedVectors,) = lazy_import("gensim", "gensim.models", "KeyedVectors")
 
             precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
             vectors = np.vstack(
@@ -1019,7 +1019,9 @@ class PooledFlairEmbeddings(TokenEmbeddings):
 
 
 @register_embeddings
-@deprecated(reason="The FastTextEmbeddings are no longer supported and will be removed at version 0.16.0", version="0.14.0")
+@deprecated(
+    reason="The FastTextEmbeddings are no longer supported and will be removed at version 0.16.0", version="0.14.0"
+)
 class FastTextEmbeddings(TokenEmbeddings):
     """FastText Embeddings with oov functionality."""
 
@@ -1053,7 +1055,9 @@ class FastTextEmbeddings(TokenEmbeddings):
 
         self.static_embeddings = True
 
-        FastTextKeyedVectors, load_facebook_vectors = lazy_import("gensim", "gensim.models.fasttext", "FastTextKeyedVectors", "load_facebook_vectors")
+        FastTextKeyedVectors, load_facebook_vectors = lazy_import(
+            "gensim", "gensim.models.fasttext", "FastTextKeyedVectors", "load_facebook_vectors"
+        )
 
         if embeddings_path.suffix == ".bin":
             self.precomputed_word_embeddings: FastTextKeyedVectors = load_facebook_vectors(str(embeddings_path))
