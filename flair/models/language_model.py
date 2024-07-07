@@ -349,9 +349,9 @@ class LanguageModel(nn.Module):
             # initial hidden state
             hidden = self.init_hidden(1)
 
-            print(prefix)
-            input = self.tokenizer.encode_as_batch([prefix]).to(flair.device).unsqueeze(0).transpose(0, 1)
-            print(input)
+            # print(prefix)
+            input = self.tokenizer.encode_as_sequence([prefix]).to(flair.device).unsqueeze(0).transpose(0, 1)
+            # print(input)
 
             if input.size(0) > 1:
 
