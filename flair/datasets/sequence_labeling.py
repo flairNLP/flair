@@ -4852,13 +4852,16 @@ class NOISY_NER_EST(ColumnCorpus):
     ) -> None:
         """Initialize the NoisyNER corpus.
 
-        :param version: Chooses the labelset for the data.
-                        v0 (default): clean labels
-                        v1 to v7: different kinds of noisy labelsets (details: https://ojs.aaai.org/index.php/AAAI/article/view/16938)
-        :param base_path: Default is None, meaning the corpus gets automatically downloaded and saved.
-                          You can override this by passing a path to a directory containing the unprocessed files but typically this
-                          should not be necessary.
-        :param in_memory: If True the dataset is kept in memory achieving speedups in training.
+        Args:
+            version (int): Chooses the labelset for the data.
+                v0 (default): Clean labels
+                v1 to v7: Different kinds of noisy labelsets (details: https://ojs.aaai.org/index.php/AAAI/article/view/16938)
+            base_path (Optional[Union[str, Path]]): Path to the data.
+                Default is None, meaning the corpus gets automatically downloaded and saved.
+                You can override this by passing a path to a directory containing the unprocessed files but typically this
+                should not be necessary.
+            in_memory (bool): If True the dataset is kept in memory achieving speedups in training.
+            **corpusargs: The arguments propagated to :meth:'flair.datasets.ColumnCorpus.__init__'.
         """
         if version not in range(8):
             raise Exception(
