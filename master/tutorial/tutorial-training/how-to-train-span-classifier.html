@@ -666,7 +666,7 @@ For this, you can use a <a class="reference internal" href="../../api/flair.mode
 
 <span class="c1"># 1. get the corpus</span>
 <span class="n">ner_corpus</span> <span class="o">=</span> <span class="n">NER_MULTI_WIKINER</span><span class="p">()</span>
-<span class="n">nel_corpus</span> <span class="o">=</span> <span class="n">ZELDA</span><span class="p">(</span><span class="n">column_format</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;ner&quot;</span><span class="p">})</span>  <span class="c1"># need to set the label type to be the same as the ner one</span>
+<span class="n">nel_corpus</span> <span class="o">=</span> <span class="n">ZELDA</span><span class="p">(</span><span class="n">column_format</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;nel&quot;</span><span class="p">})</span>  <span class="c1"># need to set the label type to be the same as the ner one</span>
 
 <span class="c1"># --- Embeddings that are shared by both models --- #</span>
 <span class="n">shared_embeddings</span> <span class="o">=</span> <span class="n">TransformerWordEmbeddings</span><span class="p">(</span><span class="s2">&quot;distilbert-base-uncased&quot;</span><span class="p">,</span> <span class="kp">fine_tune</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -683,12 +683,13 @@ For this, you can use a <a class="reference internal" href="../../api/flair.mode
 <span class="p">)</span>
 
 
-<span class="n">nel_label_dict</span> <span class="o">=</span> <span class="n">nel_corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="s2">&quot;ner&quot;</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">nel_label_dict</span> <span class="o">=</span> <span class="n">nel_corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="s2">&quot;nel&quot;</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="n">nel_model</span> <span class="o">=</span> <span class="n">SpanClassifier</span><span class="p">(</span>
     <span class="n">embeddings</span><span class="o">=</span><span class="n">shared_embeddings</span><span class="p">,</span>
     <span class="n">label_dictionary</span><span class="o">=</span><span class="n">nel_label_dict</span><span class="p">,</span>
-    <span class="n">label_type</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">,</span>
+    <span class="n">label_type</span><span class="o">=</span><span class="s2">&quot;nel&quot;</span><span class="p">,</span>
+    <span class="n">span_label_type</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">,</span>
     <span class="n">decoder</span><span class="o">=</span><span class="n">PrototypicalDecoder</span><span class="p">(</span>
         <span class="n">num_prototypes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">nel_label_dict</span><span class="p">),</span>
         <span class="n">embeddings_size</span><span class="o">=</span><span class="n">shared_embeddings</span><span class="o">.</span><span class="n">embedding_length</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="c1"># we use &quot;first_last&quot; encoding for spans</span>
