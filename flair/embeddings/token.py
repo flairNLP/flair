@@ -831,8 +831,11 @@ class FlairEmbeddings(TokenEmbeddings):
                 text = text_sentences[i]
                 encoded = self.lm.tokenizer.encode_as_sequence([f"{start_marker}{text}{end_marker}"])
                 # print(encoded)
-                for j in range(encoded.size(0)):
+                for j in range(1, encoded.size(0)):
+                    # print(j, encoded[:j], self.lm.tokenizer.decode(encoded[:j]))
                     sequences.append(self.lm.tokenizer.decode(encoded[:j]))
+                # for idx, sequence in enumerate(sequences):
+                #     print(idx, sequence)
                 # print(sequences)
 
                 for token in sentence.tokens:
@@ -847,7 +850,7 @@ class FlairEmbeddings(TokenEmbeddings):
                 while True:
                     if current_sequence.endswith(current_token):
                         # print("FOUND:", current_token, current_index)
-                        sentence[current_token_id].set_embedding(self.name, all_hidden_states_in_lm[current_index - 1, i, :])
+                        sentence[current_token_id].set_embedding(self.name, all_hidden_states_in_lm[current_index, i, :])
                         if len(tokens) == 0:
                             break
                         current_token = tokens.pop(0)
