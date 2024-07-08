@@ -847,7 +847,7 @@ class FlairEmbeddings(TokenEmbeddings):
                 while True:
                     if current_sequence.endswith(current_token):
                         # print("FOUND:", current_token, current_index)
-                        sentence[current_token_id].set_embedding(self.name, all_hidden_states_in_lm[current_index, i, :])
+                        sentence[current_token_id].set_embedding(self.name, all_hidden_states_in_lm[current_index - 1, i, :])
                         if len(tokens) == 0:
                             break
                         current_token = tokens.pop(0)
