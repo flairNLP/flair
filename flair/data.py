@@ -1363,7 +1363,7 @@ class Corpus(typing.Generic[T_co]):
             test, train = randomly_split_into_two_datasets(train, test_size, random_seed)
             log.warning(
                 "No test split found. Using %.0f%% (i.e. %d samples) of the train split as test data",
-                test_portion,
+                test_portion * 100,
                 test_size,
             )
 
@@ -1375,7 +1375,7 @@ class Corpus(typing.Generic[T_co]):
             dev, train = randomly_split_into_two_datasets(train, dev_size, random_seed)
             log.warning(
                 "No dev split found. Using %.0f%% (i.e. %d samples) of the train split as dev data",
-                dev_portion,
+                dev_portion * 100,
                 dev_size,
             )
 
