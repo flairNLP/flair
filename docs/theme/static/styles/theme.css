@@ -1,3 +1,10 @@
-.test {
-    background: red !important;
+:root {
+    --flair-orange: #f79910;
+    --flair-blue: #2f2e41;
+}
+
+
+
+.container {
+    background: var(--flair-orange);
 }
