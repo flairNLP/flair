@@ -82,7 +82,7 @@ class MultiFileJsonlCorpus(Corpus):
                         metadata_column_name=metadata_column_name,
                         label_type=label_type,
                         encoding=encoding,
-                        use_tokenizer=use_tokenizer
+                        use_tokenizer=use_tokenizer,
                     )
                     for train_file in train_files
                 ]
@@ -102,7 +102,7 @@ class MultiFileJsonlCorpus(Corpus):
                         metadata_column_name=metadata_column_name,
                         label_type=label_type,
                         encoding=encoding,
-                        use_tokenizer=use_tokenizer
+                        use_tokenizer=use_tokenizer,
                     )
                     for test_file in test_files
                 ]
@@ -122,7 +122,7 @@ class MultiFileJsonlCorpus(Corpus):
                         metadata_column_name=metadata_column_name,
                         label_type=label_type,
                         encoding=encoding,
-                        use_tokenizer=use_tokenizer
+                        use_tokenizer=use_tokenizer,
                     )
                     for dev_file in dev_files
                 ]
