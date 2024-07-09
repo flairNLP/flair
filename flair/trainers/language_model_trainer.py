@@ -31,7 +31,7 @@ class TextDataset(Dataset):
         tokenizer: LanguageModelTokenizer,
         expand_vocab: bool = False,
         forward: bool = True,
-        random_case_flip: bool = True,
+        random_case_flip: float = 0.02,
         document_delimiter: str = "\n",
         shuffle: bool = True,
     ) -> None:
@@ -64,8 +64,8 @@ class TextDataset(Dataset):
             text_lines: List[str] = [
                 doc + self.document_delimiter for doc in fin.read().split(self.document_delimiter) if doc
             ]
-            if self.random_case_flip:
-                text_lines = [self.random_casechange(line) for line in text_lines]
+            if self.random_case_flip > 0.0:
+                text_lines = [self.random_casechange(line, self.random_case_flip) for line in text_lines]
 
         log.info(f"read text file with {len(text_lines)} texts, delimited by {self.document_delimiter}")
 
@@ -75,27 +75,25 @@ class TextDataset(Dataset):
 
         ids = self.tokenizer.encode_as_sequence(text_lines)
 
-        # if self.tokenizer == "Char":
-        #     lines = [list(line) for line in text_lines]
-        #     ids = torch.tensor(
-        #         [self.dictionary.get_idx_for_item(char) for chars in lines for char in chars],
-        #         dtype=torch.long,
-        #     )
-        # if isinstance(self.tokenizer, PreTrainedTokenizerBase):
-        #     lines = "".join(text_lines)
-        #     ids = self.tokenizer(lines, return_tensors="pt").input_ids.flatten()
-
         if not self.forward:
             ids = ids.flip(0)
         return ids
 
     @staticmethod
-    def random_casechange(line: str) -> str:
-        no = random.randint(0, 99)
-        if no == 0:
-            line = line.lower()
-        if no == 1:
+    def random_casechange(line: str, chance: float) -> str:
+
+        chance_uppercase = chance / 2.0
+        chance_lowercase = chance / 2.0
+        chance_nothing = 1.0 - chance_lowercase - chance_uppercase
+
+        choice = random.choices(
+            population=["upper", "lower", "nothing"], weights=[chance_uppercase, chance_lowercase, chance_nothing], k=1
+        )[0]
+
+        if choice == "upper":
             line = line.upper()
+        if choice == "lower":
+            line = line.lower()
         return line
 
 
@@ -105,7 +103,7 @@ class TextCorpus:
         path: Union[Path, str],
         tokenizer: LanguageModelTokenizer,
         forward: bool = True,
-        random_case_flip: bool = True,
+        random_case_flip: float = 0.02,
         document_delimiter: str = "\n",
     ) -> None:
         self.forward = forward
