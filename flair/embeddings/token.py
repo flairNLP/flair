@@ -573,6 +573,7 @@ class FlairEmbeddings(TokenEmbeddings):
         is_lower: bool = False,
         name: Optional[str] = None,
         has_decoder: bool = False,
+        subtoken_pooling: str = "last",
     ) -> None:
         """Initializes contextual string embeddings using a character-level language model.
 
@@ -602,6 +603,8 @@ class FlairEmbeddings(TokenEmbeddings):
         am_path: str = "http://ltdata1.informatik.uni-hamburg.de/amharic/models/flair/"
 
         self.is_lower: bool = is_lower
+
+        self.subtoken_pooling = subtoken_pooling
 
         self.PRETRAINED_MODEL_ARCHIVE_MAP = {
             # multilingual models
@@ -832,11 +835,7 @@ class FlairEmbeddings(TokenEmbeddings):
                 encoded = self.lm.tokenizer.encode_as_sequence([f"{start_marker}{text}{end_marker}"])
                 # print(encoded)
                 for j in range(1, encoded.size(0)):
-                    # print(j, encoded[:j], self.lm.tokenizer.decode(encoded[:j]))
                     sequences.append(self.lm.tokenizer.decode(encoded[:j]))
-                # for idx, sequence in enumerate(sequences):
-                #     print(idx, sequence)
-                # print(sequences)
 
                 for token in sentence.tokens:
                     sequence = self.lm.tokenizer.encode_as_sequence([token.text])
@@ -847,10 +846,16 @@ class FlairEmbeddings(TokenEmbeddings):
                 current_token_id = 0
                 current_sequence = sequences.pop(0)
                 current_index = 0
+                previous_index = 0
                 while True:
                     if current_sequence.endswith(current_token):
                         # print("FOUND:", current_token, current_index)
-                        sentence[current_token_id].set_embedding(self.name, all_hidden_states_in_lm[current_index, i, :])
+                        embedding = all_hidden_states_in_lm[current_index, i, :]
+                        if self.subtoken_pooling == "first_last":
+                            embedding_before_token = all_hidden_states_in_lm[previous_index, i, :]
+                            embedding = torch.cat([embedding, embedding_before_token])
+                        sentence[current_token_id].set_embedding(self.name, embedding)
+                        previous_index = current_index
                         if len(tokens) == 0:
                             break
                         current_token = tokens.pop(0)
@@ -869,6 +874,7 @@ class FlairEmbeddings(TokenEmbeddings):
     def to_params(self):
         return {
             "fine_tune": self.fine_tune,
+            "subtoken_pooling": self.subtoken_pooling,
             "chars_per_chunk": self.chars_per_chunk,
             "is_lower": self.is_lower,
             "tokenized_lm": self.tokenized_lm,
