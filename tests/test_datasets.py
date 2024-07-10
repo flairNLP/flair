@@ -418,6 +418,24 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
     _assert_universal_dependencies_conllu_dataset(corpus.train)
 
 
+def test_write_to_and_load_from_directory(tasks_base_path):
+    from pathlib import Path
+
+    corpus = ColumnCorpus(
+        tasks_base_path / "column_with_whitespaces",
+        train_file="eng.train",
+        column_format={0: "text", 1: "ner"},
+        column_delimiter=" ",
+        skip_first_line=False,
+        sample_missing_splits=False,
+    )
+    directory = Path("resources/taggers/")
+    corpus.write_to_directory(["ner"], directory, column_delimiter="\t")
+    loaded_corpus = ColumnCorpus.load_corpus_with_meta_data(directory)
+    assert len(loaded_corpus.train) == len(corpus.train)
+    assert loaded_corpus.train[0].to_tagged_string() == corpus.train[0].to_tagged_string()
+
+
 def test_hipe_2022_corpus(tasks_base_path):
     # This test covers the complete HIPE 2022 dataset.
     # https://github.com/hipe-eval/HIPE-2022-data
