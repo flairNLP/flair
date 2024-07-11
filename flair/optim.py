@@ -161,6 +161,22 @@ class ExpAnnealLR(_LRScheduler):
         return [base_lr * (self.end_lr / base_lr) ** pct for base_lr in self.base_lrs]
 
 
+class _LinearSchedulerWithWarmupFunction:
+    def __init__(self, num_warmup_steps, num_train_steps):
+        self.num_warmup_steps = num_warmup_steps
+        self.num_train_steps = num_train_steps
+
+    def __call__(self, current_step):
+        lambda_during_warmup = float(current_step) / float(max(1, self.num_warmup_steps))
+        lambda_after_warmup = max(
+            0.0,
+            float(self.num_train_steps - current_step) / float(max(1, self.num_train_steps - self.num_warmup_steps)),
+        )
+        if current_step < self.num_warmup_steps:
+            return lambda_during_warmup
+        return lambda_after_warmup
+
+
 class LinearSchedulerWithWarmup(LambdaLR):
     """Linearly increase the lr from 0 to initial lr during warmup and decrease the lr to 0 after the warmup.
 
@@ -176,17 +192,19 @@ class LinearSchedulerWithWarmup(LambdaLR):
     """
 
     def __init__(self, optimizer, num_train_steps, num_warmup_steps, last_epoch=-1) -> None:
-        def linear_lr_lambda(current_step: int):
-            lambda_during_warmup = float(current_step) / float(max(1, num_warmup_steps))
-            lambda_after_warmup = max(
-                0.0,
-                float(num_train_steps - current_step) / float(max(1, num_train_steps - num_warmup_steps)),
-            )
-            if current_step < num_warmup_steps:
-                return lambda_during_warmup
-            return lambda_after_warmup
+        # def linear_lr_lambda(current_step: int):
+        #     lambda_during_warmup = float(current_step) / float(max(1, num_warmup_steps))
+        #     lambda_after_warmup = max(
+        #         0.0,
+        #         float(num_train_steps - current_step) / float(max(1, num_train_steps - num_warmup_steps)),
+        #     )
+        #     if current_step < num_warmup_steps:
+        #         return lambda_during_warmup
+        #     return lambda_after_warmup
 
-        super().__init__(optimizer, lr_lambda=linear_lr_lambda, last_epoch=last_epoch)
+        function = _LinearSchedulerWithWarmupFunction(num_warmup_steps = num_warmup_steps, num_train_steps = num_train_steps)
+
+        super().__init__(optimizer, lr_lambda=function, last_epoch=last_epoch)
 
 
 class ReduceLRWDOnPlateau(ReduceLROnPlateau):

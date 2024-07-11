@@ -437,25 +437,26 @@ class ModelTrainer(Pluggable):
         save_best_model = not train_with_dev and not use_final_model_for_eval
 
         # instantiate the optimizer
-        kwargs["lr"] = learning_rate
-        if decoder_learning_rate:
-            params = [
-                {
-                    "params": [param for name, param in self.model.named_parameters() if "embeddings" not in name],
-                    "lr": decoder_learning_rate,
-                },
-                {
-                    "params": [param for name, param in self.model.named_parameters() if "embeddings" in name],
-                    "lr": learning_rate,
-                },
-            ]
-            self.optimizer = optimizer(params=params, **kwargs)
-            log.info(
-                f"Modifying learning rate to {decoder_learning_rate} for the following "
-                f"parameters: {[name for name, param in self.model.named_parameters() if 'embeddings' not in name]}"
-            )
-        else:
-            self.optimizer = optimizer(params=self.model.parameters(), **kwargs)
+        if not self.optimizer:
+            kwargs["lr"] = learning_rate
+            if decoder_learning_rate:
+                params = [
+                    {
+                        "params": [param for name, param in self.model.named_parameters() if "embeddings" not in name],
+                        "lr": decoder_learning_rate,
+                    },
+                    {
+                        "params": [param for name, param in self.model.named_parameters() if "embeddings" in name],
+                        "lr": learning_rate,
+                    },
+                ]
+                self.optimizer = optimizer(params=params, **kwargs)
+                log.info(
+                    f"Modifying learning rate to {decoder_learning_rate} for the following "
+                    f"parameters: {[name for name, param in self.model.named_parameters() if 'embeddings' not in name]}"
+                )
+            else:
+                self.optimizer = optimizer(params=self.model.parameters(), **kwargs)
 
         # initialize sampler if provided
         if sampler is not None:
