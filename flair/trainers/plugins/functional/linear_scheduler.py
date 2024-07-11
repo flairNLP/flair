@@ -40,7 +40,7 @@ class LinearSchedulerPlugin(TrainerPlugin):
         :return:
         """
         # calculate warmup steps
-        if self.scheduler is None:  # scheduler may be set already when restoring from checkpoint
+        if not hasattr(self, 'scheduler'):  # scheduler may be set already when restoring from checkpoint
             steps_per_epoch = (dataset_size + mini_batch_size - 1) / mini_batch_size
             num_train_steps = int(steps_per_epoch * max_epochs)
             num_warmup_steps = int(num_train_steps * self.warmup_fraction)
