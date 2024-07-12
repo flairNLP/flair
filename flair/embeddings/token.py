@@ -2,7 +2,7 @@ import hashlib
 import logging
 import re
 import tempfile
-from collections import Counter
+from collections import Counter, Mapping
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -1381,6 +1381,8 @@ class BytePairEmbeddings(TokenEmbeddings):
         embedding_file_path: Optional[Path] = None,
         name: Optional[str] = None,
         force_cpu: bool = True,
+        field: Optional[str] = None,
+        preprocess: bool = True,
         **kwargs,
     ) -> None:
         """Initializes BP embeddings.
@@ -1388,11 +1390,10 @@ class BytePairEmbeddings(TokenEmbeddings):
         Constructor downloads required files if not there.
         """
         self.instance_parameters = self.get_instance_parameters(locals=locals())
-
         if not cache_dir:
             cache_dir = flair.cache_root / "embeddings"
 
-        if model_file_path is None and embedding_file_path is not None:
+        if model_file_path is not None and embedding_file_path is None:
             self.spm = SentencePieceProcessor()
             self.spm.Load(str(model_file_path))
             vectors = np.zeros((self.spm.vocab_size() + 1, dim))
@@ -1413,12 +1414,6 @@ class BytePairEmbeddings(TokenEmbeddings):
                     emb_file=embedding_file_path,
                     **kwargs,
                 )
-                vectors = np.vstack(
-                    (
-                        embedder.vectors,
-                        np.zeros(embedder.dim, dtype=embedder.vectors.dtype),
-                    )
-                )
             else:
                 if model_file_path is None:
                     raise ValueError("Need to specify model_file_path if no language is give in BytePairEmbeddings")
@@ -1431,26 +1426,28 @@ class BytePairEmbeddings(TokenEmbeddings):
                     emb_file=embedding_file_path,
                     **kwargs,
                 )
-                self.spm = embedder.spm
-                vectors = np.vstack(
-                    (
-                        embedder.vectors,
-                        np.zeros(embedder.dim, dtype=embedder.vectors.dtype),
-                    )
+            self.spm = embedder.spm
+            vectors = np.vstack(
+                (
+                    embedder.vectors,
+                    np.zeros(embedder.dim, dtype=embedder.vectors.dtype),
                 )
-                dim = embedder.dim
-                syllables = embedder.vs
+            )
+            dim = embedder.dim
+            syllables = embedder.vs
 
-                if not language:
-                    self.name = f"bpe-custom-{syllables}-{dim}"
+            if not language:
+                self.name = f"bpe-custom-{syllables}-{dim}"
         if name is not None:
             self.name = name
+        super().__init__()
         self.embedding = nn.Embedding.from_pretrained(torch.FloatTensor(vectors), freeze=True)
         self.force_cpu = force_cpu
         self.static_embeddings = True
+        self.field = field
+        self.do_preproc = preprocess
 
-        self.__embedding_length: int = self.dim * 2
-        super().__init__()
+        self.__embedding_length: int = dim * 2
         self.eval()
 
     def _preprocess(self, text: str) -> str:
@@ -1468,16 +1465,18 @@ class BytePairEmbeddings(TokenEmbeddings):
             word = token.text if self.field is None else token.get_label(self.field).value
 
             if word.strip() == "":
-                ids = [self.embedder.spm.vocab_size(), self.embedder.spm.vocab_size()]
+                ids = [self.spm.vocab_size(), self.embedder.spm.vocab_size()]
             else:
                 if self.do_preproc:
                     word = self._preprocess(word)
-                ids = self.embedder.spm.EncodeAsIds(word.lower())
-                ids = torch.tensor([ids[0], ids[-1]], dtype=torch.long, device=self.device)
+                ids = self.spm.EncodeAsIds(word.lower())
+                ids = [ids[0], ids[-1]]
             word_indices.append(ids)
 
-        embeddings = self.embedding(torch.tensor(word_indices, dtype=torch.long, device=self.device))
-
+        breakpoint()
+        index_tensor = torch.tensor(word_indices, dtype=torch.long, device=self.device)
+        embeddings = self.embedding(index_tensor)
+        embeddings = embeddings.reshape((-1, self.embedding_length))
         if self.force_cpu:
             embeddings = embeddings.to(flair.device)
 
@@ -1506,14 +1505,22 @@ class BytePairEmbeddings(TokenEmbeddings):
             else:
                 embedding_file_path = None
                 dim = params["dim"]
-            return cls(name=params["name"], dim=dim, model_file_path=model_file_path, embedding_file_path=embedding_file_path)
+            return cls(name=params["name"], dim=dim, model_file_path=model_file_path, embedding_file_path=embedding_file_path, field=params.get("field"), preprocess=params.get("preprocess", True))
 
     def to_params(self):
         return {
             "name": self.name,
             "spm_model_binary": self.spm.serialized_model_proto(),
             "dim": self.embedding_length // 2,
+            "field": self.field,
+            "preprocess": self.preprocess,
         }
+
+    def to(self, device):
+        if self.force_cpu:
+            device = torch.device("cpu")
+        self.device = device
+        super().to(device)
 
     def _apply(self, fn):
         if fn.__name__ == "convert" and self.force_cpu:
@@ -1524,6 +1531,27 @@ class BytePairEmbeddings(TokenEmbeddings):
                 self.to(flair.device)
             return
         super()._apply(fn)
+
+    def state_dict(self, *args, **kwargs):
+        # when loading the old versions from pickle, the embeddings might not be added as pytorch module.
+        # we do this delayed, when the weights are collected (e.g. for saving), as doing this earlier might
+        # lead to issues while loading (trying to load weights that weren't stored as python weights and therefore
+        # not finding them)
+        if list(self.modules()) == [self]:
+            self.embedding = self.embedding
+        return super().state_dict(*args, **kwargs)
+
+    def _load_from_state_dict(
+            self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
+    ):
+        if not state_dict:
+            # old embeddings do not have a torch-embedding and therefore do not store the weights in the saved torch state_dict
+            # however they are already initialized rightfully, so we just set the state dict from our current state dict
+            for k, v in self.state_dict(prefix=prefix).items():
+                state_dict[k] = v
+        super()._load_from_state_dict(
+            state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
+        )
 
 
 @register_embeddings
