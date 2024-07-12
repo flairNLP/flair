@@ -1522,7 +1522,7 @@ class BytePairEmbeddings(TokenEmbeddings):
             "spm_model_binary": self.spm.serialized_model_proto(),
             "dim": self.embedding_length // 2,
             "field": self.field,
-            "preprocess": self.preprocess,
+            "preprocess": self.do_preproc,
         }
 
     def to(self, device):
