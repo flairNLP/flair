@@ -1,5 +1,5 @@
 boto3>=1.20.27
-conllu>=4.0
+conllu>=4.0,<5.0.0
 deprecated>=1.2.13
 ftfy>=6.1.0
 gdown>=4.4.0
