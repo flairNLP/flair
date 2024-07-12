@@ -1473,7 +1473,6 @@ class BytePairEmbeddings(TokenEmbeddings):
                 ids = [ids[0], ids[-1]]
             word_indices.append(ids)
 
-        breakpoint()
         index_tensor = torch.tensor(word_indices, dtype=torch.long, device=self.device)
         embeddings = self.embedding(index_tensor)
         embeddings = embeddings.reshape((-1, self.embedding_length))
