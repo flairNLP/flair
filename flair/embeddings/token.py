@@ -1451,6 +1451,7 @@ class BytePairEmbeddings(TokenEmbeddings):
 
         self.__embedding_length: int = dim * 2
         self.eval()
+        self.to(flair.device)
 
     def _preprocess(self, text: str) -> str:
         return re.sub(r"\d", "0", text)
