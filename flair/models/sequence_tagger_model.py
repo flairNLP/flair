@@ -43,6 +43,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         loss_weights: Optional[Dict[str, float]] = None,
         init_from_state_dict: bool = False,
         allow_unk_predictions: bool = False,
+        wsa_embedding_layer_size: Optional[int] = None
     ) -> None:
         """Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
 
@@ -70,6 +71,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             tag_format: the format to encode spans as tags, either "BIO" or "BIOES"
         """
         super().__init__()
+
+        self.wsa_embedding_layer_size = wsa_embedding_layer_size
 
         # ----- Create the internal tag dictionary -----
         self.tag_type = tag_type
@@ -181,10 +184,16 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 ) = self._init_initial_hidden_state(num_directions)
 
             # final linear map to tag space
-            self.linear = torch.nn.Linear(hidden_output_dim, len(self.label_dictionary))
+            if self.wsa_embedding_layer_size is None:
+                self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
+            else:
+                self.linear = torch.nn.Linear(embedding_dim + self.wsa_embedding_layer_size, len(self.label_dictionary))
         else:
-            self.linear = torch.nn.Linear(embedding_dim + 32, len(self.label_dictionary))
-            self.wsa_layer = torch.nn.Linear(2, 32)
+            if self.wsa_embedding_layer_size is None:
+                self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
+            else:
+                self.linear = torch.nn.Linear(embedding_dim + self.wsa_embedding_layer_size, len(self.label_dictionary))
+                self.wsa_layer = torch.nn.Linear(2, self.wsa_embedding_layer_size)
             self.train_initial_hidden_state = False
 
         # the loss function is Viterbi if using CRF, else regular Cross Entropy Loss
@@ -285,13 +294,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def _prepare_tensors(self, data_points: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, torch.LongTensor]:
         sentences = [data_points] if not isinstance(data_points, list) else data_points
         self.embeddings.embed(sentences)
-        for sentence in sentences:
-            for token in sentence:
-                one_hot_wsa = torch.Tensor([0.0, 1.0] if token.whitespace_after else [1.0, 0.0]).to(flair.device)
-                token.set_embedding(
-                    self.embeddings.name,
-                    torch.cat((token.embedding, self.wsa_layer(one_hot_wsa)), dim=0)
-                )
+        if self.wsa_embedding_layer_size is not None:
+            for sentence in sentences:
+                for token in sentence:
+                    one_hot_wsa = torch.Tensor([0.0, 1.0] if token.whitespace_after else [1.0, 0.0]).to(flair.device)
+                    token.set_embedding(
+                        self.embeddings.name,
+                        torch.cat((token.embedding, self.wsa_layer(one_hot_wsa)), dim=0)
+                    )
 
         # make a zero-padded tensor for the whole sentence
         lengths, sentence_tensor = self._make_padded_tensor_for_batch(sentences)
@@ -360,14 +370,18 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
 
             if nb_padding_tokens > 0:
-                t = pre_allocated_zero_tensor[: (self.embeddings.embedding_length + 32) * nb_padding_tokens]
+                if self.wsa_embedding_layer_size is None:
+                    t = pre_allocated_zero_tensor[: self.embeddings.embedding_length * nb_padding_tokens]
+                else:
+                    t = pre_allocated_zero_tensor[: (self.embeddings.embedding_length + self.wsa_embedding_layer_size) * nb_padding_tokens]
                 all_embs.append(t)
 
         sentence_tensor = torch.cat(all_embs).view(
             [
                 len(sentences),
                 longest_token_sequence_in_batch,
-                self.embeddings.embedding_length + 32,
+                self.embeddings.embedding_length +
+                (self.wsa_embedding_layer_size if self.wsa_embedding_layer_size is not None else 0),
             ]
         )
         return torch.LongTensor(lengths), sentence_tensor
