@@ -1,6 +1,7 @@
 import importlib
 import inspect
-from typing import Any, Iterable, List, Optional, Type, TypeVar
+from types import ModuleType
+from typing import Any, Iterable, List, Optional, Type, TypeVar, Union, overload
 
 T = TypeVar("T")
 
@@ -20,14 +21,25 @@ def get_state_subclass_by_name(cls: Type[T], cls_name: Optional[str]) -> Type[T]
     raise ValueError(f"Could not find any class with name '{cls_name}'")
 
 
-def lazy_import(group: str, module: str, *symbols: List[str]) -> List[Any]:
+@overload
+def lazy_import(group: str, module: str, first_symbol: None) -> ModuleType:
+    ...
+
+
+@overload
+def lazy_import(group: str, module: str, first_symbol: str, *symbols: str) -> List[Any]:
+    ...
+
+
+def lazy_import(group: str, module: str, first_symbol: Optional[str] = None, *symbols: str) -> Union[List[Any], ModuleType]:
     try:
         imported_module = importlib.import_module(module)
     except ImportError:
         raise ImportError(
             f"Could not import {module}. Please install the optional '{group}' dependency. Via 'pip install flair[{group}]'"
         )
-    if not symbols:
+    if first_symbol is None:
         return imported_module
+    symbols = (first_symbol, *symbols)
 
     return [getattr(imported_module, symbol) for symbol in symbols]

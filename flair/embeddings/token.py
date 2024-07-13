@@ -4,7 +4,7 @@ import re
 import tempfile
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 
 import numpy as np
 import torch
@@ -393,9 +393,7 @@ class WordEmbeddings(TokenEmbeddings):
         state.setdefault("fine_tune", False)
         state.setdefault("field", None)
         if "precomputed_word_embeddings" in state:
-            (KeyedVectors,) = lazy_import("word-embeddings", "gensim.models", "KeyedVectors")
-
-            precomputed_word_embeddings: KeyedVectors = state.pop("precomputed_word_embeddings")
+            precomputed_word_embeddings = state.pop("precomputed_word_embeddings")
             vectors = np.vstack(
                 (
                     precomputed_word_embeddings.vectors,
@@ -1053,7 +1051,7 @@ class FastTextEmbeddings(TokenEmbeddings):
         )
 
         if embeddings_path.suffix == ".bin":
-            self.precomputed_word_embeddings: FastTextKeyedVectors = load_facebook_vectors(str(embeddings_path))
+            self.precomputed_word_embeddings = load_facebook_vectors(str(embeddings_path))
         else:
             self.precomputed_word_embeddings = FastTextKeyedVectors.load(str(embeddings_path))
 
@@ -1399,7 +1397,10 @@ class BytePairEmbeddings(TokenEmbeddings):
             self.spm = SentencePieceProcessor()
             self.spm.Load(str(model_file_path))
             vectors = np.zeros((self.spm.vocab_size() + 1, dim))
-            self.name = name
+            if name is not None:
+                self.name = name
+            else:
+                raise ValueError("When only providing a SentencePieceProcessor, you need to specify a name for the BytePairEmbeddings")
         else:
             if not language and model_file_path is None:
                 raise ValueError("Need to specify model_file_path if no language is give in BytePairEmbeddings")
@@ -1463,7 +1464,7 @@ class BytePairEmbeddings(TokenEmbeddings):
     def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
         tokens = [token for sentence in sentences for token in sentence.tokens]
 
-        word_indices: List[int] = []
+        word_indices: List[List[int]] = []
         for token in tokens:
             word = token.text if self.field is None else token.get_label(self.field).value
 
