@@ -4,7 +4,7 @@ import re
 import tempfile
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
@@ -1400,7 +1400,9 @@ class BytePairEmbeddings(TokenEmbeddings):
             if name is not None:
                 self.name = name
             else:
-                raise ValueError("When only providing a SentencePieceProcessor, you need to specify a name for the BytePairEmbeddings")
+                raise ValueError(
+                    "When only providing a SentencePieceProcessor, you need to specify a name for the BytePairEmbeddings"
+                )
         else:
             if not language and model_file_path is None:
                 raise ValueError("Need to specify model_file_path if no language is give in BytePairEmbeddings")

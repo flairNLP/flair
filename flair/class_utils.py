@@ -22,16 +22,16 @@ def get_state_subclass_by_name(cls: Type[T], cls_name: Optional[str]) -> Type[T]
 
 
 @overload
-def lazy_import(group: str, module: str, first_symbol: None) -> ModuleType:
-    ...
+def lazy_import(group: str, module: str, first_symbol: None) -> ModuleType: ...
 
 
 @overload
-def lazy_import(group: str, module: str, first_symbol: str, *symbols: str) -> List[Any]:
-    ...
+def lazy_import(group: str, module: str, first_symbol: str, *symbols: str) -> List[Any]: ...
 
 
-def lazy_import(group: str, module: str, first_symbol: Optional[str] = None, *symbols: str) -> Union[List[Any], ModuleType]:
+def lazy_import(
+    group: str, module: str, first_symbol: Optional[str] = None, *symbols: str
+) -> Union[List[Any], ModuleType]:
     try:
         imported_module = importlib.import_module(module)
     except ImportError:
