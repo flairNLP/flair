@@ -454,13 +454,14 @@ class CharacterEmbeddings(TokenEmbeddings):
         path_to_char_dict: Optional[Union[str, Dictionary]] = None,
         char_embedding_dim: int = 25,
         hidden_size_char: int = 25,
+        name: str = "Char",
     ) -> None:
         """Instantiates a bidirectional lstm layer toi encode words by their character representation.
 
         Uses the default character dictionary if none provided.
         """
         super().__init__()
-        self.name = "Char"
+        self.name = name
         self.static_embeddings = False
         self.instance_parameters = self.get_instance_parameters(locals=locals())
 
@@ -556,6 +557,7 @@ class CharacterEmbeddings(TokenEmbeddings):
             "path_to_char_dict": self.char_dictionary,
             "char_embedding_dim": self.char_embedding_dim,
             "hidden_size_char": self.hidden_size_char,
+            "name": self.name,
         }
 
 
