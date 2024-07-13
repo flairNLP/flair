@@ -64,7 +64,8 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
 
     def _labels_to_tensor(self, sentences: List[Sentence]):
         indices = [
-            torch.tensor([float(label.value) for label in sentence.labels], dtype=torch.float) for sentence in sentences
+            torch.tensor([float(label.value) for label in sentence.get_labels(self.label_name)], dtype=torch.float)
+            for sentence in sentences
         ]
 
         vec = torch.cat(indices, 0).to(flair.device)
