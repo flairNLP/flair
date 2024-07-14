@@ -474,7 +474,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                 # option 1: greedy decoding
                 if self.beam_size == 1:
                     # predictions
-                    predicted: List[List[int]] = [[] for _ in range(number_tokens)]
+                    predicted: List[List[Union[int, float]]] = [[] for _ in range(number_tokens)]
 
                     for _decode_step in range(max_length):
                         # decode next character
