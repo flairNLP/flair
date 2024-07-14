@@ -19,6 +19,7 @@ from flair.data import (
     Sentence,
     Span,
     Token,
+    _iter_dataset,
     get_spans_from_bio,
 )
 from flair.datasets.base import find_train_dev_test_files
@@ -476,7 +477,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
         (2) every sentence is separated from the previous one by an empty line
         """
         with open(file_path, mode="w") as output_file:
-            for sentence in dataset:
+            for sentence in _iter_dataset(dataset):
                 texts = [token.text for token in sentence.tokens]
                 texts_and_labels = [texts]
                 for label_type, level in label_type_tuples:
@@ -515,7 +516,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
         """
         for dataset in [self.train, self.dev, self.test]:
             if dataset:
-                for sentence in dataset:
+                for sentence in _iter_dataset(dataset):
                     for label in sentence.get_labels(label_type):
                         if isinstance(label.data_point, Token):
                             return Token
