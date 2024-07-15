@@ -734,7 +734,7 @@ document.write(`
               <span class="n">max_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This will launch a “standard training run” with SGD as optimizer. By default, the learning rate is annealed against the development score: if fo 3 epochs there is no improvement on the dev split, the learning rate is halved. If this happens too often, the learning rate will fall below a minimal threshold and training stops early.</p>
+<p>This will launch a “standard training run” with SGD as optimizer. By default, the learning rate is annealed against the development score: if for 3 epochs there is no improvement on the dev split, the learning rate is halved. If this happens too often, the learning rate will fall below a minimal threshold and training stops early.</p>
 <p>The max_epochs parameter is set to a small number in this script to make it run fast, but normally you should use a much higher value (150 or 200).</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
