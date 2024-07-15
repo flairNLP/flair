@@ -4839,7 +4839,7 @@ class NER_GERMAN_MOBIE(ColumnCorpus):
         )
 
 
-class NOISY_NER_EST(ColumnCorpus):
+class NER_ESTONIAN_NOISY(ColumnCorpus):
     data_url = "https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/patnlp/estner.cnll.zip"
     label_url = "https://raw.githubusercontent.com/uds-lsv/NoisyNER/master/data/only_labels"
 
