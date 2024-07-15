@@ -252,7 +252,7 @@ trainer.train('resources/taggers/example-upos',
               max_epochs=10)
 ```
 
-This will launch a "standard training run" with SGD as optimizer. By default, the learning rate is annealed against the development score: if fo 3 epochs there is no improvement on the dev split, the learning rate is halved. If this happens too often, the learning rate will fall below a minimal threshold and training stops early.
+This will launch a "standard training run" with SGD as optimizer. By default, the learning rate is annealed against the development score: if for 3 epochs there is no improvement on the dev split, the learning rate is halved. If this happens too often, the learning rate will fall below a minimal threshold and training stops early.
 
 The max_epochs parameter is set to a small number in this script to make it run fast, but normally you should use a much higher value (150 or 200).
 
