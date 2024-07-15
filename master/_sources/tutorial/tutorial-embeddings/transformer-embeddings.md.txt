@@ -111,7 +111,7 @@ torch.Size([1536])
 torch.Size([9984])
 ```
 
-I.e. the size of the embedding increases the mode layers we use (but ONLY if layer_mean is set to False, otherwise the length is always the same).
+I.e. the size of the embedding increases the more layers we use (but ONLY if layer_mean is set to False, otherwise the length is always the same).
 
 (pooling)=
 ### Pooling operation
