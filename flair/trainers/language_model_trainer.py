@@ -337,7 +337,7 @@ class LanguageModelTrainer:
 
                     log.info(f"best loss so far {best_val_loss:5.8f}")
 
-                    log.info(self.model.generate_text())
+                    log.info(self.model.generate_text()[0])
 
                     if checkpoint:
                         self.model.save_checkpoint(
