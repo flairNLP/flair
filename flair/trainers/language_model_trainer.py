@@ -81,6 +81,7 @@ class TextDataset(Dataset):
             ids = ids.flip(0)
 
         train_data = LanguageModelTrainer._batchify(ids.flatten(), self.mini_batch_size)
+        # print(train_data.size())
         return train_data
 
     @staticmethod
@@ -283,9 +284,15 @@ class LanguageModelTrainer:
                     total_loss = torch.zeros(1, device=flair.device)
                     start_time = time.time()
 
+                    train_data = train_data[0]
+                    # print(train_data[0].size())
+                    # agr
+
                     for batch, i in enumerate(range(0, train_data.size(0) - 1, sequence_length)):
                         data, targets = self._get_batch(train_data, i, sequence_length)
 
+                        # print(data.size(), i, sequence_length)
+                        # asd
                         # if not data.is_cuda and cuda.is_available():
                         #     log.info("Batch %d is not on CUDA, training will be very slow" % (batch))
                         # raise Exception("data isnt on cuda")
