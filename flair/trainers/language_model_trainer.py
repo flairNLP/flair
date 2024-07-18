@@ -440,8 +440,8 @@ class LanguageModelTrainer:
         data = source[i : i + seq_len]
         target = source[i + 1 : i + 1 + seq_len].view(-1)
 
-        data = data.to(flair.device)
-        target = target.to(flair.device)
+        data = data.to(flair.device, non_blocking=True)
+        target = target.to(flair.device, non_blocking=True)
 
         return data, target
 
