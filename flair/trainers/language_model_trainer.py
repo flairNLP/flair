@@ -80,7 +80,7 @@ class TextDataset(Dataset):
         if not self.forward:
             ids = ids.flip(0)
 
-        train_data = LanguageModelTrainer._batchify(ids.flatten(), self.mini_batch_size).to(flair.device)
+        train_data = LanguageModelTrainer._batchify(ids.flatten(), self.mini_batch_size)
         print(train_data)
         return train_data
 
@@ -284,7 +284,7 @@ class LanguageModelTrainer:
                     total_loss = torch.zeros(1, device=flair.device)
                     start_time = time.time()
 
-                    train_data = train_data[0]
+                    train_data = train_data[0].to(flair.device)
                     # print(train_data[0].size())
                     # agr
 
