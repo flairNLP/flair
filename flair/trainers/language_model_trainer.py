@@ -80,7 +80,7 @@ class TextDataset(Dataset):
         if not self.forward:
             ids = ids.flip(0)
 
-        train_data = LanguageModelTrainer._batchify(ids.flatten(), self.mini_batch_size)
+        train_data = LanguageModelTrainer._batchify(ids.flatten(), self.mini_batch_size).to(flair.device)
         # print(train_data.size())
         return train_data
 
@@ -440,8 +440,8 @@ class LanguageModelTrainer:
         data = source[i : i + seq_len]
         target = source[i + 1 : i + 1 + seq_len].view(-1)
 
-        data = data.to(flair.device, non_blocking=True)
-        target = target.to(flair.device, non_blocking=True)
+        # data = data.to(flair.device)
+        # target = target.to(flair.device)
 
         return data, target
 

@@ -68,7 +68,7 @@ class SubwordTokenizer(LanguageModelTokenizer):
 
     def encode_as_sequence(self, texts: List[str]) -> torch.Tensor:
         lines = "".join(texts)
-        ids = self.subtokenizer(lines, return_tensors="pt").input_ids.flatten().pin_memory()
+        ids = self.subtokenizer(lines, return_tensors="pt").input_ids.flatten()
         return ids
 
     def vocab_size(self) -> int:
