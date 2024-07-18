@@ -34,6 +34,7 @@ class TextDataset(Dataset):
         random_case_flip: float = 0.02,
         document_delimiter: str = "\n",
         shuffle: bool = True,
+        mini_batch_size: int = 100,
     ) -> None:
         path = Path(path)
         assert path.exists()
@@ -45,6 +46,7 @@ class TextDataset(Dataset):
         self.document_delimiter = document_delimiter
         self.shuffle = shuffle
         self.tokenizer = tokenizer
+        self.mini_batch_size = mini_batch_size
 
         if path.is_dir():
             self.files = sorted([f for f in path.iterdir() if f.exists()])
@@ -77,7 +79,9 @@ class TextDataset(Dataset):
 
         if not self.forward:
             ids = ids.flip(0)
-        return ids
+
+        train_data = LanguageModelTrainer._batchify(ids.flatten(), self.mini_batch_size)
+        return train_data
 
     @staticmethod
     def random_casechange(line: str, chance: float) -> str:
@@ -105,6 +109,7 @@ class TextCorpus:
         forward: bool = True,
         random_case_flip: float = 0.02,
         document_delimiter: str = "\n",
+        mini_batch_size: int = 100,
     ) -> None:
         self.forward = forward
         self.tokenizer = tokenizer
@@ -121,6 +126,7 @@ class TextCorpus:
             random_case_flip=self.random_case_flip,
             document_delimiter=self.document_delimiter,
             shuffle=True,
+            mini_batch_size=mini_batch_size,
         )
 
         # TextDataset returns a list. valid and test are only one file,
@@ -133,6 +139,7 @@ class TextCorpus:
             random_case_flip=self.random_case_flip,
             document_delimiter=self.document_delimiter,
             shuffle=True,
+            mini_batch_size=mini_batch_size,
         )[0]
         self.test = TextDataset(
             path / "test.txt",
@@ -142,6 +149,7 @@ class TextCorpus:
             random_case_flip=self.random_case_flip,
             document_delimiter=self.document_delimiter,
             shuffle=True,
+            mini_batch_size=mini_batch_size,
         )[0]
 
 
@@ -192,7 +200,8 @@ class LanguageModelTrainer:
 
         number_of_splits: int = len(self.corpus.train)
 
-        val_data = self._batchify(self.corpus.valid, mini_batch_size)
+        # val_data = self._batchify(self.corpus.valid, mini_batch_size)
+        val_data = self.corpus.valid
 
         if isinstance(flair.device, str):
             flair.device = torch.device(flair.device)
@@ -247,7 +256,7 @@ class LanguageModelTrainer:
 
                 # iterate through training data, starting at
                 # self.split (for checkpointing)
-                for curr_split, train_slice in enumerate(training_generator, self.split):
+                for curr_split, train_data in enumerate(training_generator, self.split):
                     if sequence_length < grow_to_sequence_length:
                         sequence_length += 1
                     log.info(f"Sequence length is {sequence_length}")
@@ -255,7 +264,7 @@ class LanguageModelTrainer:
                     split_start_time = time.time()
                     # off by one for printing
                     curr_split += 1
-                    train_data = self._batchify(train_slice.flatten(), mini_batch_size)
+                    # train_data = self._batchify(train_slice.flatten(), mini_batch_size)
 
                     log.info("Split %d" % curr_split + f"\t - ({datetime.datetime.now():%H:%M:%S})")
 
@@ -337,7 +346,7 @@ class LanguageModelTrainer:
 
                     log.info(f"best loss so far {best_val_loss:5.8f}")
 
-                    log.info(self.model.generate_text())
+                    log.info(self.model.generate_text()[0])
 
                     if checkpoint:
                         self.model.save_checkpoint(
