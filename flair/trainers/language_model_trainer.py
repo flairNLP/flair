@@ -81,7 +81,7 @@ class TextDataset(Dataset):
             ids = ids.flip(0)
 
         train_data = LanguageModelTrainer._batchify(ids.flatten(), self.mini_batch_size).to(flair.device)
-        # print(train_data.size())
+        print(train_data)
         return train_data
 
     @staticmethod
