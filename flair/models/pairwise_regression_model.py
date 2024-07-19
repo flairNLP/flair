@@ -153,7 +153,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
     def _filter_data_point(self, pair: TextPair) -> bool:
         return len(pair) > 0
 
-    def _encode_data_points(self, data_points: List[TextPair]):
+    def _encode_data_points(self, data_points: List[TextPair]) -> torch.Tensor:
         # get a tensor of data points
         data_point_tensor = torch.stack([self._get_embedding_for_data_point(data_point) for data_point in data_points])
 
@@ -178,14 +178,17 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
                 0,
             )
         else:
-            concatenated_sentence = Sentence(
-                prediction_data_point.first.to_tokenized_string()
-                + self.sep
-                + prediction_data_point.second.to_tokenized_string(),
-                use_tokenizer=False,
-            )
-            self.embeddings.embed(concatenated_sentence)
-            return concatenated_sentence.get_embedding(embedding_names)
+            # If the concatenated version of the text pair does not exist yet, create it
+            if prediction_data_point.concatenated_data is None:
+                concatenated_sentence = Sentence(
+                    prediction_data_point.first.to_tokenized_string()
+                    + self.sep
+                    + prediction_data_point.second.to_tokenized_string(),
+                    use_tokenizer=False,
+                )
+                prediction_data_point.concatenated_data = concatenated_sentence
+            self.embeddings.embed(prediction_data_point.concatenated_data)
+            return prediction_data_point.concatenated_data.get_embedding(embedding_names)
 
     def _get_state_dict(self):
         model_state = {
