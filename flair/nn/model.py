@@ -151,7 +151,17 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
                     continue
 
             # if the model cannot be fetched, load as a file
-            state = model_path if isinstance(model_path, dict) else load_torch_state(str(model_path))
+            try:
+                state = model_path if isinstance(model_path, dict) else load_torch_state(str(model_path))
+            except Exception:
+                log.error("-" * 80)
+                log.error(
+                    f"ERROR: The key '{model_path}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
+                )
+                log.error(" -> Please check https://huggingface.co/models?filter=flair for all available models.")
+                log.error(" -> Alternatively, point to a model file on your local drive.")
+                log.error("-" * 80)
+                raise ValueError(f"Could not find any model with name '{model_path}'")
 
             # try to get model class from state
             cls_name = state.pop("__cls__", None)
