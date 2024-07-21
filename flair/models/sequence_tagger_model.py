@@ -691,7 +691,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         }
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
-        hunflair_paper_path = hu_path + "/hunflair_smallish_models"
         hunflair_main_path = hu_path + "/hunflair_allcorpus_models"
 
         hu_model_map = {
@@ -725,18 +724,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             ),
             # Keyphase models
             "keyphrase": "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"]),
-            "negation-speculation": "/".join([hu_path, "negation-speculation", "negation-speculation-model.pt"]),
+            "negation-speculation": "/".join([hu_path, "negation-speculation", "negation-speculation-v0.14.0.pt"]),
             # Biomedical models
-            "hunflair-paper-cellline": "/".join([hunflair_paper_path, "cellline", "hunflair-celline-v1.0.pt"]),
-            "hunflair-paper-chemical": "/".join([hunflair_paper_path, "chemical", "hunflair-chemical-v1.0.pt"]),
-            "hunflair-paper-disease": "/".join([hunflair_paper_path, "disease", "hunflair-disease-v1.0.pt"]),
-            "hunflair-paper-gene": "/".join([hunflair_paper_path, "gene", "hunflair-gene-v1.0.pt"]),
-            "hunflair-paper-species": "/".join([hunflair_paper_path, "species", "hunflair-species-v1.0.pt"]),
-            "hunflair-cellline": "/".join([hunflair_main_path, "cellline", "hunflair-celline-v1.0.pt"]),
-            "hunflair-chemical": "/".join([hunflair_main_path, "huner-chemical", "hunflair-chemical-full-v1.0.pt"]),
-            "hunflair-disease": "/".join([hunflair_main_path, "huner-disease", "hunflair-disease-full-v1.0.pt"]),
-            "hunflair-gene": "/".join([hunflair_main_path, "huner-gene", "hunflair-gene-full-v1.0.pt"]),
-            "hunflair-species": "/".join([hunflair_main_path, "huner-species", "hunflair-species-full-v1.1.pt"]),
+            "hunflair-cellline": "/".join([hunflair_main_path, "huner-cellline", "hunflair-celline.pt"]),
+            "hunflair-chemical": "/".join([hunflair_main_path, "huner-chemical", "hunflair-chemical.pt"]),
+            "hunflair-disease": "/".join([hunflair_main_path, "huner-disease", "hunflair-disease.pt"]),
+            "hunflair-gene": "/".join([hunflair_main_path, "huner-gene", "hunflair-gene.pt"]),
+            "hunflair-species": "/".join([hunflair_main_path, "huner-species", "hunflair-species.pt"]),
         }
 
         cache_dir = Path("models")
