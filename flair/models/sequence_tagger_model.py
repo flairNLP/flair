@@ -696,32 +696,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         hu_model_map = {
             # English NER models
-            "ner": "/".join([hu_path, "ner", "en-ner-conll03-v0.4.pt"]),
             "ner-pooled": "/".join([hu_path, "ner-pooled", "en-ner-conll03-pooled-v0.5.pt"]),
-            "ner-fast": "/".join([hu_path, "ner-fast", "en-ner-fast-conll03-v0.4.pt"]),
-            "ner-ontonotes": "/".join([hu_path, "ner-ontonotes", "en-ner-ontonotes-v0.4.pt"]),
-            "ner-ontonotes-fast": "/".join([hu_path, "ner-ontonotes-fast", "en-ner-ontonotes-fast-v0.4.pt"]),
-            # Multilingual NER models
-            "ner-multi": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
-            "multi-ner": "/".join([hu_path, "multi-ner", "quadner-large.pt"]),
-            "ner-multi-fast": "/".join([hu_path, "multi-ner-fast", "ner-multi-fast.pt"]),
-            # English POS models
-            "upos": "/".join([hu_path, "upos", "en-pos-ontonotes-v0.4.pt"]),
-            "upos-fast": "/".join([hu_path, "upos-fast", "en-upos-ontonotes-fast-v0.4.pt"]),
-            "pos": "/".join([hu_path, "pos", "en-pos-ontonotes-v0.5.pt"]),
-            "pos-fast": "/".join([hu_path, "pos-fast", "en-pos-ontonotes-fast-v0.5.pt"]),
-            # Multilingual POS models
-            "pos-multi": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
-            "multi-pos": "/".join([hu_path, "multi-pos", "pos-multi-v0.1.pt"]),
-            "pos-multi-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
-            "multi-pos-fast": "/".join([hu_path, "multi-pos-fast", "pos-multi-fast.pt"]),
             # English SRL models
-            "frame": "/".join([hu_path, "frame", "en-frame-ontonotes-v0.4.pt"]),
-            "frame-fast": "/".join([hu_path, "frame-fast", "en-frame-ontonotes-fast-v0.4.pt"]),
             "frame-large": "/".join([hu_path, "frame-large", "frame-large.pt"]),
-            # English chunking models
-            "chunk": "/".join([hu_path, "chunk", "en-chunk-conll2000-v0.4.pt"]),
-            "chunk-fast": "/".join([hu_path, "chunk-fast", "en-chunk-conll2000-fast-v0.4.pt"]),
             # Danish models
             "da-pos": "/".join([hu_path, "da-pos", "da-pos-v0.1.pt"]),
             "da-ner": "/".join([hu_path, "NER-danish", "da-ner-v0.1.pt"]),
@@ -730,13 +707,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "de-pos-tweets": "/".join([hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]),
             "de-ner": "/".join([hu_path, "de-ner", "de-ner-conll03-v0.4.pt"]),
             "de-ner-germeval": "/".join([hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]),
-            "de-ler": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
-            "de-ner-legal": "/".join([hu_path, "de-ner-legal", "de-ner-legal.pt"]),
             # French models
             "fr-ner": "/".join([hu_path, "fr-ner", "fr-ner-wikiner-0.4.pt"]),
             # Dutch models
             "nl-ner": "/".join([hu_path, "nl-ner", "nl-ner-bert-conll02-v0.8.pt"]),
-            "nl-ner-rnn": "/".join([hu_path, "nl-ner-rnn", "nl-ner-conll02-v0.5.pt"]),
+            "nl-ner-rnn": "/".join([hu_path, "nl-ner-rnn", "nl-ner-conll02-v0.14.0.pt"]),
             # Malayalam models
             "ml-pos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-xpos-model.pt",
             "ml-upos": "https://raw.githubusercontent.com/qburst/models-repository/master/FlairMalayalamModels/malayalam-upos-model.pt",
