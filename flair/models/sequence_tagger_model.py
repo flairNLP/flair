@@ -302,25 +302,18 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def _init_metrics_logging(self, epoch_log_path, sentences):
         if not os.path.isfile(self.print_out_path / epoch_log_path):
             with open(self.print_out_path / epoch_log_path, "w") as outfile:
-                outfile.write('Text' + "\t" + 
-                                'sent_ind' + "\t" +
-                            'token_ind' + "\t" +
-                            'pred' + "\t" + 
-                            'noisy' + "\t" + 
-                            'clean' + "\t" + 
-                            'noisy_flag' + "\t" + 
-                            'last_pred' + "\t" +
-                            'last_iteration' + "\t" +
-                            'iter_norm' + "\t" +
-                            #debugging 'current_prob_true_label' + "\t" +
-                            'last_conf_sum' + "\t" +
-                            'confidence' + "\t" +      
-                            'variability' + "\t" +
-                            'correctness' + "\t" +              
-                            'msp' + "\t" +
-                            'BvSB' + "\t" +
-                            'cross_entropy' + "\t" +                            
-                            'entropy'+ "\n")
+                outfile.write("Text\t" + 
+                            "sent_index\t" +
+                            "token_index\t" +
+                            "predicted\t" + 
+                            "noisy\t" + 
+                            "clean\t" + 
+                            "noisy_flag\t")
+                for metric in self.metrics_history_variables_list:
+                    outfile.write(f"{metric}\t")
+                for metric in self.metrics_list:
+                    outfile.write(f"{metric}\t")
+                outfile.write("\n")
                 
         if self.model_card["training_parameters"]["epoch"]==1:
             # initialize metrics history
@@ -340,25 +333,19 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 token_ind=0
                 for token in sent:
                     # log old history metrics and current sample metrics
-                    outfile.write(str(token.text) + "\t" + 
-                                str(sent.ind) + "\t" +
-                                str(token_ind) + "\t" +
-                                str(self.label_dictionary.get_item_for_index(pred[i].item())) + "\t" + 
-                                str(self.label_dictionary.get_item_for_index(gold_labels[i].item())) + "\t" + 
-                                str(self.label_dictionary.get_item_for_index(clean_labels[i].item())) + "\t" + 
-                                str(self.label_dictionary.get_item_for_index(gold_labels[i].item()) != self.label_dictionary.get_item_for_index(clean_labels[i].item())) + "\t" + 
-                                str(history_metrics_dict['last_prediction'][i].item()) + "\t" +
-                                str(history_metrics_dict['last_iteration'][i].item()) + "\t" +
-                                str(round(metrics_dict['iter_norm'][i].item(),4)) + "\t" +
-                                #debugging str(round(current_prob_true_labl[i].item(),4)) + "\t" +
-                                str(round(history_metrics_dict['last_confidence_sum'][i].item(),4)) + "\t" +
-                                str(round(metrics_dict['confidence'][i].item(),4)) + "\t" +
-                                str(round(metrics_dict['variability'][i].item(),4)) + "\t" +
-                                str(round(metrics_dict['correctness'][i].item(),4)) + "\t" +
-                                str(round(metrics_dict['msp'][i].item(),4)) + "\t" +
-                                str(round(metrics_dict['BvSB'][i].item(),4)) + "\t" +
-                                str(round(metrics_dict['cross_entropy'][i].item(),4)) + "\t" +
-                                str(round(metrics_dict['entropy'][i].item(),4)) + "\n")
+                    outfile.write(f"{str(token.text)}\t" + 
+                                f"{str(sent.ind)}\t" +
+                                f"{str(token_ind)}\t" +
+                                f"{str(self.label_dictionary.get_item_for_index(pred[i].item()))}\t" + 
+                                f"{str(self.label_dictionary.get_item_for_index(gold_labels[i].item()))}\t" + 
+                                f"{str(self.label_dictionary.get_item_for_index(clean_labels[i].item()))}\t" + 
+                                f"{str(self.label_dictionary.get_item_for_index(gold_labels[i].item()) != self.label_dictionary.get_item_for_index(clean_labels[i].item()))}\t") 
+                    for metric in self.metrics_history_variables_list:
+                        outfile.write(f"{str(round(history_metrics_dict[metric][i].item(),4))}\t")
+                    for metric in self.metrics_list:
+                        outfile.write(f"{str(round(metrics_dict[metric][i].item(),4))}\t")
+                    outfile.write("\n")            
+                                
                     #set updated history metrics
                     token.set_metric('last_prediction',updated_history_metrics_dict['last_prediction'][i].item() )
                     token.set_metric('last_confidence_sum', updated_history_metrics_dict['last_confidence_sum'][i].item() )
