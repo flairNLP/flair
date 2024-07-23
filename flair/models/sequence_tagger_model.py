@@ -206,6 +206,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             self.viterbi_decoder = ViterbiDecoder(self.label_dictionary)
         
         self.calculate_sample_metrics = calculate_sample_metrics
+        if self.calculate_sample_metrics:
+            self.metrics_list = ['confidence','variability','correctness','msp','BvSB','cross_entropy','entropy','iter_norm']
+            self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness','last_iteration']
         self.print_out_path = None
 
         self.to(flair.device)
@@ -277,41 +280,161 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return RNN
 
+    # start of sample metrics functions
+    def _get_history_metrics_for_batch(self, sentences):
+        #get metrics for each token in the batch from the previous epoch
 
-    def _get_metrics_for_batch(self, sentences, lengths):
+        history_metrics_dict = {}
 
-        last_preds = []
-        last_confs = []
-        last_iters = []
-        last_sq_difs=[]
-        tokens_last_corr = []
+        for metric in self.metrics_history_variables_list:
+            history_metrics_dict[metric] = []
 
-        longest_token_sequence_in_batch: int = max(lengths)
         for sentence in sentences:
-            # do the same as sentence_tensor (same shape)
-            # nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
-            # tokens_last_preds = [token.get_metric('last_prediction') for token in sentence]
-            # tokens_last_preds.extend([0]*nb_padding_tokens)
-            # tokens_last_conf = [token.get_metric('last_confidence_sum') for token in sentence]
-            # tokens_last_conf.extend([0]*nb_padding_tokens)
-            # tokens_last_iter = [token.get_metric('last_iteration') for token in sentence]
-            # tokens_last_iter.extend([0]*nb_padding_tokens)
-            # last_preds.append(tokens_last_preds)
-            # last_confs.append(tokens_last_conf)
-            # last_iters.append(tokens_last_iter)
+            for metric in self.metrics_history_variables_list:
+                metric_list = [token.get_metric(metric) for token in sentence]
+                history_metrics_dict[metric].extend(metric_list)
 
-            tokens_last_preds = [token.get_metric('last_prediction') for token in sentence]
-            tokens_last_conf = [token.get_metric('last_confidence_sum') for token in sentence]
-            tokens_last_sq_difs = [token.get_metric('last_confidence_sum') for token in sentence]
-            tokens_last_correctness = [token.get_metric('last_correctness') for token in sentence]
-            tokens_last_iter = [token.get_metric('last_iteration') for token in sentence]
-            last_preds.extend(tokens_last_preds)
-            last_confs.extend(tokens_last_conf)
-            last_sq_difs.extend(tokens_last_sq_difs)
-            tokens_last_corr.extend(tokens_last_correctness)
-            last_iters.extend(tokens_last_iter)
+        for metric in self.metrics_history_variables_list:
+            history_metrics_dict[metric] = torch.tensor(history_metrics_dict[metric], device=flair.device)
 
-        return torch.tensor(last_preds,device=flair.device),  torch.tensor(last_confs,device=flair.device), torch.tensor(last_sq_difs,device=flair.device),torch.tensor(tokens_last_corr,device=flair.device),torch.tensor(last_iters,device=flair.device)
+        return history_metrics_dict
+
+    def _init_metrics_logging(self, epoch_log_path, sentences):
+        if not os.path.isfile(self.print_out_path / epoch_log_path):
+            with open(self.print_out_path / epoch_log_path, "w") as outfile:
+                outfile.write('Text' + "\t" + 
+                                'sent_ind' + "\t" +
+                            'token_ind' + "\t" +
+                            'pred' + "\t" + 
+                            'noisy' + "\t" + 
+                            'clean' + "\t" + 
+                            'noisy_flag' + "\t" + 
+                            'last_pred' + "\t" +
+                            'last_iteration' + "\t" +
+                            'iter_norm' + "\t" +
+                            #debugging 'current_prob_true_label' + "\t" +
+                            'last_conf_sum' + "\t" +
+                            'confidence' + "\t" +      
+                            'variability' + "\t" +
+                            'correctness' + "\t" +              
+                            'msp' + "\t" +
+                            'BvSB' + "\t" +
+                            'cross_entropy' + "\t" +                            
+                            'entropy'+ "\n")
+                
+        if self.model_card["training_parameters"]["epoch"]==1:
+            # initialize metrics history
+            for sent in sentences:
+                for dp in sent.tokens:
+                    # enable choice of metrics to store?
+                    dp.set_metric('last_prediction', -1)
+                    dp.set_metric('last_confidence_sum', 0 )
+                    dp.set_metric('last_sq_difference_sum', 0 )
+                    dp.set_metric('last_correctness', 0 )
+                    dp.set_metric('last_iteration', 0 )
+    
+    def log_metrics(self, epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, gold_labels, clean_labels):
+        i=0
+        with open(self.print_out_path / epoch_log_path, "a") as outfile:
+            for sent_ind, sent in enumerate(sentences):
+                token_ind=0
+                for token in sent:
+                    # log old history metrics and current sample metrics
+                    outfile.write(str(token.text) + "\t" + 
+                                str(sent.ind) + "\t" +
+                                str(token_ind) + "\t" +
+                                str(self.label_dictionary.get_item_for_index(pred[i].item())) + "\t" + 
+                                str(self.label_dictionary.get_item_for_index(gold_labels[i].item())) + "\t" + 
+                                str(self.label_dictionary.get_item_for_index(clean_labels[i].item())) + "\t" + 
+                                str(self.label_dictionary.get_item_for_index(gold_labels[i].item()) != self.label_dictionary.get_item_for_index(clean_labels[i].item())) + "\t" + 
+                                str(history_metrics_dict['last_prediction'][i].item()) + "\t" +
+                                str(history_metrics_dict['last_iteration'][i].item()) + "\t" +
+                                str(round(metrics_dict['iter_norm'][i].item(),4)) + "\t" +
+                                #debugging str(round(current_prob_true_labl[i].item(),4)) + "\t" +
+                                str(round(history_metrics_dict['last_confidence_sum'][i].item(),4)) + "\t" +
+                                str(round(metrics_dict['confidence'][i].item(),4)) + "\t" +
+                                str(round(metrics_dict['variability'][i].item(),4)) + "\t" +
+                                str(round(metrics_dict['correctness'][i].item(),4)) + "\t" +
+                                str(round(metrics_dict['msp'][i].item(),4)) + "\t" +
+                                str(round(metrics_dict['BvSB'][i].item(),4)) + "\t" +
+                                str(round(metrics_dict['cross_entropy'][i].item(),4)) + "\t" +
+                                str(round(metrics_dict['entropy'][i].item(),4)) + "\n")
+                    #set updated history metrics
+                    token.set_metric('last_prediction',updated_history_metrics_dict['last_prediction'][i].item() )
+                    token.set_metric('last_confidence_sum', updated_history_metrics_dict['last_confidence_sum'][i].item() )
+                    token.set_metric('last_sq_difference_sum', updated_history_metrics_dict['last_sq_difference_sum'][i].item() )
+                    token.set_metric('last_correctness', updated_history_metrics_dict['last_correctness'][i].item() )
+                    token.set_metric('last_iteration',updated_history_metrics_dict['last_iteration'][i].item() )
+                    # new dp properties: last_iter; last_pred; last_conf, last_sq_sum   
+                    i+=1 
+                    token_ind+=1
+                outfile.write('\n')
+
+    def calculate_metrics(self, history_metrics_dict, softmax, pred, gold_labels):
+        values, indices = softmax.topk(2)
+
+        # Metric: Max softmax prob (calculate_loss)
+        msp = values[:,0]
+
+        # Best vs second best (calculate_loss)
+        BvSB = msp - values[:,1]
+        # label_tensor ~ gold_labels : shape = (total_num_tokens, 17)
+
+        batch_label_indexer = gold_labels.reshape(gold_labels.size(dim=0),1)
+        current_prob_true_labl = softmax.gather(index=batch_label_indexer, dim=1)[:,0]
+
+        confidence_sum = torch.add(history_metrics_dict['last_confidence_sum'], current_prob_true_labl)
+        confidence = torch.div(confidence_sum,self.model_card["training_parameters"]["epoch"])
+        
+        sq_difference_sum = torch.add(history_metrics_dict['last_sq_difference_sum'], torch.square(torch.sub(current_prob_true_labl,confidence)))
+        variability = torch.sqrt(torch.div(sq_difference_sum, self.model_card["training_parameters"]["epoch"]))
+
+        correctness = torch.add(history_metrics_dict['last_correctness'],(gold_labels == pred).bool())
+
+        iteration = history_metrics_dict['last_iteration'].clone()
+
+        prediction_changed_list = (pred != history_metrics_dict['last_prediction']).bool()
+        iteration[prediction_changed_list] = self.model_card["training_parameters"]["epoch"]
+
+        iter_norm = torch.div(iteration,self.model_card["training_parameters"]["epoch"])
+
+        entropy = -torch.sum(torch.mul(softmax, torch.log(softmax)), dim = -1)
+
+        # calculate cross entropy for each data point
+        cross_entropy = torch.nn.functional.nll_loss(torch.log(softmax), gold_labels, reduction='none')
+        metrics_dict = {'confidence':confidence, 'BvSB':BvSB, 'msp':msp,'correctness':correctness, 'iter_norm':iter_norm, 'entropy':entropy, 'cross_entropy':cross_entropy,'variability':variability}
+        
+        #update history metrics
+        updated_history_metrics_dict = {}
+        updated_history_metrics_dict['last_prediction'] = torch.tensor(pred, device=flair.device)
+        updated_history_metrics_dict['last_iteration'] = torch.tensor(iteration, device=flair.device)
+        updated_history_metrics_dict['last_confidence_sum'] = torch.tensor(confidence_sum, device=flair.device)
+        updated_history_metrics_dict['last_sq_difference_sum'] = torch.tensor(sq_difference_sum, device=flair.device)
+        updated_history_metrics_dict['last_correctness'] = history_metrics_dict['last_correctness']
+
+        return metrics_dict, updated_history_metrics_dict
+
+    def calculate_and_log_metrics(self, sentences, scores):
+        #BIO
+        gold_labels = self._prepare_bio_label_tensor(sentences)
+
+        #BIO
+        clean_labels = self._prepare_bio_clean_label_tensor(sentences)
+
+        epoch_log_path = "epoch_log_"+str(self.model_card["training_parameters"]["epoch"])+'.log'
+    
+        self._init_metrics_logging(epoch_log_path, sentences)
+        history_metrics_dict = self._get_history_metrics_for_batch(sentences)
+    
+        # scores: shape = (total_num_tokens, 17)
+        softmax = torch.nn.functional.softmax(scores)
+        # softmax: shape = (total_num_tokens, 17) 
+
+        pred = torch.argmax(softmax, dim=1)
+
+        metrics_dict, updated_history_metrics_dict = self.calculate_metrics(history_metrics_dict, softmax, pred, gold_labels)
+
+        self.log_metrics(epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, gold_labels, clean_labels)
 
 
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
@@ -319,141 +442,15 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
         sentences = sorted(sentences, key=len, reverse=True)
-        gold_labels = self._prepare_bio_label_tensor(sentences)
-
-        #not really needed for now.
-        clean_labels = self._prepare_bio_clean_label_tensor(sentences)
 
         sentence_tensor, lengths = self._prepare_tensors(sentences)
-        # sentence_tensor has shape (batch_size, max num tokens in sentence, embedding length)
 
-        if self.calculate_sample_metrics:
-            epoch_log_path = "epoch_log_"+str(self.model_card["training_parameters"]["epoch"])+'.log'
-        
-            if not os.path.isfile(self.print_out_path / epoch_log_path):
-                with open(self.print_out_path / epoch_log_path, "w") as outfile:
-                    outfile.write('Text' + "\t" + 
-                                  'sent_ind' + "\t" +
-                                'token_ind' + "\t" +
-                                'pred' + "\t" + 
-                                'noisy' + "\t" + 
-                                'clean' + "\t" + 
-                                'noisy_flag' + "\t" + 
-                                'last_pred' + "\t" +
-                                'last_iteration' + "\t" +
-                                'iter_norm' + "\t" +
-                                'current_prob_true_label' + "\t" +
-                                'last_conf_sum' + "\t" +
-                                'confidence' + "\t" +      
-                                'variability' + "\t" +
-                                'correctness' + "\t" +              
-                                'msp' + "\t" +
-                                'BvSB' + "\t" +
-                                'cross_entropy' + "\t" +                            
-                                'entropy'+ "\n")
-                    
-            if self.model_card["training_parameters"]["epoch"]==1:
-                # function, initialize metrics history
-                for sent in sentences:
-                    for dp in sent.tokens:
-                        # enable choice of metrics to store?
-                        dp.set_metric('last_prediction', -1)
-                        dp.set_metric('last_confidence_sum', 0 )
-                        dp.set_metric('last_sq_difference_sum', 0 )
-                        dp.set_metric('last_correctness', 0 )
-                        dp.set_metric('last_iteration', 0 )
-
-            last_prediction, last_confidence, last_sq_difference_sum, last_correctness, last_iteration = self._get_metrics_for_batch(sentences, lengths)
-
-            # shape (batch_size, max num tokens, 1): change this to (total_num_tokens, 1)
-
-
-        # before forward: embeddings
-        
         # forward pass to get scores
         scores = self.forward(sentence_tensor, lengths)
 
         if self.calculate_sample_metrics:
-            # metric keys 'confidence', msp, bvsb, iter_norm...
-            # metric history keys: confidence_sum, last prediction, last_iter_norm
-            # to do: metrics = self._calculate_metrics_for_batch(scores, label_tensor, )
-            
-            # scores: shape = (total_num_tokens, 17)
+            self.calculate_and_log_metrics(sentences, scores)
 
-            softmax = torch.nn.functional.softmax(scores)
-            
-            # softmax: shape = (total_num_tokens, 17) 
-
-            pred = torch.argmax(softmax, dim=1)
-
-            values, indices = softmax.topk(2)
-
-            # Metric: Max softmax prob (calculate_loss)
-            msp = values[:,0]
-
-            # Best vs second best (calculate_loss)
-            BvSB = msp - values[:,1]
-            # label_tensor ~ gold_labels : shape = (total_num_tokens, 17)
-
-            batch_label_indexer = gold_labels.reshape(gold_labels.size(dim=0),1)
-            current_prob_true_labl = softmax.gather(index=batch_label_indexer, dim=1)[:,0]
-
-            confidence_sum = torch.add(last_confidence, current_prob_true_labl)
-            confidence = torch.div(confidence_sum,self.model_card["training_parameters"]["epoch"])
-            
-            sq_difference_sum = torch.add(last_sq_difference_sum, torch.square(torch.sub(current_prob_true_labl,confidence)))
-            variability = torch.sqrt(torch.div(sq_difference_sum, self.model_card["training_parameters"]["epoch"]))
-
-            correctness = torch.add(last_correctness,(gold_labels == pred).bool())
-
-            iteration = last_iteration.clone()
-
-            prediction_changed_list = (pred != last_prediction).bool()
-            iteration[prediction_changed_list] = self.model_card["training_parameters"]["epoch"]
-
-            iter_norm = torch.div(iteration,self.model_card["training_parameters"]["epoch"])
-
-            entropy = -torch.sum(torch.mul(softmax, torch.log(softmax)), dim = -1)
-
-            # calc cross entropy for each data point
-            cross_entropy = torch.nn.functional.nll_loss(torch.log(softmax), gold_labels, reduction='none')
-
-            i=0
-            with open(self.print_out_path / epoch_log_path, "a") as outfile:
-                for sent_ind, sent in enumerate(sentences):
-                    token_ind=0
-                    for token in sent:
-                        outfile.write(str(token.text) + "\t" + 
-                                    str(sent.ind) + "\t" +
-                                    str(token_ind) + "\t" +
-                                    str(self.label_dictionary.get_item_for_index(pred[i].item())) + "\t" + 
-                                    str(self.label_dictionary.get_item_for_index(gold_labels[i].item())) + "\t" + 
-                                    str(self.label_dictionary.get_item_for_index(clean_labels[i].item())) + "\t" + 
-                                    str(self.label_dictionary.get_item_for_index(gold_labels[i].item()) != self.label_dictionary.get_item_for_index(clean_labels[i].item())) + "\t" + 
-                                    str(last_prediction[i].item()) + "\t" +
-                                    str(last_iteration[i].item()) + "\t" +
-                                    str(round(iter_norm[i].item(),4)) + "\t" +
-                                    str(round(current_prob_true_labl[i].item(),4)) + "\t" +
-                                    str(round(last_confidence[i].item(),4)) + "\t" +
-                                    str(round(confidence[i].item(),4)) + "\t" +
-                                    str(round(variability[i].item(),4)) + "\t" +
-                                    str(round(correctness[i].item(),4)) + "\t" +
-                                    str(round(msp[i].item(),4)) + "\t" +
-                                    str(round(BvSB[i].item(),4)) + "\t" +
-                                    
-                                    str(round(cross_entropy[i].item(),4)) + "\t" +
-                                    str(round(entropy[i].item(),4)) + "\n")
-                        token.set_metric('last_prediction',pred[i] )
-                        token.set_metric('last_confidence_sum', confidence_sum[i] )
-                        token.set_metric('last_sq_difference_sum', sq_difference_sum[i] )
-                        token.set_metric('last_correctness', last_correctness[i] )
-                        token.set_metric('last_iteration',iteration[i] )
-                        # new dp properties: last_iter; last_pred; last_conf, last_sq_sum   
-                        i+=1 
-                        token_ind+=1
-                    outfile.write('\n')
-            #print(i)
-        
         # BIOES
         gold_labels = self._prepare_label_tensor(sentences)
 
