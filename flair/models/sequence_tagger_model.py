@@ -357,7 +357,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     token_ind+=1
                 outfile.write('\n')
 
-    def calculate_metrics(self, history_metrics_dict, softmax, pred, gold_labels):
+    def calculate_metrics(self, history_metrics_dict, softmax, gold_labels):
+
+        pred = torch.argmax(softmax, dim=1)
+
         values, indices = softmax.topk(2)
 
         # Metric: Max softmax prob (calculate_loss)
@@ -399,7 +402,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         updated_history_metrics_dict['last_sq_difference_sum'] = torch.tensor(sq_difference_sum, device=flair.device)
         updated_history_metrics_dict['last_correctness'] = history_metrics_dict['last_correctness']
 
-        return metrics_dict, updated_history_metrics_dict
+        return pred, metrics_dict, updated_history_metrics_dict
 
     def calculate_and_log_metrics(self, sentences, scores):
         #BIO
@@ -1340,6 +1343,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
         relabel_noisy_hard = False,
         relabel_noisy_soft = False,
         relabel_path = '',
+        calculate_sample_metrics = False,
         **seqtaggerargs
     ):
         """
@@ -1357,6 +1361,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
             use_rnn = use_rnn,
             use_crf = use_crf, 
             reproject_embeddings = reproject_embeddings,
+            calculate_sample_metrics=calculate_sample_metrics,
             **seqtaggerargs
         )
         
@@ -1383,6 +1388,8 @@ class EarlyExitSequenceTagger(SequenceTagger):
             )
          # if modified loss, then return per-sample losses
         #TODO: add check for different variants of loss
+        self.metrics_list.append('pd')
+
         self.to(flair.device)
 
     def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.LongTensor, torch.Tensor]:
@@ -1509,7 +1516,19 @@ class EarlyExitSequenceTagger(SequenceTagger):
         if to_print:
             outfile.close()
 
+    def calculate_metrics(self, history_metrics_dict, softmax, gold_labels):
 
+        pred, metrics_dict, updated_history_metrics_dict = super().calculate_metrics(
+            history_metrics_dict, softmax[-1], gold_labels
+        )
+
+        # calculate and set pd metric here
+        pd = []
+        
+        for i in range(softmax.size()[1]):
+            pd.append(self._calculate_pd(softmax[:, i, :]))
+        metrics_dict['pd'] = torch.tensor(pd, device=flair.device)
+        return pred, metrics_dict, updated_history_metrics_dict
 
     def _prepare_soft_label_tensor(self, sentences: List[Sentence]):
         
