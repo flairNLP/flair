@@ -722,8 +722,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     "pucpr-flair-clinical-pos-tagging-best-model.pt",
                 ]
             ),
-            # Keyphase models
-            "keyphrase": "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"]),
             "negation-speculation": "/".join([hu_path, "negation-speculation-v14", "negation-speculation-v0.14.0.pt"]),
             # Biomedical models
             "hunflair-cellline": "/".join([hunflair_main_path, "huner-cellline", "hunflair-cellline.pt"]),
