@@ -724,9 +724,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             ),
             # Keyphase models
             "keyphrase": "/".join([hu_path, "keyphrase", "keyphrase-en-scibert.pt"]),
-            "negation-speculation": "/".join([hu_path, "negation-speculation", "negation-speculation-v0.14.0.pt"]),
+            "negation-speculation": "/".join([hu_path, "negation-speculation-v14", "negation-speculation-v0.14.0.pt"]),
             # Biomedical models
-            "hunflair-cellline": "/".join([hunflair_main_path, "huner-cellline", "hunflair-celline.pt"]),
+            "hunflair-cellline": "/".join([hunflair_main_path, "huner-cellline", "hunflair-cellline.pt"]),
             "hunflair-chemical": "/".join([hunflair_main_path, "huner-chemical", "hunflair-chemical.pt"]),
             "hunflair-disease": "/".join([hunflair_main_path, "huner-disease", "hunflair-disease.pt"]),
             "hunflair-gene": "/".join([hunflair_main_path, "huner-gene", "hunflair-gene.pt"]),
