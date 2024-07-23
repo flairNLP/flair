@@ -40,7 +40,6 @@ from .legacy import (
 
 # Expose token embedding classes
 from .token import (
-    BPEmbSerializable,
     BytePairEmbeddings,
     CharacterEmbeddings,
     FastTextEmbeddings,

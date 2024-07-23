@@ -418,6 +418,7 @@ def test_load_universal_dependencies_conllu_corpus(tasks_base_path):
     _assert_universal_dependencies_conllu_dataset(corpus.train)
 
 
+@pytest.mark.integration()
 def test_hipe_2022_corpus(tasks_base_path):
     # This test covers the complete HIPE 2022 dataset.
     # https://github.com/hipe-eval/HIPE-2022-data
@@ -681,6 +682,7 @@ def test_hipe_2022_corpus(tasks_base_path):
     test_hipe_2022(dataset_version="v2.1", add_document_separator=False)
 
 
+@pytest.mark.integration()
 def test_icdar_europeana_corpus(tasks_base_path):
     # This test covers the complete ICDAR Europeana corpus:
     # https://github.com/stefan-it/historic-domain-adaptation-icdar
@@ -698,6 +700,7 @@ def test_icdar_europeana_corpus(tasks_base_path):
         check_number_sentences(len(corpus.test), gold_stats[language]["test"], "test")
 
 
+@pytest.mark.integration()
 def test_masakhane_corpus(tasks_base_path):
     # This test covers the complete MasakhaNER dataset, including support for v1 and v2.
     supported_versions = ["v1", "v2"]
@@ -781,6 +784,7 @@ def test_masakhane_corpus(tasks_base_path):
             check_number_sentences(len(corpus.test), gold_stats["test"], "test", language, version)
 
 
+@pytest.mark.integration()
 def test_nermud_corpus(tasks_base_path):
     # This test covers the NERMuD dataset. Official stats can be found here:
     # https://github.com/dhfbk/KIND/tree/main/evalita-2023
@@ -808,6 +812,7 @@ def test_german_ler_corpus(tasks_base_path):
     assert len(corpus.test) == 6673, "Mismatch in number of sentences for test split"
 
 
+@pytest.mark.integration()
 def test_masakha_pos_corpus(tasks_base_path):
     # This test covers the complete MasakhaPOS dataset.
     supported_versions = ["v1"]
@@ -876,6 +881,7 @@ def test_masakha_pos_corpus(tasks_base_path):
             check_number_sentences(len(corpus.test), gold_stats["test"], "test", language, version)
 
 
+@pytest.mark.integration()
 def test_german_mobie(tasks_base_path):
     corpus = flair.datasets.NER_GERMAN_MOBIE()
 
@@ -960,6 +966,7 @@ def test_jsonl_corpus_loads_metadata(tasks_base_path):
     assert dataset.sentences[2].get_metadata("from") == 125
 
 
+@pytest.mark.integration()
 def test_ontonotes_download():
     from urllib.parse import urlparse
 
