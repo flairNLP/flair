@@ -677,8 +677,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "chunk": "flair/chunk-english",
             "chunk-fast": "flair/chunk-english-fast",
             # Language-specific NER models
-            "ar-ner": "megantosh/flair-arabic-multi-ner",
-            "ar-pos": "megantosh/flair-arabic-dialects-codeswitch-egy-lev",
             "da-ner": "flair/ner-danish",
             "de-ner": "flair/ner-german",
             "de-ler": "flair/ner-german-legal",
@@ -706,6 +704,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "de-pos-tweets": "/".join([hu_path, "de-pos-tweets", "de-pos-twitter-v0.1.pt"]),
             "de-ner": "/".join([hu_path, "de-ner", "de-ner-conll03-v0.4.pt"]),
             "de-ner-germeval": "/".join([hu_path, "de-ner-germeval", "de-ner-germeval-0.4.1.pt"]),
+            # Arabic models
+            "ar-ner": "/".join([hu_path, "arabic", "ar-ner.pt"]),
+            "ar-pos": "/".join([hu_path, "arabic", "ar-pos.pt"]),
             # French models
             "fr-ner": "/".join([hu_path, "fr-ner", "fr-ner-wikiner-0.4.pt"]),
             # Dutch models
