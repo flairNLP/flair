@@ -435,62 +435,71 @@ class ColumnCorpus(MultiFileColumnCorpus):
         )
 
     @staticmethod
-    def get_token_level_label_of_each_token(sentence: Sentence, label_type: str) -> List[str]:
-        """Generates a label for each token in the sentence. This function requires that the labels corresponding to the label_type are token-level tokens.
+    def _get_level_of_label(dataset: Optional[Dataset], label_type: str) -> Optional[Union[Type[Token], Type[Span]]]:
+        """Gets level of label type by checking the first label in this dataset.
 
-        Args:
-            sentence: a flair sentence to generate labels for
-            label_type: a string representing the type of the labels, e.g., "pos"
+        Raises:
+            NotImplementedError: if level of label_type is neither Token nor Span
         """
-        list_of_labels = ["O" for _ in range(len(sentence.tokens))]
-        for label in sentence.get_labels(label_type):
-            label_token_index = label.data_point._internal_index
-            list_of_labels[label_token_index - 1] = label.value
-        return list_of_labels
+        for sentence in _iter_dataset(dataset):
+            for label in sentence.get_labels(label_type):
+                if isinstance(label.data_point, Token):
+                    return Token
+                elif isinstance(label.data_point, Span):
+                    return Span
+                else:
+                    raise NotImplementedError(
+                        f"The level of {label_type} is neither token nor span. Only token level labels and span level labels can be handled now."
+                    )
+        log.warning(f"There is no label of type {label_type} in this dataset.")
+        return None
 
     @staticmethod
-    def get_span_level_label_of_each_token(sentence: Sentence, label_type: str) -> List[str]:
-        """Generates a label for each token in the sentence in BIO format. This function requires that the labels corresponding to the label_type are span-level tokens.
-
-        Args:
-            sentence: a flair sentence to generate labels for
-            label_type: a string representing the type of the labels, e.g., "ner"
-        """
-        list_of_labels = ["O" for _ in range(len(sentence.tokens))]
-        for label in sentence.get_labels(label_type):
-            tokens = label.data_point.tokens
-            start_token_index = tokens[0]._internal_index
-            list_of_labels[start_token_index - 1] = f"B-{label.value}"
-            for token in tokens[1:]:
-                token_index = token._internal_index
-                list_of_labels[token_index - 1] = f"I-{label.value}"
-        return list_of_labels
-
-    @staticmethod
-    def write_dataset_to_file(
-        dataset: Dataset, file_path: Path, label_type_tuples: List[tuple], column_delimiter: str = "\t"
+    def _write_dataset_to_file(
+        dataset: Optional[Dataset], label_types: List[str], file_path: Path, column_delimiter: str = "\t"
     ) -> None:
         """Writes a dataset to a file.
 
-        Following these two rules:
+        Following these two rules.
         (1) the text and the label(s) of every token is represented in one line separated by column_delimiter
         (2) every sentence is separated from the previous one by an empty line
-        """
-        with open(file_path, mode="w") as output_file:
-            for sentence in _iter_dataset(dataset):
-                texts = [token.text for token in sentence.tokens]
-                texts_and_labels = [texts]
-                for label_type, level in label_type_tuples:
-                    if level is Token:
-                        texts_and_labels.append(ColumnCorpus.get_token_level_label_of_each_token(sentence, label_type))
-                    elif level is Span:
-                        texts_and_labels.append(ColumnCorpus.get_span_level_label_of_each_token(sentence, label_type))
-                    else:
-                        raise NotImplementedError(f"The level of {label_type} is neither token nor span.")
 
-                for text_and_labels_of_a_token in zip(*texts_and_labels):
-                    output_file.write(column_delimiter.join(text_and_labels_of_a_token) + "\n")
-                output_file.write("\n")
+        Note:
+        Only labels corresponding to label_types will be written.
+        Only token level or span level sequence tagging labels are supported.
+        Currently, the whitespace_after attribute of each token will not be preserved in the written file.
+
+        Args:
+            dataset: a dataset to write
+            label_types: a list of label types to write e.g., ["ner", "pos"]
+            file_path: a path to store the file
+            column_delimiter: a string to separate token texts and labels in a line, the default value is a tab
+        """
+        if dataset:
+            label_type_tuples = []
+            for label_type in label_types:
+                level_of_label = ColumnCorpus._get_level_of_label(dataset, label_type)
+                label_type_tuples.append((label_type, level_of_label))
+
+            with open(file_path, mode="w") as output_file:
+                for sentence in _iter_dataset(dataset):
+                    texts = [token.text for token in sentence.tokens]
+                    texts_and_labels = [texts]
+                    for label_type, level in label_type_tuples:
+                        if level is None:
+                            texts_and_labels.append(["O" for _ in range(len(sentence))])
+                        elif level is Token:
+                            texts_and_labels.append(sentence._get_token_level_label_of_each_token(label_type))
+                        elif level is Span:
+                            texts_and_labels.append(sentence._get_span_level_label_of_each_token(label_type))
+                        else:
+                            raise NotImplementedError(f"The level of {label_type} is neither token nor span.")
+
+                    for text_and_labels_of_a_token in zip(*texts_and_labels):
+                        output_file.write(column_delimiter.join(text_and_labels_of_a_token) + "\n")
+                    output_file.write("\n")
+        else:
+            log.warning("dataset is None, did not write any file.")
 
     @classmethod
     def load_corpus_with_meta_data(cls, directory: Path) -> "ColumnCorpus":
@@ -507,28 +516,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
             **meta_data,
         )
 
-    def get_level_of_label(self, label_type: str) -> Union[Type[Token], Type[Span]]:
-        """Gets level of label type by checking the first label in this corpus.
-
-        Raises:
-            RuntimeError: if there is no label of label_type
-            NotImplementedError: if level of label_type is other than Token or Span
-        """
-        for dataset in [self.train, self.dev, self.test]:
-            if dataset:
-                for sentence in _iter_dataset(dataset):
-                    for label in sentence.get_labels(label_type):
-                        if isinstance(label.data_point, Token):
-                            return Token
-                        elif isinstance(label.data_point, Span):
-                            return Span
-                        else:
-                            raise NotImplementedError(
-                                f"The level of {label_type} is neither token nor span. Only token level labels and span level labels can be handled now."
-                            )
-        raise RuntimeError(f"There is no label of type {label_type} in this corpus.")
-
-    def write_corpus_meta_data(
+    def _write_corpus_meta_data(
         self, label_types: List[str], file_path: Path, column_delimiter: str, max_depth=5
     ) -> None:
         """Writes meta data of this corpus to a json file.
@@ -548,6 +536,8 @@ class ColumnCorpus(MultiFileColumnCorpus):
         meta_data["column_format"] = column_format
 
         nonempty_dataset = self.train or self.dev or self.test
+        # Sometimes, nonempty_dataset is a ConcatDataset or Subset, we need to get the original ColumnDataset
+        # to access the encoding, in_memory, banned_sentences and default_whitespace_after attributes
         for _ in range(max_depth):
             if type(nonempty_dataset) is ColumnDataset:
                 break
@@ -576,24 +566,16 @@ class ColumnCorpus(MultiFileColumnCorpus):
         Only labels corresponding to label_types will be written.
         Only token level or span level sequence tagging labels are supported.
         Currently, the whitespace_after attribute of each token will not be preserved in the written file.
+
+        Args:
+            label_types: a list of label types to write e.g., ["ner", "pos"]
+            output_directory: a directory to store the files
+            column_delimiter: a string to separate token texts and labels in a line, the default value is a tab
         """
-        label_type_tuples = [(label_type, self.get_level_of_label(label_type)) for label_type in label_types]
-
         os.makedirs(output_directory, exist_ok=True)
-        if self.train:
-            ColumnCorpus.write_dataset_to_file(
-                self.train, output_directory / "train.conll", label_type_tuples, column_delimiter
-            )
-        if self.dev:
-            ColumnCorpus.write_dataset_to_file(
-                self.dev, output_directory / "dev.conll", label_type_tuples, column_delimiter
-            )
-        if self.test:
-            ColumnCorpus.write_dataset_to_file(
-                self.test, output_directory / "test.conll", label_type_tuples, column_delimiter
-            )
-
-        self.write_corpus_meta_data(label_types, output_directory / "meta_data.json", column_delimiter)
+        for dataset, file_name in [(self.train, "train.conll"), (self.dev, "dev.conll"), (self.test, "test.conll")]:
+            ColumnCorpus._write_dataset_to_file(dataset, label_types, output_directory / file_name, column_delimiter)
+        self._write_corpus_meta_data(label_types, output_directory / "meta_data.json", column_delimiter)
 
 
 class ColumnDataset(FlairDataset):
@@ -948,6 +930,26 @@ class ColumnDataset(FlairDataset):
         if self.label_name_map and tag in self.label_name_map:
             tag = self.label_name_map[tag]  # for example, transforming 'PER' to 'person'
         return tag
+
+    def write_dataset_to_file(self, label_types: List[str], file_path: Path, column_delimiter: str = "\t") -> None:
+        """Writes a dataset to a file.
+
+        Following these two rules.
+        (1) the text and the label(s) of every token is represented in one line separated by column_delimiter
+        (2) every sentence is separated from the previous one by an empty line
+
+        Note:
+        Only labels corresponding to label_types will be written.
+        Only token level or span level sequence tagging labels are supported.
+        Currently, the whitespace_after attribute of each token will not be preserved in the written file.
+
+        Args:
+            label_types: a list of label types to write e.g., ["ner", "pos"]
+            file_path: a path to store the file
+            column_delimiter: a string to separate token texts and labels in a line, the default value is a tab
+        """
+        file_path.parent.mkdir(exist_ok=True, parents=True)
+        ColumnCorpus._write_dataset_to_file(self, label_types, file_path, column_delimiter)
 
     def __line_completes_sentence(self, line: str) -> bool:
         sentence_completed = line.isspace() or line == ""
