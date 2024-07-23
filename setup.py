@@ -6,7 +6,7 @@ required = Path("requirements.txt").read_text(encoding="utf-8").split("\n")
 
 setup(
     name="flair",
-    version="0.13.1",
+    version="0.14.0",
     description="A very simple framework for state-of-the-art NLP",
     long_description=Path("README.md").read_text(encoding="utf-8"),
     long_description_content_type="text/markdown",
