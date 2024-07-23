@@ -4973,6 +4973,57 @@ class NER_ESTONIAN_NOISY(ColumnCorpus):
                 out_file.write("\n")
 
 
+class NER_NOISEBENCH(ColumnCorpus):
+    label_url = "https://github.com/elenamer/NoiseBench/tree/8a32da1e06f2239afc95b3f9dc5274abc25cc46d/data/annotations"
+    def __init__(
+        self,
+        noise: str = None,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ) -> None:
+        """Initialize the NoiseBench corpus.
+
+        Args:
+            noise (string): Chooses the labelset for the data.
+                clean (default): Clean labels
+                crowd,crowdbest,expert,distant,weak,llm : Different kinds of noisy labelsets (details: ...)
+            base_path (Optional[Union[str, Path]]): Path to the data.
+                Default is None, meaning the corpus gets automatically downloaded and saved.
+                You can override this by passing a path to a directory containing the unprocessed files but typically this
+                should not be necessary.
+            in_memory (bool): If True the dataset is kept in memory achieving speedups in training.
+            **corpusargs: The arguments propagated to :meth:'flair.datasets.ColumnCorpus.__init__'.
+        """
+        if noise not in ['clean', None, 'crowd','crowdbest','expert','distant','weak','llm']:
+            raise Exception(
+                "Please choose a valid version"
+            )
+
+        base_path = self._set_path(base_path)
+
+        filename = 'clean' if noise in ['clean',None] else f'noise_{noise}'
+
+        cached_path(f"{self.label_url}/{filename}.traindev", base_path)
+        cached_path(f"{self.label_url}/index.txt", base_path)
+
+        super().__init__(
+            data_folder=base_path,
+            train_file=f"{filename}.train",
+            dev_file=f"{filename}.dev",
+            test_file=f"clean.test", # test set is always clean (without noise)
+            column_format={0: "text", 1: "ner"},
+            in_memory=in_memory,
+            column_delimiter="\t",
+            document_separator = "-DOCSTART-",
+            **corpusargs,
+        )
+
+    @classmethod
+    def _set_path(cls, base_path) -> Path:
+        base_path = flair.cache_root / "datasets" / "noisebench" if not base_path else Path(base_path)
+        return base_path
+    
 class MASAKHA_POS(MultiCorpus):
     def __init__(
         self,
