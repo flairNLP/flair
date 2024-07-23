@@ -171,13 +171,6 @@ def hf_download(model_name: str) -> str:
         )
     except HTTPError:
         # output information
-        logger.error("-" * 80)
-        logger.error(
-            f"ERROR: The key '{model_name}' was neither found on the ModelHub nor is this a valid path to a file on your system!"
-        )
-        logger.error(" -> Please check https://huggingface.co/models?filter=flair for all available models.")
-        logger.error(" -> Alternatively, point to a model file on your local drive.")
-        logger.error("-" * 80)
         Path(flair.cache_root / "models" / model_folder).rmdir()  # remove folder again if not valid
         raise
 
