@@ -496,7 +496,7 @@ class ModelTrainer(Pluggable):
             self.context_stack = context_stack
             self.dispatch("after_setup", **parameters)
 
-            scaler = torch.cuda.amp.GradScaler(enabled=use_amp and flair.device.type != "cpu")
+            scaler = torch.cuda.amp.GradScaler(enabled=use_amp and flair.device.type != "cpu")  # type: ignore[futurewarning]
 
             final_eval_info = (
                 "model after last epoch (final-model.pt)"
