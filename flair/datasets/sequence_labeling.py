@@ -4974,7 +4974,9 @@ class NER_ESTONIAN_NOISY(ColumnCorpus):
 
 
 class NER_NOISEBENCH(ColumnCorpus):
-    label_url = "https://github.com/elenamer/NoiseBench/tree/8a32da1e06f2239afc95b3f9dc5274abc25cc46d/data/annotations"
+    label_url = "https://raw.githubusercontent.com/elenamer/NoiseBench/main/data/annotations/"
+    SAVE_TRAINDEV_FILE = False
+    
     def __init__(
         self,
         noise: str = None,
@@ -5000,26 +5002,26 @@ class NER_NOISEBENCH(ColumnCorpus):
                 "Please choose a valid version"
             )
 
-        base_path = self._set_path(base_path)
+        self._set_path(base_path)
 
         filename = 'clean' if noise in ['clean',None] else f'noise_{noise}'
-        file_paths = [base_path / f'{filename}.train', base_path / f'{filename}.dev', base_path / 'clean.test']
+        file_paths = [self.base_path / f'{filename}.train', self.base_path / f'{filename}.dev', self.base_path / 'clean.test']
         files_exist = [path.exists() for path in file_paths]
-        cleanconll_base_path = flair.cache_root / "datasets" / "cleanconll"
+        self.cleanconll_base_path = flair.cache_root / "datasets" / "cleanconll"
 
         if not all(files_exist):
-            cached_path(f"{self.label_url}/{filename}.traindev", base_path / 'annotations_only')
-            cached_path(f"{self.label_url}/index.txt", base_path / 'annotations_only')
+            cached_path(f"{self.label_url}/{filename}.traindev", self.base_path / 'annotations_only')
+            cached_path(f"{self.label_url}/index.txt", self.base_path / 'annotations_only')
             
-            cleanconll_files_exist = [Path(f'{cleanconll_base_path}/cleanconll.{split}').exists() for split in ['train','dev','test']]
+            cleanconll_files_exist = [Path(f'{self.cleanconll_base_path}/cleanconll.{split}').exists() for split in ['train','dev','test']]
             if not all(cleanconll_files_exist):
                 # download cleanconll
 
-                clone = f"git clone https://github.com/flairNLP/CleanCoNLL.git {cleanconll_base_path}/CleanCoNLL" 
+                clone = f"git clone https://github.com/flairNLP/CleanCoNLL.git {self.cleanconll_base_path}/CleanCoNLL" 
                 os.system(clone) # Cloning
                 cwd = os.getcwd()
 
-                os.chdir(f"{cleanconll_base_path}/CleanCoNLL")
+                os.chdir(f"{self.cleanconll_base_path}/CleanCoNLL")
                 chmod = f"chmod u+x create_cleanconll_from_conll03.sh"
                 os.system(chmod)
                 create = f"bash create_cleanconll_from_conll03.sh"
@@ -5027,29 +5029,135 @@ class NER_NOISEBENCH(ColumnCorpus):
                 os.system(create)
                 os.chdir(cwd)
                 
-                shutil.move(f'{cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.train', cleanconll_base_path)
-                shutil.move(f'{cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.dev', cleanconll_base_path)
-                shutil.move(f'{cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.test', cleanconll_base_path)
+                shutil.move(f'{self.cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.train', self.cleanconll_base_path)
+                shutil.move(f'{self.cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.dev', self.cleanconll_base_path)
+                shutil.move(f'{self.cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.test', self.cleanconll_base_path)
+            
+                shutil.rmtree(self.cleanconll_base_path / 'CleanCoNLL')
 
             # create dataset files from index and train/test splits
+            self.generate_data_files(filename,)
 
         super().__init__(
-            data_folder=base_path,
+            data_folder=self.base_path,
             train_file=f"{filename}.train",
             dev_file=f"{filename}.dev",
             test_file=f"clean.test", # test set is always clean (without noise)
             column_format={0: "text", 1: "ner"},
             in_memory=in_memory,
             column_delimiter="\t",
-            document_separator = "-DOCSTART-",
+            document_separator_token = "-DOCSTART-",
             **corpusargs,
         )
 
-    @classmethod
-    def _set_path(cls, base_path) -> Path:
-        base_path = flair.cache_root / "datasets" / "noisebench" if not base_path else Path(base_path)
-        return base_path
+    def _set_path(self, base_path) -> Path:
+        self.base_path = flair.cache_root / "datasets" / "noisebench" if not base_path else Path(base_path)
     
+    @staticmethod   
+    def read_column_file(filename):
+        raw = open(filename, 'r', errors='replace')
+        raw = raw.readlines()
+        all_x = []
+        point = []
+        for line in raw:
+            if '\t' in line.strip():
+                stripped_line = line.strip().split('\t')
+            else:
+                stripped_line = line.strip().split(' ')
+            point.append(stripped_line)
+            if line.strip() == '':
+                if len(point[:-1]) > 0:
+                    all_x.append(point[:-1])
+                point = []
+
+        if len(point) > 0:
+            all_x.append(point)
+
+        all_x = all_x
+        return all_x
+
+    @staticmethod
+    def save_to_column_file(filename, list):
+        with open(filename, "w") as f:
+            for sentence in list:
+                for token in sentence:
+                    f.write('\t'.join(token))
+                    f.write('\n')
+                f.write('\n')
+
+    def _create_train_dev_splits(self, filename, all_sentences = None, datestring = '1996-08-24'):
+        if not all_sentences:
+            all_sentences = self.read_column_file(filename)
+
+        train_sentences = [] 
+        dev_sentences = [] 
+        for i, s in enumerate(all_sentences):
+            if 'DOCSTART' in s[0][0]:
+                assert i+3 < len(all_sentences) # last document is too short
+                
+                # news date is usually in 3rd or 4th sentence of each article
+                if datestring in all_sentences[i+2][-1][0] or datestring in all_sentences[i+3][-1][0]:
+                    save_to_dev = True
+                else:
+                    save_to_dev = False
+
+            if save_to_dev:
+                dev_sentences.append(s)
+            else:
+                train_sentences.append(s)
+
+        self.save_to_column_file(os.sep.join(filename.split(os.sep)[:-1])+os.sep+filename.split(os.sep)[-1].split('.')[0]+'.dev',dev_sentences)
+        self.save_to_column_file(os.sep.join(filename.split(os.sep)[:-1])+os.sep+filename.split(os.sep)[-1].split('.')[0]+'.train',train_sentences)
+
+
+    def _merge_tokens_labels(self, corpus, all_clean_sentences, token_indices):
+        # generate NoiseBench dataset variants, given CleanCoNLL, noisy label files and index file
+
+        noisy_labels = self.read_column_file(os.path.join(self.base_path,'annotations_only',f'{corpus}.traindev'))
+        #print(noisy_labels)
+        #print(token_indices)
+        for index, sentence in zip(token_indices, noisy_labels):
+
+            if index.strip() == 'docstart':
+                assert len(sentence) == 1
+                sentence[0][0] = '-DOCSTART-'
+                continue
+            clean_sentence = all_clean_sentences[int(index.strip())]
+
+            assert len(clean_sentence) == len(sentence) # this means indexing is wrong
+
+            for token, label in zip(clean_sentence, sentence):
+                label[0] = token[0] # token[0] -> text, token[1] -> BIO label
+        if self.SAVE_TRAINDEV_FILE:
+            self.save_to_column_file(os.path.join(self.base_path,f'{corpus}.traindev'),noisy_labels)
+        return noisy_labels
+
+
+    def generate_data_files(self, filename):
+
+        index_file = open(os.path.join(self.base_path,'annotations_only','index.txt'))
+        token_indices = index_file.readlines()
+
+        all_clean_sentences = self.read_column_file(os.path.join(self.cleanconll_base_path,'cleanconll.train'))
+
+        #os.makedirs(os.path.join('data','noisebench'), exist_ok=True)
+
+        noisy_sentences = self._merge_tokens_labels(filename, all_clean_sentences, token_indices)
+        self._create_train_dev_splits(all_sentences=noisy_sentences,filename=os.path.join(self.base_path,f'{filename}.traindev'))
+    
+
+        # copy test set 
+        all_clean_test_sentences = self.read_column_file(os.path.join(self.cleanconll_base_path,'cleanconll.test'))
+        
+        test_sentences = []
+        for s in all_clean_test_sentences:
+            new_s = []
+            for token in s:
+                new_s.append([token[0],token[4]])
+            test_sentences.append(new_s)
+
+        self.save_to_column_file(os.path.join(self.base_path,f'clean.test'),test_sentences)
+
 class MASAKHA_POS(MultiCorpus):
     def __init__(
         self,
