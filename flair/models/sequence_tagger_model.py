@@ -206,9 +206,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             self.viterbi_decoder = ViterbiDecoder(self.label_dictionary)
         
         self.calculate_sample_metrics = calculate_sample_metrics
-        if self.calculate_sample_metrics:
-            self.metrics_list = ['confidence','variability','correctness','msp','BvSB','cross_entropy','entropy','iter_norm']
-            self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness','last_iteration']
+        self.metrics_list = ['confidence','variability','correctness','msp','BvSB','cross_entropy','entropy','iter_norm']
+        self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness_sum','last_iteration']
         self.print_out_path = None
 
         self.to(flair.device)
@@ -365,6 +364,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # Metric: Max softmax prob (calculate_loss)
         msp = values[:,0]
+        assert msp.all()
 
         # Best vs second best (calculate_loss)
         BvSB = msp - values[:,1]
@@ -396,10 +396,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         
         #update history metrics
         updated_history_metrics_dict = {}
-        updated_history_metrics_dict['last_prediction'] = torch.tensor(pred, device=flair.device)
-        updated_history_metrics_dict['last_iteration'] = torch.tensor(iteration, device=flair.device)
-        updated_history_metrics_dict['last_confidence_sum'] = torch.tensor(confidence_sum, device=flair.device)
-        updated_history_metrics_dict['last_sq_difference_sum'] = torch.tensor(sq_difference_sum, device=flair.device)
+        updated_history_metrics_dict['last_prediction'] = pred
+        updated_history_metrics_dict['last_iteration'] = iteration
+        updated_history_metrics_dict['last_confidence_sum'] = confidence_sum
+        updated_history_metrics_dict['last_sq_difference_sum'] = sq_difference_sum
         updated_history_metrics_dict['last_correctness'] = history_metrics_dict['last_correctness']
 
         return pred, metrics_dict, updated_history_metrics_dict
@@ -415,14 +415,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     
         self._init_metrics_logging(epoch_log_path, sentences)
         history_metrics_dict = self._get_history_metrics_for_batch(sentences)
-    
-        # scores: shape = (total_num_tokens, 17)
         softmax = torch.nn.functional.softmax(scores)
         # softmax: shape = (total_num_tokens, 17) 
 
-        pred = torch.argmax(softmax, dim=1)
-
-        metrics_dict, updated_history_metrics_dict = self.calculate_metrics(history_metrics_dict, softmax, pred, gold_labels)
+        pred, metrics_dict, updated_history_metrics_dict = self.calculate_metrics(history_metrics_dict, softmax, gold_labels)
 
         self.log_metrics(epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, gold_labels, clean_labels)
 
@@ -1641,7 +1637,10 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         # forward pass to get scores
         scores = self.forward(sentence_tensor, lengths)
-        
+
+        if self.calculate_sample_metrics:
+            self.calculate_and_log_metrics(sentences, scores)       
+
         if self.relabel_noisy_soft:# and int(self.model_card["training_parameters"]["epoch"])>1:
             gold_labels = self._prepare_soft_label_tensor(sentences)#, scores)
         else:
