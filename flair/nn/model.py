@@ -456,10 +456,13 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             # Otherwise, it is identical to the "macro avg". In this case, we add it to the report.
             if "micro avg" not in classification_report_dict:
                 classification_report_dict["micro avg"] = {}
-                for precision_recall_f1 in classification_report_dict["macro avg"]:
-                    classification_report_dict["micro avg"][precision_recall_f1] = classification_report_dict[
-                        "accuracy"
-                    ]
+                for metric_key in classification_report_dict["macro avg"]:
+                    if metric_key != "support":
+                        classification_report_dict["micro avg"][metric_key] = classification_report_dict["accuracy"]
+                    else:
+                        classification_report_dict["micro avg"][metric_key] = classification_report_dict["macro avg"][
+                            "support"
+                        ]
 
             detailed_result = (
                 "\nResults:"
