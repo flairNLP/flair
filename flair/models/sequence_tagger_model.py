@@ -573,9 +573,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return predictions, all_tags
 
-    def _all_scores_for_token(self, sentences: List[Sentence], scores: torch.Tensor, lengths: List[int]):
+    def _all_scores_for_token(self, sentences: List[Sentence], score_tensor: torch.Tensor, lengths: List[int]):
         """Returns all scores for each tag in tag dictionary."""
-        scores = scores.numpy()
+        scores = score_tensor.numpy()
         tokens = [token for sentence in sentences for token in sentence]
         prob_all_tags = [
             [
