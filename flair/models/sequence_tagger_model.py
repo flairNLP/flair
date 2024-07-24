@@ -13,7 +13,7 @@ import flair.nn
 from flair.data import Dictionary, Label, Sentence, Span, get_spans_from_bio
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import TokenEmbeddings
-from flair.file_utils import cached_path, hf_download, unzip_file
+from flair.file_utils import cached_path, hf_download
 from flair.models.sequence_tagger_utils.crf import CRF
 from flair.models.sequence_tagger_utils.viterbi import ViterbiDecoder, ViterbiLoss
 from flair.training_utils import store_embeddings
