@@ -20,7 +20,7 @@ from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
 from flair.file_utils import Tqdm, load_torch_state
-from flair.training_utils import Result, store_embeddings
+from flair.training_utils import EmbeddingStorageMode, Result, store_embeddings
 
 log = logging.getLogger("flair")
 
@@ -53,7 +53,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         data_points: Union[List[DT], Dataset],
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
-        embedding_storage_mode: str = "none",
+        embedding_storage_mode: EmbeddingStorageMode = "none",
         mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: Optional[List[str]] = None,
@@ -149,7 +149,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
                         return model_cls.load(new_model_path)
                 except Exception as e:
                     log.debug(e)
-                    # skip any invalid loadings, e.g. not found on huggingface hub
+                    # skip any invalid loadings, e.g. not found on HuggingFace hub
                     continue
 
             # if the model cannot be fetched, load as a file
@@ -179,7 +179,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
                     return model
                 except Exception as e:
                     print(e)
-                    # skip any invalid loadings, e.g. not found on huggingface hub
+                    # skip any invalid loadings, e.g. not found on HuggingFace hub
                     continue
 
             raise ValueError(f"Could not find any model with name '{model_path}'")
@@ -254,7 +254,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         data_points: Union[List[DT], Dataset],
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
-        embedding_storage_mode: str = "none",
+        embedding_storage_mode: EmbeddingStorageMode = "none",
         mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
         exclude_labels: Optional[List[str]] = None,
@@ -520,7 +520,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         verbose: bool = False,
         label_name: Optional[str] = None,
         return_loss: bool = False,
-        embedding_storage_mode="none",
+        embedding_storage_mode: EmbeddingStorageMode = "none",
     ):
         """Predicts the class labels for the given sentences.
 
@@ -799,7 +799,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         verbose: bool = False,
         label_name: Optional[str] = None,
         return_loss: bool = False,
-        embedding_storage_mode="none",
+        embedding_storage_mode: EmbeddingStorageMode = "none",
     ):
         """Predicts the class labels for the given sentences. The labels are directly added to the sentences.
 

@@ -32,7 +32,7 @@ from flair.trainers.plugins import (
     TrainingInterrupt,
     WeightExtractorPlugin,
 )
-from flair.training_utils import identify_dynamic_embeddings, log_line, store_embeddings
+from flair.training_utils import EmbeddingStorageMode, identify_dynamic_embeddings, log_line, store_embeddings
 
 log = logging.getLogger("flair")
 
@@ -153,7 +153,7 @@ class ModelTrainer(Pluggable):
         shuffle: bool = True,
         shuffle_first_epoch: bool = True,
         # evaluation and monitoring
-        embeddings_storage_mode: str = "cpu",
+        embeddings_storage_mode: EmbeddingStorageMode = "cpu",
         epoch: int = 0,
         # when and what to save
         save_final_model: bool = True,
@@ -227,7 +227,7 @@ class ModelTrainer(Pluggable):
         shuffle: bool = True,
         shuffle_first_epoch: bool = True,
         # evaluation and monitoring
-        embeddings_storage_mode: str = "none",
+        embeddings_storage_mode: EmbeddingStorageMode = "none",
         epoch: int = 0,
         # when and what to save
         save_final_model: bool = True,
@@ -321,7 +321,7 @@ class ModelTrainer(Pluggable):
         shuffle: bool = True,
         shuffle_first_epoch: bool = True,
         # evaluation and monitoring
-        embeddings_storage_mode: str = "cpu",
+        embeddings_storage_mode: EmbeddingStorageMode = "cpu",
         epoch: int = 0,
         # when and what to save
         save_final_model: bool = True,
