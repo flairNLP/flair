@@ -5003,9 +5003,35 @@ class NER_NOISEBENCH(ColumnCorpus):
         base_path = self._set_path(base_path)
 
         filename = 'clean' if noise in ['clean',None] else f'noise_{noise}'
+        file_paths = [base_path / f'{filename}.train', base_path / f'{filename}.dev', base_path / 'clean.test']
+        files_exist = [path.exists() for path in file_paths]
+        cleanconll_base_path = flair.cache_root / "datasets" / "cleanconll"
 
-        cached_path(f"{self.label_url}/{filename}.traindev", base_path)
-        cached_path(f"{self.label_url}/index.txt", base_path)
+        if not all(files_exist):
+            cached_path(f"{self.label_url}/{filename}.traindev", base_path / 'annotations_only')
+            cached_path(f"{self.label_url}/index.txt", base_path / 'annotations_only')
+            
+            cleanconll_files_exist = [Path(f'{cleanconll_base_path}/cleanconll.{split}').exists() for split in ['train','dev','test']]
+            if not all(cleanconll_files_exist):
+                # download cleanconll
+
+                clone = f"git clone https://github.com/flairNLP/CleanCoNLL.git {cleanconll_base_path}/CleanCoNLL" 
+                os.system(clone) # Cloning
+                cwd = os.getcwd()
+
+                os.chdir(f"{cleanconll_base_path}/CleanCoNLL")
+                chmod = f"chmod u+x create_cleanconll_from_conll03.sh"
+                os.system(chmod)
+                create = f"bash create_cleanconll_from_conll03.sh"
+                
+                os.system(create)
+                os.chdir(cwd)
+                
+                shutil.move(f'{cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.train', cleanconll_base_path)
+                shutil.move(f'{cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.dev', cleanconll_base_path)
+                shutil.move(f'{cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.test', cleanconll_base_path)
+
+            # create dataset files from index and train/test splits
 
         super().__init__(
             data_folder=base_path,
