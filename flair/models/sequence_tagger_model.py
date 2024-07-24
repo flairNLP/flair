@@ -686,6 +686,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "ner-ukrainian": "dchaplinsky/flair-uk-ner",
             # Language-specific POS models
             "pos-ukrainian": "dchaplinsky/flair-uk-pos",
+            # Historic German
+            "de-historic-direct": "aehrm/redewiedergabe-direct",
+            "de-historic-indirect": "aehrm/redewiedergabe-indirect",
+            "de-historic-reported": "aehrm/redewiedergabe-reported",
+            "de-historic-free-indirect": "aehrm/redewiedergabe-freeindirect",
         }
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
@@ -756,59 +761,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     "See https://github.com/flairNLP/flair/blob/master/resources/docs/HUNFLAIR2.md for further "
                     "information."
                 )
-
-        # special handling for the taggers by the @redewiegergabe project (TODO: move to model hub)
-        elif model_name == "de-historic-indirect":
-            model_file = flair.cache_root / cache_dir / "indirect" / "final-model.pt"
-            if not model_file.exists():
-                cached_path(
-                    "http://www.redewiedergabe.de/models/indirect.zip",
-                    cache_dir=cache_dir,
-                )
-                unzip_file(
-                    flair.cache_root / cache_dir / "indirect.zip",
-                    flair.cache_root / cache_dir,
-                )
-            model_path = str(flair.cache_root / cache_dir / "indirect" / "final-model.pt")
-
-        elif model_name == "de-historic-direct":
-            model_file = flair.cache_root / cache_dir / "direct" / "final-model.pt"
-            if not model_file.exists():
-                cached_path(
-                    "http://www.redewiedergabe.de/models/direct.zip",
-                    cache_dir=cache_dir,
-                )
-                unzip_file(
-                    flair.cache_root / cache_dir / "direct.zip",
-                    flair.cache_root / cache_dir,
-                )
-            model_path = str(flair.cache_root / cache_dir / "direct" / "final-model.pt")
-
-        elif model_name == "de-historic-reported":
-            model_file = flair.cache_root / cache_dir / "reported" / "final-model.pt"
-            if not model_file.exists():
-                cached_path(
-                    "http://www.redewiedergabe.de/models/reported.zip",
-                    cache_dir=cache_dir,
-                )
-                unzip_file(
-                    flair.cache_root / cache_dir / "reported.zip",
-                    flair.cache_root / cache_dir,
-                )
-            model_path = str(flair.cache_root / cache_dir / "reported" / "final-model.pt")
-
-        elif model_name == "de-historic-free-indirect":
-            model_file = flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt"
-            if not model_file.exists():
-                cached_path(
-                    "http://www.redewiedergabe.de/models/freeIndirect.zip",
-                    cache_dir=cache_dir,
-                )
-                unzip_file(
-                    flair.cache_root / cache_dir / "freeIndirect.zip",
-                    flair.cache_root / cache_dir,
-                )
-            model_path = str(flair.cache_root / cache_dir / "freeIndirect" / "final-model.pt")
 
         # for all other cases (not local file or special download location), use HF model hub
         else:
