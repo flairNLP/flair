@@ -279,11 +279,12 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
+        exclude_labels: Optional[List[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         **kwargs,
     ) -> Result:
+        exclude_labels = exclude_labels if exclude_labels is not None else []
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
