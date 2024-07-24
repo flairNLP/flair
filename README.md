@@ -127,6 +127,7 @@ In particular:
 - [Tutorial 1: Basic tagging](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) → how to tag your text 
 - [Tutorial 2: Training models](https://flairnlp.github.io/docs/category/tutorial-2-training-models) → how to train your own state-of-the-art NLP models 
 - [Tutorial 3: Embeddings](https://flairnlp.github.io/docs/category/tutorial-3-embeddings) → how to produce embeddings for words and documents
+- [Tutorial 4: Biomedical text](https://flairnlp.github.io/docs/category/tutorial-4-biomedical-text) → how to analyse biomedical text data
 
 There is also a dedicated landing page for our [biomedical NER and datasets](/resources/docs/HUNFLAIR.md) with
 installation instructions and tutorials.
