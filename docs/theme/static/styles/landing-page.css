@@ -39,6 +39,7 @@
             align-items: center;
             width: 50%;
             .card {
+                border-radius: 1rem;
                 width: 20%;
                 display: flex;
                 justify-content: center;
@@ -50,8 +51,10 @@
                 }
                 & > span {
                     color: var(--flair-blue);
+                    margin-top: 1em;
                 }
-                background: var(--background-theme-inv);
+                background: var(--background-theme);
+                color: var(--background-theme-inv);
                 height: 40%;
             }
         }
