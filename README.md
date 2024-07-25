@@ -23,7 +23,7 @@ document embeddings, including our proposed [Flair embeddings](https://www.aclwe
 * **A PyTorch NLP framework.** Our framework builds directly on [PyTorch](https://pytorch.org/), making it easy to
 train your own models and experiment with new approaches using Flair embeddings and classes.
 
-Now at [version 0.13.1](https://github.com/flairNLP/flair/releases)!
+Now at [version 0.14.0](https://github.com/flairNLP/flair/releases)!
 
 
 ## State-of-the-Art Models
@@ -127,6 +127,7 @@ In particular:
 - [Tutorial 1: Basic tagging](https://flairnlp.github.io/docs/category/tutorial-1-basic-tagging) → how to tag your text 
 - [Tutorial 2: Training models](https://flairnlp.github.io/docs/category/tutorial-2-training-models) → how to train your own state-of-the-art NLP models 
 - [Tutorial 3: Embeddings](https://flairnlp.github.io/docs/category/tutorial-3-embeddings) → how to produce embeddings for words and documents
+- [Tutorial 4: Biomedical text](https://flairnlp.github.io/docs/category/tutorial-4-biomedical-text) → how to analyse biomedical text data
 
 There is also a dedicated landing page for our [biomedical NER and datasets](/resources/docs/HUNFLAIR.md) with
 installation instructions and tutorials.

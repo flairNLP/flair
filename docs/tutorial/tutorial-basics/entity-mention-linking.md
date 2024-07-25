@@ -23,7 +23,7 @@ sentence = Sentence(
 ner_tagger = Classifier.load("hunflair2")
 ner_tagger.predict(sentence)
 
-nen_tagger = EntityMentionLinker.load("disease-linker-no-ab3p")
+nen_tagger = EntityMentionLinker.load("disease-linker")
 nen_tagger.predict(sentence)
 
 for tag in sentence.get_labels():

@@ -105,7 +105,7 @@ tagger.predict(sentence)
 print(sentence)
 ```
 
-## Tagging universal parts-of-speech (uPoS)​
+## Tagging parts-of-speech in any language
 
 Universal parts-of-speech are a set of minimal syntactic units that exist across languages. For instance, most languages
 will have VERBs or NOUNs. 

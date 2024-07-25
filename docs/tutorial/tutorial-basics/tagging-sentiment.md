@@ -2,7 +2,7 @@
 
 This tutorials shows you how to do sentiment analysis in Flair.
 
-## Tagging sentiment with our standard model​
+## Tagging sentiment with our standard model
 
 Our standard sentiment analysis model uses distilBERT embeddings and was trained over a mix of corpora, notably
 the Amazon review corpus, and can thus handle a variety of domains and language.
