@@ -34,15 +34,32 @@
             }
         }
         .right-side {
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            width: 50%;
             .card {
-                background: var(--background-theme);
+                width: 20%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+                svg {
+                    height: 40%;
+                    width: auto;
+                }
+                & > span {
+                    color: var(--flair-blue);
+                }
+                background: var(--background-theme-inv);
+                height: 40%;
             }
         }
     }
-    .st0{
+    .st0 {
         fill: var(--flair-orange);
     }
-    .st1{
+    .st1 {
         fill: var(--background-theme);
     }
 }

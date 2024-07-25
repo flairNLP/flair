@@ -5,6 +5,7 @@
     --flair-orange-transparent: rgba(247, 153, 16, .5);
     --flair-blue: #2f2e41;
 	--background-theme: white;
+	--background-theme-inv: var(--flair-blue);
     font-family: "Afacad", sans-serif;
     font-optical-sizing: auto;
     font-weight: 400;
