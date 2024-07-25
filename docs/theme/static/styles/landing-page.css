@@ -25,6 +25,11 @@
             #get-started {
                 background: var(--background-theme);
                 border: none;
+                padding: 0.3em 0.9em;
+                font-size: 1.5rem;
+                color: var(--flair-blue);
+                font-weight: 600;
+                border-radius: .5em;
             }
         }
     }
