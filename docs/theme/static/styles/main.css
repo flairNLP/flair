@@ -106,6 +106,6 @@ a {
 }
 
 .inv-sel::selection {
-	background: var(--blue-white);
+	background: var(--white-blue);
 	color: var(--flair-orange);
 }

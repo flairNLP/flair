@@ -21,6 +21,15 @@
                 font-size: 1.5rem;
                 font-weight: 600;
             }
+            &:nth-of-type(2) {
+                display: none;
+                :root .dark-mode & {
+                    display: block;
+                }
+            }
+            :root .dark-mode & {
+                display: none;
+            }
         }
         span, p {
             color: var(--blue-white);
