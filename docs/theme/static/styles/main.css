@@ -73,3 +73,13 @@ a {
 	fill: var(--flair-orange);
 	stroke: none;
 }
+
+::selection {
+	background: var(--flair-orange);
+	color: var(--background-theme);
+}
+
+.inv-sel::selection {
+	background: var(--background-theme);
+	color: var(--flair-orange);
+}
