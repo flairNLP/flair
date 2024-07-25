@@ -403,23 +403,44 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return pred, metrics_dict, updated_history_metrics_dict
 
-    def calculate_and_log_metrics(self, sentences, scores):
+    def _convert_bioes_to_bio(self, label_indices):
+
+        bio_labels_list = []
+
+        for ind in label_indices.tolist():
+            label = self.label_dictionary.get_item_for_index(ind)
+            if label.startswith('S-'):
+                bio_labels_list.append('B-'+label[2:])
+            elif label.startswith('E-'):
+                bio_labels_list.append('I-'+label[2:])
+            else:
+                bio_labels_list.append(label)
+
+        labels = torch.tensor(
+            [self.label_dictionary.get_idx_for_item(label) for label in bio_labels_list],
+            dtype=torch.long,
+            device=flair.device,
+        )
+
+        return labels
+
+    def calculate_and_log_metrics(self, sentences, scores, observed_labels, clean_labels):
         #BIO
-        gold_labels = self._prepare_bio_label_tensor(sentences)
+        observed_labels = self._convert_bioes_to_bio(observed_labels)
 
         #BIO
-        clean_labels = self._prepare_bio_clean_label_tensor(sentences)
+        clean_labels = self._convert_bioes_to_bio(clean_labels)
 
         epoch_log_path = "epoch_log_"+str(self.model_card["training_parameters"]["epoch"])+'.log'
     
         self._init_metrics_logging(epoch_log_path, sentences)
         history_metrics_dict = self._get_history_metrics_for_batch(sentences)
-        softmax = torch.nn.functional.softmax(scores)
+        softmax = torch.nn.functional.softmax(scores, dim=1)
         # softmax: shape = (total_num_tokens, 17) 
 
-        pred, metrics_dict, updated_history_metrics_dict = self.calculate_metrics(history_metrics_dict, softmax, gold_labels)
+        pred, metrics_dict, updated_history_metrics_dict = self.calculate_metrics(history_metrics_dict, softmax, observed_labels)
 
-        self.log_metrics(epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, gold_labels, clean_labels)
+        self.log_metrics(epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, observed_labels, clean_labels)
 
 
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
@@ -433,11 +454,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # forward pass to get scores
         scores = self.forward(sentence_tensor, lengths)
 
-        if self.calculate_sample_metrics:
-            self.calculate_and_log_metrics(sentences, scores)
-
         # BIOES
         gold_labels = self._prepare_label_tensor(sentences)
+
+        if self.calculate_sample_metrics:
+            # BIOES
+            clean_labels = self._prepare_label_tensor(sentences, label_type = self.label_type+'_clean')
+
+            self.calculate_and_log_metrics(sentences, scores, gold_labels, clean_labels)
 
         # calculate loss given scores and labels
         return self._calculate_loss(scores, gold_labels)
@@ -543,47 +567,22 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return scores
 
 
-    def _get_bio_gold_labels(self, sentences: List[Sentence]) -> List[str]:
+    def _get_gold_labels(self, sentences: List[Sentence], label_type = None) -> List[str]:
         # is esentially noisy (observed) label
         """Extracts gold labels from each sentence.
 
         Args:
             sentences: List of sentences in batch
         """
+        if label_type is None:
+            label_type = self.label_type
+
         # spans need to be encoded as token-level predictions
         if self.predict_spans:
             all_sentence_labels = []
             for sentence in sentences:
                 sentence_labels = ["O"] * len(sentence)
-                for label in sentence.get_labels(self.label_type):
-                    span: Span = label.data_point
-                    sentence_labels[span[0].idx - 1] = "B-" + label.value
-                    for i in range(span[0].idx, span[-1].idx):
-                        sentence_labels[i] = "I-" + label.value
-                all_sentence_labels.extend(sentence_labels)
-            labels = all_sentence_labels
-
-        # all others are regular labels for each token
-        else:
-            labels = [token.get_label(self.label_type, "O").value for sentence in sentences for token in sentence]
-
-        return labels
-    
-
-
-    def _get_gold_labels(self, sentences: List[Sentence]) -> List[str]:
-        # is esentially noisy (observed) label
-        """Extracts gold labels from each sentence.
-
-        Args:
-            sentences: List of sentences in batch
-        """
-        # spans need to be encoded as token-level predictions
-        if self.predict_spans:
-            all_sentence_labels = []
-            for sentence in sentences:
-                sentence_labels = ["O"] * len(sentence)
-                for label in sentence.get_labels(self.label_type):
+                for label in sentence.get_labels(label_type):
                     span: Span = label.data_point
                     if self.tag_format == "BIOES":
                         if len(span) == 1:
@@ -606,110 +605,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return labels
 
-
-
-    def _get_bio_clean_labels(self, sentences: List[Sentence]) -> List[str]:
-        # clean labels
-        """Extracts gold labels from each sentence.
-
-        Args:
-            sentences: List of sentences in batch
-        """
-        # spans need to be encoded as token-level predictions
-        if self.predict_spans:
-            all_sentence_labels = []
-            for sentence in sentences:
-                sentence_labels = ["O"] * len(sentence)
-                for label in sentence.get_labels(self.label_type+'_clean'):
-                    span: Span = label.data_point
-                    sentence_labels[span[0].idx - 1] = "B-" + label.value
-                    for i in range(span[0].idx, span[-1].idx):
-                        sentence_labels[i] = "I-" + label.value
-                all_sentence_labels.extend(sentence_labels)
-            labels = all_sentence_labels
-
-        # all others are regular labels for each token
-        else:
-            labels = [token.get_label(self.label_type, "O").value for sentence in sentences for token in sentence]
-
-        return labels
-
-
-
-    def _get_clean_labels(self, sentences: List[Sentence]) -> List[str]:
-        # clean labels
-        """Extracts gold labels from each sentence.
-
-        Args:
-            sentences: List of sentences in batch
-        """
-        # spans need to be encoded as token-level predictions
-        if self.predict_spans:
-            all_sentence_labels = []
-            for sentence in sentences:
-                sentence_labels = ["O"] * len(sentence)
-                for label in sentence.get_labels(self.label_type+'_clean'):
-                    span: Span = label.data_point
-                    if self.tag_format == "BIOES":
-                        if len(span) == 1:
-                            sentence_labels[span[0].idx - 1] = "S-" + label.value
-                        else:
-                            sentence_labels[span[0].idx - 1] = "B-" + label.value
-                            sentence_labels[span[-1].idx - 1] = "E-" + label.value
-                            for i in range(span[0].idx, span[-1].idx - 1):
-                                sentence_labels[i] = "I-" + label.value
-                    else:
-                        sentence_labels[span[0].idx - 1] = "B-" + label.value
-                        for i in range(span[0].idx, span[-1].idx):
-                            sentence_labels[i] = "I-" + label.value
-                all_sentence_labels.extend(sentence_labels)
-            labels = all_sentence_labels
-
-        # all others are regular labels for each token
-        else:
-            labels = [token.get_label(self.label_type, "O").value for sentence in sentences for token in sentence]
-
-        return labels
-
-    def _prepare_clean_label_tensor(self, sentences: List[Sentence]):
-        clean_labels = self._get_clean_labels(sentences)
-        labels = torch.tensor(
-            [self.label_dictionary.get_idx_for_item(label) for label in clean_labels],
-            dtype=torch.long,
-            device=flair.device,
-        )
-        return labels
-
-
-    def _prepare_label_tensor(self, sentences: List[Sentence]):
-        gold_labels = self._get_gold_labels(sentences)
+    def _prepare_label_tensor(self, sentences: List[Sentence], label_type = None):
+        gold_labels = self._get_gold_labels(sentences, label_type = label_type)
         labels = torch.tensor(
             [self.label_dictionary.get_idx_for_item(label) for label in gold_labels],
             dtype=torch.long,
             device=flair.device,
         )
         return labels
-
-
-    def _prepare_bio_clean_label_tensor(self, sentences: List[Sentence]):
-        clean_labels = self._get_bio_clean_labels(sentences)
-        labels = torch.tensor(
-            [self.label_dictionary.get_idx_for_item(label) for label in clean_labels],
-            dtype=torch.long,
-            device=flair.device,
-        )
-        return labels
-
-
-    def _prepare_bio_label_tensor(self, sentences: List[Sentence]):
-        gold_labels = self._get_bio_gold_labels(sentences)
-        labels = torch.tensor(
-            [self.label_dictionary.get_idx_for_item(label) for label in gold_labels],
-            dtype=torch.long,
-            device=flair.device,
-        )
-        return labels
-
 
 
     def predict(
