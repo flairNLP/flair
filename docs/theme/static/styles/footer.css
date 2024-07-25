@@ -3,7 +3,17 @@ footer {
     width: 100%;
     color: white;
     height: 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10%;
+    box-sizing: border-box;
     span, a {
         color: white;
+    }
+    & > div {
+        a {
+            margin-left: 4em;
+        }
     }
 }

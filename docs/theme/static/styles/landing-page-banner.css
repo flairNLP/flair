@@ -27,7 +27,7 @@
             #get-started {
                 background: var(--background-theme);
                 border: none;
-                padding: 0.3em 0.9em;
+                padding: 0.2em 0.9em;
                 font-size: 1.5rem;
                 color: var(--background-theme-inv);
                 font-weight: 600;
@@ -40,10 +40,11 @@
         }
         .right-side {
             display: flex;
-            justify-content: space-evenly;
+            justify-content: flex-start;
             align-items: center;
             width: 50%;
             .card {
+                margin-left: 3rem;
                 border-radius: 1rem;
                 width: 20%;
                 display: flex;
@@ -64,7 +65,7 @@
                 }
                 background: var(--background-theme);
                 color: var(--background-theme-inv);
-                height: 40%;
+                min-height: 42%;
             }
         }
     }
