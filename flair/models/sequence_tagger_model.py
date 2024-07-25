@@ -325,7 +325,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     dp.set_metric('last_correctness_sum', 0 )
                     dp.set_metric('last_iteration', 0 )
     
-    def log_metrics(self, epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, gold_labels, clean_labels):
+    def _log_metrics(self, epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, gold_labels, clean_labels):
         i=0
         with open(self.print_out_path / epoch_log_path, "a") as outfile:
             for sent_ind, sent in enumerate(sentences):
@@ -356,7 +356,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     token_ind+=1
                 outfile.write('\n')
 
-    def calculate_metrics(self, history_metrics_dict, softmax, gold_labels):
+    def _calculate_metrics(self, history_metrics_dict, softmax, gold_labels):
 
         pred = torch.argmax(softmax, dim=1)
 
@@ -438,9 +438,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         softmax = torch.nn.functional.softmax(scores, dim=1)
         # softmax: shape = (total_num_tokens, 17) 
 
-        pred, metrics_dict, updated_history_metrics_dict = self.calculate_metrics(history_metrics_dict, softmax, observed_labels)
+        pred, metrics_dict, updated_history_metrics_dict = self._calculate_metrics(history_metrics_dict, softmax, observed_labels)
 
-        self.log_metrics(epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, observed_labels, clean_labels)
+        self._log_metrics(epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, observed_labels, clean_labels)
 
 
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
@@ -1414,9 +1414,9 @@ class EarlyExitSequenceTagger(SequenceTagger):
         if to_print:
             outfile.close()
 
-    def calculate_metrics(self, history_metrics_dict, softmax, gold_labels):
+    def _calculate_metrics(self, history_metrics_dict, softmax, gold_labels):
 
-        pred, metrics_dict, updated_history_metrics_dict = super().calculate_metrics(
+        pred, metrics_dict, updated_history_metrics_dict = super()._calculate_metrics(
             history_metrics_dict, softmax[-1], gold_labels
         )
 
