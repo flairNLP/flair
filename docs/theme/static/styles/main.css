@@ -3,6 +3,7 @@
 :root {
     --flair-orange: #f79910;
     --flair-blue: #2f2e41;
+	--background-theme: white;
     font-family: "Afacad", sans-serif;
     font-optical-sizing: auto;
     font-weight: 400;
