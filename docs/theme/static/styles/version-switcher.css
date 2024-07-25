@@ -1,5 +1,6 @@
 .version-switcher__container {
     position: relative;
+    z-index: 10;
     #versionswitcherbutton {
         background: none;
         border: 2px var(--flair-orange) solid;
@@ -7,14 +8,15 @@
         font-weight: 500;
         cursor: pointer;
         font-size: 1rem;
-        padding: 0.25em 1em;
+        padding: 0.2em 1em;
         border-radius: 0.66em;
         font-family: inherit;
         width: 7em;
     }
     #versionswitcherlist {
+        background: var(--background-theme);
         position: absolute;
-        top: calc(100% + 0.5rem);
+        top: calc(100% + 0.4rem);
         left: 0;
         display: none;
         flex-direction: column;
@@ -30,17 +32,17 @@
     }
     .list-group-item {
         font-size: 1rem;
-        padding: 0.25em 1em 0.25em 1em;
+        padding: 0.2em 1em 0.2em 1em;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         position: relative;
         &:hover {
-            background: var(--flair-orange);
+            background: var(--flair-orange-transparent);
             color: var(--background-theme);
         }
         &:not(:last-of-type) {
-            padding-bottom: calc(0.25em + 2px);
+            padding-bottom: calc(0.2em + 2px);
             &::after {
                 content: "";
                 height: 2px;

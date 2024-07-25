@@ -1,6 +1,7 @@
 .landing-page {
     .banner {
         display: flex;
+        height: 500px;
         background: var(--flair-orange);
     }
 }
