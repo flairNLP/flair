@@ -30,10 +30,18 @@
 
 .fill-white-blue {
 	fill: var(--white-blue);
+	stroke: none;
+}
+
+
+.fill-orange {
+	fill: var(--flair-orange);
+	stroke: none;
 }
 
 .stroke-orange-white {
 	stroke: var(--orange-white);
+	fill: none;
 }
 
 html, body, div, span, applet, object, iframe,
@@ -54,7 +62,6 @@ time, mark, audio, video {
 	border: 0;
 	font: inherit;
 	vertical-align: baseline;
-	color: var(--background-theme-inv);
 	line-height: 1.2em;
 }
 
@@ -93,22 +100,12 @@ a {
 	}
 }
 
-
-.svg-stroke {
-	stroke: var(--flair-orange);
-	fill: none;
-}
-.svg-fill {
-	fill: var(--flair-orange);
-	stroke: none;
-}
-
 ::selection {
 	background: var(--flair-orange);
-	color: var(--background-theme);
+	color: var(--white-blue);
 }
 
 .inv-sel::selection {
-	background: var(--background-theme);
+	background: var(--blue-white);
 	color: var(--flair-orange);
 }
