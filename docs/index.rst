@@ -1,15 +1,4 @@
-flair
-=====
-
 .. _flair_docs_mainpage:
-
-
-**Version**: |version|
-
-**Useful links**:
-`Getting started <tutorial/intro.html>`_ |
-`Source Repository <https://github.com/flairNLP/flair>`_ |
-`Issue Tracker <https://github.com/flairNLP/flair/issues>`_ |
 
 Flair is a very simple framework for state-of-the-art Natural Language Processing (NLP)
 
