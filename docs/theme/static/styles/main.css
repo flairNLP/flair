@@ -4,10 +4,14 @@
     --flair-orange: #f79910;
 	--flair-orange-light: #ffc063;
     --flair-orange-transparent: rgba(247, 153, 16, .5);
+    --white-transparent: rgba(255, 255, 255, .5);
     --flair-blue: #2f2e41;
-	--background-theme: white;
-	--background-theme-inv: var(--flair-blue);
-	--background-alt: var(--flair-blue);
+	--white-blue: white;
+	--blue-white: var(--flair-blue);
+	--orange-white: var(--flair-orange);
+	--orange-white-transparent: var(--flair-orange-transparent);
+	--orange-blue: var(--flair-orange);
+	--blue-orange: var(--flair-blue);
     font-family: "Afacad", sans-serif;
     font-optical-sizing: auto;
     font-weight: 400;
@@ -16,7 +20,16 @@
 }
 
 :root .dark-mode {
-	--background-theme: var(--flair-blue);
+	--white-blue: var(--flair-blue);
+	--blue-white: white;
+	--orange-white: white;
+	--orange-blue: var(--flair-blue);
+	--blue-orange: var(--flair-orange);
+	--orange-white-transparent: var(--white-transparent);
+}
+
+.fill-white-blue {
+	fill: var(--white-blue);
 }
 
 html, body, div, span, applet, object, iframe,
