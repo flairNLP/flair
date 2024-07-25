@@ -5,7 +5,7 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
 .. grid:: 2
 
     .. grid-item-card::
-        :img-top: ./_static/tutorial.svg
+        :img-top: ./_static/illustration1.svg
 
         Tutorial
         ^^^^^^^^
@@ -22,7 +22,7 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
             To the tutorials
 
     .. grid-item-card::
-        :img-top: ./_static/api.svg
+        :img-top: ./_static/illustration2.svg
 
         API-docs
         ^^^^^^^^
@@ -39,7 +39,7 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
             To the API docs
 
     .. grid-item-card::
-        :img-top: ./_static/contributing.svg
+        :img-top: ./_static/illustration3.svg
 
         Contributor's Guide
         ^^^^^^^^^^^^^^^^^^^
@@ -56,29 +56,3 @@ Flair is a very simple framework for state-of-the-art Natural Language Processin
             :click-parent:
 
             To the contributor's guide
-
-    .. grid-item-card::
-        :img-top: ./_static/glossary.svg
-
-        Glossary
-        ^^^^^^^^
-
-        Not sure what the exact meaning of certain terms is? Find their definition in the Glossary.
-
-        +++
-
-        .. button-ref:: glossary/index
-            :expand:
-            :color: secondary
-            :click-parent:
-
-            To the glossary
-
-.. toctree::
-   :maxdepth: 3
-   :hidden:
-
-   Tutorials <tutorial/index>
-   API reference <api/index>
-   Contributing <contributing/index>
-   Glossary <glossary/index>
