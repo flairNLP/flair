@@ -22,6 +22,7 @@
                 font-size: 1.5rem;
                 margin: 1.3em 0;
                 line-height: 1.2em;
+                color: var(--background-theme);
             }
             #get-started {
                 background: var(--background-theme);
@@ -31,6 +32,10 @@
                 color: var(--background-theme-inv);
                 font-weight: 600;
                 border-radius: .5em;
+                transition: transform 200ms cubic-bezier(0,.35,.08,.89);
+                &:hover {
+                    transform: scale(1.1);
+                }
             }
         }
         .right-side {
@@ -45,6 +50,10 @@
                 justify-content: center;
                 align-items: center;
                 flex-direction: column;
+                transition: transform 200ms cubic-bezier(0,.35,.08,.89);
+                &:hover {
+                    transform: scale(1.1);
+                }
                 svg {
                     height: 40%;
                     width: auto;

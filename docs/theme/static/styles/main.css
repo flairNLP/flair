@@ -2,6 +2,7 @@
 
 :root {
     --flair-orange: #f79910;
+	--flair-orange-light: #ffc063;
     --flair-orange-transparent: rgba(247, 153, 16, .5);
     --flair-blue: #2f2e41;
 	--background-theme: white;
@@ -31,6 +32,8 @@ time, mark, audio, video {
 	border: 0;
 	font: inherit;
 	vertical-align: baseline;
+	color: var(--background-theme-inv);
+	line-height: 1.2em;
 }
 
 button {
@@ -62,6 +65,10 @@ table {
 a {
 	color: var(--flair-orange);
 	text-decoration: none;
+	transition: color 200ms cubic-bezier(0,.35,.08,.89);
+	&:hover {
+		color: var(--flair-orange-light);
+	}
 }
 
 

@@ -37,9 +37,14 @@
         overflow: hidden;
         text-overflow: ellipsis;
         position: relative;
+        color: var(--flair-orange);
+        transition: all 200ms cubic-bezier(0,.35,.08,.89);
         &:hover {
             background: var(--flair-orange-transparent);
             color: var(--background-theme);
+        }
+        span {
+            color: inherit;
         }
         &:not(:last-of-type) {
             padding-bottom: calc(0.2em + 2px);
