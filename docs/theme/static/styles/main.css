@@ -32,6 +32,10 @@ time, mark, audio, video {
 	vertical-align: baseline;
 }
 
+button {
+	font-family: inherit;
+}
+
 article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
 	display: block;

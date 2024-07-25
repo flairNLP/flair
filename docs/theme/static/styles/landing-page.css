@@ -1,7 +1,31 @@
 .landing-page {
+    color: var(--background-theme);
     .banner {
         display: flex;
-        height: 500px;
+        height: 510px;
         background: var(--flair-orange);
+        .left-side {
+            align-items: flex-start;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            justify-content: center;
+            width: 50%;
+            padding-left: 10%;
+            padding-right: 10%;
+            box-sizing: border-box;
+            svg {
+                height: 20%;
+                width: auto;
+            }
+            & > span {
+                font-size: 1.5rem;
+                margin: 1.5em 0;
+            }
+            #get-started {
+                background: var(--background-theme);
+                border: none;
+            }
+        }
     }
 }
