@@ -1,3 +1,26 @@
 .landing-page-illustrations {
-
+    display: flex;
+    margin: 5rem 0;
+    padding: 0 5rem;
+    .item {
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding: 0 5%;
+        &:not(:last-of-type) {
+            border-right: #ccc 2px solid;
+        }
+        svg {
+            height: 12vw;
+            width: auto;
+            & + span {
+                margin-top: 2.5em;
+                margin-bottom: 0.75em;
+                font-size: 1.5rem;
+                font-weight: 600;
+            }
+        }
+    }
 }
