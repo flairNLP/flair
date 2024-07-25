@@ -21,8 +21,8 @@
             {% endblock %}
         </main>
     </div>
-    <footer>
-        <p>© {{ release }} {{ author }}. All rights reserved.</p>
-    </footer>
+    {% block footer %}
+    {% include "templates/footer.html" %}
+    {% endblock %}
 </body>
 </html>
