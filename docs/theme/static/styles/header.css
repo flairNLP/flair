@@ -1,6 +1,7 @@
 header {
     width: 100%;
     height: 90px;
+    background: var(--background-theme);
     .header-wrapper {
         margin: 0 calc(10% + 10px);
         height: 100%;
@@ -58,6 +59,24 @@ header {
                     height: 100%;
                     display: flex;
                     align-items: center;
+                    &:not(:last-of-type) {
+                        cursor: pointer;
+                    }
+                    &:nth-of-type(2) {
+                        svg {
+                            &:first-of-type {
+                                :root .dark-mode & {
+                                    display: none;
+                                }
+                            }
+                            &:nth-of-type(2) {
+                                display: none;
+                                :root .dark-mode & {
+                                    display: block;
+                                }
+                            }
+                        }
+                    }
                     svg {
                         height: 35%;
                         width: auto;
