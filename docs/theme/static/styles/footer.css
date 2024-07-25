@@ -1,4 +1,9 @@
 footer {
     background: var(--background-alt);
     width: 100%;
+    color: white;
+    height: 60px;
+    span, a {
+        color: white;
+    }
 }
