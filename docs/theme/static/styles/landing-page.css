@@ -1,3 +1,6 @@
-.test {
-    background: red;
+.landing-page {
+    .banner {
+        display: flex;
+        background: var(--flair-orange);
+    }
 }
