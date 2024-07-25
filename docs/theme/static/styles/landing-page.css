@@ -21,6 +21,7 @@
             & > span {
                 font-size: 1.5rem;
                 margin: 1.5em 0;
+                line-height: 1.2em;
             }
             #get-started {
                 background: var(--background-theme);
@@ -32,5 +33,16 @@
                 border-radius: .5em;
             }
         }
+        .right-side {
+            .card {
+                background: var(--background-theme);
+            }
+        }
+    }
+    .st0{
+        fill: var(--flair-orange);
+    }
+    .st1{
+        fill: var(--background-theme);
     }
 }
