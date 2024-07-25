@@ -45,7 +45,7 @@
                     </svg>
 
                 </li>
-                <li>
+                <li onclick="toggleDarkMode()">
                     <svg width="36.809" height="36.809" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
                         <g transform="translate(-398.68 -8.4525)">
                             <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="svg-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
@@ -60,3 +60,15 @@
         </div>
     </div>
 </header>
+<script defer>
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        document.body.classList.add("dark-mode");
+    }
+    const toggleDarkMode = () => {
+        if (document.body.classList.contains("dark-mode")) {
+            document.body.classList.remove("dark-mode");
+        } else {
+            document.body.classList.add("dark-mode");
+        }
+    }
+</script>
