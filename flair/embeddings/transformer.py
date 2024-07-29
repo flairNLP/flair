@@ -326,6 +326,65 @@ def map_offsets(first_list: List[Tuple[int]], second_list: List[Tuple[int]]):
     return simple_list, mappings
 
 
+def adjust_offsets_when_context(lists_of_tuples, flair_tokens):
+
+    adjusted_lists_of_tupels = []
+
+    for inner_list, tokens in zip(lists_of_tuples, flair_tokens):
+        if not inner_list:
+            continue
+
+        adjusted_inner_list = []
+
+        # Get the initial start value
+        initial_offset = inner_list[0][0]
+        initial_offset = -(initial_offset)
+
+        last_adjusted_end = 0
+        # Adjust each tuple by the initial start value
+        for i in range(len(inner_list)):
+            start, end = inner_list[i]
+            length = end - start
+            t = tokens[i]
+            if start == 0:
+                initial_offset = last_adjusted_end
+                if t.text == "[FLERT]":
+                    initial_offset +=1
+
+            adjusted_start = start + initial_offset
+
+            adjusted_end = adjusted_start + length
+            last_adjusted_end = adjusted_end
+            adjusted_inner_list.append((adjusted_start, adjusted_end))
+
+
+        adjusted_lists_of_tupels.append(adjusted_inner_list)
+
+    return adjusted_lists_of_tupels
+
+
+def backadjust_mappings_when_context(word_ids_list, mappings, flair_tokens):
+
+    adjusted_word_ids_list, adjusted_mappings = [], []
+
+    for word_ids, mapping, tokens in zip(word_ids_list, mappings, flair_tokens):
+        start_real_sentence, end_real_sentence = None, None
+        for i, t in enumerate(tokens):
+            if t.text == "[FLERT]":
+                if not start_real_sentence:
+                    start_real_sentence = i+1
+                if start_real_sentence:
+                    end_real_sentence = i
+        word_ids = [id - start_real_sentence for id in word_ids if id in range(start_real_sentence, end_real_sentence+1)]
+        mapping = [[e - start_real_sentence for e in m if e in range(start_real_sentence, end_real_sentence+1)] for m in mapping ]
+        mapping = [m for m in mapping if m]
+        adjusted_word_ids_list.append(word_ids)
+        adjusted_mappings.append(mapping)
+
+    return adjusted_word_ids_list, adjusted_mappings
+
+
+
 class TransformerBaseEmbeddings(Embeddings[Sentence]):
     """Base class for all TransformerEmbeddings.
 
@@ -632,6 +691,10 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                     # get the offsets from the flair tokens to align later
                     batch_flair_token_offsets = [[(t.start_position, t.end_position) for t in tokens] for tokens in flair_tokens]
 
+                    # if we have context sentences, we need to make the flair offsets continuous, i.e. no restarts with 0 (like the batch encoding offsets)
+                    if self.context_length > 0:
+                        batch_flair_token_offsets = adjust_offsets_when_context(batch_flair_token_offsets, flair_tokens)
+
                     for s_i in range(input_ids.size()[0]):
                         batch_encoding_offsets = batch_encoding[s_i].offsets
                         flair_token_offsets = batch_flair_token_offsets[s_i]
@@ -640,6 +703,12 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
                         word_ids_list.append(word_ids)
                         sentence_token_mappings.append(mappings)
+
+                    if self.context_length > 0:
+                        # we need to "cut off" the ids and mappings from the context sentences and adjust the ids for the mappings back to the original sentence
+                        # careful: the word_ids need to be the context adjusted ones (see above), but the sentence_token_mappings need to be relative to only the center sentence!
+                        _, sentence_token_mappings = backadjust_mappings_when_context(word_ids_list, sentence_token_mappings, flair_tokens)
+
 
                 else:
                     word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
