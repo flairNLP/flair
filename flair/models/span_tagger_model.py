@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 import torch
 
@@ -39,6 +39,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             concat_span_length_to_embedding: bool = False,
             resolve_overlaps: str = "by_token",
             decoder=None,
+            wsa_embedding_layer_size: Optional[int] = None,
             **classifierargs,
     ):
         """
@@ -59,6 +60,8 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             'no_boundary_clashes' : predictions cannot overlap boundaries, but can include other predictions (nested NER)
             'prefer_longer' : prefers longer spans over shorter ones # TODO: names are confusing, this is also "by token" but with length instead of score
         """
+        self.wsa_embedding_layer_size = wsa_embedding_layer_size
+
         final_embedding_size = 0
         if embeddings:
             if pooling_operation == "first_last":
@@ -71,6 +74,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             final_embedding_size += gazetteer_embeddings.embedding_length
         if concat_span_length_to_embedding:
             final_embedding_size += 1
+        if self.wsa_embedding_layer_size is not None:
+            final_embedding_size += self.wsa_embedding_layer_size
+            self.wsa_layer = torch.nn.Linear(2, self.wsa_embedding_layer_size)
 
         # make sure the label dictionary has an "O" entry for "no tagged span"
         label_dictionary.add_item("O")
