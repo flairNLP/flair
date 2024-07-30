@@ -188,6 +188,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
             else:
                 self.linear = torch.nn.Linear(embedding_dim + self.wsa_embedding_layer_size, len(self.label_dictionary))
+                self.wsa_layer = torch.nn.Linear(2, self.wsa_embedding_layer_size)
         else:
             if self.wsa_embedding_layer_size is None:
                 self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
