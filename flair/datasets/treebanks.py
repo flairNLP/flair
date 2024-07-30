@@ -122,11 +122,12 @@ class UniversalDependenciesDataset(FlairDataset):
         else:
             with open(str(self.path_to_conll_file), encoding="utf-8") as file:
                 file.seek(self.indices[index])
-                sentence = self._read_next_sentence(file)
+                sentence_or_none = self._read_next_sentence(file)
+                sentence = sentence_or_none if isinstance(sentence_or_none, Sentence) else Sentence("")
 
         return sentence
 
-    def _read_next_sentence(self, file) -> Sentence:
+    def _read_next_sentence(self, file) -> Optional[Sentence]:
         line = file.readline()
         tokens: List[Token] = []
 
@@ -139,6 +140,7 @@ class UniversalDependenciesDataset(FlairDataset):
         current_multiword_first_token = 0
         current_multiword_last_token = 0
 
+        newline_reached = False
         while line:
             line = line.strip()
             fields: List[str] = re.split("\t+", line)
@@ -146,6 +148,7 @@ class UniversalDependenciesDataset(FlairDataset):
             # end of sentence
             if line == "":
                 if len(tokens) > 0:
+                    newline_reached = True
                     break
 
             # comments or ellipsis
@@ -205,20 +208,18 @@ class UniversalDependenciesDataset(FlairDataset):
                 if token_idx <= current_multiword_last_token:
                     current_multiword_sequence += token.text
 
-                # print(token)
-                # print(current_multiword_last_token)
-                # print(current_multiword_first_token)
                 # if multi-word equals component tokens, there should be no whitespace
                 if token_idx == current_multiword_last_token and current_multiword_sequence == current_multiword_text:
                     # go through all tokens in subword and set whitespace_after information
                     for i in range(current_multiword_last_token - current_multiword_first_token):
-                        # print(i)
                         tokens[-(i + 1)].whitespace_after = 0
                 tokens.append(token)
 
             line = file.readline()
 
-        return Sentence(tokens)
+        if newline_reached or len(tokens) > 0:
+            return Sentence(tokens)
+        return None
 
 
 class UD_ENGLISH(UniversalDependenciesCorpus):

@@ -30,6 +30,7 @@ filterwarnings = [
     'ignore:Deprecated call to `pkg_resources',  # huggingface has deprecated calls.
     'ignore:distutils Version classes are deprecated.',  # faiss uses deprecated distutils.
     'ignore:`resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.',  # transformers calls deprecated hf_hub
+    "ignore:`torch.cuda.amp.GradScaler",  # GradScaler changes in torch 2.3.0 but we want to be backwards compatible.
 ]
 markers = [
     "integration",
