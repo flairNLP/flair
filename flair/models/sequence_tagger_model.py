@@ -372,7 +372,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             for token in sentence:
                 for emb in token.get_each_embedding(names):
                     all_embs.append(emb)
-                if self.embeddings.name == "Stack":
+                if self.embeddings.name == "Stack" and self.wsa_embedding_layer_size is not None:
                     one_hot_wsa = torch.Tensor([0.0, 1.0] if token.whitespace_after else [1.0, 0.0]).to(flair.device)
                     all_embs.append(self.wsa_layer(one_hot_wsa))
 
