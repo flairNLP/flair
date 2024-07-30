@@ -299,9 +299,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             for sentence in sentences:
                 for token in sentence:
                     one_hot_wsa = torch.Tensor([0.0, 1.0] if token.whitespace_after else [1.0, 0.0]).to(flair.device)
+                    new_embedding = torch.cat((token.get_embedding(self.embeddings.name), self.wsa_layer(one_hot_wsa)), dim=0)
                     token.set_embedding(
                         self.embeddings.name,
-                        torch.cat((token.embedding, self.wsa_layer(one_hot_wsa)), dim=0)
+                        new_embedding
                     )
 
         # make a zero-padded tensor for the whole sentence
