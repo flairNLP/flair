@@ -154,7 +154,10 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # ----- Model layers -----
         self.reproject_embeddings = reproject_embeddings
         if self.reproject_embeddings:
-            self.embedding2nn = torch.nn.Linear(embedding_dim, embedding_dim)
+            if self.wsa_embedding_layer_size is None:
+                self.embedding2nn = torch.nn.Linear(embedding_dim, embedding_dim)
+            else:
+                self.embedding2nn = torch.nn.Linear(embedding_dim + self.wsa_embedding_layer_size, embedding_dim + self.wsa_embedding_layer_size)
 
         # ----- RNN layer -----
         if use_rnn:
@@ -167,7 +170,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     rnn_layers,
                     hidden_size,
                     bidirectional,
-                    rnn_input_dim=embedding_dim,
+                    rnn_input_dim=embedding_dim + (0 if self.wsa_embedding_layer_size is None else self.wsa_embedding_layer_size),
                 )
             )
 
@@ -184,10 +187,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 ) = self._init_initial_hidden_state(num_directions)
 
             # final linear map to tag space
-            if self.wsa_embedding_layer_size is None:
-                self.linear = torch.nn.Linear(hidden_output_dim, len(self.label_dictionary))
-            else:
-                self.linear = torch.nn.Linear(hidden_output_dim + self.wsa_embedding_layer_size, len(self.label_dictionary))
+            self.linear = torch.nn.Linear(hidden_output_dim, len(self.label_dictionary))
+            if self.wsa_embedding_layer_size is not None:
                 self.wsa_layer = torch.nn.Linear(2, self.wsa_embedding_layer_size)
         else:
             if self.wsa_embedding_layer_size is None:
