@@ -36,7 +36,7 @@ def insert_verbalizations_into_sentence(sentence: Sentence, label_type: str, lab
         label = sp.get_label(label_type).value
         add_at_position_in_tokens = sp.tokens[-1].idx + added_tokens
 
-        verbalization = Sentence(f" ({label_map.get(label, label)})")
+        verbalization = Sentence(f" ({label_map.get(label, label.replace('_', ' '))})")
 
         verbalization_token_texts = [t.text for t in verbalization.tokens]
         len_verbalization_tokens = len(verbalization_token_texts)
@@ -498,7 +498,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
          for i in range(self._negative_sampling_factor):
              negative_samples_indices.append(random.sample(range(len(self._sampled_label_dict.items)), len(batch_gold_labels)))
          negative_labels = [self._sampled_label_at(i) for f in negative_samples_indices for i in f]
-         negative_labels_sentence_objects = [Sentence(self.label_map.get(l, l)) for l in negative_labels]
+         negative_labels_sentence_objects = [Sentence(self.label_map.get(l, l.replace("_", " "))) for l in negative_labels]
 
          stacked = self._embed_labels_batchwise_return_stacked_embeddings(labels = negative_labels,
                                                                           labels_sentence_objects = negative_labels_sentence_objects,
@@ -520,9 +520,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             span_embeddings = span_embeddings.to(self._sampled_label_embeddings_storage_device)
 
             # reembed the labels every N step to have more recent embeddings
-            if self.constant_updating and self._iteration_count % 20000 == 0 and self._iteration_count > 0:
-                print(f"At step {self._iteration_count}, updating label embeddings...")
-                self._sampled_label_embeddings = None
+            #if self.constant_updating and self._iteration_count % 20000 == 0 and self._iteration_count > 0:
+            #    print(f"At step {self._iteration_count}, updating label embeddings...")
+            #    self._sampled_label_embeddings = None
 
             #similarity_spans_sampled_labels = -torch.cdist(span_embeddings, self.get_sampled_label_embeddings())
             similarity_spans_sampled_labels = self.similarity_metric.similarity(span_embeddings, self.get_sampled_label_embeddings())
@@ -556,7 +556,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
         # reembed the labels (necessary for tracking gradients! Otherwise model cannot learn from the negatives.)
         most_similar_labels = [self._sampled_label_at(i) for i in most_similar_label_index]
-        most_similar_labels_sentence_objects = [Sentence(self.label_map.get(l,l)) for l in most_similar_labels]
+        most_similar_labels_sentence_objects = [Sentence(self.label_map.get(l,l.replace("_", " "))) for l in most_similar_labels]
 
         stacked = self._embed_labels_batchwise_return_stacked_embeddings(labels = most_similar_labels,
                                                                          labels_sentence_objects = most_similar_labels_sentence_objects,
@@ -574,7 +574,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             with torch.no_grad():
                 print("Updating label embeddings...")
                 print(" - Creating label objects...")
-                all_labels_sentence_objects = [Sentence(self.label_map.get(l, l)) for l in tqdm(self._sampled_label_dict.items, position=0, leave=True)]
+                all_labels_sentence_objects = [Sentence(self.label_map.get(l, l.replace("_", " "))) for l in tqdm(self._sampled_label_dict.items, position=0, leave=True)]
                 print(" - Embedding label objects...")
                 self._sampled_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = [l for l in self._sampled_label_dict.items],
                                                                                                         labels_sentence_objects = all_labels_sentence_objects,
@@ -600,7 +600,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
         # get one embedding vector for each label
         labels = [sp.get_label(self.label_type).value for sp in spans]
-        labels_sentence_objects = [Sentence(self.label_map.get(l,l)) for l in labels]
+        labels_sentence_objects = [Sentence(self.label_map.get(l,l.replace("_", " "))) for l in labels]
         #self.label_encoder.embed(labels_sentence_objects)
         #label_embeddings = torch.stack([l.get_embedding() for l in labels_sentence_objects], dim = 0)
         label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = labels,
