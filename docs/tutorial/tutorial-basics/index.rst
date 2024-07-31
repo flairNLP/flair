@@ -6,7 +6,6 @@ and showcases various models we ship with Flair.
 
 .. toctree::
    :maxdepth: 1
-   :hidden:
 
    basic-types
    how-predictions-work
@@ -17,11 +16,3 @@ and showcases various models we ship with Flair.
    part-of-speech-tagging
    other-models
    how-to-tag-corpus
-
-.. toctree::
-   :maxdepth: 2
-
-   ../intro
-   ../tutorial-basics/index
-   ../tutorial-training/index
-   ../tutorial-embeddings/index
