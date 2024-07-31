@@ -10,7 +10,7 @@
 
 .. raw:: html
 
-    <a href="./">Tutorials</a>
+    <a href="./index.html">Tutorials</a>
 
 .. toctree::
    :maxdepth: 2
@@ -22,8 +22,8 @@
 
 .. raw:: html
 
-    <a href="../api">API</a>
-    <a href="../contributing">Contributing</a>
+    <a href="../api/index.html">API</a>
+    <a href="../contributing/index.html">Contributing</a>
 
 
 
