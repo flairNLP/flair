@@ -1,9 +1,6 @@
 Tutorial 2: Training models
 ===========================
 
-This tutorial illustrates how you can train your own state-of-the-art NLP models with Flair.
-
-
 .. raw:: html
    :file: ../_templates/header-reset-styles.html
 
@@ -42,3 +39,7 @@ This tutorial illustrates how you can train your own state-of-the-art NLP models
 
       <a href="../api/index.html">API</a>
       <a href="../contributing/index.html">Contributing</a>
+
+
+This tutorial illustrates how you can train your own state-of-the-art NLP models with Flair.
+
