@@ -1,6 +1,3 @@
-Tutorial 2: Training models
-===========================
-
 .. raw:: html
    :file: ../_templates/header-reset-styles.html
 
@@ -39,6 +36,8 @@ Tutorial 2: Training models
       <a href="../api/index.html">API</a>
       <a href="../contributing/index.html">Contributing</a>
 
+Tutorial 2: Training models
+===========================
 
 This tutorial illustrates how you can train your own state-of-the-art NLP models with Flair.
 
