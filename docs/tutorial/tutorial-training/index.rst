@@ -18,21 +18,21 @@ Tutorial 2: Training models
       ../intro
       ../tutorial-basics/index
       ../tutorial-training/index
-
-      .. toctree::
-         :maxdepth: 1
-         :caption: Training Tutorials
-         :hidden:
-
-         how-model-training-works
-         train-vs-fine-tune
-         how-to-load-prepared-dataset
-         how-to-load-custom-dataset
-         how-to-train-sequence-tagger
-         how-to-train-text-classifier
-         how-to-train-span-classifier
-
       ../tutorial-embeddings/index
+
+
+   .. toctree::
+      :maxdepth: 1
+      :caption: Training Tutorials
+      :hidden:
+
+      how-model-training-works
+      train-vs-fine-tune
+      how-to-load-prepared-dataset
+      how-to-load-custom-dataset
+      how-to-train-sequence-tagger
+      how-to-train-text-classifier
+      how-to-train-span-classifier
 
 
    .. raw:: html
