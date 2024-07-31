@@ -10,11 +10,16 @@
 
    .. toctree::
       :maxdepth: 2
+      :includehidden:
 
       ../intro
       ../tutorial-basics/index
+      ../tutorial-training/index
+      ../tutorial-embeddings/index
+
       .. toctree::
          :maxdepth: 1
+         :includehidden:
 
          how-model-training-works
          train-vs-fine-tune
@@ -23,7 +28,6 @@
          how-to-train-sequence-tagger
          how-to-train-text-classifier
          how-to-train-span-classifier
-      ../tutorial-embeddings/index
 
 
 
