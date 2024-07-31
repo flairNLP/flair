@@ -6,9 +6,9 @@
 
 
 .. raw:: html
-
+    <section id="tutorials">
     <div id="toc-container">
-    <h1>Tutorials</h1>
+    <a href="../">Tutorials</a>
 
 .. toctree::
    :maxdepth: 2
@@ -18,8 +18,14 @@
    tutorial-training/index
    tutorial-embeddings/index
 
+.. raw:: html
+
+    <a href="../api">API</a>
+    <a href="../contributing">Contributing</a>
+
 
 
 .. raw:: html
 
     </div>
+    </section>
