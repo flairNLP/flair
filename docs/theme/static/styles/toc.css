@@ -1,11 +1,24 @@
 .toc-container {
-    background-color: red;
+    padding-left: 1rem;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
     & > a {
         display: block;
         font-weight: 600;
         margin-left: 1rem;
+        font-size: 1.5rem;
+        margin-top: 0.8rem;
+    }
+    a {
+        color: var(--blue-white);
+        &:hover {
+            color: var(--flair-orange);
+        }
     }
     ul {
         margin-left: 1rem;
+        li {
+            margin-top: 0.8rem;
+        }
     }
 }

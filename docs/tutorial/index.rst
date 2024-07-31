@@ -14,6 +14,10 @@
 
       intro
       tutorial-basics/index
+
+   .. toctree::
+      :maxdepth: 1
+
       tutorial-training/index
       tutorial-embeddings/index
 
