@@ -10,7 +10,7 @@
       <a href="../index.html">Tutorials</a>
 
    .. toctree::
-      :maxdepth: 2
+      :maxdepth: 1
 
       intro
       tutorial-basics/index

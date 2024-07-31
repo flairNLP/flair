@@ -16,8 +16,15 @@ This tutorial illustrates how you can train your own state-of-the-art NLP models
 
    .. toctree::
       :maxdepth: 1
-      :caption: Training Tutorials
       :includehidden:
+
+      intro
+      tutorial-basics/index
+      tutorial-training/index
+      tutorial-embeddings/index
+   .. toctree::
+      :maxdepth: 1
+      :hidden:
 
       how-model-training-works
       train-vs-fine-tune
