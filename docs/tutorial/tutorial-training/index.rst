@@ -22,7 +22,7 @@ Tutorial 2: Training models
       .. toctree::
          :maxdepth: 1
          :caption: Training Tutorials
-         :includehidden:
+         :hidden:
 
          how-model-training-works
          train-vs-fine-tune
