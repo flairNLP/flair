@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import gzip
 import shutil
 import tarfile
 from collections import defaultdict
@@ -10,6 +11,9 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 import tempfile
 import shutil
+import requests
+import zipfile
+import subprocess
 from typing import (
     Any,
     Optional,
@@ -1423,6 +1427,7 @@ class CONLL_03_SPANISH(ColumnCorpus):
         )
 
 
+
 class CLEANCONLL(ColumnCorpus):
     def __init__(
             self,
@@ -1459,37 +1464,8 @@ class CLEANCONLL(ColumnCorpus):
         if not train_set.exists():
             print("CleanCoNLL files not found, so downloading and creating them.")
 
-            github_url = "https://github.com/flairNLP/CleanCoNLL/archive/main.zip"
-
-            # Create a temporary directory
-            with tempfile.TemporaryDirectory() as tmpdirname:
-                tmpdir = Path(tmpdirname)
-
-                zip_path = cached_path(github_url, tmpdir)
-                unpack_file(zip_path, tmpdir, "zip", False)
-
-                script_root = tmpdir / 'CleanCoNLL-main'
-
-                # Verify the script path
-                create_script_path = script_root / 'create_cleanconll_from_conll03.sh'
-                print(f"Path to the create script: {create_script_path}")
-
-                if not create_script_path.exists():
-                    raise FileNotFoundError(f"Script not found: {create_script_path}")
-
-                # Run shell script for creating corpus files
-                import subprocess
-                subprocess.call(['chmod', 'u+x', create_script_path])
-                subprocess.call(['bash', create_script_path], cwd=script_root)
-
-                print("CleanCoNLL files created in temporary directory:", str(script_root / 'data/cleanconll'))
-
-                # Ensure the final data folder exists
-                data_folder.mkdir(parents=True, exist_ok=True)
-
-                # Copy the files to the final data folder
-                shutil.copytree(script_root / 'data/cleanconll', data_folder, dirs_exist_ok=True)
-                print("CleanCoNLL files are placed here:", data_folder)
+            # Download and prepare the dataset
+            self.download_and_prepare_data(data_folder, base_path)
 
         else:
             print("Found files for CleanCoNLL in:", data_folder)
@@ -1503,6 +1479,180 @@ class CLEANCONLL(ColumnCorpus):
             document_separator_token="-DOCSTART-",
             **corpusargs,
         )
+
+    @staticmethod
+    def download_and_prepare_data(data_folder: Path, base_path: Path):
+        # Create a temporary directory
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmpdir = Path(tmpdirname)
+
+            github_url = "https://github.com/flairNLP/CleanCoNLL/archive/main.zip"
+            zip_path = cached_path(github_url, tmpdir)
+            unpack_file(zip_path, tmpdir, "zip", False)
+            cleanconll_data_root = tmpdir / 'CleanCoNLL-main'
+
+            # Check the contents of the temporary directory
+            print(f"Contents of the temporary directory: {list(tmpdir.iterdir())}")
+
+            # TODO These files are different
+            # CoNLL-03 Flair path
+            # conll03_path = base_path / 'conll_03'
+            # # Check if the CoNLL-03 files already exists in flair's dataset directory
+            # if conll03_path.exists() and conll03_path.is_dir() and "eng.testa" in [f.name for f in conll03_path.iterdir()]:
+            #     print(f"Original CoNLL03 files detected here: {conll03_path}")
+            #     print(f"Contents: {[f.name for f in conll03_path.iterdir()]}")
+            #     conll03_train = conll03_path / "eng.train"
+            #     conll03_dev = conll03_path / "eng.testa"
+            #     conll03_test = conll03_path / "eng.testb"
+            #     print(f"So not downloading from {conll_url}, using the following files: 'eng.train', 'eng.testa', 'eng.testb'")
+
+            conll03_dir = data_folder / 'original_conll-03'
+            if conll03_dir.exists() and conll03_dir.is_dir() and "train.txt" in [f.name for f in conll03_dir.iterdir()]:
+                print(f"Original CoNLL03 files detected here: {conll03_dir}")
+
+            else:
+                conll_url = "https://data.deepai.org/conll2003.zip"
+
+                conll03_dir.mkdir(parents=True, exist_ok=True)
+                print(f"Downloading the original CoNLL-03 from {conll_url} into {conll03_dir} ...")
+
+                zip_path = conll03_dir / "conll2003.zip"
+                response = requests.get(conll_url)
+                zip_path.write_bytes(response.content)
+
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    zip_ref.extractall(conll03_dir)
+
+            conll03_train = conll03_dir / "train.txt"
+            conll03_dev = conll03_dir / "valid.txt"
+            conll03_test = conll03_dir / "test.txt"
+
+            # Apply the patch files
+            patch_dir = cleanconll_data_root / 'data' / 'patch_files'
+            tokens_dir = cleanconll_data_root / 'data' / 'tokens_updated'
+            tokens_dir.mkdir(parents=True, exist_ok=True)
+
+            def apply_patch(file_path, patch_path, output_path):
+                subprocess.run(['patch', str(file_path), str(patch_path), '-o', output_path])
+
+            def extract_tokens(file_path: Path, output_path: Path):
+                with open(file_path, 'r') as f_in, open(output_path, 'w') as f_out:
+                    for line in f_in:
+                        # Strip whitespace to check if the line is empty
+                        stripped_line = line.strip()
+                        if stripped_line:
+                            # Write the first token followed by a newline if the line is not empty
+                            f_out.write(stripped_line.split()[0] + '\n')
+                        else:
+                            # Write an empty line if the line is empty
+                            f_out.write('\n')
+
+            extract_tokens(conll03_train, tokens_dir / 'train_tokens.txt')
+            extract_tokens(conll03_dev, tokens_dir / 'valid_tokens.txt')
+            extract_tokens(conll03_test, tokens_dir / 'test_tokens.txt')
+
+            apply_patch(tokens_dir / 'train_tokens.txt', patch_dir / 'train_tokens.patch', tokens_dir / 'train_tokens_updated.txt')
+            apply_patch(tokens_dir / 'valid_tokens.txt', patch_dir / 'dev_tokens.patch', tokens_dir / 'dev_tokens_updated.txt')
+            apply_patch(tokens_dir / 'test_tokens.txt', patch_dir / 'test_tokens.patch', tokens_dir / 'test_tokens_updated.txt')
+
+            # Merge the updated token files with the CleanCoNLL annotations
+            cleanconll_annotations_dir = cleanconll_data_root / 'data' / 'cleanconll_annotations'
+            data_folder.mkdir(parents=True, exist_ok=True)
+
+            def merge_annotations(tokens_file, annotations_file, output_file):
+                with open(tokens_file, 'r') as tokens, open(annotations_file, 'r') as annotations, open(output_file, 'w') as output:
+                    for token, annotation in zip(tokens, annotations):
+                        # Strip the leading '[TOKEN]\t' from the annotation
+                        stripped_annotation = '\t'.join(annotation.strip().split('\t')[1:])
+                        output.write(token.strip() + '\t' + stripped_annotation + '\n')
+            merge_annotations(tokens_dir / 'train_tokens_updated.txt', cleanconll_annotations_dir / 'cleanconll_annotations.train', data_folder / 'cleanconll.train')
+            merge_annotations(tokens_dir / 'dev_tokens_updated.txt', cleanconll_annotations_dir / 'cleanconll_annotations.dev', data_folder / 'cleanconll.dev')
+            merge_annotations(tokens_dir / 'test_tokens_updated.txt', cleanconll_annotations_dir / 'cleanconll_annotations.test', data_folder / 'cleanconll.test')
+
+            print("Done with creating. CleanCoNLL files are placed here:", data_folder)
+
+
+
+# class CLEANCONLL(ColumnCorpus):
+#     def __init__(
+#             self,
+#             base_path: Optional[Union[str, Path]] = None,
+#             in_memory: bool = True,
+#             **corpusargs,
+#     ) -> None:
+#         """
+#         Initialize the CleanCoNLL corpus.
+#
+#         Args:
+#             base_path: Base directory for the dataset. If None, defaults to flair.cache_root / "datasets".
+#             in_memory: If True, keeps dataset in memory for faster training.
+#         """
+#         # Set the base path for the dataset
+#         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
+#
+#         # Define column format
+#         columns = {0: "text",
+#                    1: "pos",
+#                    2: "nel",
+#                    3: "ner*",
+#                    4: "ner"}
+#
+#         # Define dataset name
+#         dataset_name = self.__class__.__name__.lower()
+#
+#         # Define data folder path
+#         data_folder = base_path / dataset_name
+#
+#         # Check if the train data file exists, otherwise download and prepare the dataset
+#         train_set = data_folder / 'cleanconll.train'
+#
+#         if not train_set.exists():
+#             print("CleanCoNLL files not found, so downloading and creating them.")
+#
+#             github_url = "https://github.com/flairNLP/CleanCoNLL/archive/main.zip"
+#
+#             # Create a temporary directory
+#             with tempfile.TemporaryDirectory() as tmpdirname:
+#                 tmpdir = Path(tmpdirname)
+#
+#                 zip_path = cached_path(github_url, tmpdir)
+#                 unpack_file(zip_path, tmpdir, "zip", False)
+#
+#                 script_root = tmpdir / 'CleanCoNLL-main'
+#
+#                 # Verify the script path
+#                 create_script_path = script_root / 'create_cleanconll_from_conll03.sh'
+#                 print(f"Path to the create script: {create_script_path}")
+#
+#                 if not create_script_path.exists():
+#                     raise FileNotFoundError(f"Script not found: {create_script_path}")
+#
+#                 # Run shell script for creating corpus files
+#                 import subprocess
+#                 subprocess.call(['chmod', 'u+x', create_script_path])
+#                 subprocess.call(['bash', create_script_path], cwd=script_root)
+#
+#                 print("CleanCoNLL files created in temporary directory:", str(script_root / 'data/cleanconll'))
+#
+#                 # Ensure the final data folder exists
+#                 data_folder.mkdir(parents=True, exist_ok=True)
+#
+#                 # Copy the files to the final data folder
+#                 shutil.copytree(script_root / 'data/cleanconll', data_folder, dirs_exist_ok=True)
+#                 print("CleanCoNLL files are placed here:", data_folder)
+#
+#         else:
+#             print("Found files for CleanCoNLL in:", data_folder)
+#
+#         # Initialize the parent class with the specified parameters
+#         super().__init__(
+#             data_folder,
+#             columns,
+#             encoding="utf-8",
+#             in_memory=in_memory,
+#             document_separator_token="-DOCSTART-",
+#             **corpusargs,
+#         )
 
 
 class CONLL_2000(ColumnCorpus):
@@ -1535,7 +1685,6 @@ class CONLL_2000(ColumnCorpus):
         if not data_file.is_file():
             cached_path(f"{conll_2000_path}train.txt.gz", Path("datasets") / dataset_name)
             cached_path(f"{conll_2000_path}test.txt.gz", Path("datasets") / dataset_name)
-            import gzip
 
             with (
                 gzip.open(flair.cache_root / "datasets" / dataset_name / "train.txt.gz", "rb") as f_in,
