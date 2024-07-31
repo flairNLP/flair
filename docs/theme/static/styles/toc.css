@@ -1,3 +1,6 @@
 .toc-container {
     background-color: red;
+    ul {
+        margin-left: 1rem;
+    }
 }

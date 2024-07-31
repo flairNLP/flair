@@ -7,7 +7,7 @@
 
    .. raw:: html
 
-      <a href="../index.html">Tutorials</a>
+      <a href="./index.html">Tutorials</a>
 
    .. toctree::
       :maxdepth: 2
