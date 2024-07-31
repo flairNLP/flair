@@ -22,17 +22,17 @@ This tutorial illustrates how you can train your own state-of-the-art NLP models
       ../tutorial-basics/index
       ../tutorial-training/index
       ../tutorial-embeddings/index
-   .. toctree::
-      :maxdepth: 1
-      :hidden:
+      .. toctree::
+         :maxdepth: 1
+         :hidden:
 
-      how-model-training-works
-      train-vs-fine-tune
-      how-to-load-prepared-dataset
-      how-to-load-custom-dataset
-      how-to-train-sequence-tagger
-      how-to-train-text-classifier
-      how-to-train-span-classifier
+         how-model-training-works
+         train-vs-fine-tune
+         how-to-load-prepared-dataset
+         how-to-load-custom-dataset
+         how-to-train-sequence-tagger
+         how-to-train-text-classifier
+         how-to-train-span-classifier
 
 
    .. raw:: html
