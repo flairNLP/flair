@@ -1,5 +1,10 @@
 .toc-container {
     background-color: red;
+    & > a {
+        display: block;
+        font-weight: 600;
+        margin-left: 1rem;
+    }
     ul {
         margin-left: 1rem;
     }
