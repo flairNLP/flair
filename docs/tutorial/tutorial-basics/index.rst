@@ -5,18 +5,14 @@ This tutorial shows you in more detail how to tag your text and access predictio
 and showcases various models we ship with Flair.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-   intro
-   tutorial-basics/index
-      basic-types
-      how-predictions-work
-      tagging-entities
-      tagging-sentiment
-      entity-linking
-      entity-mention-linking
-      part-of-speech-tagging
-      other-models
-      how-to-tag-corpus
-   tutorial-training/index
-   tutorial-embeddings/index
+   basic-types
+   how-predictions-work
+   tagging-entities
+   tagging-sentiment
+   entity-linking
+   entity-mention-linking
+   part-of-speech-tagging
+   other-models
+   how-to-tag-corpus
