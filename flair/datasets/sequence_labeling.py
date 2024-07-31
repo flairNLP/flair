@@ -1526,7 +1526,7 @@ class CLEANCONLL(ColumnCorpus):
                 conll_url = "https://data.deepai.org/conll2003.zip"
 
                 conll03_dir.mkdir(parents=True, exist_ok=True)
-                print(f"Downloading the original CoNLL-03 from {conll_url} into {conll03_dir} ...")
+                print(f"Downloading the original CoNLL03 from {conll_url} into {conll03_dir} ...")
 
                 zip_path = conll03_dir / "conll2003.zip"
                 response = requests.get(conll_url)
@@ -1543,12 +1543,12 @@ class CLEANCONLL(ColumnCorpus):
             tokens_dir = cleanconll_data_root / 'data' / 'tokens_updated'
             tokens_dir.mkdir(parents=True, exist_ok=True)
 
-            # Cut the tokens from the original CoNLL-03 files
+            # Extract only the tokens from the original CoNLL03 files
             extract_tokens(conll03_train, tokens_dir / 'train_tokens.txt')
             extract_tokens(conll03_dev, tokens_dir / 'valid_tokens.txt')
             extract_tokens(conll03_test, tokens_dir / 'test_tokens.txt')
 
-            # Apply the downloaded patch files
+            # Apply the downloaded patch files to apply our token modifications (e.g. line breaks)
             apply_patch(tokens_dir / 'train_tokens.txt', patch_dir / 'train_tokens.patch', tokens_dir / 'train_tokens_updated.txt')
             apply_patch(tokens_dir / 'valid_tokens.txt', patch_dir / 'dev_tokens.patch', tokens_dir / 'dev_tokens_updated.txt')
             apply_patch(tokens_dir / 'test_tokens.txt', patch_dir / 'test_tokens.patch', tokens_dir / 'test_tokens_updated.txt')
