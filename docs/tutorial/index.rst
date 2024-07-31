@@ -3,7 +3,7 @@
 .. raw:: html
    :file: ../_templates/header-reset-styles.html
 
-.. container:: tutorials
+.. container:: toc-container
 
    .. toctree::
       :maxdepth: 2
