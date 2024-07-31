@@ -1,7 +1,5 @@
 .toc-container {
-    padding-left: 1rem;
-    padding-top: 3rem;
-    padding-bottom: 3rem;
+    padding: 3rem 2rem 3rem 1rem;
     & > a {
         display: block;
         font-weight: 600;
