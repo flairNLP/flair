@@ -4,21 +4,16 @@
    :file: ../_templates/header-reset-styles.html
 
 
-   .. raw:: html
+.. toctree::
+   :maxdepth: 2
 
-      <a href="./index.html">Tutorials</a>
+      flair_docs_mainpage
+      intro
+      tutorial-basics/index
+      tutorial-training/index
+      tutorial-embeddings/index
 
-
-   .. toctree::
-      :maxdepth: 2
-
-         flair_docs_mainpage
-         intro
-         tutorial-basics/index
-         tutorial-training/index
-         tutorial-embeddings/index
-
-   .. raw:: html
-      <a href="../api/index.html">API</a>
-      <a href="../contributing/index.html">Contributing</a>
+.. raw:: html
+   <a href="../api/index.html">API</a>
+   <a href="../contributing/index.html">Contributing</a>
 
