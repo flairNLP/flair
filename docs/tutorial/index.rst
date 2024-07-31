@@ -4,25 +4,21 @@
    :file: ../_templates/header-reset-styles.html
 
 
-.. container:: tutorials
-    .. container:: toc-container
+   .. raw:: html
 
-        .. raw:: html
-
-            <a href="./index.html">Tutorials</a>
+      <a href="./index.html">Tutorials</a>
 
 
-        .. toctree::
-           :maxdepth: 2
+   .. toctree::
+      :maxdepth: 2
 
-           intro
-           tutorial-basics/index
-           tutorial-training/index
-           tutorial-embeddings/index
+         flair_docs_mainpage
+         intro
+         tutorial-basics/index
+         tutorial-training/index
+         tutorial-embeddings/index
 
-        .. raw:: html
-
-            <a href="../api/index.html">API</a>
-            <a href="../contributing/index.html">Contributing</a>
-
+   .. raw:: html
+      <a href="../api/index.html">API</a>
+      <a href="../contributing/index.html">Contributing</a>
 
