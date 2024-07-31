@@ -8,7 +8,7 @@
 .. raw:: html
     <section id="tutorials">
     <div id="toc-container">
-    <a href="../">Tutorials</a>
+    <a href="./">Tutorials</a>
 
 .. toctree::
    :maxdepth: 2
