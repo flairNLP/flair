@@ -8,7 +8,6 @@
 .. toctree::
    :maxdepth: 2
 
-   index.html
    intro
    tutorial-basics/index
    tutorial-training/index
