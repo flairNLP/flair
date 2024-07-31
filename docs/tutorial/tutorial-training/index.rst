@@ -16,7 +16,6 @@ This tutorial illustrates how you can train your own state-of-the-art NLP models
 
    .. toctree::
       :maxdepth: 1
-      :includehidden:
 
       ../intro
       ../tutorial-basics/index
@@ -24,7 +23,6 @@ This tutorial illustrates how you can train your own state-of-the-art NLP models
       ../tutorial-embeddings/index
       .. toctree::
          :maxdepth: 1
-         :hidden:
 
          how-model-training-works
          train-vs-fine-tune
