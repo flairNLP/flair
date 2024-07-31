@@ -3,6 +3,10 @@ Tutorials
 
 
 .. _flair_tutorials:
+
+.. meta::
+    :title: Tutorial - Flair Documentation
+
 .. raw:: html
    :file: ../_templates/header-reset-styles.html
 
