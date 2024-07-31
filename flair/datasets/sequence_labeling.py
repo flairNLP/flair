@@ -1482,6 +1482,30 @@ class CLEANCONLL(ColumnCorpus):
 
     @staticmethod
     def download_and_prepare_data(data_folder: Path, base_path: Path):
+
+        def apply_patch(file_path, patch_path, output_path):
+            subprocess.run(['patch', str(file_path), str(patch_path), '-o', output_path])
+
+        def extract_tokens(file_path: Path, output_path: Path):
+            with open(file_path, 'r') as f_in, open(output_path, 'w') as f_out:
+                for line in f_in:
+                    # Strip whitespace to check if the line is empty
+                    stripped_line = line.strip()
+                    if stripped_line:
+                        # Write the first token followed by a newline if the line is not empty
+                        f_out.write(stripped_line.split()[0] + '\n')
+                    else:
+                        # Write an empty line if the line is empty
+                        f_out.write('\n')
+
+        def merge_annotations(tokens_file, annotations_file, output_file):
+            with open(tokens_file, 'r') as tokens, open(annotations_file, 'r') as annotations, open(output_file,
+                                                                                                    'w') as output:
+                for token, annotation in zip(tokens, annotations):
+                    # Strip the leading '[TOKEN]\t' from the annotation
+                    stripped_annotation = '\t'.join(annotation.strip().split('\t')[1:])
+                    output.write(token.strip() + '\t' + stripped_annotation + '\n')
+
         # Create a temporary directory
         with tempfile.TemporaryDirectory() as tmpdirname:
             tmpdir = Path(tmpdirname)
@@ -1493,18 +1517,6 @@ class CLEANCONLL(ColumnCorpus):
 
             # Check the contents of the temporary directory
             print(f"Contents of the temporary directory: {list(tmpdir.iterdir())}")
-
-            # TODO These files are different
-            # CoNLL-03 Flair path
-            # conll03_path = base_path / 'conll_03'
-            # # Check if the CoNLL-03 files already exists in flair's dataset directory
-            # if conll03_path.exists() and conll03_path.is_dir() and "eng.testa" in [f.name for f in conll03_path.iterdir()]:
-            #     print(f"Original CoNLL03 files detected here: {conll03_path}")
-            #     print(f"Contents: {[f.name for f in conll03_path.iterdir()]}")
-            #     conll03_train = conll03_path / "eng.train"
-            #     conll03_dev = conll03_path / "eng.testa"
-            #     conll03_test = conll03_path / "eng.testb"
-            #     print(f"So not downloading from {conll_url}, using the following files: 'eng.train', 'eng.testa', 'eng.testb'")
 
             conll03_dir = data_folder / 'original_conll-03'
             if conll03_dir.exists() and conll03_dir.is_dir() and "train.txt" in [f.name for f in conll03_dir.iterdir()]:
@@ -1527,30 +1539,16 @@ class CLEANCONLL(ColumnCorpus):
             conll03_dev = conll03_dir / "valid.txt"
             conll03_test = conll03_dir / "test.txt"
 
-            # Apply the patch files
             patch_dir = cleanconll_data_root / 'data' / 'patch_files'
             tokens_dir = cleanconll_data_root / 'data' / 'tokens_updated'
             tokens_dir.mkdir(parents=True, exist_ok=True)
 
-            def apply_patch(file_path, patch_path, output_path):
-                subprocess.run(['patch', str(file_path), str(patch_path), '-o', output_path])
-
-            def extract_tokens(file_path: Path, output_path: Path):
-                with open(file_path, 'r') as f_in, open(output_path, 'w') as f_out:
-                    for line in f_in:
-                        # Strip whitespace to check if the line is empty
-                        stripped_line = line.strip()
-                        if stripped_line:
-                            # Write the first token followed by a newline if the line is not empty
-                            f_out.write(stripped_line.split()[0] + '\n')
-                        else:
-                            # Write an empty line if the line is empty
-                            f_out.write('\n')
-
+            # Cut the tokens from the original CoNLL-03 files
             extract_tokens(conll03_train, tokens_dir / 'train_tokens.txt')
             extract_tokens(conll03_dev, tokens_dir / 'valid_tokens.txt')
             extract_tokens(conll03_test, tokens_dir / 'test_tokens.txt')
 
+            # Apply the downloaded patch files
             apply_patch(tokens_dir / 'train_tokens.txt', patch_dir / 'train_tokens.patch', tokens_dir / 'train_tokens_updated.txt')
             apply_patch(tokens_dir / 'valid_tokens.txt', patch_dir / 'dev_tokens.patch', tokens_dir / 'dev_tokens_updated.txt')
             apply_patch(tokens_dir / 'test_tokens.txt', patch_dir / 'test_tokens.patch', tokens_dir / 'test_tokens_updated.txt')
@@ -1559,12 +1557,6 @@ class CLEANCONLL(ColumnCorpus):
             cleanconll_annotations_dir = cleanconll_data_root / 'data' / 'cleanconll_annotations'
             data_folder.mkdir(parents=True, exist_ok=True)
 
-            def merge_annotations(tokens_file, annotations_file, output_file):
-                with open(tokens_file, 'r') as tokens, open(annotations_file, 'r') as annotations, open(output_file, 'w') as output:
-                    for token, annotation in zip(tokens, annotations):
-                        # Strip the leading '[TOKEN]\t' from the annotation
-                        stripped_annotation = '\t'.join(annotation.strip().split('\t')[1:])
-                        output.write(token.strip() + '\t' + stripped_annotation + '\n')
             merge_annotations(tokens_dir / 'train_tokens_updated.txt', cleanconll_annotations_dir / 'cleanconll_annotations.train', data_folder / 'cleanconll.train')
             merge_annotations(tokens_dir / 'dev_tokens_updated.txt', cleanconll_annotations_dir / 'cleanconll_annotations.dev', data_folder / 'cleanconll.dev')
             merge_annotations(tokens_dir / 'test_tokens_updated.txt', cleanconll_annotations_dir / 'cleanconll_annotations.test', data_folder / 'cleanconll.test')
