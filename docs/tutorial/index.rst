@@ -3,11 +3,13 @@
 .. raw:: html
    :file: ../_templates/header-reset-styles.html
 
-
-
 .. raw:: html
     <section id="tutorials">
     <div id="toc-container">
+
+
+.. raw:: html
+
     <a href="./">Tutorials</a>
 
 .. toctree::
