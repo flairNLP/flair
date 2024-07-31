@@ -9,15 +9,12 @@
 
       <a href="./index.html">Tutorials</a>
 
-   .. toctree::
-      :maxdepth: 2
-
-      intro
-      tutorial-basics/index
 
    .. toctree::
       :maxdepth: 1
 
+      intro
+      tutorial-basics/index
       tutorial-training/index
       tutorial-embeddings/index
 
