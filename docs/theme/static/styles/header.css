@@ -1,6 +1,6 @@
 header {
     width: 100%;
-    height: 90px;
+    height: var(--header-height);
     background: var(--white-blue);
     .header-wrapper {
         margin: 0 calc(10% + 10px);

@@ -12,6 +12,8 @@
 	--orange-white-transparent: var(--flair-orange-transparent);
 	--orange-blue: var(--flair-orange);
 	--blue-orange: var(--flair-blue);
+	--header-height: 90px;
+	--footer-height: 60px;
     font-family: "Afacad", sans-serif;
     font-optical-sizing: auto;
     font-weight: 400;
@@ -76,6 +78,10 @@ footer, header, hgroup, menu, nav, section {
 
 body {
 	line-height: 1;
+}
+
+main {
+	min-height: calc(100vh - var(--header-height) - var(--footer-height));
 }
 
 ol, ul {

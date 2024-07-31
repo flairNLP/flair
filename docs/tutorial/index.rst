@@ -4,6 +4,45 @@ Tutorials
 
 .. _flair_tutorials:
 
+.. raw:: html
+    <style>
+    header {
+        background-color: var(--flair-orange);
+        color: white;
+        .header-wrapper nav ul li a {
+            color: white;
+        }
+        .fill-orange {
+            fill: white;
+        }
+        .stroke-orange-white {
+            stroke: white;
+        }
+        .version-switcher__container {
+            #versionswitcherbutton {
+                border-color: white;
+                color: white;
+            }
+            #versionswitcherlist {
+                border-color: white;
+                background-color: var(--flair-orange);
+                .list-group-item {
+                    background-color: var(--flair-orange);
+                    color: white;
+                    border-color: white;
+                    &:hover {
+                    background-color: var(--white-transparent);
+                        color: white
+                    }
+                    &::after {
+                        background-color: white;
+                    }
+                }
+            }
+        }
+    }
+    </style>
+
 .. toctree::
    :maxdepth: 2
 
