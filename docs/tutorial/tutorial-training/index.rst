@@ -5,7 +5,7 @@ This tutorial illustrates how you can train your own state-of-the-art NLP models
 
 .. toctree::
    :glob:
-   :maxdepth: 2
+   :maxdepth: 1
 
    how-model-training-works
    train-vs-fine-tune
