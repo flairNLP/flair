@@ -8,6 +8,7 @@
 .. toctree::
    :maxdepth: 2
 
+   _flair_tutorials
    intro
    tutorial-basics/index
    tutorial-training/index
