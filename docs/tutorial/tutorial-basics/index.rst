@@ -7,12 +7,16 @@ and showcases various models we ship with Flair.
 .. toctree::
    :maxdepth: 2
 
-   basic-types
-   how-predictions-work
-   tagging-entities
-   tagging-sentiment
-   entity-linking
-   entity-mention-linking
-   part-of-speech-tagging
-   other-models
-   how-to-tag-corpus
+   intro
+   tutorial-basics/index
+      basic-types
+      how-predictions-work
+      tagging-entities
+      tagging-sentiment
+      entity-linking
+      entity-mention-linking
+      part-of-speech-tagging
+      other-models
+      how-to-tag-corpus
+   tutorial-training/index
+   tutorial-embeddings/index
