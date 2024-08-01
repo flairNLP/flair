@@ -642,6 +642,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "reproject_embeddings": self.reproject_embeddings,
             "weight_dict": self.weight_dict,
             "train_initial_hidden_state": self.train_initial_hidden_state,
+            "wsa_embedding_layer_size": self.wsa_embedding_layer_size
         }
 
         return model_state
@@ -670,6 +671,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             loss_weights=state.get("weight_dict"),
             init_from_state_dict=True,
             train_initial_hidden_state=state.get("train_initial_hidden_state", False),
+            wsa_embedding_layer_size=state.get("wsa_embedding_layer_size") if state.get("wsa_embedding_layer_size") > 0 else None
             **kwargs,
         )
 
