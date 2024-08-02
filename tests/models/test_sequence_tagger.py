@@ -5,6 +5,9 @@ from flair.embeddings import FlairEmbeddings, WordEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 from tests.model_test_utils import BaseModelTest
+import pandas as pd
+import csv
+import numpy as np
 
 
 class TestSequenceTagger(BaseModelTest):
@@ -99,6 +102,36 @@ class TestSequenceTagger(BaseModelTest):
         loaded_model.predict([example_sentence, self.empty_sentence])
         loaded_model.predict([self.empty_sentence])
         del loaded_model
+
+
+    @pytest.mark.integration()
+    def test_train_load_use_tagger_with_trainable_hidden_state_sample_metrics(
+        self, embeddings, results_base_path, corpus, example_sentence
+    ):
+        tag_dictionary = corpus.make_label_dictionary("ner", add_unk=False)
+
+        model = self.build_model(embeddings, tag_dictionary, train_initial_hidden_state=True, calculate_sample_metrics = True )
+        trainer = ModelTrainer(model, corpus)
+
+        trainer.train(results_base_path, shuffle=False, **self.training_args)
+
+        del trainer, model, tag_dictionary, corpus
+
+        epoch_1_log_df = pd.read_csv(results_base_path / 'epoch_log_1.log', delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
+        epoch_2_log_df = pd.read_csv(results_base_path / 'epoch_log_2.log', delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
+
+        assert (epoch_2_log_df['last_prediction'] == epoch_1_log_df['predicted']).all()
+
+        assert (epoch_2_log_df['noisy_flag'] == epoch_1_log_df['noisy_flag']).all()
+        assert (epoch_2_log_df['clean'] == epoch_1_log_df['clean']).all()
+
+        assert (epoch_2_log_df['iter_norm'] <= 1).all()
+        assert (epoch_1_log_df['confidence'] <= (epoch_1_log_df['last_confidence_sum'] + 0.9) / 2).all()
+
+
+        assert (epoch_1_log_df['variability'] <= np.sqrt((epoch_1_log_df['last_sq_difference_sum'] + 0.9 ** 2) / 2)).all()
+        assert (epoch_1_log_df['correctness'] == epoch_2_log_df['last_correctness_sum']).all()
+        assert ((epoch_2_log_df['correctness'] <= (epoch_2_log_df['last_correctness_sum'] + 1) / 2)  & (epoch_2_log_df['correctness'] >= epoch_2_log_df['last_correctness_sum'] / 2)).all()
 
     @pytest.mark.integration()
     def test_train_load_use_tagger_disjunct_tags(
