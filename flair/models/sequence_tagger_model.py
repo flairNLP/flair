@@ -327,6 +327,16 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     
     def _log_metrics(self, epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, gold_labels, clean_labels):
         i=0
+        #BIO
+        gold_labels = self._convert_bioes_to_bio(gold_labels)
+
+        #BIO
+        clean_labels = self._convert_bioes_to_bio(clean_labels)
+        
+        pred = self._convert_bioes_to_bio(pred)
+
+        #BIO
+        history_predicted = self._convert_bioes_to_bio(history_metrics_dict['last_prediction'])
         with open(self.print_out_path / epoch_log_path, "a") as outfile:
             for sent_ind, sent in enumerate(sentences):
                 token_ind=0
@@ -339,8 +349,12 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                                 f"{str(self.label_dictionary.get_item_for_index(gold_labels[i].item()))}\t" + 
                                 f"{str(self.label_dictionary.get_item_for_index(clean_labels[i].item()))}\t" + 
                                 f"{str(self.label_dictionary.get_item_for_index(gold_labels[i].item()) != self.label_dictionary.get_item_for_index(clean_labels[i].item()))}\t") 
+                    
                     for metric in self.metrics_history_variables_list:
-                        outfile.write(f"{str(round(history_metrics_dict[metric][i].item(),4))}\t")
+                        if metric == 'last_prediction':
+                            outfile.write(f"{str(self.label_dictionary.get_item_for_index(history_predicted[i].item()))}\t")
+                        else:
+                            outfile.write(f"{str(round(history_metrics_dict[metric][i].item(),4))}\t")
                     for metric in self.metrics_list:
                         outfile.write(f"{str(round(metrics_dict[metric][i].item(),4))}\t")
                     outfile.write("\n")            
@@ -424,11 +438,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return labels
 
     def calculate_and_log_metrics(self, sentences, scores, observed_labels, clean_labels):
-        #BIO
-        observed_labels = self._convert_bioes_to_bio(observed_labels)
-
-        #BIO
-        clean_labels = self._convert_bioes_to_bio(clean_labels)
 
         epoch_log_path = "epoch_log_"+str(self.model_card["training_parameters"]["epoch"])+'.log'
     
