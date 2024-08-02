@@ -364,8 +364,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # Metric: Max softmax prob (calculate_loss)
         msp = values[:,0]
-        assert msp.all()
-
+        assert msp.cpu().detach().all()
         # Best vs second best (calculate_loss)
         BvSB = msp - values[:,1]
         # label_tensor ~ gold_labels : shape = (total_num_tokens, 17)
