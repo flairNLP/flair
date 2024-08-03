@@ -1,9 +1,13 @@
 import importlib
 import inspect
 from types import ModuleType
-from typing import Any, Iterable, List, Optional, Type, TypeVar, Union, overload
+from typing import Any, Iterable, List, Optional, Protocol, Type, TypeVar, Union, overload
 
 T = TypeVar("T")
+
+
+class StringLike(Protocol):
+    def __str__(self) -> str: ...
 
 
 def get_non_abstract_subclasses(cls: Type[T]) -> Iterable[Type[T]]:
