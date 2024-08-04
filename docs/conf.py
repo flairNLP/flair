@@ -88,7 +88,7 @@ html_css_files = [
     'css/header.css',
 ]
 
-html_logo = "_static/flair_logo.svg"
+html_logo = "_static/flair_logo_white.svg"
 html_show_sphinx = False
 
 # Napoleon settings
