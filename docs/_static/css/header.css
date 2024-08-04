@@ -1,7 +1,7 @@
 .bd-header {
     width: 100%;
     height: var(--header-height);
-    background: var(--white-blue) !important;
+    background: var(--flair-orange) !important;
     .header-wrapper {
         margin: 0 calc(10% + 10px);
         height: 100%;
