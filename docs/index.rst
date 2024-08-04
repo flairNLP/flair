@@ -4,7 +4,7 @@ flair
 .. _flair_docs_mainpage:
 
 .. raw:: html
-   :file: _static/html/landing_page_header_styles.html
+   :file: _static/html/landing_page_styles.html
 
 .. raw:: html
    :file: _templates/landing-page-banner.html
