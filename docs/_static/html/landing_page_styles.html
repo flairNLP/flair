@@ -120,11 +120,11 @@
                 }
                 &:nth-of-type(2) {
                     display: none;
-                    :root .dark-mode & {
+                    :root[data-theme="dark"] & {
                         display: block;
                     }
                 }
-                :root .dark-mode & {
+                :root[data-theme="dark"]  & {
                     display: none;
                 }
             }
