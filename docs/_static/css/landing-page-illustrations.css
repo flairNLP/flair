@@ -1,0 +1,38 @@
+.landing-page-illustrations {
+    display: flex;
+    padding: 5rem;
+    background: var(--white-blue);
+    .item {
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        padding: 0 5%;
+        &:not(:last-of-type) {
+            border-right: #ccc 2px solid;
+        }
+        svg {
+            height: 12vw;
+            width: auto;
+            & + span {
+                margin-top: 2.5em;
+                margin-bottom: 0.75em;
+                font-size: 1.5rem;
+                font-weight: 600;
+            }
+            &:nth-of-type(2) {
+                display: none;
+                :root .dark-mode & {
+                    display: block;
+                }
+            }
+            :root .dark-mode & {
+                display: none;
+            }
+        }
+        span, p {
+            color: var(--blue-white);
+        }
+    }
+}
