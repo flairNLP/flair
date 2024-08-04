@@ -5,9 +5,7 @@
 
 .. container:: toc-container
 
-   .. raw:: html
-
-      <a href="../index.html">Tutorials</a>
+   `Tutorials <tutorial/intro.html>`
 
    .. toctree::
       :maxdepth: 1
