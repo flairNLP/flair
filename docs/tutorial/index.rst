@@ -5,7 +5,12 @@
 
 .. container:: toc-container
 
-   `Tutorials <tutorial/intro.html>`
+   .. button-ref:: tutorial/index
+            :expand:
+            :color: secondary
+            :click-parent:
+
+            To the tutorials
 
    .. toctree::
       :maxdepth: 1
