@@ -1,0 +1,89 @@
+.bd-header {
+    width: 100%;
+    height: var(--header-height);
+    background: var(--white-blue) !important;
+    .header-wrapper {
+        margin: 0 calc(10% + 10px);
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+        nav {
+            height: 100%;
+            ul {
+                display: flex;
+                height: 100%;
+                li {
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    a {
+                        font-size: 1.1rem;
+                        color: var(--orange-white);
+                        svg {
+                            height: 50%;
+                            flex-grow: 1;
+                        }
+                        &.header-logo {
+                            height: 100%;
+                            display: flex;
+                            align-items: center;
+                        }
+                        &.header-hover-underline {
+                            position: relative;
+                            &::after {
+                                transition: width 150ms cubic-bezier(.17,.67,0,1);
+                                content: "";
+                                width: 0;
+                                height: 3px;
+                                background-color: var(--orange-white);
+                                position: absolute;
+                                left: 50%;
+                                transform: translateX(-50%);
+                                bottom: -1rem;
+                            }
+                            &:hover::after {
+                                width: 1rem;
+                            }
+                        }
+                    }
+                    margin-right: 3em;
+                }
+            }
+        }
+        .header-controls {
+            height: 100%;
+            ul {
+                height: 100%;
+                display: flex;
+                li {
+                    margin-left: 3rem;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    &:not(:last-of-type) {
+                        cursor: pointer;
+                    }
+                    &:nth-of-type(2) {
+                        svg {
+                            &:first-of-type {
+                                :root .dark-mode & {
+                                    display: none;
+                                }
+                            }
+                            &:nth-of-type(2) {
+                                display: none;
+                                :root .dark-mode & {
+                                    display: block;
+                                }
+                            }
+                        }
+                    }
+                    svg {
+                        height: 35%;
+                        width: auto;
+                    }
+                }
+            }
+        }
+    }
+}
