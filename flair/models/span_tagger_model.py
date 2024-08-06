@@ -75,8 +75,7 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
         if concat_span_length_to_embedding:
             final_embedding_size += 1
         if self.wsa_embedding_layer_size is not None:
-            final_embedding_size += self.wsa_embedding_layer_size
-            self.wsa_layer = torch.nn.Linear(2, self.wsa_embedding_layer_size)
+            final_embedding_size += self.wsa_embedding_layer_size * 2
 
         # make sure the label dictionary has an "O" entry for "no tagged span"
         label_dictionary.add_item("O")
@@ -88,6 +87,9 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
             decoder=decoder,
             **classifierargs,
         )
+
+        if self.wsa_embedding_layer_size is not None:
+            self.wsa_layer = torch.nn.Linear(2, self.wsa_embedding_layer_size)
 
         self.gazetteer_embeddings = gazetteer_embeddings
 
@@ -121,14 +123,18 @@ class SpanTagger(flair.nn.DefaultClassifier[Sentence, Span]):
         self.to(flair.device)
 
     def emb_first(self, span: Span, embedding_names):
-        return span.tokens[0].get_embedding(embedding_names)
+        one_hot_wsa = torch.Tensor([0.0, 1.0] if span.tokens[0].whitespace_after else [1.0, 0.0]).to(flair.device)
+        wsa_embedding = self.wsa_layer(one_hot_wsa)
+        return torch.cat((span.tokens[0].get_embedding(embedding_names), wsa_embedding), 0)
 
     def emb_last(self, span: Span, embedding_names):
-        return span.tokens[-1].get_embedding(embedding_names)
+        one_hot_wsa = torch.Tensor([0.0, 1.0] if span.tokens[-1].whitespace_after else [1.0, 0.0]).to(flair.device)
+        wsa_embedding = self.wsa_layer(one_hot_wsa)
+        return torch.cat((span.tokens[-1].get_embedding(embedding_names), wsa_embedding), 0)
 
     def emb_firstAndLast(self, span: Span, embedding_names):
         return torch.cat(
-            (span.tokens[0].get_embedding(embedding_names), span.tokens[-1].get_embedding(embedding_names)), 0
+            (self.emb_first(span, embedding_names), self.emb_last(span, embedding_names)), 0
         )
 
     def emb_mean(self, span, embedding_names):
