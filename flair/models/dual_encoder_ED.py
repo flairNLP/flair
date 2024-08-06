@@ -36,9 +36,14 @@ def insert_verbalizations_into_sentence(sentence: Sentence, label_type: str, lab
         label = sp.get_label(label_type).value
         add_at_position_in_tokens = sp.tokens[-1].idx + added_tokens
 
+        import string
+
         verbalization = Sentence(f" ({label_map.get(label, label.replace('_', ' '))})")
+        #verbalization = Sentence(f" ({''.join(random.choices(string.ascii_letters, k=10))})")
+        #verbalization = Sentence(f" ({random.choice(list(label_map.values()))})")
 
         verbalization_token_texts = [t.text for t in verbalization.tokens]
+
         len_verbalization_tokens = len(verbalization_token_texts)
         tokens_text = tokens_text[:add_at_position_in_tokens] + verbalization_token_texts + tokens_text[add_at_position_in_tokens:]
 
@@ -95,8 +100,22 @@ class SimilarityMetric:
 
     def similarity(self, tensor_a, tensor_b):
 
+        def chunked_cdist(tensor_a, tensor_b, chunk_size=200000):
+            results = []
+            for i in range(0, tensor_a.size(0), chunk_size):
+                results_chunk_a = []
+                chunk_a = tensor_a[i:i + chunk_size]
+                for j in range(0, tensor_b.size(0), chunk_size):
+                    chunk_b = tensor_b[j:j + chunk_size]
+                    results_chunk_a.append(torch.cdist(chunk_a, chunk_b, compute_mode = "donot_use_mm_for_euclid_dist"))
+                results_chunk_a = torch.cat(results_chunk_a, dim=1)
+                results.append(results_chunk_a)
+            return torch.cat(results, dim=0)
+
         if self.metric_to_use == "euclidean":
-            return -torch.cdist(tensor_a, tensor_b)
+            # if we do not use compute_mode = "donot_use_mm_for_euclid_dist", numerical deviations are very high on gpu, see https://github.com/pytorch/pytorch/issues/42479 and https://github.com/pytorch/pytorch/issues/57690
+            #return -torch.cdist(tensor_a, tensor_b, compute_mode = "donot_use_mm_for_euclid_dist")
+            return -chunked_cdist(tensor_a, tensor_b)
 
         elif self.metric_to_use == "cosine":
             tensor_a_normalized = F.normalize(tensor_a, p=2, dim=-1)
@@ -730,7 +749,17 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
     re-embedded and predicted. This process is iterative until all spans have predicted labels.
     """
 
-    def sample_spans_to_use_for_gold_label_verbalization(self, sentences, search_context_window: int = 2):
+    def __init__(self, insert_in_context: Union[int, bool] = False, **kwargs):
+        super(GreedyDualEncoderEntityDisambiguation, self).__init__(**kwargs)
+        if not insert_in_context:
+            self.insert_in_context = 0
+        elif insert_in_context == True:
+            self.insert_in_context = 2
+        else:
+            self.insert_in_context = insert_in_context
+
+
+    def sample_spans_to_use_for_gold_label_verbalization(self, sentences, search_context_window: int = 0):
         """
         Samples random spans with a label_type annotation that will be used for gold label verbalization insertion during training.
         :param sentences: Sentences too search for spans.
@@ -748,6 +777,8 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
                 if next:
                     spans.extend(next.get_spans(self.label_type))
                     next = next._next_sentence
+        # In case we do not shuffle and use search_context_window, the same spans would keep getting added. Use set() to only use them once.
+        spans = list(set(spans))
         number_of_spans_to_verbalize = random.randint(0, len(spans))
         return random.sample(spans, number_of_spans_to_verbalize)
 
@@ -762,7 +793,11 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         spans = []
         for s in sentences:
             spans.extend([sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)])
-        sorted_spans = sorted(spans, key = lambda sp: sp.get_label(label_name).score)
+        sorted_spans = sorted(spans, key = lambda sp: sp.get_label(label_name).score, reverse = True)
+
+        #cut_at = int(len(sorted_spans)/n)
+        #return sorted_spans[:cut_at]
+
         return sorted_spans[:n]
 
 
@@ -772,14 +807,14 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         :param sentences: Sentences in batch.
         :return: Tuple(loss, number of spans)
         """
-        sampled_spans = self.sample_spans_to_use_for_gold_label_verbalization(sentences, search_context_window=0)
+        sampled_spans = self.sample_spans_to_use_for_gold_label_verbalization(sentences, search_context_window=self.insert_in_context)
         # add a verbalization marker to the chosen spans:
         for sp in sampled_spans:
             label = sp.get_label(self.label_type)
             sp.set_label("to_verbalized", value=label.value, score=label.score)
         # insert verbalizations (from the sampled_spans) into the sentences, using the verbalization marker:
         verbalized_sentences = [
-            insert_verbalizations_into_sentence(s, "to_verbalized", label_map = self.label_map, verbalize_previous=0, verbalize_next=0) for s in
+            insert_verbalizations_into_sentence(s, "to_verbalized", label_map = self.label_map, verbalize_previous=self.insert_in_context, verbalize_next=self.insert_in_context) for s in
             sentences]
         # remove the verbalization marker from the ORIGINAL spans so that they remain unmodified:
         for sp in sampled_spans:
@@ -841,7 +876,7 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
 
             # insert the label verbalizations of the chosen spans
             verbalized_sentences = [
-                insert_verbalizations_into_sentence(s, verbalized_label_type, label_map = self.label_map, verbalize_previous=2, verbalize_next=2)
+                insert_verbalizations_into_sentence(s, verbalized_label_type, label_map = self.label_map, verbalize_previous=self.insert_in_context, verbalize_next=self.insert_in_context)
                 for s in sentences]
             # keep the spans in the original sentences unmodified
             for sp in chosen_spans:
@@ -901,4 +936,25 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
 
             lines.append(eval_line)
         return lines
+
+    def _get_state_dict(self):
+        # todo Something missing here?
+        model_state = {
+            **super()._get_state_dict(),
+            "insert_in_context": self.insert_in_context
+
+        }
+        return model_state
+
+    @classmethod
+    def _init_model_with_state_dict(cls, state, **kwargs):
+
+        model = super()._init_model_with_state_dict(
+            state,
+            **kwargs,
+        )
+
+        model.insert_in_context = state.get("insert_in_context", model.insert_in_context)
+
+        return model
 
