@@ -72,17 +72,22 @@
         .navbar-header-items__end {
 
             .navbar-item:first-of-type {
-                i {
-                    visibility: hidden;
-                    &:focus, &, &:active {
-                        border: none;
-                        outline: none;
+                button.search-button {
+                    background-size: contain;
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    border-radius: 0;
+                    background-color: red;
+                    height: 55%;
+                    width: auto;
+                    i {
+                        visibility: hidden;
+                        &:focus, &, &:active {
+                            border: none;
+                            outline: none;
+                        }
                     }
                 }
-                background-image: url("_static/magnifying_glass.svg");
-                background-size: contain;
-                background-repeat: no-repeat;
-                background-position: center;
             }
             .navbar-item:nth-of-type(2) {
                 svg {
