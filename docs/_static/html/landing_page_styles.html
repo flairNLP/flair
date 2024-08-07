@@ -23,6 +23,49 @@
             background-repeat: no-repeat;
             background-position: center;
         }
+        .bd-header {
+    width: 100%;
+    height: var(--header-height);
+    background: var(--flair-orange) !important;
+    box-shadow: none;
+    .bd-header__inner {
+        margin: 0 10%;
+        padding: 0;
+        height: 100%;
+        display: flex;
+        justify-content: space-between;
+        .navbar-header-items__start {
+            padding: 0;
+            height: 55%;
+            .navbar-item {
+                height: 100%;
+                .navbar-brand.logo {
+                    height: 100%;
+                    padding: 0;
+                    display: block;
+                    .logo__image {
+                        height: 100%;
+                        width: auto;
+                    }
+                }
+            }
+        }
+        nav {
+            ul.bd-navbar-elements {
+                li.nav-item {
+                    a {
+                        font-size: 1.1rem;
+                        padding: 0;
+                        color: var(--orange-white);
+                        &:hover {
+                            color: var(--orange-white);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
     }
     .landing-page {
         .banner {
