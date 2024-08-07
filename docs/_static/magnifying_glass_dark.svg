@@ -14,7 +14,7 @@
    xmlns:svg="http://www.w3.org/2000/svg"><defs
    id="defs2" /><sodipodi:namedview
    id="namedview2"
-   pagecolor="#f79910"
+   pagecolor="#ffffff"
    bordercolor="#000000"
    borderopacity="0.25"
    inkscape:showpageshadow="2"
@@ -33,24 +33,24 @@
                   <g
    transform="translate(-371.73 -8.534)"
    id="g2"
-   style="fill:none;stroke:#f79910;stroke-opacity:1">
+   style="fill:none;stroke:#ffffff;stroke-opacity:1">
                      <g
    transform="matrix(.81949 -.81949 .81949 .81949 16.159 396.59)"
    class="stroke-orange-white"
    stroke-width=".4566"
    id="g1"
-   style="fill:none;stroke:#f79910;stroke-opacity:1">
+   style="fill:none;stroke:#ffffff;stroke-opacity:1">
                         <circle
    cx="453.71"
    cy="-14.914"
    r="3.2422"
    id="circle1"
-   style="fill:none;stroke:#f79910;stroke-opacity:1" />
+   style="fill:none;stroke:#ffffff;stroke-opacity:1" />
                         <path
    d="m453.71-11.494v3.0363"
    stroke-linecap="round"
    id="path1"
-   style="fill:none;stroke:#f79910;stroke-opacity:1" />
+   style="fill:none;stroke:#ffffff;stroke-opacity:1" />
                      </g>
                   </g>
                </svg>
