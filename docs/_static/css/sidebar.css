@@ -1,5 +1,29 @@
 .bd-sidebar-primary.bd-sidebar {
+    padding: 2rem;
+    width: auto;
     h3 {
         display: none;
+    }
+    * {
+        color: var(--flair-blue);
+    }
+    .toctree-l1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-top: .8rem;
+    }
+    .toctree-l2 {
+        font-size: 1rem;
+        font-weight: 400;
+        margin-top: .8rem;
+        ul {
+            margin-left: 1rem;
+        }
+    }
+    .toctree-l3 {
+        margin-top: .8rem;
+    }
+    .current {
+        color: var(--flair-orange);
     }
 }
