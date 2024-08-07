@@ -73,9 +73,12 @@
 
             .navbar-item:first-of-type {
                 i {
-                    display: none;
+                    visibility: hidden;
+                    &:focus, &, &:active {
+                        border: none;
+                        outline: none;
+                    }
                 }
-                width: 2rem;
                 background-color: red;
             }
             .navbar-item:nth-of-type(2) {
