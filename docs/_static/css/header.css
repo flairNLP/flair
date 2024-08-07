@@ -116,6 +116,28 @@
     }
 }
 
+.search-button__wrapper.show {
+    .search-button__overlay {
+        background: var(--flair-blue);
+    }
+    form.bd-search {
+        i {
+            display: none;
+        }
+        input {
+            border: 2px var(--flair-orange) solid;
+            color: var(--flair-blue);
+            box-shadow: none;
+            padding: .25em 5.5em .25em .75em;
+            border-radius: 1rem;
+            font-size: 1.2rem;
+        }
+        .search-button__kbd-shortcut {
+            align-items: center;
+        }
+    }
+}
+
 .fill-white-blue {
 	fill: var(--white-blue);
 	stroke: none;
