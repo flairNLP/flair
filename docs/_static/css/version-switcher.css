@@ -12,6 +12,9 @@
         border-radius: 0.66em;
         font-family: inherit;
         width: 7em;
+        &::after {
+            content: none;
+        }
     }
     #versionswitcherlist {
         background: var(--white-blue);
@@ -30,6 +33,9 @@
     &.open #versionswitcherlist {
         display: flex;
     }
+    .version-switcher__menu a.list-group-item:not(:last-child) {
+        border-bottom: none;
+    }
     .list-group-item {
         font-size: 1rem;
         padding: 0.2em 1em 0.2em 1em;
@@ -44,7 +50,7 @@
             color: var(--white-blue);
         }
         span {
-            color: inherit;
+            color: var(--flair-orange);
         }
         &:not(:last-of-type) {
             padding-bottom: calc(0.2em + 2px);
