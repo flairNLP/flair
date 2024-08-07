@@ -81,8 +81,8 @@
                     background-repeat: no-repeat;
                     background-position: center;
                     border-radius: 0;
-                    height: 1.75rem;
-                    width: 1.75rem;
+                    height: 1.85rem;
+                    width: 1.85rem;
                     i {
                         visibility: hidden;
                         &:focus, &, &:active {
