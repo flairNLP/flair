@@ -1,5 +1,8 @@
 .. _flair_docs_mainpage:
 
+.. meta::
+   :title: Flair Documentation
+
 .. raw:: html
    :file: _static/html/landing_page_styles.html
 
