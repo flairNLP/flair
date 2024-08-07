@@ -3,10 +3,19 @@
     background: var(--blue-orange);
     .bd-footer__inner {
         padding: 1rem 10%;
+        width: 100%;
+        max-width: initial;
         margin: 0;
         box-sizing: border-box;
         .footer-item * {
             color: white;
+        }
+        .footer-items__end {
+            display: flex;
+            flex-direction: row;
+            .footer-item:not(:last-of-type) {
+                margin-right: 3rem;
+            }
         }
     }
 }
