@@ -79,6 +79,7 @@ html_title = 'Flair Documentation'
 html_css_files = [
     'css/main.css',
     'css/header.css',
+    'css/version-switcher.css',
 ]
 
 html_logo = "_static/flair_logo_white.svg"
