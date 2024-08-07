@@ -223,6 +223,9 @@ class LanguageModelTrainer:
 
             if self.optimizer_state is not None:
                 optimizer.load_state_dict(self.optimizer_state)
+                # update learning rate
+                for i, param_group in enumerate(optimizer.param_groups):
+                    param_group["lr"] = learning_rate
 
             if isinstance(optimizer, (AdamW, SGDW)):
                 scheduler: ReduceLROnPlateau = ReduceLRWDOnPlateau(optimizer, factor=anneal_factor, patience=patience)
