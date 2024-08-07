@@ -27,15 +27,7 @@ html_context = {
 }  # dummy value that sphinx-github-style won't crash when run in temp folder.
 
 html_theme_options = {
-    "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"],
-    "github_url": linkcode_url,
-    "icon_links": [
-        {
-            "name": "PyPI",
-            "url": "https://pypi.org/project/flair",
-            "icon": "fas fa-box",
-        },
-    ],
+    "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"]
 }
 
 
