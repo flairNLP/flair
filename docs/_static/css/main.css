@@ -14,6 +14,9 @@
 	--blue-orange: var(--flair-blue);
 	--header-height: 90px;
 	--footer-height: 60px;
+	--track-color: #dddddd;
+	--track-thumb: #bbbbbb;
+	--track-thumb-hover: #999999;
     font-family: "Afacad", sans-serif;
     font-optical-sizing: auto;
     font-weight: 400;
@@ -28,6 +31,9 @@
 	--orange-blue: var(--flair-blue);
 	--blue-orange: var(--flair-orange);
 	--orange-white-transparent: var(--white-transparent);
+	--track-color: #38374a;
+	--track-thumb: #4c4b5c;
+	--track-thumb-hover: #5c5b69;
 }
 
 .fill-white-blue {
@@ -125,22 +131,18 @@ a {
 	max-width: 100%;
 }
 
- /* width */
 ::-webkit-scrollbar {
   width: 10px;
 }
 
-/* Track */
 ::-webkit-scrollbar-track {
-  background: #2f2e41;
+  background: var(--track-color);
 }
 
-/* Handle */
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--track-thumb);
 }
 
-/* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--track-thumb-hover);
 }
