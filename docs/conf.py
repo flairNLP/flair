@@ -27,7 +27,8 @@ html_context = {
 }  # dummy value that sphinx-github-style won't crash when run in temp folder.
 
 html_theme_options = {
-    "navbar_end": ["darkmode-toggle", "version-switcher", "navbar-icon-links"]
+    "navbar_end": ["darkmode-toggle", "version-switcher", "navbar-icon-links"],
+    "show_prev_next": False
 }
 
 
