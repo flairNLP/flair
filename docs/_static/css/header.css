@@ -79,7 +79,10 @@
                         outline: none;
                     }
                 }
-                background-color: red;
+                background-image: url("_static/magnifying_glass.svg");
+                background-size: contain;
+                background-repeat: no-repeat;
+                background-position: center;
             }
             .navbar-item:nth-of-type(2) {
                 svg {
