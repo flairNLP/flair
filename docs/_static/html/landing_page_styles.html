@@ -146,4 +146,30 @@
             }
         }
     }
+    .version-switcher__container {
+        #versionswitcherbutton {
+            background: var(--white-blue);
+            border: 2px var(--orange-white) solid;
+            color: var(--orange-white);
+        }
+        #versionswitcherlist {
+            background: var(--white-blue);
+            border: 2px var(--orange-white) solid;
+        }
+        a.list-group-item {
+            background: var(--white-blue);
+            &:hover {
+                background: var(--white-transparent);
+                color: var(--orange-white);
+            }
+            span {
+                color: var(--orange-white);
+            }
+            &:not(:last-of-type) {
+                &::after {
+                    background: var(--orange-white);
+                }
+            }
+        }
+    }
 </style>
