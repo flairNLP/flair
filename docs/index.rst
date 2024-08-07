@@ -1,6 +1,3 @@
-flair
-=====
-
 .. _flair_docs_mainpage:
 
 .. raw:: html
