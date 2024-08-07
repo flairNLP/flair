@@ -21,7 +21,7 @@
     font-style: normal;
 }
 
-:root[data-theme=dark] {
+:root.dark-mode {
 	--white-blue: var(--flair-blue);
 	--blue-white: white;
 	--orange-white: white;
@@ -119,4 +119,20 @@ a {
 .inv-sel::selection {
 	background: var(--white-blue);
 	color: var(--flair-orange);
+}
+
+.fill-white-blue {
+	fill: var(--white-blue);
+	stroke: none;
+}
+
+
+.fill-orange {
+	fill: var(--flair-orange);
+	stroke: none;
+}
+
+.stroke-orange-white {
+	stroke: var(--orange-white);
+	fill: none;
 }
