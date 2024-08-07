@@ -21,7 +21,7 @@
     font-style: normal;
 }
 
-:root.dark-mode {
+:root .dark-mode {
 	--white-blue: var(--flair-blue);
 	--blue-white: white;
 	--orange-white: white;
