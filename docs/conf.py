@@ -29,7 +29,7 @@ html_context = {
 html_theme_options = {
     "navbar_end": ["darkmode-toggle", "version-switcher", "navbar-icon-links"],
     "show_prev_next": False,
-    "footer_end": []
+    "footer_end": ["footer-links.html"]
 }
 
 
