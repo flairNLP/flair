@@ -10,6 +10,9 @@
         .footer-item * {
             color: white;
         }
+        a:hover {
+            color: var(--orange-blue);
+        }
         .footer-items__end {
             display: flex;
             flex-direction: row;
