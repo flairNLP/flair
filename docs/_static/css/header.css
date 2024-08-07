@@ -2,23 +2,47 @@
     width: 100%;
     height: var(--header-height);
     background: var(--flair-orange) !important;
-    .header-wrapper {
-        margin: 0 calc(10% + 10px);
+    box-shadow: none;
+    .bd-header__inner {
+        margin: 0 10%;
+        padding: 0;
         height: 100%;
         display: flex;
         justify-content: space-between;
+        .navbar-header-items__start {
+            padding: 0;
+            height: 55%;
+            .navbar-item {
+                height: 100%;
+                .navbar-brand.logo {
+                    height: 100%;
+                    padding: 0;
+                    display: block;
+                    .logo__image {
+                        height: 100%;
+                        width: auto;
+                    }
+                }
+            }
+        }
         nav {
             height: 100%;
-            ul {
+            ul.bd-navbar-elements {
                 display: flex;
                 height: 100%;
-                li {
-                    height: 100%;
+                li.nav-item {
+                    height: auto;
                     display: flex;
                     align-items: center;
+                    margin-right: 0;
+                    margin-left: 3rem;
                     a {
                         font-size: 1.1rem;
+                        padding: 0;
                         color: var(--orange-white);
+                        &:hover {
+                            color: var(--orange-white);
+                        }
                         svg {
                             height: 50%;
                             flex-grow: 1;
@@ -46,7 +70,6 @@
                             }
                         }
                     }
-                    margin-right: 3em;
                 }
             }
         }
