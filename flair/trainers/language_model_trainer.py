@@ -356,7 +356,7 @@ class LanguageModelTrainer:
                     summary = (
                         f"| end of split {curr_split:3d} /{number_of_splits:3d} | epoch {epoch + 1:3d} | time: "
                         f"{(time.time() - split_start_time):5.2f}s | valid loss {val_loss:5.4f} | valid ppl "
-                        f"{math.exp(val_loss):5.4f} | learning rate {learning_rate:3.4f}"
+                        f"{math.exp(val_loss):5.4f} | learning rate {learning_rate:3.6f}"
                     )
 
                     with open(loss_txt, "a") as myfile:
