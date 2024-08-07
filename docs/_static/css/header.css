@@ -36,6 +36,7 @@
                     align-items: center;
                     margin-right: 0;
                     margin-left: 3rem;
+
                     &.active a {
                         font-weight: inherit;
                         &::after {
@@ -66,6 +67,36 @@
                         }
                     }
                 }
+            }
+        }
+        .navbar-header-items__end {
+
+            .navbar-item:first-of-type {
+                i {
+                    display: none;
+                }
+                width: 2rem;
+                background-color: red;
+            }
+            .navbar-item:nth-of-type(2) {
+                svg {
+                    cursor: pointer;
+                    &:first-of-type {
+                        :root .dark-mode & {
+                            display: none;
+                        }
+                    }
+                    &:nth-of-type(2) {
+                        display: none;
+                        :root .dark-mode & {
+                            display: block;
+                        }
+                    }
+                }
+            }
+            svg {
+                height: 35%;
+                width: auto;
             }
         }
     }
