@@ -84,6 +84,7 @@ html_css_files = [
     'css/header.css',
     'css/footer.css',
     'css/version-switcher.css',
+    'css/sidebar.css',
 ]
 
 html_logo = "_static/flair_logo_white.svg"
@@ -111,7 +112,6 @@ html_sidebars = {
     "**": [
         "globaltoc.html",
         "searchbox.html",
-        "versioning.html",
     ],
     "index": [],
 }

@@ -1,0 +1,5 @@
+.bd-sidebar-primary.bd-sidebar {
+    h3 {
+        display: none;
+    }
+}
