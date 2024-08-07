@@ -173,17 +173,21 @@
         }
     }
     .bd-header {
-           .bd-header__inner {
-               .navbar-header-items__end {
-                   .navbar-item:first-of-type {
-                       button.search-button {
-                           background-image: url("_static/magnifying_glass.svg");
-                           :root .dark-mode & {
-                              background-image: url("_static/magnifying_glass_dark.svg");
-                           }
-                       }
-                   }
-               }
-           }
-       }
+        .bd-header__inner {
+            .navbar-header-items__end {
+                .navbar-item:first-of-type {
+                    button.search-button {
+                        background-image: url("_static/magnifying_glass.svg");
+                        :root .dark-mode & {
+                            background-image: url("_static/magnifying_glass_dark.svg");
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .stroke-moon {
+        stroke: var(--orange-white);
+        fill: none;
+    }
 </style>

@@ -111,3 +111,18 @@
         }
     }
 }
+
+.fill-white-blue {
+	fill: var(--white-blue);
+	stroke: none;
+}
+
+.fill-orange {
+	fill: var(--flair-orange);
+	stroke: none;
+}
+
+.stroke-moon {
+	stroke: white;
+	fill: none;
+}
