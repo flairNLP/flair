@@ -266,7 +266,7 @@ class LanguageModel(nn.Module):
         optimizer_state_dict = state.get("optimizer_state_dict")
 
         model = cls(
-            dictionary=state["dictionary"],
+            tokenizer=state["tokenizer"],
             is_forward_lm=state["is_forward_lm"],
             hidden_size=state["hidden_size"],
             nlayers=state["nlayers"],
