@@ -120,3 +120,7 @@ a {
 	background: var(--white-blue);
 	color: var(--flair-orange);
 }
+
+.bd-container__inner {
+	max-width: 100%;
+}
