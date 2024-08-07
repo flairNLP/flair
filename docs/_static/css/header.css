@@ -70,7 +70,9 @@
             }
         }
         .navbar-header-items__end {
-
+            .navbar-item:not(:last-of-type) {
+                margin-right: 2rem;
+            }
             .navbar-item:first-of-type {
                 button.search-button {
                     background-size: contain;
