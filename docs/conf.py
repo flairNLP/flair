@@ -28,7 +28,8 @@ html_context = {
 
 html_theme_options = {
     "navbar_end": ["darkmode-toggle", "version-switcher", "navbar-icon-links"],
-    "show_prev_next": False
+    "show_prev_next": False,
+    "footer_end": []
 }
 
 
@@ -80,6 +81,7 @@ html_title = 'Flair Documentation'
 html_css_files = [
     'css/main.css',
     'css/header.css',
+    'css/footer.css',
     'css/version-switcher.css',
 ]
 
