@@ -1,11 +1,35 @@
 .bd-sidebar-primary.bd-sidebar {
-    padding: 2rem;
-    width: auto;
+    top: 90px;
+    width: 350px;
+    padding: 0;
+    border: none;
+    overflow: initial;
+    background: var(--white-blue);
+    #rtd-footer-container, .sidebar-primary-items__end {
+        display: none;
+    }
+    &::after {
+        content: "";
+        background: linear-gradient(90deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,0) 100%);
+        height: 100%;
+        width: 7px;
+        position: absolute;
+        right: 0;
+        transform: translateX(100%);
+        top: 0;
+    }
     h3 {
         display: none;
     }
     * {
-        color: var(--flair-blue);
+        color: var(--blue-white);
+    }
+    .sidebar-primary-items__start {
+        overflow-y: auto;
+        padding: 2rem;
+    }
+    .sidebar-primary-item {
+        padding: 0;
     }
     .toctree-l1 {
         font-size: 1.5rem;
@@ -25,5 +49,11 @@
     }
     .current {
         color: var(--flair-orange);
+    }
+    code {
+        padding: 0;
+        background: transparent;
+        border: none;
+        font-weight: 400;
     }
 }
