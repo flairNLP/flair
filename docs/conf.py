@@ -110,8 +110,7 @@ source_suffix = {
 
 html_sidebars = {
     "**": [
-        "globaltoc.html",
-        "searchbox.html",
+        "globaltoc.html"
     ],
     "index": [],
 }
