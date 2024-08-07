@@ -1,0 +1,12 @@
+.bd-footer {
+    border: none;
+    background: var(--blue-orange);
+    .bd-footer__inner {
+        padding: 1rem 10%;
+        margin: 0;
+        box-sizing: border-box;
+        .footer-item * {
+            color: white;
+        }
+    }
+}
