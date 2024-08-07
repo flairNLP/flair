@@ -26,6 +26,12 @@
     }
     a:hover {
         color: var(--flair-orange);
+        * {
+            color: var(--flair-orange);
+        }
+    }
+    a * {
+	    transition: color 200ms cubic-bezier(0,.35,.08,.89);
     }
     .sidebar-primary-items__start {
         overflow-y: auto;
