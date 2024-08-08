@@ -178,10 +178,11 @@ class LanguageModelTrainer:
         learning_rate: float = 20,
         mini_batch_size: int = 100,
         anneal_factor: float = 0.25,
-        patience: int = 10,
+        patience: int = 3,
+        cooldown: int = 5,
         clip=0.25,
         max_epochs: int = 1000,
-        checkpoint: bool = False,
+        checkpoint: int = 0,
         grow_to_sequence_length: int = 0,
         num_workers: int = 2,
         use_amp: bool = False,
@@ -228,9 +229,11 @@ class LanguageModelTrainer:
                     param_group["lr"] = learning_rate
 
             if isinstance(optimizer, (AdamW, SGDW)):
-                scheduler: ReduceLROnPlateau = ReduceLRWDOnPlateau(optimizer, factor=anneal_factor, patience=patience)
+                scheduler: ReduceLROnPlateau = ReduceLRWDOnPlateau(
+                    optimizer, factor=anneal_factor, patience=patience, cooldown=cooldown
+                )
             else:
-                scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience)
+                scheduler = ReduceLROnPlateau(optimizer, factor=anneal_factor, patience=patience, cooldown=cooldown)
 
             training_generator = DataLoader(self.corpus.train, shuffle=False, num_workers=num_workers)
 
@@ -342,7 +345,7 @@ class LanguageModelTrainer:
 
                     log.info(self.model.generate_text()[0])
 
-                    if checkpoint:
+                    if checkpoint > 0 and curr_split % checkpoint == 0:
                         self.model.save_checkpoint(
                             base_path / "checkpoint.pt",
                             optimizer,
@@ -356,8 +359,10 @@ class LanguageModelTrainer:
                     ##########################################################
                     log.info("-" * 89)
 
+                    bad_epochs = scheduler.num_bad_epochs
                     summary = (
-                        f"| end of split {curr_split:3d} /{number_of_splits:3d} | epoch {epoch + 1:3d} | time: "
+                        f"| end of split {curr_split:3d} /{number_of_splits:3d} | epoch {epoch + 1:3d} "
+                        f"| patience {bad_epochs + 1:3d} | time: "
                         f"{(time.time() - split_start_time):5.2f}s | valid loss {val_loss:5.4f} | valid ppl "
                         f"{math.exp(val_loss):5.4f} | learning rate {learning_rate:3.6f}"
                     )
