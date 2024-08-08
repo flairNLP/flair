@@ -3,7 +3,7 @@ from typing import Dict, List
 import pytest
 
 from flair.data import Sentence
-from flair.training_utils import CharEntity, create_flair_sentence
+from flair.training_utils import CharEntity, create_sentence_chunks
 
 
 @pytest.fixture(params=["resume1.txt"])
@@ -63,7 +63,7 @@ def small_token_limit_response() -> List[Sentence]:
 
 class TestChunking:
     def test_empty_string(self):
-        sentences = create_flair_sentence("", [])
+        sentences = create_sentence_chunks("", [])
         assert len(sentences) == 0
 
     def check_split_entities(self, entity_labels, chunks, max_token_limit):
@@ -97,11 +97,11 @@ class TestChunking:
     )
     def test_short_text(self, test_text, expected_text):
         """Short texts that should fit nicely into a single chunk."""
-        chunks = create_flair_sentence(test_text, [])
+        chunks = create_sentence_chunks(test_text, [])
         assert chunks[0].text == expected_text
 
     def test_create_flair_sentence(self, parsed_resume_dict):
-        chunks = create_flair_sentence(parsed_resume_dict["raw_text"], parsed_resume_dict["entities"])
+        chunks = create_sentence_chunks(parsed_resume_dict["raw_text"], parsed_resume_dict["entities"])
         assert len(chunks) == 2
 
         max_token_limit = 512  # default
@@ -111,7 +111,7 @@ class TestChunking:
 
     def test_small_token_limit(self, small_token_limit_resume, small_token_limit_response):
         max_token_limit = 10  # test a small max token limit
-        chunks = create_flair_sentence(
+        chunks = create_sentence_chunks(
             small_token_limit_resume["raw_text"], small_token_limit_resume["entities"], token_limit=max_token_limit
         )
 
@@ -142,7 +142,7 @@ class TestChunking:
     )
     def test_contractions_and_hyphens(self, test_text, entities, expected_chunks):
         max_token_limit = 20
-        chunks = create_flair_sentence(test_text, entities, max_token_limit)
+        chunks = create_sentence_chunks(test_text, entities, max_token_limit)
         for i, chunk in enumerate(expected_chunks):
             assert chunks[i].text == chunk
         self.check_split_entities(entities, chunks, max_token_limit)
@@ -159,7 +159,7 @@ class TestChunking:
     def test_long_text(self, test_text, entities):
         """Test for handling long texts that should be split into multiple chunks."""
         max_token_limit = 512
-        chunks = create_flair_sentence(test_text, entities, max_token_limit)
+        chunks = create_sentence_chunks(test_text, entities, max_token_limit)
         assert len(chunks) > 1
         assert all(len(c) <= max_token_limit for c in chunks)
         self.check_split_entities(entities, chunks, max_token_limit)
@@ -185,7 +185,7 @@ class TestChunking:
     )
     def test_text_with_punctuation(self, test_text, entities, expected_chunks):
         max_token_limit = 10
-        chunks = create_flair_sentence(test_text, entities, max_token_limit)
+        chunks = create_sentence_chunks(test_text, entities, max_token_limit)
         for i, chunk in enumerate(expected_chunks):
             assert chunks[i].text == chunk
         self.check_split_entities(entities, chunks, max_token_limit)

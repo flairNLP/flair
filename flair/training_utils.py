@@ -461,14 +461,14 @@ def create_labeled_sentence_from_tokens(
     return sentence
 
 
-def create_flair_sentence(
+def create_sentence_chunks(
     text: str,
     entities: List[CharEntity],
     token_limit: int = 512,
     use_context: bool = True,
     overlap: int = 0,  # TODO: implement overlap
 ) -> List[Sentence]:
-    """Constructs a Flair Sentence from text and a list of entity annotations.
+    """Chunks and labels a text from a list of entity annotations.
 
     The function explicitly tokenizes the text and labels separately, ensuring entity labels are
     not partially split across tokens.
