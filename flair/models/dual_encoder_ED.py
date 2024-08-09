@@ -36,11 +36,19 @@ def insert_verbalizations_into_sentence(sentence: Sentence, label_type: str, lab
         label = sp.get_label(label_type).value
         add_at_position_in_tokens = sp.tokens[-1].idx + added_tokens
 
-        import string
+        verbalization_string = label_map.get(label, label.replace('_', ' '))
 
-        verbalization = Sentence(f" ({label_map.get(label, label.replace('_', ' '))})")
-        #verbalization = Sentence(f" ({''.join(random.choices(string.ascii_letters, k=10))})")
-        #verbalization = Sentence(f" ({random.choice(list(label_map.values()))})")
+        # experiment: cutting off the label name
+        #if ";" in verbalization_string:
+        #    verbalization_string = verbalization_string.split(";", 1)[1].strip()
+
+        verbalization = Sentence(f" ({verbalization_string})") # using brackets
+        #verbalization = Sentence(f", {verbalization_string},") # using commas
+
+
+        #import string
+        #verbalization = Sentence(f" ({''.join(random.choices(string.ascii_letters, k=10))})") # gibberish
+        #verbalization = Sentence(f" ({random.choice(list(label_map.values()))})") # a random label verbalization
 
         verbalization_token_texts = [t.text for t in verbalization.tokens]
 
@@ -328,16 +336,16 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self.to(flair.device)
 
         # Checking how many labels in known_labels are NOT found in the label_map
-        if label_map:
-            print("Checking verbalizations...")
-            non_verbalized_labels = []
-            for label in tqdm(known_labels, position=0, leave=True):
-                if label not in label_map:
-                    non_verbalized_labels.append(label)
-            print(f"Found {len(non_verbalized_labels)} non verbalized labels:")
-            for l in non_verbalized_labels:
-                is_gold = " (gold)" if l in gold_labels else ""
-                print(f"\t{l}{is_gold}")
+        # if label_map:
+        #     print("Checking verbalizations...")
+        #     non_verbalized_labels = []
+        #     for label in tqdm(known_labels, position=0, leave=True):
+        #         if label not in label_map:
+        #             non_verbalized_labels.append(label)
+        #     print(f"Found {len(non_verbalized_labels)} non verbalized labels:")
+        #     for l in non_verbalized_labels:
+        #         is_gold = " (gold)" if l in gold_labels else ""
+        #         print(f"\t{l}{is_gold}")
 
     def _sampled_label_at(self, idx: int):
         return self._sampled_label_dict.items[idx]
@@ -612,9 +620,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         if spans is None:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
-        if len(spans) >20: # todo anything better?
-            spans = spans[:20]
-            span_embeddings = span_embeddings[:20]
+        if len(spans) >50: # todo anything better?
+            spans = spans[:50]
+            span_embeddings = span_embeddings[:50]
             #return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
         # get one embedding vector for each label
@@ -636,7 +644,6 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self._next_prediction_needs_updated_label_embeddings = True
 
         self._iteration_count += 1
-        #print(self._iteration_count)
 
         return loss, len(spans)
 
@@ -655,7 +662,6 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         Predicts labels for the spans in sentences. Adds them to the spans under label_name.
         :return:
         """
-        #self._iteration_count = 0
         with torch.no_grad():
 
             (spans, span_embeddings) = self._embed_spans(sentences)
@@ -681,6 +687,10 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             for i, sp in enumerate(spans):
                 label_value = self._sampled_label_at(most_similar_label_index[i])
                 label_score = most_similar_label_similarity[i].item()
+                #if sp.get_label(label_name).value != "O" and sp.get_label(label_name).value != label_value:
+                #    print("Difference:", sp.text, "|", sp.get_label("nel").value, "|", sp.get_label(label_name).value, "-->", label_value)
+                #    print(sp.sentence.text)
+                #    print("-")
                 sp.set_label(label_name, label_value, score = label_score)
 
         if return_loss:
@@ -794,11 +804,17 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         for s in sentences:
             spans.extend([sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)])
         sorted_spans = sorted(spans, key = lambda sp: sp.get_label(label_name).score, reverse = True)
+        chosen = sorted_spans[:n]
 
-        #cut_at = int(len(sorted_spans)/n)
-        #return sorted_spans[:cut_at]
+        # alternative experiment: chose one per sentence:
+        # chosen = []
+        # for s in sentences:
+        #     spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)] #and sp.get_label("label_name").value == sp.get_label(self.label_type).value]
+        #     if len(spans_in_sentence) > 0:
+        #         sorted_spans = sorted(spans_in_sentence, key=lambda sp: sp.get_label(label_name).score, reverse=True)
+        #         chosen.append(sorted_spans[0])
 
-        return sorted_spans[:n]
+        return chosen
 
 
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
@@ -846,9 +862,10 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         step_size = 5
         level = 0
         # iterate until all spans are predicted
+        sentences_to_use = sentences
         while True:
             # do the prediction of all remaining spans
-            super(GreedyDualEncoderEntityDisambiguation, self).predict(sentences,
+            super(GreedyDualEncoderEntityDisambiguation, self).predict(sentences_to_use,
                                   mini_batch_size=mini_batch_size,
                                   return_probabilities_for_all_classes=return_probabilities_for_all_classes,
                                   verbose=verbose,
@@ -858,7 +875,7 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
                                   )
 
             # select the step_size highest confidence spans
-            chosen_spans = self.select_predicted_spans_to_use_for_label_verbalization(sentences, label_name, step_size)
+            chosen_spans = self.select_predicted_spans_to_use_for_label_verbalization(sentences_to_use, label_name, step_size)
 
             # if no spans remaining, break
             if len(chosen_spans) == 0:
@@ -877,7 +894,7 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
             # insert the label verbalizations of the chosen spans
             verbalized_sentences = [
                 insert_verbalizations_into_sentence(s, verbalized_label_type, label_map = self.label_map, verbalize_previous=self.insert_in_context, verbalize_next=self.insert_in_context)
-                for s in sentences]
+                for s in sentences_to_use]
             # keep the spans in the original sentences unmodified
             for sp in chosen_spans:
                 sp.remove_labels(verbalized_label_type)
@@ -887,7 +904,7 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
                     sp.remove_labels(self.label_type)
 
             # prepare for the next iteration
-            sentences = verbalized_sentences
+            sentences_to_use = verbalized_sentences
             level +=1
 
 
@@ -896,7 +913,7 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
             original_spans.extend(s.get_spans(self.label_type))
 
         predicted_spans = []
-        for s in sentences:
+        for s in sentences_to_use:
             predicted_spans.extend(s.get_spans(label_name))
 
         assert len(predicted_spans) == len(original_spans), \
@@ -913,6 +930,10 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
                 orig.set_label("sentence_input", pred.get_label(input_sentence_key).value, score = 0.0)
             else:
                 orig.set_label("sentence_input", orig.sentence.text, score = 0.0) # this should not happen but to be sure
+
+        for sentence in sentences:
+            sentence.remove_labels("verbalized:0")
+            sentence.remove_labels("input_sentence:0")
 
         if return_loss:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=False), len(original_spans)
