@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union, cast
 
 import torch
 import transformers
-from semver import Version
+from packaging.version import Version
 from torch.jit import ScriptModule
 from transformers import (
     CONFIG_MAPPING,
@@ -1222,7 +1222,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     def _load_from_state_dict(
         self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
     ):
-        if transformers.__version__ >= Version(4, 31, 0):
+        if Version(transformers.__version__) >= Version("4.31.0"):
             assert isinstance(state_dict, dict)
             state_dict.pop(f"{prefix}model.embeddings.position_ids", None)
         super()._load_from_state_dict(
@@ -1307,7 +1307,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             self.__dict__[key] = embedding.__dict__[key]
 
         if model_state_dict:
-            if transformers.__version__ >= Version(4, 31, 0):
+            if Version(transformers.__version__) >= Version("4.31.0"):
                 model_state_dict.pop("embeddings.position_ids", None)
             self.model.load_state_dict(model_state_dict)
 
