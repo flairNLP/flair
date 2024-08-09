@@ -226,10 +226,14 @@ class ViterbiDecoder:
         return tags, all_tags
 
     def _all_scores_for_token(
-        self, scores: torch.Tensor, tag_sequences: torch.Tensor, lengths: torch.IntTensor, sentences: List[Sentence]
+        self,
+        score_tensor: torch.Tensor,
+        tag_sequences: torch.Tensor,
+        lengths: torch.IntTensor,
+        sentences: List[Sentence],
     ):
         """Returns all scores for each tag in tag dictionary."""
-        scores = scores.numpy()
+        scores = score_tensor.numpy()
         for i_batch, (batch, tag_seq) in enumerate(zip(scores, tag_sequences)):
             for i, (tag_id, tag_scores) in enumerate(zip(tag_seq, batch)):
                 tag_id_int = tag_id if isinstance(tag_id, int) else int(tag_id.item())

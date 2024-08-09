@@ -250,7 +250,6 @@ class MultitaskModel(flair.nn.Classifier):
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         # biomedical models
-        model_map["bioner"] = "/".join([hu_path, "bioner", "hunflair.pt"])
         model_map["hunflair"] = "/".join([hu_path, "bioner", "hunflair.pt"])
         model_map["hunflair-paper"] = "/".join([hu_path, "bioner", "hunflair-paper.pt"])
 

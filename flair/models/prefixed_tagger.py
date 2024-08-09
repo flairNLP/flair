@@ -321,7 +321,7 @@ class PrefixedSequenceTagger(SequenceTagger):
 
     @staticmethod
     def _fetch_model(model_name) -> str:
-        huggingface_model_map = {"hunflair2": "hunflair/hunflair2-ner"}
+        huggingface_model_map = {"hunflair2": "hunflair/hunflair2-ner", "bioner": "hunflair/hunflair2-ner"}
 
         # check if model name is a valid local file
         if Path(model_name).exists():
