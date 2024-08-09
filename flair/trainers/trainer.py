@@ -32,7 +32,7 @@ from flair.trainers.plugins import (
     TrainingInterrupt,
     WeightExtractorPlugin,
 )
-from flair.training_utils import identify_dynamic_embeddings, log_line, store_embeddings
+from flair.training_utils import EmbeddingStorageMode, identify_dynamic_embeddings, log_line, store_embeddings
 
 log = logging.getLogger("flair")
 
@@ -147,13 +147,13 @@ class ModelTrainer(Pluggable):
         monitor_train_sample: float = 0.0,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: List[str] = [],
+        exclude_labels: Optional[List[str]] = None,
         # sampling and shuffling
         sampler=None,
         shuffle: bool = True,
         shuffle_first_epoch: bool = True,
         # evaluation and monitoring
-        embeddings_storage_mode: str = "cpu",
+        embeddings_storage_mode: EmbeddingStorageMode = "cpu",
         epoch: int = 0,
         # when and what to save
         save_final_model: bool = True,
@@ -168,6 +168,7 @@ class ModelTrainer(Pluggable):
         attach_default_scheduler: bool = True,
         **kwargs,
     ):
+        exclude_labels = exclude_labels if exclude_labels is not None else []
         if plugins is None:
             plugins = []
 
@@ -220,13 +221,13 @@ class ModelTrainer(Pluggable):
         monitor_train_sample: float = 0.0,
         use_final_model_for_eval: bool = True,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: List[str] = [],
+        exclude_labels: Optional[List[str]] = None,
         # sampling and shuffling
         sampler=None,
         shuffle: bool = True,
         shuffle_first_epoch: bool = True,
         # evaluation and monitoring
-        embeddings_storage_mode: str = "none",
+        embeddings_storage_mode: EmbeddingStorageMode = "none",
         epoch: int = 0,
         # when and what to save
         save_final_model: bool = True,
@@ -243,6 +244,7 @@ class ModelTrainer(Pluggable):
         attach_default_scheduler: bool = True,
         **kwargs,
     ):
+        exclude_labels = exclude_labels if exclude_labels is not None else []
         # annealing logic
         if plugins is None:
             plugins = []
@@ -313,13 +315,13 @@ class ModelTrainer(Pluggable):
         monitor_train_sample: float = 0.0,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: List[str] = [],
+        exclude_labels: Optional[List[str]] = None,
         # sampling and shuffling
         sampler: Optional[FlairSampler] = None,
         shuffle: bool = True,
         shuffle_first_epoch: bool = True,
         # evaluation and monitoring
-        embeddings_storage_mode: str = "cpu",
+        embeddings_storage_mode: EmbeddingStorageMode = "cpu",
         epoch: int = 0,
         # when and what to save
         save_final_model: bool = True,
@@ -332,7 +334,7 @@ class ModelTrainer(Pluggable):
         # amp
         use_amp: bool = False,
         # plugins
-        plugins: List[TrainerPlugin] = [],
+        plugins: Optional[List[TrainerPlugin]] = None,
         **kwargs,
     ) -> dict:
         """Trains any class that implements the flair.nn.Model interface.
@@ -381,6 +383,9 @@ class ModelTrainer(Pluggable):
             A dictionary with at least the key "test_score" containing the final evaluation score. Some plugins add
             additional information to this dictionary, such as the :class:`flair.trainers.plugins.MetricHistoryPlugin`
         """
+        exclude_labels = exclude_labels if exclude_labels is not None else []
+        plugins = plugins if plugins is not None else []
+
         # Create output folder
         base_path = Path(base_path)
         base_path.mkdir(exist_ok=True, parents=True)

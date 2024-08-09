@@ -5,7 +5,7 @@ from enum import Enum
 from functools import reduce
 from math import inf
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -15,6 +15,7 @@ from torch.utils.data import Dataset
 import flair
 from flair.data import DT, Dictionary, Sentence, _iter_dataset
 
+EmbeddingStorageMode = Literal["none", "cpu", "gpu"]
 log = logging.getLogger("flair")
 
 
@@ -23,10 +24,11 @@ class Result:
         self,
         main_score: float,
         detailed_results: str,
-        classification_report: dict = {},
-        scores: dict = {},
+        classification_report: Optional[dict] = None,
+        scores: Optional[Dict] = None,
     ) -> None:
-        assert "loss" in scores, "No loss provided."
+        classification_report = classification_report if classification_report is not None else {}
+        assert scores is not None and "loss" in scores, "No loss provided."
 
         self.main_score: float = main_score
         self.scores = scores
@@ -363,7 +365,9 @@ def add_file_handler(log, output_file):
 
 
 def store_embeddings(
-    data_points: Union[List[DT], Dataset], storage_mode: str, dynamic_embeddings: Optional[List[str]] = None
+    data_points: Union[List[DT], Dataset],
+    storage_mode: EmbeddingStorageMode,
+    dynamic_embeddings: Optional[List[str]] = None,
 ):
     if isinstance(data_points, Dataset):
         data_points = list(_iter_dataset(data_points))
@@ -387,7 +391,7 @@ def store_embeddings(
             data_point.to("cpu", pin_memory=pin_memory)
 
 
-def identify_dynamic_embeddings(data_points: List[DT]):
+def identify_dynamic_embeddings(data_points: List[DT]) -> Optional[List]:
     dynamic_embeddings = []
     all_embeddings = []
     for data_point in data_points:

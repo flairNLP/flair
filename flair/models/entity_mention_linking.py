@@ -1056,12 +1056,13 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("accuracy", "f1-score"),
-        exclude_labels: List[str] = [],
+        exclude_labels: Optional[List[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         k: int = 1,
         **kwargs,
     ) -> Result:
+        exclude_labels = exclude_labels if exclude_labels is not None else []
         if gold_label_dictionary is not None:
             raise NotImplementedError("evaluating an EntityMentionLinker with a gold_label_dictionary is not supported")
 

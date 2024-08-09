@@ -34,6 +34,7 @@ from flair.data import (
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import DocumentEmbeddings, TransformerDocumentEmbeddings
 from flair.tokenization import SpaceTokenizer
+from flair.training_utils import EmbeddingStorageMode
 
 logger: logging.Logger = logging.getLogger("flair")
 
@@ -602,7 +603,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         verbose: bool = False,
         label_name: Optional[str] = None,
         return_loss: bool = False,
-        embedding_storage_mode: str = "none",
+        embedding_storage_mode: EmbeddingStorageMode = "none",
     ) -> Optional[Tuple[torch.Tensor, int]]:
         """Predicts the class labels for the given sentence(s).
 

@@ -14,7 +14,7 @@ from flair.data import Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings.base import load_embeddings
 from flair.nn.model import ReduceTransformerVocabMixin
-from flair.training_utils import MetricRegression, Result, store_embeddings
+from flair.training_utils import EmbeddingStorageMode, MetricRegression, Result, store_embeddings
 
 log = logging.getLogger("flair")
 
@@ -78,7 +78,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         mini_batch_size: int = 32,
         verbose: bool = False,
         label_name: Optional[str] = None,
-        embedding_storage_mode="none",
+        embedding_storage_mode: EmbeddingStorageMode = "none",
     ) -> List[Sentence]:
         if label_name is None:
             label_name = self.label_name if self.label_name is not None else "label"
@@ -135,14 +135,15 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         data_points: Union[List[Sentence], Dataset],
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
-        embedding_storage_mode: str = "none",
+        embedding_storage_mode: EmbeddingStorageMode = "none",
         mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
+        exclude_labels: Optional[List[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         **kwargs,
     ) -> Result:
+        exclude_labels = exclude_labels if exclude_labels is not None else []
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
