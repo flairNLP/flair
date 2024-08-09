@@ -1219,6 +1219,36 @@ class Sentence(DataPoint):
         # delete labels at object itself
         super().remove_labels(typename)
 
+    def _get_token_level_label_of_each_token(self, label_type: str) -> List[str]:
+        """Generates a label for each token in the sentence. This function requires that the labels corresponding to the label_type are token-level tokens.
+
+        Args:
+            sentence: a flair sentence to generate labels for
+            label_type: a string representing the type of the labels, e.g., "pos"
+        """
+        list_of_labels = ["O" for _ in range(len(self.tokens))]
+        for label in self.get_labels(label_type):
+            label_token_index = label.data_point._internal_index
+            list_of_labels[label_token_index - 1] = label.value
+        return list_of_labels
+
+    def _get_span_level_label_of_each_token(self, label_type: str) -> List[str]:
+        """Generates a label for each token in the sentence in BIO format. This function requires that the labels corresponding to the label_type are span-level tokens.
+
+        Args:
+            sentence: a flair sentence to generate labels for
+            label_type: a string representing the type of the labels, e.g., "ner"
+        """
+        list_of_labels = ["O" for _ in range(len(self.tokens))]
+        for label in self.get_labels(label_type):
+            tokens = label.data_point.tokens
+            start_token_index = tokens[0]._internal_index
+            list_of_labels[start_token_index - 1] = f"B-{label.value}"
+            for token in tokens[1:]:
+                token_index = token._internal_index
+                list_of_labels[token_index - 1] = f"I-{label.value}"
+        return list_of_labels
+
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):
     def __init__(self, first: DT, second: DT2) -> None:
