@@ -687,10 +687,10 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             for i, sp in enumerate(spans):
                 label_value = self._sampled_label_at(most_similar_label_index[i])
                 label_score = most_similar_label_similarity[i].item()
-                #if sp.get_label(label_name).value != "O" and sp.get_label(label_name).value != label_value:
-                #    print("Difference:", sp.text, "|", sp.get_label("nel").value, "|", sp.get_label(label_name).value, "-->", label_value)
-                #    print(sp.sentence.text)
-                #    print("-")
+                if sp.get_label(label_name).value != "O" and sp.get_label(label_name).value != label_value:
+                   print("Difference:", sp.text, "|", sp.get_label("nel").value, "|", sp.get_label(label_name).value, "-->", label_value)
+                   print(sp.sentence.text)
+                   print("-")
                 sp.set_label(label_name, label_value, score = label_score)
 
         if return_loss:
@@ -800,19 +800,20 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         :param n: Number of chosen highest scored spans.
         :return: n or less spans.
         """
-        spans = []
-        for s in sentences:
-            spans.extend([sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)])
-        sorted_spans = sorted(spans, key = lambda sp: sp.get_label(label_name).score, reverse = True)
-        chosen = sorted_spans[:n]
+        # spans = []
+        # for s in sentences:
+        #     spans.extend([sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)])
+        # sorted_spans = sorted(spans, key = lambda sp: sp.get_label(label_name).score, reverse = True)
+        # chosen = sorted_spans[:n]
 
         # alternative experiment: chose one per sentence:
-        # chosen = []
-        # for s in sentences:
-        #     spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)] #and sp.get_label("label_name").value == sp.get_label(self.label_type).value]
-        #     if len(spans_in_sentence) > 0:
-        #         sorted_spans = sorted(spans_in_sentence, key=lambda sp: sp.get_label(label_name).score, reverse=True)
-        #         chosen.append(sorted_spans[0])
+
+        chosen = []
+        for s in sentences:
+            spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)] #and sp.get_label("label_name").value == sp.get_label(self.label_type).value]
+            if len(spans_in_sentence) > 0:
+                sorted_spans = sorted(spans_in_sentence, key=lambda sp: sp.get_label(label_name).score, reverse=True)
+                chosen.append(sorted_spans[0])
 
         return chosen
 
