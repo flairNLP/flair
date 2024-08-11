@@ -12,7 +12,7 @@ import flair.nn
 from flair.data import Corpus, Dictionary, Sentence, TextPair, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.nn.model import ReduceTransformerVocabMixin
-from flair.training_utils import MetricRegression, Result, store_embeddings
+from flair.training_utils import EmbeddingStorageMode, MetricRegression, Result, store_embeddings
 
 
 class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
@@ -276,14 +276,15 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         data_points: Union[List[TextPair], Dataset],
         gold_label_type: str,
         out_path: Union[str, Path, None] = None,
-        embedding_storage_mode: str = "none",
+        embedding_storage_mode: EmbeddingStorageMode = "none",
         mini_batch_size: int = 32,
         main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
+        exclude_labels: Optional[List[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         **kwargs,
     ) -> Result:
+        exclude_labels = exclude_labels if exclude_labels is not None else []
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
