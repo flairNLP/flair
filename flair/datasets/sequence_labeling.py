@@ -33,6 +33,7 @@ from flair.data import (
 )
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
+from flair.tokenization import Tokenizer
 
 log = logging.getLogger("flair")
 
@@ -50,6 +51,7 @@ class MultiFileJsonlCorpus(Corpus):
         label_column_name: str = "label",
         metadata_column_name: str = "metadata",
         label_type: str = "ner",
+        use_tokenizer: Union[bool, Tokenizer] = True,
         **corpusargs,
     ) -> None:
         """Instantiates a MuliFileJsonlCorpus as, e.g., created with doccanos JSONL export.
@@ -61,9 +63,12 @@ class MultiFileJsonlCorpus(Corpus):
         :param train_files: the name of the train files
         :param test_files: the name of the test files
         :param dev_files: the name of the dev files, if empty, dev data is sampled from train
+        :param encoding: file encoding (default "utf-8")
         :param text_column_name: Name of the text column inside the jsonl files.
         :param label_column_name: Name of the label column inside the jsonl files.
         :param metadata_column_name: Name of the metadata column inside the jsonl files.
+        :param label_type: he type of label to predict (default "ner")
+        :param use_tokenizer: Specify a custom tokenizer to split the text into tokens.
 
         :raises RuntimeError: If no paths are given
         """
@@ -77,6 +82,7 @@ class MultiFileJsonlCorpus(Corpus):
                         metadata_column_name=metadata_column_name,
                         label_type=label_type,
                         encoding=encoding,
+                        use_tokenizer=use_tokenizer,
                     )
                     for train_file in train_files
                 ]
@@ -95,6 +101,8 @@ class MultiFileJsonlCorpus(Corpus):
                         label_column_name=label_column_name,
                         metadata_column_name=metadata_column_name,
                         label_type=label_type,
+                        encoding=encoding,
+                        use_tokenizer=use_tokenizer,
                     )
                     for test_file in test_files
                 ]
@@ -113,6 +121,8 @@ class MultiFileJsonlCorpus(Corpus):
                         label_column_name=label_column_name,
                         metadata_column_name=metadata_column_name,
                         label_type=label_type,
+                        encoding=encoding,
+                        use_tokenizer=use_tokenizer,
                     )
                     for dev_file in dev_files
                 ]
@@ -137,6 +147,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
         label_type: str = "ner",
         autofind_splits: bool = True,
         name: Optional[str] = None,
+        use_tokenizer: Union[bool, Tokenizer] = True,
         **corpusargs,
     ) -> None:
         """Instantiates a JsonlCorpus with one file per Dataset (train, dev, and test).
@@ -145,11 +156,14 @@ class JsonlCorpus(MultiFileJsonlCorpus):
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param encoding: file encoding (default "utf-8")
         :param text_column_name: Name of the text column inside the JSONL file.
         :param label_column_name: Name of the label column inside the JSONL file.
         :param metadata_column_name: Name of the metadata column inside the JSONL file.
+        :param label_type: The type of label to predict (default "ner")
         :param autofind_splits: Whether train, test and dev file should be determined automatically
         :param name: name of the Corpus see flair.data.Corpus
+        :param use_tokenizer: Specify a custom tokenizer to split the text into tokens.
         """
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(
@@ -165,6 +179,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
             label_type=label_type,
             name=name if data_folder is None else str(data_folder),
             encoding=encoding,
+            use_tokenizer=use_tokenizer,
             **corpusargs,
         )
 
@@ -178,6 +193,7 @@ class JsonlDataset(FlairDataset):
         label_column_name: str = "label",
         metadata_column_name: str = "metadata",
         label_type: str = "ner",
+        use_tokenizer: Union[bool, Tokenizer] = True,
     ) -> None:
         """Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.
 
@@ -193,9 +209,12 @@ class JsonlDataset(FlairDataset):
 
         Args:
             path_to_jsonl_file: File to read
+            encoding: file encoding (default "utf-8")
             text_column_name: Name of the text column
             label_column_name: Name of the label column
             metadata_column_name: Name of the metadata column
+            label_type: The type of label to predict (default "ner")
+            use_tokenizer: Specify a custom tokenizer to split the text into tokens.
         """
         path_to_json_file = Path(path_to_jsonl_file)
 
@@ -212,7 +231,7 @@ class JsonlDataset(FlairDataset):
                 raw_text = current_line[text_column_name]
                 current_labels = current_line[label_column_name]
                 current_metadatas = current_line.get(self.metadata_column_name, [])
-                current_sentence = Sentence(raw_text)
+                current_sentence = Sentence(raw_text, use_tokenizer=use_tokenizer)
 
                 self._add_labels_to_sentence(raw_text, current_sentence, current_labels)
                 self._add_metadatas_to_sentence(current_sentence, current_metadatas)
@@ -319,6 +338,7 @@ class MultiFileColumnCorpus(Corpus):
             dev_files: the name of the dev files, if empty, dev data is sampled from train
             column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t" to split only on tabs
             comment_symbol: if set, lines that begin with this symbol are treated as comments
+            encoding: file encoding (default "utf-8")
             document_separator_token: If provided, sentences that function as document boundaries are so marked
             skip_first_line: set to True if your dataset has a header line
             in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
