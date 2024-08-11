@@ -744,7 +744,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         return data_point_tensor
 
     def _mask_scores(self, scores: Tensor, data_points) -> Tensor:
-        """This appears to have not been fully implemented and simply returns scores."""
+        """Classes that inherit from DefaultClassifier may optionally mask scores."""
         return scores
 
     def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
