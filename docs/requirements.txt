@@ -6,3 +6,8 @@ importlib-metadata
 sphinx-multiversion
 pydata-sphinx-theme<0.14
 sphinx_design
+
+# previous dependencies that are required to build docs for later versions too.
+semver
+gensim
+bpemb
