@@ -261,10 +261,11 @@ class LabelList:
 
 class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
-    def __init__(self, token_encoder: TokenEmbeddings, label_encoder: DocumentEmbeddings, known_labels: List[str], gold_labels: List[str] = [], label_sample_negative_size: Union[int, None] = None, label_type: str = "nel", label_map: dict = {},
+    def __init__(self, token_encoder: TokenEmbeddings, label_encoder: DocumentEmbeddings, known_labels: List[str], gold_labels: List[str] = [],
+                 label_sample_negative_size: Union[int, None] = None, label_type: str = "nel", label_map: dict = {},
                  negative_sampling_strategy: Literal["shift", "random", "hard"] = "hard", negative_sampling_factor: int = 1,
-                 loss_function_name: Literal["triplet", "binary_embedding", "cross_entropy"] = "cross_entropy",
-                 similarity_metric_name: Literal ["euclidean", "cosine", "mm"] = "euclidean", constant_updating: bool = False,
+                 loss_function_name: Literal["triplet", "binary_embedding", "cross_entropy"] = "triplet",
+                 similarity_metric_name: Literal ["euclidean", "cosine", "mm"] = "euclidean", constant_updating: bool = True,
                  label_embedding_batch_size: int = 128, sampled_label_embeddings_storage_device: torch.device = None, *args, **kwargs):
         """
         This model uses a dual encoder architecture where both inputs and labels (verbalized) are encoded with separate
@@ -836,11 +837,13 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         # remove the verbalization marker from the ORIGINAL spans so that they remain unmodified:
         for sp in sampled_spans:
             sp.remove_labels("to_verbalized")
+
         # delete the label_type for the spans that were used for verbalization from the verbalized_sentences,
         # so that those do not get used in the forward pass afterwards:
         for s in verbalized_sentences:
             for sp in s.get_spans("to_verbalized"):
                 sp.remove_labels(self.label_type)
+
         # do the normal forward pass, now with the modified sentences (with less datapoints):
         return super(GreedyDualEncoderEntityDisambiguation, self).forward_loss(verbalized_sentences)
 
