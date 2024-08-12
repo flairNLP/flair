@@ -115,53 +115,19 @@ def fill_masked_elements(
     word_ids: torch.Tensor,
     lengths: torch.LongTensor,
 ):
-    for i in torch.arange(int(all_token_embeddings.shape[0])):
-        r = insert_missing_embeddings(sentence_hidden_states[i][mask[i] & (word_ids[i] >= 0)], word_ids[i], lengths[i])
-        all_token_embeddings[i, : lengths[i], :] = r
+    batch_size, max_tokens, embedding_dim = all_token_embeddings.shape
+    # sum embeddings for each token, as scatter_ would non-deterministically choose between the right token and masked tokens.
+    all_token_embeddings.scatter_add_(
+        1,
+        word_ids.clamp(min=0).unsqueeze(-1).expand(-1, -1, embedding_dim),
+        sentence_hidden_states * (mask & (word_ids >= 0)).unsqueeze(-1).float(),
+    )
+
+    # create a mask for valid tokens based on token_lengths
+    token_mask = torch.arange(max_tokens, device=lengths.device)[None, :] < lengths[:, None]
+    all_token_embeddings = all_token_embeddings * token_mask.unsqueeze(-1)
+
     return all_token_embeddings
-
-
-@torch.jit.script_if_tracing
-def insert_missing_embeddings(
-    token_embeddings: torch.Tensor, word_id: torch.Tensor, length: torch.LongTensor
-) -> torch.Tensor:
-    # in some cases we need to insert zero vectors for tokens without embedding.
-    if token_embeddings.shape[0] == 0:
-        if token_embeddings.dim() == 2:
-            token_embeddings = torch.zeros(
-                int(length), token_embeddings.shape[1], dtype=token_embeddings.dtype, device=token_embeddings.device
-            )
-        elif token_embeddings.dim() == 3:
-            token_embeddings = torch.zeros(
-                int(length),
-                token_embeddings.shape[1],
-                token_embeddings.shape[2],
-                dtype=token_embeddings.dtype,
-                device=token_embeddings.device,
-            )
-        elif token_embeddings.dim() == 4:
-            token_embeddings = torch.zeros(
-                int(length),
-                token_embeddings.shape[1],
-                token_embeddings.shape[2],
-                token_embeddings.shape[3],
-                dtype=token_embeddings.dtype,
-                device=token_embeddings.device,
-            )
-    elif token_embeddings.shape[0] < length:
-        for _id in torch.arange(int(length)):
-            zero_vector = torch.zeros_like(token_embeddings[:1])
-
-            if not (word_id == _id).any():
-                token_embeddings = torch.cat(
-                    (
-                        token_embeddings[:_id],
-                        zero_vector,
-                        token_embeddings[_id:],
-                    ),
-                    dim=0,
-                )
-    return token_embeddings
 
 
 @torch.jit.script_if_tracing
@@ -171,11 +137,30 @@ def fill_mean_token_embeddings(
     word_ids: torch.Tensor,
     token_lengths: torch.Tensor,
 ):
-    for i in torch.arange(all_token_embeddings.shape[0]):
-        for _id in torch.arange(token_lengths[i]):  # type: ignore[call-overload]
-            all_token_embeddings[i, _id, :] = torch.nan_to_num(
-                sentence_hidden_states[i][word_ids[i] == _id].mean(dim=0)
-            )
+    batch_size, max_tokens, embedding_dim = all_token_embeddings.shape
+    mask = word_ids >= 0
+
+    # sum embeddings for each token
+    all_token_embeddings.scatter_add_(
+        1,
+        word_ids.clamp(min=0).unsqueeze(-1).expand(-1, -1, embedding_dim),
+        sentence_hidden_states * mask.unsqueeze(-1).float(),
+    )
+
+    # calculate the mean of subtokens
+    subtoken_counts = torch.zeros_like(all_token_embeddings[:, :, 0])
+    subtoken_counts.scatter_add_(1, word_ids.clamp(min=0), mask.float())
+    all_token_embeddings = torch.where(
+        subtoken_counts.unsqueeze(-1) > 0,
+        all_token_embeddings / subtoken_counts.unsqueeze(-1),
+        torch.zeros_like(all_token_embeddings),
+    )
+
+    # create a mask for valid tokens based on token_lengths
+    token_mask = torch.arange(max_tokens, device=token_lengths.device)[None, :] < token_lengths[:, None]
+    all_token_embeddings = all_token_embeddings * token_mask.unsqueeze(-1)
+    all_token_embeddings = torch.nan_to_num(all_token_embeddings)
+
     return all_token_embeddings
 
 
