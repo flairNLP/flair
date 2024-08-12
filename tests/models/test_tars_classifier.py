@@ -12,7 +12,7 @@ class TestTarsClassifier(BaseModelTest):
     train_label_type = "class"
     model_args = {"task_name": "2_CLASS"}
     training_args = {"mini_batch_size": 1, "max_epochs": 2}
-    pretrained_model = "tars-base"
+    # pretrained_model = "tars-base"  # disabled due to too much space requirements.
 
     @pytest.fixture()
     def corpus(self, tasks_base_path):
