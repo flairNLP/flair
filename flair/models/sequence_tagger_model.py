@@ -443,7 +443,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     
         self._init_metrics_logging(epoch_log_path, sentences)
         history_metrics_dict = self._get_history_metrics_for_batch(sentences)
-        softmax = torch.nn.functional.softmax(scores, dim=1)
+        softmax = torch.nn.functional.softmax(scores, dim=-1)
         # softmax: shape = (total_num_tokens, 17) 
 
         pred, metrics_dict, updated_history_metrics_dict = self._calculate_metrics(history_metrics_dict, softmax, observed_labels)
@@ -1548,14 +1548,15 @@ class EarlyExitSequenceTagger(SequenceTagger):
         # forward pass to get scores
         scores = self.forward(sentence_tensor, lengths)
 
-        if self.calculate_sample_metrics:
-            self.calculate_and_log_metrics(sentences, scores)       
-
         if self.relabel_noisy_soft:# and int(self.model_card["training_parameters"]["epoch"])>1:
             gold_labels = self._prepare_soft_label_tensor(sentences)#, scores)
         else:
             gold_labels = self._prepare_label_tensor(sentences)
 
+
+        if self.calculate_sample_metrics:
+            clean_labels = self._prepare_label_tensor(sentences, label_type = self.label_type+'_clean')
+            self.calculate_and_log_metrics(sentences, scores, gold_labels, clean_labels)       
 
         # calculate loss given scores and labels
         return self._calculate_loss(scores, gold_labels)
