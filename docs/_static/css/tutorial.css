@@ -26,17 +26,30 @@
         .highlight {
             background: transparent;
             pre {
+                font-family: "Source Code Pro", monospace;
                 padding: 1.1em 1.5em;
                 border-radius: 1rem;
                 background: var(--gray-dark-blue);
-                .nn, .n {
+                .nn, .n, .o, .p {
                     color: var(--blue-white);
                 }
+                .kn {
+                    color: #CF8E6D;
+                }
+                .kp {
+                    color: #57AAF7;
+                }
+                .nb {
+                    color: #8888C6;
+                }
                 .c1 {
-                    color: #999;
-                    :root .dark-mode & {
+                    color: #5F826B;
+                    /*:root .dark-mode & {
                         color: #696991;
-                    }
+                    }*/
+                }
+                .s1 {
+                    color : #6AAB73;
                 }
             }
         }
