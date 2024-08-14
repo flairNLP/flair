@@ -32,10 +32,14 @@
         margin: 0.4em 0 0.9em 0;
     }
     ul {
-        list-style: initial;
-        margin-left: 1rem;
+        list-style-type: "»";
+        margin-left: .6em;
+        li {
+            padding-left: .3em;
+        }
         ::marker {
             color: var(--blue-white);
+            font-size: inherit;
         }
     }
     .highlight-python {
