@@ -15,11 +15,55 @@
     color: var(--blue-white);
     font-family: "Source Code Pro", monospace;
     .linkcode-link {
+        padding: 0;
+        display: inline-block;
+        width: 1.5rem;
+        height: 1.5rem;
+        transform: translateY(25%);
         .pre {
             display: none;
         }
         &::after {
-            content: url("../../_static/octocat.svg");
+            content:"";
+            background-image: url('../../_static/octocat.svg');
+            background-size: cover;
+            display: inline-block;
+            width: 100%;
+            height: 100%;
+        }
+    }
+}
+
+.sig-name.descname {
+    color: var(--flair-orange);
+}
+
+.class, .method {
+    .sig {
+        margin-top: 2rem;
+    }
+    dd {
+        margin-left: 0 !important;
+        padding-left: 3rem !important;
+        border-left: 2px var(--gray-white) solid;
+        dl.field-list {
+            background-color: transparent;
+            border: 2px var(--flair-orange) solid;
+            border-radius: 1rem;
+            padding: 1rem 1.5rem;
+            dt {
+                background-color: transparent !important;
+                color: var(--blue-white);
+                font-weight: 600;
+                font-size: 1.5rem;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            dd {
+                margin: 0 !important;
+                padding: 0 !important;
+                border-left: none;
+            }
         }
     }
 }
