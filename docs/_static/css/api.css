@@ -45,8 +45,11 @@
     padding-bottom: .5em;
     padding-top: .5em;
     &:target {
-        background: var(--flair-orange-transparent);
+        background: rgba(47, 46, 65, 0.15);
         border-radius: .5rem;
+    }
+    :root .dark-mode &:target {
+        background: rgba(255, 255, 255, 0.15);
     }
 }
 
