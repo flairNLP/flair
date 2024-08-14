@@ -6,12 +6,15 @@
     --flair-orange-transparent: rgba(247, 153, 16, .5);
     --white-transparent: rgba(255, 255, 255, .5);
     --flair-blue: #2f2e41;
+    --flair-dark-blue: #262635;
+	--light-gray: #e6e6e6;
 	--white-blue: white;
 	--blue-white: var(--flair-blue);
 	--orange-white: var(--flair-orange);
 	--orange-white-transparent: var(--flair-orange-transparent);
 	--orange-blue: var(--flair-orange);
 	--blue-orange: var(--flair-blue);
+	--gray-dark-blue: var(--light-gray);
 	--header-height: 90px;
 	--footer-height: 60px;
 	--track-color: #dddddd;
@@ -31,6 +34,7 @@
 	--orange-blue: var(--flair-blue);
 	--blue-orange: var(--flair-orange);
 	--orange-white-transparent: var(--white-transparent);
+	--gray-dark-blue: var(--flair-dark-blue);
 	--track-color: #38374a;
 	--track-thumb: #4c4b5c;
 	--track-thumb-hover: #5c5b69;

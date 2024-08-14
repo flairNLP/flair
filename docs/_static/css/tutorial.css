@@ -1,6 +1,6 @@
 .bd-main .bd-content .bd-article-container{
     max-width: initial;
-    padding: 4rem 5rem;
+    padding: 4rem 30% 4rem 5rem;
     box-sizing: border-box;
 }
 
@@ -20,7 +20,18 @@
     }
     p {
         color: var(--blue-white);
-        margin: 0.5em 0 1em 0;
+        margin: 0.4em 0 0.9em 0;
+    }
+    .highlight-python {
+        .highlight {
+            background: transparent;
+            pre {
+                background: var(--gray-dark-blue);
+                .nn, .n {
+                    color: var(--blue-white);
+                }
+            }
+        }
     }
 }
 
