@@ -17,9 +17,9 @@
     .linkcode-link {
         padding: 0;
         display: inline-block;
-        width: 1.5rem;
-        height: 1.5rem;
-        transform: translateY(25%);
+        width: 1rem;
+        height: 1rem;
+        transform: translateY(10%) scale(1.5);
         .pre {
             display: none;
         }
@@ -38,16 +38,18 @@
     color: var(--flair-orange);
 }
 
-.class, .method, .function {
-    .sig {
-        margin-top: 2rem;
-        margin-bottom: .5em;
-        padding-bottom: .5em;
-    }
-    dt:target {
+.sig {
+    margin-top: 2rem;
+    margin-bottom: .5em;
+    padding-bottom: .5em;
+    padding-top: .5em;
+    &:target {
         background: var(--flair-orange-transparent);
-        border-radius: 10px;
+        border-radius: .5rem;
     }
+}
+
+.class, .method, .function, .data {
     dd {
         margin-left: 0 !important;
         padding-left: 3rem !important;
