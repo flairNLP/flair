@@ -41,7 +41,12 @@
 .class, .method, .function {
     .sig {
         margin-top: 2rem;
-        margin-bottom: 1rem;
+        margin-bottom: .5em;
+        padding-bottom: .5em;
+    }
+    dt:target {
+        background: var(--flair-orange-transparent);
+        border-radius: 10px;
     }
     dd {
         margin-left: 0 !important;
@@ -71,35 +76,28 @@
 
 div.deprecated {
     box-shadow: none !important;
-    background: linear-gradient(180deg, var(--error-red) 0, var(--error-red) 2rem, var(--white-blue) 2rem, var(--white-blue) 100%);
+    background: var(--error-red);
     border: 2px var(--error-red) solid;
     border-radius: 1rem;
-    padding: 0;
+    padding: 0.5em 2.2em 0 2.2em;
     box-sizing: border-box;
     p {
-        &::before {
-            content: none;
-        }
-    }
-    /* p {
-        background: var(--flair-orange);
-        border-radius: 0 0 1rem 1rem;
-        margin: 0;
-        font-size: 1.5rem;
-        font-weight: 400;
-        padding: 0.5em 2.2em;
-        position: relative;
-        line-height: 1em;
-        &::before {
-            content: none;
-        }
-        &::after {
+        span.versionmodified.deprecated::before {
             color: white;
-            margin-left: 0.4em;
-            font-size: 0.9em;
+        }
+        &::before {
+            content: none;
         }
     }
-    p:not(.admonition-title) {
-        padding: 0.5em 2.2em 0.25em 3.3em;
-    }*/
+}
+
+a.github::before {
+    content: "";
+    height: 1em;
+    width: 1em;
+    display: inline-block;
+    background-image: url("../../_static/octocat.svg");
+    background-size: contain;
+    background-position: center;
+    transform: translateY(25%);
 }
