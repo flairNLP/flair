@@ -233,7 +233,7 @@ table.table {border-collapse: collapse;
     }
 }
 
-#flair-tutorials, #api-docs, [id^="tutorial"], [id^="flair"] {
+#flair-tutorials, #api-docs, #contributing, [id^="tutorial"], [id^="flair"] {
     li {
         list-style-type: "»";
         padding-left: 0.25em;
