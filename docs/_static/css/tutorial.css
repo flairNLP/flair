@@ -18,6 +18,12 @@
         font-weight: 600;
         margin-top: 2em;
     }
+    h3 {
+        font-size: 1.2rem;
+        color: var(--blue-white);
+        font-weight: 600;
+        margin-top: 2em;
+    }
     p {
         color: var(--blue-white);
         margin: 0.4em 0 0.9em 0;
@@ -30,31 +36,31 @@
                 padding: 1.1em 1.5em;
                 border-radius: 1rem;
                 background: var(--gray-dark-blue);
-                .nn, .n, .o, .p {
+                .nn, .n, .o, .p, .kp {
                     color: var(--blue-white);
                 }
-                .kn {
+                .kn, .k, .ow {
                     color: #CF8E6D;
-                }
-                .kp {
-                    color: #57AAF7;
                 }
                 .nb {
                     color: #8888C6;
                 }
                 .c1 {
-                    color: #5F826B;
-                    /*:root .dark-mode & {
-                        color: #696991;
-                    }*/
+                    color: #7A7E85;
                 }
-                .s1 {
+                .s1, .sa, .si {
                     color : #6AAB73;
+                }
+                .mi {
+                    color: #2AACB8;
                 }
             }
         }
     }
-    .highlight-console {
+    .highlight-console, .highlight-default {
+        * {
+            color: var(--blue-white);
+        }
         .highlight {
             background: transparent;
         }
@@ -97,7 +103,9 @@
         }
         p:not(.admonition-title) {
             padding: 0.5em 2.2em 0.25em 3.3em;
-            line-height: 1em;
+        }
+        .highlight-python, .highlight-default, .highlight-console, .highlight {
+            margin-bottom: 0.7rem;
         }
     }
 }
@@ -160,12 +168,22 @@ table.table {
     }
 }
 
-.reference .docutils {
-    border: 2px var(--flair-orange) solid;
+.docutils, .docutils.literal {
+    border: 2px var(--blue-white) solid;
     background: transparent;
     border-radius: 0.5em;
     font-weight: 400;
     font-family: "Source Code Pro", monospace;
     font-size: 0.8em;
     color: var(--blue-white);
+}
+.reference {
+    .docutils, .docutils.literal {
+        border: 2px var(--flair-orange) solid;
+        transition: color, background-color 200ms ease-in-out;
+        &:hover {
+            background: var(--flair-orange);
+            color: white;
+        }
+    }
 }
