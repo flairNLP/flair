@@ -1,0 +1,33 @@
+ul.bd-breadcrumbs {
+    li.breadcrumb-home .fa-home {
+        &::before {
+            content: "Home";
+            font-family: "Afacad", sans-serif;
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--blue-white);
+        }
+    }
+    li.breadcrumb-item:not(.breadcrumb-home) {
+        &::before {
+            content: "";
+            width: 1px;
+            height: 1rem;
+            background: white;
+            display: inline-block;
+            padding: 0;
+            transform: rotate(30deg);
+            margin: 0 .6rem;
+        }
+        a {
+            color: var(--blue-white);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+        &.active {
+            color: var(--blue-white);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+    }
+}
