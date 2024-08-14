@@ -10,3 +10,16 @@
         }
     }
 }
+
+.sig {
+    color: var(--blue-white);
+    font-family: "Source Code Pro", monospace;
+    .linkcode-link {
+        .pre {
+            display: none;
+        }
+        &::after {
+            content: url("_static/octocat.svg");
+        }
+    }
+}
