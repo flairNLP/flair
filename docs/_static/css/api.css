@@ -14,6 +14,7 @@
 .sig {
     color: var(--blue-white);
     font-family: "Source Code Pro", monospace;
+    line-height: 2em;
     .linkcode-link {
         padding: 0;
         display: inline-block;
@@ -59,6 +60,9 @@
             border: 2px var(--flair-orange) solid;
             border-radius: 1rem;
             padding: 1rem 1.5rem;
+            ul {
+                padding-left: 0 !important;
+            }
             dt {
                 background-color: transparent !important;
                 color: var(--blue-white);
@@ -73,6 +77,12 @@
                 border-left: none;
             }
         }
+    }
+    .n {
+        color: #2AACB8;
+    }
+    .default_value {
+        color: #8888C6;
     }
 }
 
@@ -102,4 +112,18 @@ a.github::before {
     background-size: contain;
     background-position: center;
     transform: translateY(25%);
+}
+
+blockquote {
+    font-family: "Source Code Pro", monospace;
+    border-radius: 1rem;
+    padding: 1.1em 1.5em;
+    background: var(--gray-dark-blue);
+    color: var(--blue-white);
+    &::before {
+        content: none;
+    }
+    p {
+        margin: 0 !important;
+    }
 }
