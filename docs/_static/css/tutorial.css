@@ -1,3 +1,21 @@
+.bd-header-article {
+    margin-bottom: 2rem;
+}
+
+.bd-main .bd-content .bd-article-container{
+    max-width: initial;
+    padding: 4rem 5rem;
+    box-sizing: border-box;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article {
+    padding: 0;
+}
+
+.header-article-items.header-article__inner {
+    padding: 0;
+}
+
 ul.bd-breadcrumbs {
     li.breadcrumb-home .fa-home {
         &::before {
