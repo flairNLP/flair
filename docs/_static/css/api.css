@@ -1,0 +1,12 @@
+.sidebar-primary-item {
+    .docutils {
+        &::before {
+            content: none;
+        }
+        .pre {
+            font-family: "Afacad", sans-serif;
+            font-size: 1rem;
+            text-overflow: ellipsis;
+        }
+    }
+}
