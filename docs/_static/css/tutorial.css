@@ -26,9 +26,17 @@
         .highlight {
             background: transparent;
             pre {
+                padding: 1.1em 1.5em;
+                border-radius: 1rem;
                 background: var(--gray-dark-blue);
                 .nn, .n {
                     color: var(--blue-white);
+                }
+                .c1 {
+                    color: #999;
+                    :root .dark-mode & {
+                        color: #696991;
+                    }
                 }
             }
         }
