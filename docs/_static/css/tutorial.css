@@ -67,7 +67,7 @@
             }
         }
     }
-    .highlight-console, .highlight-default {
+    [class^="highlight-"]:not(.highlight-python) {
         * {
             color: var(--blue-white);
         }
