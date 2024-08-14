@@ -148,7 +148,9 @@ ul.bd-breadcrumbs {
     }
 }
 
-table.table {
+table.table {border-collapse: collapse;
+    border-radius: 1rem;
+    box-shadow: 0 0 0 2px var(--blue-white);
     tr {
         &:not(:last-of-type), &:has(th) {
             border-bottom: 2px var(--blue-white) solid;
@@ -157,12 +159,12 @@ table.table {
             font-weight: 600;
         }
         th, td {
-            padding: .5em .2em .15em .2em;
+            padding: .4em .2em 0 .2em;
             &:first-of-type {
-                padding-left: 0;
+                padding-left: .5em;
             }
             &:last-of-type {
-                padding-right: 0;
+                padding-right: .5em;
             }
         }
     }
