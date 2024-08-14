@@ -1,7 +1,3 @@
-.bd-header-article {
-    margin-bottom: 2rem;
-}
-
 .bd-main .bd-content .bd-article-container{
     max-width: initial;
     padding: 4rem 5rem;
@@ -10,6 +6,22 @@
 
 .bd-main .bd-content .bd-article-container .bd-article {
     padding: 0;
+    h1 {
+        font-size: 3rem;
+        color: var(--blue-white);
+        font-weight: 600;
+        margin-top: 0.5em;
+    }
+    h2 {
+        font-size: 1.6rem;
+        color: var(--blue-white);
+        font-weight: 600;
+        margin-top: 2em;
+    }
+    p {
+        color: var(--blue-white);
+        margin: 0.5em 0 1em 0;
+    }
 }
 
 .header-article-items.header-article__inner {
