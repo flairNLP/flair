@@ -139,3 +139,33 @@ ul.bd-breadcrumbs {
         }
     }
 }
+
+table.table {
+    tr {
+        &:not(:last-of-type), &:has(th) {
+            border-bottom: 2px var(--blue-white) solid;
+        }
+        th {
+            font-weight: 600;
+        }
+        th, td {
+            padding: .5em .2em .15em .2em;
+            &:first-of-type {
+                padding-left: 0;
+            }
+            &:last-of-type {
+                padding-right: 0;
+            }
+        }
+    }
+}
+
+.reference .docutils {
+    border: 2px var(--flair-orange) solid;
+    background: transparent;
+    border-radius: 0.5em;
+    font-weight: 400;
+    font-family: "Source Code Pro", monospace;
+    font-size: 0.8em;
+    color: var(--blue-white);
+}
