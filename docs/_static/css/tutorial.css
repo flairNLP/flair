@@ -48,7 +48,7 @@
                 .c1 {
                     color: #7A7E85;
                 }
-                .s1, .sa, .si {
+                .s1, .s2, .sa, .si {
                     color : #6AAB73;
                 }
                 .mi {
@@ -171,21 +171,40 @@ table.table {border-collapse: collapse;
 }
 
 .docutils, .docutils.literal {
-    border: 2px var(--blue-white) solid;
+    border: none;
     background: transparent;
     border-radius: 0.5em;
     font-weight: 400;
     font-family: "Source Code Pro", monospace;
     font-size: 0.8em;
     color: var(--blue-white);
+    position: relative;
+    z-index: 1;
+    &::before {
+        content: "";
+        width: 100%;
+        height: 90%;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        border-radius: 0.5em;
+        border: 2px var(--blue-white) solid;
+        position: absolute;
+    }
 }
 .reference {
     .docutils, .docutils.literal {
-        border: 2px var(--flair-orange) solid;
-        transition: color, background-color 200ms ease-in-out;
+        transition: color 200ms ease-in-out;
         &:hover {
-            background: var(--flair-orange);
+            &::before {
+                background: var(--flair-orange);
+            }
             color: white;
+        }
+        &::before {
+            z-index: -1;
+            border-color: var(--flair-orange);
+            transition: background-color 200ms ease-in-out;
         }
     }
 }
