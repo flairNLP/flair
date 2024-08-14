@@ -15,6 +15,7 @@
 	--orange-blue: var(--flair-orange);
 	--blue-orange: var(--flair-blue);
 	--gray-dark-blue: var(--light-gray);
+	--gray-white: var(--light-gray);
 	--header-height: 90px;
 	--footer-height: 60px;
 	--track-color: #dddddd;
@@ -35,6 +36,7 @@
 	--blue-orange: var(--flair-orange);
 	--orange-white-transparent: var(--white-transparent);
 	--gray-dark-blue: var(--flair-dark-blue);
+	--gray-white: white;
 	--track-color: #38374a;
 	--track-thumb: #4c4b5c;
 	--track-thumb-hover: #5c5b69;
