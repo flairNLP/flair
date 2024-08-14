@@ -6,6 +6,9 @@
 
 .bd-main .bd-content .bd-article-container .bd-article {
     padding: 0;
+    .headerlink {
+        display: none;
+    }
     h1 {
         font-size: 3rem;
         color: var(--blue-white);
@@ -27,6 +30,13 @@
     p {
         color: var(--blue-white);
         margin: 0.4em 0 0.9em 0;
+    }
+    ul {
+        list-style: initial;
+        margin-left: 1rem;
+        ::marker {
+            color: var(--blue-white);
+        }
     }
     .highlight-python {
         .highlight {
@@ -51,7 +61,7 @@
                 .s1, .s2, .sa, .si {
                     color : #6AAB73;
                 }
-                .mi {
+                .mi, .mf {
                     color: #2AACB8;
                 }
             }
@@ -122,14 +132,18 @@ ul.bd-breadcrumbs {
             font-size: 1rem;
             font-weight: 400;
             color: var(--blue-white);
+            transition: color 200ms ease-in-out;
         }
+    }
+    li.breadcrumb-home a:hover .fa-home::before {
+        color: var(--flair-orange);
     }
     li.breadcrumb-item:not(.breadcrumb-home) {
         &::before {
             content: "";
             width: 1px;
             height: 1rem;
-            background: white;
+            background: var(--blue-white);
             display: inline-block;
             padding: 0;
             transform: rotate(30deg);
@@ -139,6 +153,9 @@ ul.bd-breadcrumbs {
             color: var(--blue-white);
             font-size: 1rem;
             font-weight: 400;
+            &:hover {
+                color: var(--flair-orange);
+            }
         }
         &.active {
             color: var(--blue-white);
