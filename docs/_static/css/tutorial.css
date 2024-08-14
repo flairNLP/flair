@@ -49,11 +49,14 @@
                 .nn, .n, .o, .p, .kp {
                     color: var(--blue-white);
                 }
-                .kn, .k, .ow {
+                .kn, .k, .ow, .kc {
                     color: #CF8E6D;
                 }
                 .nb {
                     color: #8888C6;
+                }
+                .nf {
+                    color: #56A8F5;
                 }
                 .c1 {
                     color: #7A7E85;
@@ -222,6 +225,16 @@ table.table {border-collapse: collapse;
             z-index: -1;
             border-color: var(--flair-orange);
             transition: background-color 200ms ease-in-out;
+        }
+    }
+}
+
+#flair-tutorials, [id^="tutorial"] {
+    li {
+        list-style-type: "»";
+        padding-left: 0.25em;
+        ::marker {
+            color: var(--blue-white);
         }
     }
 }
