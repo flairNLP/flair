@@ -68,3 +68,38 @@
         }
     }
 }
+
+div.deprecated {
+    box-shadow: none !important;
+    background: linear-gradient(180deg, var(--error-red) 0, var(--error-red) 2rem, var(--white-blue) 2rem, var(--white-blue) 100%);
+    border: 2px var(--error-red) solid;
+    border-radius: 1rem;
+    padding: 0;
+    box-sizing: border-box;
+    p {
+        &::before {
+            content: none;
+        }
+    }
+    /* p {
+        background: var(--flair-orange);
+        border-radius: 0 0 1rem 1rem;
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 400;
+        padding: 0.5em 2.2em;
+        position: relative;
+        line-height: 1em;
+        &::before {
+            content: none;
+        }
+        &::after {
+            color: white;
+            margin-left: 0.4em;
+            font-size: 0.9em;
+        }
+    }
+    p:not(.admonition-title) {
+        padding: 0.5em 2.2em 0.25em 3.3em;
+    }*/
+}

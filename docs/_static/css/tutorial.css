@@ -121,7 +121,7 @@
         p:not(.admonition-title) {
             padding: 0.5em 2.2em 0.25em 3.3em;
         }
-        .highlight-python, .highlight-default, .highlight-console, .highlight {
+        [class^="highlight-"] {
             margin-bottom: 0.7rem;
         }
     }

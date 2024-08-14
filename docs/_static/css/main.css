@@ -16,6 +16,7 @@
 	--blue-orange: var(--flair-blue);
 	--gray-dark-blue: var(--light-gray);
 	--gray-white: var(--light-gray);
+	--error-red: #e32239;
 	--header-height: 90px;
 	--footer-height: 60px;
 	--track-color: #dddddd;
