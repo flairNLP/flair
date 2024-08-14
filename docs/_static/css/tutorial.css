@@ -229,12 +229,37 @@ table.table {border-collapse: collapse;
     }
 }
 
-#flair-tutorials, [id^="tutorial"] {
+#flair-tutorials, #api-docs, [id^="tutorial"], [id^="flair"] {
     li {
         list-style-type: "»";
         padding-left: 0.25em;
+        margin-top: .5em;
         ::marker {
             color: var(--blue-white);
+            font-size: 1.2rem;
+        }
+    }
+    .toctree-wrapper li[class^="toctree-l"] {
+        margin-top: .5em;
+        &::marker {
+            font-size: 1.2rem;
+        }
+        & > a {
+            font-size: 1.2rem;
+        }
+    }
+    .docutils {
+        color: var(--flair-orange);
+        &:hover {
+            color: var(--flair-orange-light);
+        }
+        &::before {
+            content: none;
+        }
+        .pre {
+            font-family: "Afacad", sans-serif;
+            text-overflow: ellipsis;
+            font-size: 1.2rem;
         }
     }
 }
