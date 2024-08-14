@@ -38,9 +38,10 @@
     color: var(--flair-orange);
 }
 
-.class, .method {
+.class, .method, .function {
     .sig {
         margin-top: 2rem;
+        margin-bottom: 1rem;
     }
     dd {
         margin-left: 0 !important;

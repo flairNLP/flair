@@ -252,7 +252,7 @@ table.table {border-collapse: collapse;
             font-size: 1.2rem;
         }
     }
-    .docutils {
+    .docutils:not(.py) {
         color: var(--flair-orange);
         &:hover {
             color: var(--flair-orange-light);
