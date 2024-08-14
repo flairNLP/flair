@@ -19,7 +19,7 @@
             display: none;
         }
         &::after {
-            content: url("_static/octocat.svg");
+            content: url("../../_static/octocat.svg");
         }
     }
 }
