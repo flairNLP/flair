@@ -417,8 +417,6 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
 
     def _resample_labels(self):
-        print(f"Resampling new sample labels of size {self._label_sample_negative_size}")
-
         n = len(self._label_dict.items)
 
         # mapping from sampled index to index in complete label dict
