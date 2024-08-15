@@ -43,6 +43,8 @@ def insert_verbalizations_into_sentence(sentence: Sentence, label_type: str, lab
         #    verbalization_string = verbalization_string.split(";", 1)[1].strip()
 
         verbalization = Sentence(f" ({verbalization_string})") # using brackets
+        #verbalization = Sentence(f" (the {verbalization_string})") # using brackets and "the"
+
         #verbalization = Sentence(f", {verbalization_string},") # using commas
 
 
@@ -266,7 +268,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                  negative_sampling_strategy: Literal["shift", "random", "hard"] = "hard", negative_sampling_factor: int = 1,
                  loss_function_name: Literal["triplet", "binary_embedding", "cross_entropy"] = "triplet",
                  similarity_metric_name: Literal ["euclidean", "cosine", "mm"] = "euclidean", constant_updating: bool = True,
-                 label_embedding_batch_size: int = 128, sampled_label_embeddings_storage_device: torch.device = None, *args, **kwargs):
+                 label_embedding_batch_size: int = 128, label_embeddings_storage_device: torch.device = None, *args, **kwargs):
         """
         This model uses a dual encoder architecture where both inputs and labels (verbalized) are encoded with separate
         Transformers. It uses some kind of similarity loss to push datapoints and true labels nearer together while pushing negatives away
@@ -286,7 +288,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :param similarity_metric_name: Similarity metric to use, must be one of "euclidean", "cosine", "mm".
         :param constant_updating: Updating the label embeddings for every embedded label (positive and negative).
         :param label_embedding_batch_size: Batch size to use for embedding labels to avoid memory overflow.
-        :param sampled_label_embeddings_storage_device: Device to store the sampled label embeddings on. If None, uses flair.device
+        :param label_embeddings_storage_device: Device to store the sampled label embeddings on. If None, uses flair.device
         :param args:
         :param kwargs:
         """
@@ -298,13 +300,12 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self.known_labels = known_labels
         self.gold_labels = gold_labels
         self._label_sample_negative_size = label_sample_negative_size
-        #self._sampled_labels = None
-        self._sampled_label_embeddings = None
+        self._label_embeddings = None
         self._next_prediction_needs_updated_label_embeddings = False
         self._label_embedding_batch_size = label_embedding_batch_size
-        if not sampled_label_embeddings_storage_device:
-            sampled_label_embeddings_storage_device = flair.device
-        self._sampled_label_embeddings_storage_device = sampled_label_embeddings_storage_device
+        if not label_embeddings_storage_device:
+            label_embeddings_storage_device = flair.device
+        self._label_embeddings_storage_device = label_embeddings_storage_device
         if similarity_metric_name in ["euclidean", "cosine", "mm"]:
             self.similarity_metric = SimilarityMetric(metric_to_use = similarity_metric_name)
         else:
@@ -332,7 +333,11 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self._negative_sampling_factor = negative_sampling_factor
         self._iteration_count = 0
 
-        self._sampled_label_dict = None
+        self._label_dict = None
+        self._sampled_label_indices = None
+        self._indices_of_sampled_labels = None
+
+        self._SAMPLE_INDEX_NOT_FOUND = torch.tensor(-1, device=flair.device, dtype=torch.int64)
 
         self.to(flair.device)
 
@@ -348,19 +353,38 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         #         is_gold = " (gold)" if l in gold_labels else ""
         #         print(f"\t{l}{is_gold}")
 
-    def _sampled_label_at(self, idx: int):
-        return self._sampled_label_dict.items[idx]
+    def _label_at(self, idx: int):
+        """ Label at index in label_dict """
+        return self._label_dict.items[idx]
 
-    def _sampled_label_idx(self, label: str):
-        return self._sampled_label_dict.index_for(label)
+    def _idx_for_label(self, label: str):
+        """ Index of label in label_dict.items """
+        return self._label_dict.index_for(label)
+
+    def _sampled_label_at(self, idx: int):
+        """ Label at index in sampled labels """
+        label_idx = self._sampled_label_indices[idx]
+        return self._label_at(label_idx)
+
+    def _sample_idx_for_label(self, label: str):
+        """ Index of label in sampled labels """
+        idx = self._idx_for_label(label)
+        if idx is None:
+            return self._SAMPLE_INDEX_NOT_FOUND # torch.tensor(-1, device=flair.device)
+        return self._indices_of_sampled_labels[idx]
+
+    def _num_sampled_labels(self):
+        if self._sampled_label_indices is None:
+            self._resample_labels()
+        return len(self._sampled_label_indices)
 
     def _update_some_label_embeddings(self, labels, new_label_embeddings):
-        if self._sampled_label_embeddings is None:
-            # using this just to make sure self._sampled_label_dict and self._sampled_label_embeddings get created if not yet there
-            _ = self.get_sampled_label_embeddings()
+        if self._label_embeddings is None:
+            # using this just to make sure self._label_dict and self._label_embeddings get created if not yet there
+            _ = self.get_label_embeddings()
 
         with torch.no_grad():
-            indices = [self._sampled_label_idx(label) for label in labels]
+            indices = [self._idx_for_label(label) for label in labels]
             invalid_items = [i for i, id in enumerate(indices) if id is None]
             valid_indices = [id for id in indices if id is not None]
 
@@ -372,7 +396,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
             if len(valid_indices) !=0:
                 valid_indices = torch.tensor(valid_indices)
-                self._sampled_label_embeddings[valid_indices] = new_label_embeddings
+                self._label_embeddings[valid_indices] = new_label_embeddings
 
     @property
     def label_type(self):
@@ -387,37 +411,41 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         """
         self.known_labels = known
         self.gold_labels = gold
+        self._label_dict = None
+        self._create_label_dict()
         self._resample_labels()
 
+
     def _resample_labels(self):
+        print(f"Resampling new sample labels of size {self._label_sample_negative_size}")
+
+        n = len(self._label_dict.items)
+
+        # mapping from sampled index to index in complete label dict
+        self._sampled_label_indices = torch.randperm(n, device=flair.device)[:self._label_sample_negative_size]
+
+        # mapping from complete label dict to sample label index
+        # contains -1 for indices which are not in the sample
+        #self._indices_of_sampled_labels = torch.full([n], -1, device=flair.device, dtype=torch.int64)
+        self._indices_of_sampled_labels = self._SAMPLE_INDEX_NOT_FOUND.expand([n]).clone()
+        self._indices_of_sampled_labels[self._sampled_label_indices] = torch.arange(len(self._sampled_label_indices), device=flair.device)
+        print(f"Resampled new sample labels of size {len(self._sampled_label_indices)}")
+
+
+    def _create_label_dict(self):
         """
-        Resampling of sampled labels. E.g. necessary for a new epoch or after adding new labels (update_labels()).
-        The model uses only the samples labels for looking for negatives and for prediction.
+        Creates self._label_dict and sets self._label_embeddings == None (so they will be embedded)
         """
-        print("Resampling labels from known_labels.")
-        if not self._label_sample_negative_size:
-            print("Using ALL known labels because no label sample size given.")
-            labels = self.known_labels
-        else:
-            print(f"Sampling {self._label_sample_negative_size} from known labels.")
-            labels = self.gold_labels.copy() # make sure the gold labels are included (keep in mind that for ZELDA gold_labels are {}, because would be too many)
-            if len(self.known_labels) > self._label_sample_negative_size:
-                labels += random.sample(self.known_labels, self._label_sample_negative_size)
-            else:
-                print(f"Not enough labels found in known labels, taking them all.")
-                labels += self.known_labels
+        if not self._label_dict:
+            labels = self.gold_labels + self.known_labels
             labels = list(set(labels))
-        # if self._sampled_labels != labels:
-        #     print("Need label embedding update")
-        #     self._sampled_labels = labels
-        #     self._sampled_label_embeddings = None
-        if not self._sampled_label_dict or self._sampled_label_dict.items != labels:
+            print(f"Using a total of {len(labels)} labels ({len(self.gold_labels)} gold labels).")
             print("Need label embedding update")
-            self._sampled_label_dict = LabelList()
-            self._sampled_label_dict.add(labels)
-            self._sampled_label_embeddings = None
+            self._label_dict = LabelList()
+            self._label_dict.add(labels)
+            self._label_embeddings = None
         else:
-            print("No change in labels.")
+            print("Already existing label dict.")
 
     def _embed_spans(self, sentences: List[Sentence]):
         """
@@ -520,11 +548,11 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
     def _negative_sampling_random_over_all(self, spans: List[flair.data.Span], span_embeddings: torch.Tensor, batch_gold_labels: List[str], label_embeddings: torch.Tensor):
          # todo: currently it's possibly that the gold label is samples as negative
-         if self._sampled_label_dict is None:
-             self._resample_labels()
+         if self._label_dict is None:
+             self._create_label_dict()
          negative_samples_indices = []
          for i in range(self._negative_sampling_factor):
-             negative_samples_indices.append(random.sample(range(len(self._sampled_label_dict.items)), len(batch_gold_labels)))
+             negative_samples_indices.append(random.sample(range(self._num_sampled_labels()), len(batch_gold_labels)))
          negative_labels = [self._sampled_label_at(i) for f in negative_samples_indices for i in f]
          negative_labels_sentence_objects = [Sentence(self.label_map.get(l, l.replace("_", " "))) for l in negative_labels]
 
@@ -544,26 +572,34 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :return:
         """
         with torch.no_grad():
-            #self._sampled_label_embeddings = None # testing
-            span_embeddings = span_embeddings.to(self._sampled_label_embeddings_storage_device)
+            span_embeddings = span_embeddings.to(self._label_embeddings_storage_device)
 
-            # reembed the labels every N step to have more recent embeddings
-            #if self.constant_updating and self._iteration_count % 20000 == 0 and self._iteration_count > 0:
-            #    print(f"At step {self._iteration_count}, updating label embeddings...")
-            #    self._sampled_label_embeddings = None
+            # reembed the labels every N step to have more recent embeddings, also resample new for negative mining
+            if self.constant_updating and self._iteration_count % 20000 == 0 and self._iteration_count > 0:
+                print(f"At step {self._iteration_count}, updating label embeddings...")
+                self._label_embeddings = None
+                #self._indices_of_sampled_labels = None
+                #self._sampled_label_indices = None
 
-            #similarity_spans_sampled_labels = -torch.cdist(span_embeddings, self.get_sampled_label_embeddings())
             similarity_spans_sampled_labels = self.similarity_metric.similarity(span_embeddings, self.get_sampled_label_embeddings())
-            gold_label_similatity = []
+
+            gold_label_indices = []
+
             for nr, label in enumerate(batch_gold_labels):
-                idx = self._sampled_label_idx(label)
-                if idx is None:
-                    #print(e)
-                    #print("Could not find", label)
-                    gold_label_similatity.append(-torch.inf)
-                    continue
-                gold_label_similatity.append(similarity_spans_sampled_labels[nr, idx].item())
-                similarity_spans_sampled_labels[nr,idx] = -torch.inf
+                idx = self._sample_idx_for_label(label)
+                gold_label_indices.append(idx)
+
+            nr = torch.arange(len(batch_gold_labels), device=flair.device)
+            gold_label_indices = torch.stack(gold_label_indices)
+            gold_is_in_sample = gold_label_indices != self._SAMPLE_INDEX_NOT_FOUND # torch.tensor(-1, device=flair.device)
+            nr = nr[gold_is_in_sample]
+            gold_label_indices = gold_label_indices[gold_is_in_sample]
+
+            #gold_label_similarity = torch.full([len(batch_gold_labels)], torch.nan, device=flair.device)
+            #gold_label_similarity[nr] = similarity_spans_sampled_labels[nr, gold_label_indices]
+
+            similarity_spans_sampled_labels[nr, gold_label_indices] = -torch.inf
+
             _, most_similar_label_index = torch.topk(similarity_spans_sampled_labels, self._negative_sampling_factor, dim=1)
 
         # not used, but nice for debugging
@@ -593,22 +629,29 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         # return tensor of dimension factor x num_spans x embedding_size
         return torch.reshape(stacked, (self._negative_sampling_factor, *span_embeddings.shape))
 
-    def get_sampled_label_embeddings(self):
-        #if self._sampled_labels is None:
-        #    self._resample_labels()
-        if self._sampled_label_dict is None:
-            self._resample_labels()
-        if self._sampled_label_embeddings is None:
+
+    def get_label_embeddings(self, ignore_sampling: bool = False):
+        if self._label_dict is None:
+            self._create_label_dict()
+
+        if self._label_embeddings is None:
             with torch.no_grad():
                 print("Updating label embeddings...")
                 print(" - Creating label objects...")
-                all_labels_sentence_objects = [Sentence(self.label_map.get(l, l.replace("_", " "))) for l in tqdm(self._sampled_label_dict.items, position=0, leave=True)]
+                all_labels_sentence_objects = [Sentence(self.label_map.get(l, l.replace("_", " "))) for l in tqdm(self._label_dict.items, position=0, leave=True)]
                 print(" - Embedding label objects...")
-                self._sampled_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = [l for l in self._sampled_label_dict.items],
+                self._label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = [l for l in self._label_dict.items],
                                                                                                         labels_sentence_objects = all_labels_sentence_objects,
                                                                                                         update_these_embeddings = False,
-                                                                                                        device=self._sampled_label_embeddings_storage_device)
-        return self._sampled_label_embeddings
+                                                                                                        device=self._label_embeddings_storage_device)
+        return self._label_embeddings
+
+    def get_sampled_label_embeddings(self):
+        if self._sampled_label_indices is None:
+            self._resample_labels()
+        embeddings = self.get_label_embeddings()
+        return embeddings[self._sampled_label_indices]
+
 
     #@torch.compile
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
@@ -675,24 +718,33 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             # Also, after resampling of the labels the label embeddings might not yet exist
             # To avoid unnecessary work the labels only get embedded here (important for a large label set, might take very long)
             if self._next_prediction_needs_updated_label_embeddings:
-                self._resample_labels()
-                self._sampled_label_embeddings = None
+                #self._resample_labels()
+                self._label_embeddings = None
                 self._next_prediction_needs_updated_label_embeddings = False
-            sampled_label_embeddings = self.get_sampled_label_embeddings().to(flair.device)
-            # Choosing the most similar label from the set of sampled_labels (might not include the true gold label)
-            #similarity_span_all_labels = -torch.cdist(span_embeddings, sampled_label_embeddings)
-            similarity_span_all_labels = self.similarity_metric.similarity(span_embeddings, sampled_label_embeddings)
+                self._sampled_label_indices = None
+
+            label_embeddings = self.get_label_embeddings().to(flair.device)
+            # Choosing the most similar label from the set of labels (might not include the true gold label)
+            similarity_span_all_labels = self.similarity_metric.similarity(span_embeddings, label_embeddings)
 
             most_similar_label_similarity, most_similar_label_index = torch.max(similarity_span_all_labels, dim=1)
 
+            #top5_similarity, top5_index = torch.topk(similarity_span_all_labels, k=5, dim=1)
+
+
             for i, sp in enumerate(spans):
-                label_value = self._sampled_label_at(most_similar_label_index[i])
+                label_value = self._label_at(most_similar_label_index[i])
                 label_score = most_similar_label_similarity[i].item()
-                if sp.get_label(label_name).value != "O" and sp.get_label(label_name).value != label_value:
-                   print("Difference:", sp.text, "|", sp.get_label("nel").value, "|", sp.get_label(label_name).value, "-->", label_value)
-                   print(sp.sentence.text)
-                   print("-")
+                # if sp.get_label(label_name).value != "O" and sp.get_label(label_name).value != label_value:
+                #    print("Difference:", sp.text, "|", sp.get_label("nel").value, "|", sp.get_label(label_name).value, "-->", label_value)
+                #    print(sp.sentence.text)
+                #    print("-")
                 sp.set_label(label_name, label_value, score = label_score)
+
+                #top5 = zip(top5_similarity[i], top5_index[i])
+                #for t_i, (t_sim, t_index) in enumerate(top5):
+                #    sp.set_label(typename=f"top_{t_i}", value=self._label_at(t_index.item()), score=t_sim.item())
+                #print(sp)
 
         if return_loss:
             # todo not yet implemented
@@ -791,6 +843,7 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         # In case we do not shuffle and use search_context_window, the same spans would keep getting added. Use set() to only use them once.
         spans = list(set(spans))
         number_of_spans_to_verbalize = random.randint(0, len(spans))
+        #number_of_spans_to_verbalize = random.randint(int(len(spans)/2), len(spans)) # experiment: use more verbalizations in training
         return random.sample(spans, number_of_spans_to_verbalize)
 
     def select_predicted_spans_to_use_for_label_verbalization(self, sentences, label_name, n: int):
@@ -801,20 +854,28 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         :param n: Number of chosen highest scored spans.
         :return: n or less spans.
         """
-        # spans = []
-        # for s in sentences:
-        #     spans.extend([sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)])
+        spans = []
+        for s in sentences:
+            spans.extend([sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)])
         # sorted_spans = sorted(spans, key = lambda sp: sp.get_label(label_name).score, reverse = True)
         # chosen = sorted_spans[:n]
 
         # alternative experiment: chose one per sentence:
-
         chosen = []
         for s in sentences:
             spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)] #and sp.get_label("label_name").value == sp.get_label(self.label_type).value]
             if len(spans_in_sentence) > 0:
                 sorted_spans = sorted(spans_in_sentence, key=lambda sp: sp.get_label(label_name).score, reverse=True)
                 chosen.append(sorted_spans[0])
+
+        # alternative: chose N most distinct (i.e. largest gap to the next probable label) labels
+        # import heapq
+        #
+        # def select_most_distinct_predictions(spans, n):
+        #     most_distinct_spans = heapq.nlargest(n, spans, key=lambda sp: abs(sp.get_label("top_0").score - sp.get_label("top_1").score))
+        #     return most_distinct_spans
+        #
+        # chosen = select_most_distinct_predictions(spans, n)
 
         return chosen
 
