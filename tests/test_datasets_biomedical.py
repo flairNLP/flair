@@ -1,21 +1,12 @@
-import inspect
 import logging
 import os
 import tempfile
-from operator import itemgetter
 from pathlib import Path
-from typing import Callable, List, Optional, Type
+from typing import List, Optional
 
-import pytest
-from tqdm import tqdm
-
-import flair
-from flair.data import Sentence, Token, _iter_dataset
-from flair.datasets import ColumnCorpus, biomedical
 from flair.datasets.biomedical import (
     CoNLLWriter,
     Entity,
-    HunerDataset,
     InternalBioNerDataset,
     filter_nested_entities,
 )
