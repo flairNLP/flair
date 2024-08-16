@@ -453,49 +453,16 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         """
         spans = []
         sentences_to_embed = []
-        use_special_token = False
-        if use_special_token:
-            spans_special = []
         for s in sentences:
             sentence_spans = s.get_spans(self.label_type)
             if sentence_spans:
                 spans.extend(sentence_spans)
-                if use_special_token:
-                    start_token, end_token = None, self.token_encoder.tokenizer.special_tokens_map["mask_token"]
-                    new_tokens = [ t.text for t in s.tokens ]
-                    adjustment = 0
-                    spans_token_offsets = sorted([(sp.tokens[0].idx-1, sp.tokens[-1].idx) for sp in sentence_spans])
-                    new_offsets = []
-                    for start, end in spans_token_offsets:
-                        start += adjustment
-                        end += adjustment
-                        if start_token is not None and end_token is not None:
-                            new_tokens = new_tokens[:start] + [start_token] + new_tokens[start:end] + [end_token] + new_tokens[end:]
-                            new_offsets.append((start+1, end+1))
-                            adjustment += 2
-                        elif start_token is None and end_token is not None:
-                            new_tokens = new_tokens[:start] + new_tokens[start:end] + [end_token] + new_tokens[end:]
-                            new_offsets.append((start, end+1))
-                            adjustment += 1
-                        elif start_token is not None and end_token is None:
-                            new_tokens = new_tokens[:start] + new_tokens[start:end] + new_tokens[end:]
-                            new_offsets.append((start+1, end))
-                            adjustment += 1
-                    new_s = flair.data.Sentence(new_tokens)
-                    spans_special.extend([flair.data.Span(new_s.tokens[s:e]) for s,e in new_offsets])
-                    sentences_to_embed.append(new_s)
-                else:
-                    sentences_to_embed.append(s)
+                sentences_to_embed.append(s)
         if not spans:
             return None, None
 
         self.token_encoder.embed(sentences_to_embed)
-        if use_special_token:
-            #embeddings = [torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0) for span in spans_special] # use the mean still
-            embeddings = [token.get_embedding() for s in sentences_to_embed for token in s.tokens if token.text == end_token] # use the special start/end token
-
-        else:
-            embeddings = [torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0) for span in spans]
+        embeddings = [torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0) for span in spans]
         for s in sentences_to_embed:
             s.clear_embeddings()
         return spans, torch.stack(embeddings, dim=0)
