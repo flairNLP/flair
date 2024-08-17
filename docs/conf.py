@@ -86,7 +86,8 @@ html_css_files = [
     'css/version-switcher.css',
     'css/sidebar.css',
     'css/tutorial.css',
-    'css/api.css'
+    'css/api.css',
+    'css/legal-notice.css',
 ]
 
 html_logo = "_static/flair_logo_white.svg"
