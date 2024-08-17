@@ -157,13 +157,16 @@ class LanguageModelTrainer:
         loss: float = 10000,
         optimizer_state: Optional[Dict[str, Any]] = None,
         scaler_state: Optional[Dict[str, Any]] = None,
+        multi_label: bool = False,
     ) -> None:
         self.model: LanguageModel = model
         self.optimizer: Type[Optimizer] = optimizer
         self.corpus: TextCorpus = corpus
         self.test_mode: bool = test_mode
 
-        self.loss_function = torch.nn.CrossEntropyLoss()
+        self.multi_label = multi_label
+        self.loss_function = torch.nn.BCEWithLogitsLoss() if multi_label else torch.nn.CrossEntropyLoss()
+        self.cross_entropy_loss = torch.nn.CrossEntropyLoss()
         self.log_interval = 100
         self.epoch = epoch
         self.split = split
@@ -281,7 +284,8 @@ class LanguageModelTrainer:
                     start_time = time.time()
 
                     for batch, i in enumerate(range(0, train_data.size(0) - 1, sequence_length)):
-                        data, targets = self._get_batch(train_data, i, sequence_length)
+                        data, targets = self._get_batch(train_data, i, sequence_length, self.multi_label)
+                        # print(targets)
 
                         # if not data.is_cuda and cuda.is_available():
                         #     log.info("Batch %d is not on CUDA, training will be very slow" % (batch))
@@ -408,10 +412,10 @@ class LanguageModelTrainer:
             hidden = self.model.init_hidden(eval_batch_size)
 
             for i in range(0, data_source.size(0) - 1, sequence_length):
-                data, targets = self._get_batch(data_source, i, sequence_length)
+                data, targets = self._get_batch(data_source, i, sequence_length, multi_label=False)
                 prediction, rnn_output, hidden = self.model.forward(data, hidden)
                 output_flat = prediction.view(-1, ntokens)
-                total_loss += len(data) * self.loss_function(output_flat, targets).data
+                total_loss += len(data) * self.cross_entropy_loss(output_flat, targets).data
                 hidden = self._repackage_hidden(hidden)
             return total_loss.item() / len(data_source)
 
@@ -425,12 +429,15 @@ class LanguageModelTrainer:
         data = data.view(batch_size, -1).t().contiguous()
         return data
 
-    @staticmethod
-    def _get_batch(source, i, sequence_length):
+    def _get_batch(self, source, i, sequence_length, multi_label):
         seq_len = min(sequence_length, len(source) - 1 - i)
 
         data = source[i : i + seq_len]
         target = source[i + 1 : i + 1 + seq_len].view(-1)
+        # print(target)
+        if multi_label:
+            target = torch.nn.functional.one_hot(target, self.model.tokenizer.vocab_size()).float()
+            # target = torch.nn.functional.one_hot(target.to(torch.int64), self.model.tokenizer.vocab_size()).float()
 
         data = data.to(flair.device)
         target = target.to(flair.device)

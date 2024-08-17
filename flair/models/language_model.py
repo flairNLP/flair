@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple, Union
 
 import torch
 from torch import logsumexp, nn
+from torch.nn import Transformer
 from torch.optim import Optimizer
 from transformers import PreTrainedTokenizerBase, AutoTokenizer
 
@@ -89,6 +90,7 @@ class LanguageModel(nn.Module):
         hidden_size: int,
         nlayers: int,
         embedding_size: int = 100,
+        attention_heads: int = 0,
         nout=None,
         document_delimiter: str = "\n",
         dropout=0.1,
@@ -122,6 +124,11 @@ class LanguageModel(nn.Module):
             hidden_size = nout
         else:
             self.proj = None
+
+        self.attention_heads = attention_heads
+        if attention_heads:
+            self.attention = torch.nn.MultiheadAttention(hidden_size, num_heads=attention_heads)
+
         if has_decoder:
             self.decoder: Optional[nn.Linear] = nn.Linear(hidden_size, self.tokenizer.vocab_size())
         else:
@@ -159,6 +166,18 @@ class LanguageModel(nn.Module):
             output = self.proj(output)
 
         output = self.drop(output)
+
+        if self.attention_heads > 0:
+            attended = self.attention.forward(
+                query=output,
+                key=output,
+                value=output,
+                attn_mask=Transformer.generate_square_subsequent_mask(output.size(0)),
+                is_causal=True,
+                need_weights=False,
+            )[0]
+
+            output = output + attended
 
         if decode:
             decoded = self.decoder(output)
@@ -246,6 +265,7 @@ class LanguageModel(nn.Module):
             document_delimiter=document_delimiter,
             dropout=state["dropout"],
             recurrent_type=state.get("recurrent_type", "lstm"),
+            attention_heads=0,
             has_decoder=has_decoder,
         )
         model.load_state_dict(state["state_dict"], strict=has_decoder)
@@ -339,6 +359,7 @@ class LanguageModel(nn.Module):
         number_of_characters: int = 1000,
         temperature: float = 1.0,
         break_on_suffix=None,
+        multi_label: bool = False,
     ) -> Tuple[str, float]:
         if prefix == "":
             prefix = self.document_delimiter
@@ -370,16 +391,21 @@ class LanguageModel(nn.Module):
                 prediction = prediction.squeeze().detach()
                 decoder_output = prediction
 
-                # divide by temperature
-                prediction = prediction.div(temperature)
+                if not multi_label:
+                    # divide by temperature
+                    prediction = prediction.div(temperature)
 
-                # to prevent overflow problem with small temperature values, substract largest value from all
-                # this makes a vector in which the largest value is 0
-                max = torch.max(prediction)
-                prediction -= max
+                    # to prevent overflow problem with small temperature values, substract largest value from all
+                    # this makes a vector in which the largest value is 0
+                    max = torch.max(prediction)
+                    prediction -= max
 
-                # compute word weights with exponential function
-                word_weights = prediction.exp().cpu()
+                    # compute word weights with exponential function
+                    word_weights = prediction.exp().cpu()
+
+                else:
+                    word_weights = torch.sigmoid(prediction)
+                    print(word_weights)
 
                 # try sampling multinomial distribution for next character
                 try:
