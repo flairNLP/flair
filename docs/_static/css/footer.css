@@ -1,8 +1,15 @@
 .bd-footer {
     border: none;
     background: var(--blue-orange);
+    height: var(--footer-height);
+    display: flex;
+    align-items: center;
+    *::selection {
+        background: var(--white-blue);
+        color: var(--flair-orange);
+    }
     .bd-footer__inner {
-        padding: 1rem 10%;
+        padding: 0 10%;
         width: 100%;
         max-width: initial;
         margin: 0;
