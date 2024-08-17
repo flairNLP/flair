@@ -3,6 +3,10 @@
     height: var(--header-height);
     background: var(--flair-orange) !important;
     box-shadow: none;
+    *::selection {
+        background: var(--white-blue);
+        color: var(--flair-orange);
+    }
     .bd-header__inner {
         margin: 0 10%;
         padding: 0;
