@@ -3,4 +3,4 @@
 .. title:: Legal notice
 
 .. raw:: html
-   :file: _templates/legal-notice-content-html
+   :file: _templates/legal-notice-content.html
