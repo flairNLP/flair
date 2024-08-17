@@ -1,6 +1,7 @@
-.. _flair_legal-notice:
+Legal Notice
+============
 
-.. title:: Legal notice
+.. title:: Legal Notice
 
 .. raw:: html
    :file: _templates/legal-notice-content.html
