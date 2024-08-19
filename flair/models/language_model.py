@@ -96,6 +96,7 @@ class LanguageModel(nn.Module):
         dropout=0.1,
         recurrent_type="LSTM",
         has_decoder=True,
+        decoder_bias=True,
     ) -> None:
         super().__init__()
 
@@ -130,7 +131,7 @@ class LanguageModel(nn.Module):
             self.attention = torch.nn.MultiheadAttention(hidden_size, num_heads=attention_heads)
 
         if has_decoder:
-            self.decoder: Optional[nn.Linear] = nn.Linear(hidden_size, self.tokenizer.vocab_size())
+            self.decoder: Optional[nn.Linear] = nn.Linear(hidden_size, self.tokenizer.vocab_size(), bias=decoder_bias)
         else:
             self.decoder = None
 
@@ -143,7 +144,8 @@ class LanguageModel(nn.Module):
         initrange = 0.1
         self.encoder.weight.detach().uniform_(-initrange, initrange)
         if self.decoder is not None:
-            self.decoder.bias.detach().fill_(0)
+            if self.decoder.bias is not None:
+                self.decoder.bias.detach().fill_(0)
             self.decoder.weight.detach().uniform_(-initrange, initrange)
 
     def set_hidden(self, hidden):
