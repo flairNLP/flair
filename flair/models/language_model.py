@@ -248,7 +248,7 @@ class LanguageModel(nn.Module):
     def load_language_model(cls, model_file: Union[Path, str], has_decoder=True):
         state = torch.load(str(model_file), map_location=flair.device)
 
-        print(state.keys())
+        # print(state.keys())
 
         document_delimiter = state.get("document_delimiter", "\n")
         has_decoder = state.get("has_decoder", True) and has_decoder
@@ -405,7 +405,7 @@ class LanguageModel(nn.Module):
 
                 else:
                     word_weights = torch.sigmoid(prediction)
-                    print(word_weights)
+                    # print(word_weights)
 
                 # try sampling multinomial distribution for next character
                 try:
