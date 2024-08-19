@@ -29,7 +29,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./cache
-          key: cache-v1.1
+          key: cache-v1.2
       - name: Run tests
         run: |
           python -c 'import flair'
