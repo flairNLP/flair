@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tagging entities &#8212; flair 0.13.1 documentation</title>
+    <title>Tagging entities &#8212; flair 0.14.0 documentation</title>
   
   
   
@@ -36,7 +36,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=583e1c8d"></script>
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
     <script src="../../_static/doctools.js?v=888ff710"></script>
     <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/design-tabs.js?v=36754332"></script>
@@ -107,7 +107,7 @@
   
   
   
-    <p class="title logo__title">flair 0.13.1 documentation</p>
+    <p class="title logo__title">flair 0.14.0 documentation</p>
   
 </a></div>
     
@@ -201,6 +201,13 @@ document.write(`
     
     
     [x]
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/tutorial/tutorial-basics/tagging-entities.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.14.0
+      
+    
     </span>
       </a>
       <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-basics/tagging-entities.html" data-version-name="dev" data-version="devdocs">
@@ -361,6 +368,13 @@ document.write(`
     [x]
     </span>
       </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/tutorial/tutorial-basics/tagging-entities.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.14.0
+      
+    
+    </span>
+      </a>
       <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-basics/tagging-entities.html" data-version-name="dev" data-version="devdocs">
       <span>
     v0.13.1
@@ -450,6 +464,12 @@ document.write(`
     latest (master)
     
   </a></li>
+  <li><a href="../../../v0.14.0/tutorial/tutorial-basics/tagging-entities.html">
+    
+    v0.14.0
+      
+    
+  </a></li>
   <li><a href="../../../v0.13.1/tutorial/tutorial-basics/tagging-entities.html">
     
     v0.13.1
@@ -527,7 +547,7 @@ document.write(`
 <h1>Tagging entities<a class="headerlink" href="#tagging-entities" title="Permalink to this heading">#</a></h1>
 <p>This tutorials shows you how to do named entity recognition, showcases various NER models, and provides a full list of all NER models in Flair.</p>
 <section id="tagging-entities-with-our-standard-model">
-<h2>Tagging entities with our standard model​<a class="headerlink" href="#tagging-entities-with-our-standard-model" title="Permalink to this heading">#</a></h2>
+<h2>Tagging entities with our standard model<a class="headerlink" href="#tagging-entities-with-our-standard-model" title="Permalink to this heading">#</a></h2>
 <p>Our standard model uses Flair embeddings and was trained over the English CoNLL-03 task and can recognize 4 different entity types. It offers a good tradeoff between accuracy and speed.</p>
 <p>As example, let’s use the sentence “<em>George Washington went to Washington.</em>”:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
@@ -553,7 +573,7 @@ document.write(`
 <p>The printout tells us that two entities are labeled in this sentence: “George Washington” as PER (person) and “Washington” as LOC (location).</p>
 </section>
 <section id="tagging-entities-with-our-best-model">
-<h2>Tagging entities with our best model​<a class="headerlink" href="#tagging-entities-with-our-best-model" title="Permalink to this heading">#</a></h2>
+<h2>Tagging entities with our best model<a class="headerlink" href="#tagging-entities-with-our-best-model" title="Permalink to this heading">#</a></h2>
 <p>Our best 4-class model is trained using a very large transformer. Use it if accuracy is the most important to you, and speed/memory not so much.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
 <span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
@@ -877,8 +897,8 @@ to classify 18 different types of entities.</p>
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-entities-with-our-standard-model">Tagging entities with our standard model​</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-entities-with-our-best-model">Tagging entities with our best model​</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-entities-with-our-standard-model">Tagging entities with our standard model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-entities-with-our-best-model">Tagging entities with our best model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-entities-in-non-english-text">Tagging entities in non-English text</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-a-german-sentence">Tagging a German sentence</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-an-arabic-sentence">Tagging an Arabic sentence</a></li>

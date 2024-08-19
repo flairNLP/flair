@@ -1,0 +1,890 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Basics &#8212; flair 0.14.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/basic-types';</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="How predictions work" href="how-predictions-work.html" />
+    <link rel="prev" title="Tutorial 1: Basic Tagging" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">flair 0.14.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../glossary/index.html">
+                        Glossary
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       v0.14.0  
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="../../../master/tutorial/tutorial-basics/basic-types.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="basic-types.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.14.0
+      
+    
+    
+    [x]
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-basics/basic-types.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.1
+      
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-basics/basic-types.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.0
+      
+    
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../glossary/index.html">
+                        Glossary
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       v0.14.0  
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="../../../master/tutorial/tutorial-basics/basic-types.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="basic-types.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.14.0
+      
+    
+    
+    [x]
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-basics/basic-types.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.1
+      
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-basics/basic-types.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.0
+      
+    
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Quick Start</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tutorial 1: Basic Tagging</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Basics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-predictions-work.html">How predictions work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tagging-entities.html">Tagging entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tagging-sentiment.html">Tagging sentiment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="entity-linking.html">Tagging and linking entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="entity-mention-linking.html">Using and creating entity mention linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="part-of-speech-tagging.html">Tagging parts-of-speech</a></li>
+<li class="toctree-l3"><a class="reference internal" href="other-models.html">Tagging other things</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-tag-corpus.html">How to tag a whole corpus</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-training/index.html">Tutorial 2: Training models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-embeddings/index.html">Tutorial 3: Embeddings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-hunflair2/index.html">Tutorial: HunFlair2</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary/index.html">Glossary</a></li>
+</ul>
+</div>
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+<h3>Versions</h3>
+<ul>
+  <li><a href="../../../master/tutorial/tutorial-basics/basic-types.html">
+    
+    latest (master)
+    
+  </a></li>
+  <li><a href="basic-types.html">
+    
+    v0.14.0
+      
+    
+  </a></li>
+  <li><a href="../../../v0.13.1/tutorial/tutorial-basics/basic-types.html">
+    
+    v0.13.1
+      
+    
+  </a></li>
+  <li><a href="../../../v0.13.0/tutorial/tutorial-basics/basic-types.html">
+    
+    v0.13.0
+      
+    
+  </a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Tutorials</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorial 1: Basic Tagging</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Basics</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="basics">
+<h1>Basics<a class="headerlink" href="#basics" title="Permalink to this heading">#</a></h1>
+<p>This tutorial explains the basic concepts used in Flair:</p>
+<ul class="simple">
+<li><p>what is a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a></p></li>
+<li><p>what is a <a class="reference internal" href="../../api/flair.data.html#flair.data.Label" title="flair.data.Label"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Label</span></code></span></a></p></li>
+</ul>
+<p>You should be familiar with these two concepts in order to get the most out of Flair.</p>
+<section id="what-is-a-sentence">
+<h2>What is a Sentence<a class="headerlink" href="#what-is-a-sentence" title="Permalink to this heading">#</a></h2>
+<p>If you want to tag a sentence, you need to first make a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> object for it.</p>
+<p>For example, say you want to tag the text “<em>The grass is green.</em>”.</p>
+<p>Let’s start by making a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> object for this sentence.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The sentence objects holds a sentence that we may want to embed or tag</span>
+<span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+
+<span class="c1"># Make a sentence object by passing a string</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
+
+<span class="c1"># Print the object to see what&#39;s in there</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Sentence[5]: &quot;The grass is green.&quot;</span>
+</pre></div>
+</div>
+<p>The print-out tells us that the sentence consists of 5 tokens.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A token is an atomic unit of the text, often a word or punctuation. The printout is therefore telling us that the sentence “<em>The grass is green.</em>” consists of 5 such atomic units.</p>
+</div>
+<section id="iterating-over-the-tokens-in-a-sentence">
+<h3>Iterating over the tokens in a Sentence<a class="headerlink" href="#iterating-over-the-tokens-in-a-sentence" title="Permalink to this heading">#</a></h3>
+<p>So what are the 5 tokens in this example sentence?</p>
+<p>You can iterate over all tokens in a sentence like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">sentence</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Token[0]: &quot;The&quot;</span>
+<span class="go">Token[1]: &quot;grass&quot;</span>
+<span class="go">Token[2]: &quot;is&quot;</span>
+<span class="go">Token[3]: &quot;green&quot;</span>
+<span class="go">Token[4]: &quot;.&quot;</span>
+</pre></div>
+</div>
+<p>This printout is telling us that the 5 tokens in the text are the words “<em>The</em>”, “<em>grass</em>”, “<em>is</em>”, “<em>green</em>”, with a separate token for the full stop at the end. The tokens therefore correspond to the words and the punctuation of the text.</p>
+</section>
+<section id="directly-accessing-a-token">
+<h3>Directly accessing a token<a class="headerlink" href="#directly-accessing-a-token" title="Permalink to this heading">#</a></h3>
+<p>You can access the tokens of a sentence via their token id or with their index:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># using the token id</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="o">.</span><span class="kp">get_token</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+<span class="c1"># using the index itself</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>which should print in both cases</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Token[3]: &quot;green&quot;</span>
+</pre></div>
+</div>
+<p>This print-out includes the token index (3) and the lexical value of the token (“green”).</p>
+</section>
+<section id="tokenization">
+<h3>Tokenization<a class="headerlink" href="#tokenization" title="Permalink to this heading">#</a></h3>
+<p>When you create a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> as above, the text is automatically tokenized (segmented into words) using the <a class="reference external" href="https://pypi.org/project/segtok/">segtok</a> library.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can also use a different tokenizer if you like. To learn more about this, check out our tokenization tutorial.</p>
+</div>
+</section>
+</section>
+<section id="what-is-a-label">
+<h2>What is a Label<a class="headerlink" href="#what-is-a-label" title="Permalink to this heading">#</a></h2>
+<p>All Flair models predict labels. For instance, our sentiment analysis models will predict labels for a sentence. Our NER models will predict labels for tokens in a sentence.</p>
+<section id="example-1-labeling-a-token-in-a-sentence">
+<h3>Example 1: Labeling a token in a sentence<a class="headerlink" href="#example-1-labeling-a-token-in-a-sentence" title="Permalink to this heading">#</a></h3>
+<p>To illustrate how labels work, let’s use the same example sentence as above: “<em>The grass is green.</em>”.</p>
+<p>Let us label all “color words” in this sentence. Since the sentence contains only one color word (namely “green”), we only need to add a label to one of the tokens.</p>
+<p>We access token 3 in the sentence, and set a label for it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a sentence object by passing a string</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
+
+<span class="c1"># add an NER tag to token 3 in the sentence</span>
+<span class="n">sentence</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="kp">add_label</span><span class="p">(</span><span class="s1">&#39;ner&#39;</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">)</span>
+
+<span class="c1"># print the sentence (now with this annotation)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Sentence: &quot;The grass is green .&quot; → [&quot;green&quot;/color]</span>
+</pre></div>
+</div>
+<p>The output indicates that the word “green” in this sentence is labeled as a “color”. You can also
+iterate through each token and print it to see if it has labels:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">sentence</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Token[0]: &quot;The&quot;</span>
+<span class="go">Token[1]: &quot;grass&quot;</span>
+<span class="go">Token[2]: &quot;is&quot;</span>
+<span class="go">Token[3]: &quot;green&quot; → color (1.0)</span>
+<span class="go">Token[4]: &quot;.&quot;</span>
+</pre></div>
+</div>
+<p>This shows that there are 5 tokens in the sentence, one of which has a label.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <a class="reference internal" href="../../api/flair.data.html#flair.data.DataPoint.add_label" title="flair.data.DataPoint.add_label"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">add_label</span></code></span></a> method used here has two mandatory parameters.</p>
+</div>
+</section>
+<section id="example-2-labeling-a-whole-sentence">
+<h3>Example 2: Labeling a whole sentence<a class="headerlink" href="#example-2-labeling-a-whole-sentence" title="Permalink to this heading">#</a></h3>
+<p>Sometimes you want to label an entire sentence instead of only a token. Do this by calling <a class="reference internal" href="../../api/flair.data.html#flair.data.DataPoint.add_label" title="flair.data.DataPoint.add_label"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">add_label</span></code></span></a> for the whole sentence.</p>
+<p>For example, say we want to add a sentiment label to the sentence “<em>The grass is green.</em>”:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
+
+<span class="c1"># add a label to a sentence</span>
+<span class="n">sentence</span><span class="o">.</span><span class="kp">add_label</span><span class="p">(</span><span class="s1">&#39;sentiment&#39;</span><span class="p">,</span> <span class="s1">&#39;POSITIVE&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Sentence[5]: &quot;The grass is green.&quot; → POSITIVE (1.0)
+</pre></div>
+</div>
+<p>Indicating that this sentence is now labeled as having a positive sentiment.</p>
+</section>
+<section id="multiple-labels">
+<h3>Multiple labels<a class="headerlink" href="#multiple-labels" title="Permalink to this heading">#</a></h3>
+<p>Importantly, in Flair you can add as many labels to a sentence as you like.</p>
+<p>Let’s bring the two examples above together: We will label the sentence “<em>The grass is green.</em>” with an overall positive sentiment, and also add a “color” tag to the token “grass”:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
+
+<span class="c1"># add a sentiment label to the sentence</span>
+<span class="n">sentence</span><span class="o">.</span><span class="kp">add_label</span><span class="p">(</span><span class="s1">&#39;sentiment&#39;</span><span class="p">,</span> <span class="s1">&#39;POSITIVE&#39;</span><span class="p">)</span>
+
+<span class="c1"># add an NER tag to token 3 in the sentence</span>
+<span class="n">sentence</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="kp">add_label</span><span class="p">(</span><span class="s1">&#39;ner&#39;</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">)</span>
+
+<span class="c1"># print the sentence with all annotations</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will print:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Sentence[5]: &quot;The grass is green.&quot; → POSITIVE (1.0) → [&quot;green&quot;/color]
+</pre></div>
+</div>
+<p>Indicating that the sentence is now labeled with two different types of information.</p>
+</section>
+<section id="accessing-labels">
+<h3>Accessing labels<a class="headerlink" href="#accessing-labels" title="Permalink to this heading">#</a></h3>
+<p>You can iterate through all labels of a sentence using the <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence.get_labels" title="flair.data.Sentence.get_labels"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">get_labels()</span></code></span></a> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># iterate over all labels and print</span>
+<span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will get each label and print it. For instance, let’s re-use the previous example in which we add two different labels to the same sentence:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
+
+<span class="c1"># add a sentiment label to the sentence</span>
+<span class="n">sentence</span><span class="o">.</span><span class="kp">add_label</span><span class="p">(</span><span class="s1">&#39;sentiment&#39;</span><span class="p">,</span> <span class="s1">&#39;POSITIVE&#39;</span><span class="p">)</span>
+
+<span class="c1"># add an NER tag to token 3 in the sentence</span>
+<span class="n">sentence</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="kp">add_label</span><span class="p">(</span><span class="s1">&#39;ner&#39;</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">)</span>
+
+<span class="c1"># iterate over all labels and print</span>
+<span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will now print the following two lines:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Sentence[5]: &quot;The grass is green.&quot; → POSITIVE (1.0)
+Token[3]: &quot;green&quot; → color (1.0)
+</pre></div>
+</div>
+<p>This printout tells us that there are two labels: The first is for the whole sentence, tagged as POSITIVE. The second is only for the token “green”, tagged as “color”.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you only want to iterate over labels of a specific type, add the label name as parameter to <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence.get_labels" title="flair.data.Sentence.get_labels"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">get_labels()</span></code></span></a>. For instance, to only iterate over all NER labels, do:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># iterate over all NER labels only</span>
+<span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="s1">&#39;ner&#39;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="information-for-each-label">
+<h3>Information for each label<a class="headerlink" href="#information-for-each-label" title="Permalink to this heading">#</a></h3>
+<p>Each label is of class <code class="docutils literal notranslate"><span class="pre">Label</span></code> which next to the value has a score indicating confidence. It also has a pointer back to the data point to which it attaches.</p>
+<p>This means that you can print the value, the confidence and the labeled text of each label:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
+
+<span class="c1"># add an NER tag to token 3 in the sentence</span>
+<span class="n">sentence</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="kp">add_label</span><span class="p">(</span><span class="s1">&#39;ner&#39;</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">)</span>
+
+<span class="c1"># iterate over all labels and print</span>
+<span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
+
+    <span class="c1"># Print the text, the label value and the label score</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">data_point</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&quot; is classified as &quot;</span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">&quot; with score </span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">score</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;green&quot;</span> <span class="ow">is</span> <span class="n">classified</span> <span class="k">as</span> <span class="s2">&quot;color&quot;</span> <span class="k">with</span> <span class="n">score</span> <span class="mf">1.0</span>
+</pre></div>
+</div>
+<p>Our color tag has a score of 1.0 since we manually added it. If a tag is predicted by our sequence labeler, the score value will indicate classifier confidence.</p>
+</section>
+</section>
+</section>
+
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial 1: Basic Tagging</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="how-predictions-work.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">How predictions work</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-a-sentence">What is a Sentence</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#iterating-over-the-tokens-in-a-sentence">Iterating over the tokens in a Sentence</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#directly-accessing-a-token">Directly accessing a token</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tokenization">Tokenization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-is-a-label">What is a Label</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-1-labeling-a-token-in-a-sentence">Example 1: Labeling a token in a sentence</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-2-labeling-a-whole-sentence">Example 2: Labeling a whole sentence</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-labels">Multiple labels</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#accessing-labels">Accessing labels</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#information-for-each-label">Information for each label</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/tutorial/tutorial-basics/basic-types.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

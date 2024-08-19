@@ -1,0 +1,867 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tagging other things &#8212; flair 0.14.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/other-models';</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="How to tag a whole corpus" href="how-to-tag-corpus.html" />
+    <link rel="prev" title="Tagging parts-of-speech" href="part-of-speech-tagging.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">flair 0.14.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../glossary/index.html">
+                        Glossary
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       v0.14.0  
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="../../../master/tutorial/tutorial-basics/other-models.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="other-models.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.14.0
+      
+    
+    
+    [x]
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-basics/other-models.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.1
+      
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-basics/other-models.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.0
+      
+    
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../glossary/index.html">
+                        Glossary
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       v0.14.0  
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="../../../master/tutorial/tutorial-basics/other-models.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="other-models.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.14.0
+      
+    
+    
+    [x]
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-basics/other-models.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.1
+      
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-basics/other-models.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.0
+      
+    
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Quick Start</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tutorial 1: Basic Tagging</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="basic-types.html">Basics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-predictions-work.html">How predictions work</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tagging-entities.html">Tagging entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tagging-sentiment.html">Tagging sentiment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="entity-linking.html">Tagging and linking entities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="entity-mention-linking.html">Using and creating entity mention linker</a></li>
+<li class="toctree-l3"><a class="reference internal" href="part-of-speech-tagging.html">Tagging parts-of-speech</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Tagging other things</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-tag-corpus.html">How to tag a whole corpus</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-training/index.html">Tutorial 2: Training models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-embeddings/index.html">Tutorial 3: Embeddings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-hunflair2/index.html">Tutorial: HunFlair2</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary/index.html">Glossary</a></li>
+</ul>
+</div>
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+<h3>Versions</h3>
+<ul>
+  <li><a href="../../../master/tutorial/tutorial-basics/other-models.html">
+    
+    latest (master)
+    
+  </a></li>
+  <li><a href="other-models.html">
+    
+    v0.14.0
+      
+    
+  </a></li>
+  <li><a href="../../../v0.13.1/tutorial/tutorial-basics/other-models.html">
+    
+    v0.13.1
+      
+    
+  </a></li>
+  <li><a href="../../../v0.13.0/tutorial/tutorial-basics/other-models.html">
+    
+    v0.13.0
+      
+    
+  </a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Tutorials</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorial 1: Basic Tagging</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Tagging other things</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="tagging-other-things">
+<h1>Tagging other things<a class="headerlink" href="#tagging-other-things" title="Permalink to this heading">#</a></h1>
+<p>This tutorial gives you a tour of <strong>other crazy models</strong> shipped with Flair. These include:</p>
+<ul class="simple">
+<li><p>tagging semantic frames</p></li>
+<li><p>chunking text</p></li>
+<li><p>relation extraction</p></li>
+<li><p>others</p></li>
+</ul>
+<p>Let’s get started!</p>
+<section id="semantic-frame-detection">
+<h2>Semantic Frame Detection<a class="headerlink" href="#semantic-frame-detection" title="Permalink to this heading">#</a></h2>
+<p>For English, we provide a pre-trained model that detects semantic frames in text, trained using Propbank 3.0 frames.
+This provides a sort of word sense disambiguation for frame evoking words, and we are curious what researchers might
+do with this.</p>
+<p>Here’s an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
+<span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+
+<span class="c1"># load model</span>
+<span class="n">tagger</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;frame&#39;</span><span class="p">)</span>
+
+<span class="c1"># make English sentence</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;George returned to Berlin to return his hat.&#39;</span><span class="p">)</span>
+
+<span class="c1"># predict NER tags</span>
+<span class="n">tagger</span><span class="o">.</span><span class="kp">predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+
+<span class="c1"># go through tokens and print predicted frame (if one is predicted)</span>
+<span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">sentence</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Token[0]: &quot;George&quot;</span>
+<span class="go">Token[1]: &quot;returned&quot; → return.01 (0.9951)</span>
+<span class="go">Token[2]: &quot;to&quot;</span>
+<span class="go">Token[3]: &quot;Berlin&quot;</span>
+<span class="go">Token[4]: &quot;to&quot;</span>
+<span class="go">Token[5]: &quot;return&quot; → return.02 (0.6361)</span>
+<span class="go">Token[6]: &quot;his&quot;</span>
+<span class="go">Token[7]: &quot;hat&quot;</span>
+<span class="go">Token[8]: &quot;.&quot;</span>
+</pre></div>
+</div>
+<p>As we can see, the frame detector makes a distinction in the sentence between two different meanings of the word ‘return’. ‘return.01’ means returning to a location, while ‘return.02’ means giving something back.</p>
+</section>
+<section id="syntactic-chunking">
+<h2>Syntactic Chunking<a class="headerlink" href="#syntactic-chunking" title="Permalink to this heading">#</a></h2>
+<p>For English, we provide a model for chunking verb and noun phrases, trained using CoNLL 2000.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
+<span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+
+<span class="c1"># load model</span>
+<span class="n">tagger</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;chunk&#39;</span><span class="p">)</span>
+
+<span class="c1"># make English sentence</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The quick brown fox jumps over the lazy dog.&#39;</span><span class="p">)</span>
+
+<span class="c1"># predict NER tags</span>
+<span class="n">tagger</span><span class="o">.</span><span class="kp">predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+
+<span class="c1"># print the chunks</span>
+<span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
+  <span class="nb">print</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Span[0:4]: &quot;The quick brown fox&quot; → NP (0.9914)</span>
+<span class="go">Span[4:5]: &quot;jumps&quot; → VP (1.0)</span>
+<span class="go">Span[5:6]: &quot;over&quot; → PP (0.9967)</span>
+<span class="go">Span[6:9]: &quot;the lazy dog&quot; → NP (0.9991)</span>
+</pre></div>
+</div>
+<p>This tells us for instance that “the quick brown fox” and “the lazy dog” form syntactic units in this sentence.</p>
+</section>
+<section id="tagging-relations">
+<h2>Tagging Relations<a class="headerlink" href="#tagging-relations" title="Permalink to this heading">#</a></h2>
+<p>Relations hold between two entities. For instance, a text like “<em>George was born in Washington</em>”
+names two entities and also expresses that there is a born_in relationship between
+both.</p>
+<p>We added an experimental relation extraction model trained over a modified version of TACRED.
+You must use this model together with an entity tagger. Here is an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+<span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
+
+<span class="c1"># 1. make example sentence</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s2">&quot;George was born in Washington&quot;</span><span class="p">)</span>
+
+<span class="c1"># 2. load entity tagger and predict entities</span>
+<span class="n">tagger</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;ner-fast&#39;</span><span class="p">)</span>
+<span class="n">tagger</span><span class="o">.</span><span class="kp">predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+
+<span class="c1"># check which named entities have been found in the sentence</span>
+<span class="n">entities</span> <span class="o">=</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="s1">&#39;ner&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+
+<span class="c1"># 3. load relation extractor</span>
+<span class="n">extractor</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;relations&#39;</span><span class="p">)</span>
+
+<span class="c1"># predict relations</span>
+<span class="n">extractor</span><span class="o">.</span><span class="kp">predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+
+<span class="c1"># check which relations have been found</span>
+<span class="n">relations</span> <span class="o">=</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="s1">&#39;relation&#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">relations</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">relation</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="c1"># Use the `get_labels()` method with parameter &#39;relation&#39; to iterate over all relation predictions. </span>
+<span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="s1">&#39;relation&#39;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Span[0:1]: &quot;George&quot; → PER (0.9971)</span>
+<span class="go">Span[4:5]: &quot;Washington&quot; → LOC (0.9847)</span>
+
+<span class="go">Relation[0:1][4:5]: &quot;George -&gt; Washington&quot; → born_in (1.0)</span>
+</pre></div>
+</div>
+<p>Indicating that a <strong>born_in</strong> relationship holds between “George” and “Washington”!</p>
+</section>
+<section id="list-of-other-models">
+<h2>List of Other Models<a class="headerlink" href="#list-of-other-models" title="Permalink to this heading">#</a></h2>
+<p>We end this section with a list of all other models we currently ship with Flair:</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>ID</p></th>
+<th class="head"><p>Task</p></th>
+<th class="head"><p>Language</p></th>
+<th class="head"><p>Training Dataset</p></th>
+<th class="head"><p>Accuracy</p></th>
+<th class="head"><p>Contributor / Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>‘<a class="reference external" href="https://huggingface.co/flair/chunk-english">chunk</a>’</p></td>
+<td><p>Chunking</p></td>
+<td><p>English</p></td>
+<td><p>Conll-2000</p></td>
+<td><p><strong>96.47</strong> (F1)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘<a class="reference external" href="https://huggingface.co/flair/chunk-english-fast">chunk-fast</a>’</p></td>
+<td><p>Chunking</p></td>
+<td><p>English</p></td>
+<td><p>Conll-2000</p></td>
+<td><p><strong>96.22</strong> (F1)</p></td>
+<td><p>(fast model)</p></td>
+</tr>
+<tr class="row-even"><td><p>‘<a class="reference external" href="https://huggingface.co/flair/frame-english">frame</a>’</p></td>
+<td><p>Frame Detection</p></td>
+<td><p>English</p></td>
+<td><p>Propbank 3.0</p></td>
+<td><p><strong>97.54</strong> (F1)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘<a class="reference external" href="https://huggingface.co/flair/frame-english-fast">frame-fast</a>’</p></td>
+<td><p>Frame Detection</p></td>
+<td><p>English</p></td>
+<td><p>Propbank 3.0</p></td>
+<td><p><strong>97.31</strong> (F1)</p></td>
+<td><p>(fast model)</p></td>
+</tr>
+<tr class="row-even"><td><p>‘negation-speculation’</p></td>
+<td><p>Negation / speculation</p></td>
+<td><p>English</p></td>
+<td><p>Bioscope</p></td>
+<td><p><strong>80.2</strong> (F1)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘de-historic-indirect’</p></td>
+<td><p>historical indirect speech</p></td>
+<td><p>German</p></td>
+<td><p>&#64;redewiedergabe project</p></td>
+<td><p><strong>87.94</strong> (F1)</p></td>
+<td><p><a class="reference external" href="https://github.com/redewiedergabe/tagger">redewiedergabe</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘de-historic-direct’</p></td>
+<td><p>historical direct speech</p></td>
+<td><p>German</p></td>
+<td><p>&#64;redewiedergabe project</p></td>
+<td><p><strong>87.94</strong> (F1)</p></td>
+<td><p><a class="reference external" href="https://github.com/redewiedergabe/tagger">redewiedergabe</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>‘de-historic-reported’</p></td>
+<td><p>historical reported speech</p></td>
+<td><p>German</p></td>
+<td><p>&#64;redewiedergabe project</p></td>
+<td><p><strong>87.94</strong> (F1)</p></td>
+<td><p><a class="reference external" href="https://github.com/redewiedergabe/tagger">redewiedergabe</a></p></td>
+</tr>
+<tr class="row-even"><td><p>‘de-historic-free-indirect’</p></td>
+<td><p>historical free-indirect speech</p></td>
+<td><p>German</p></td>
+<td><p>&#64;redewiedergabe project</p></td>
+<td><p><strong>87.94</strong> (F1)</p></td>
+<td><p><a class="reference external" href="https://github.com/redewiedergabe/tagger">redewiedergabe</a></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="part-of-speech-tagging.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tagging parts-of-speech</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="how-to-tag-corpus.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">How to tag a whole corpus</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#semantic-frame-detection">Semantic Frame Detection</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#syntactic-chunking">Syntactic Chunking</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-relations">Tagging Relations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#list-of-other-models">List of Other Models</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/tutorial/tutorial-basics/other-models.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,776 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>HunFlair2 - Tutorial 1: Tagging &#8212; flair 0.14.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-hunflair2/tagging';</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="HunFlair2 - Tutorial 2: Entity Linking" href="linking.html" />
+    <link rel="prev" title="HunFlair2 - Overview" href="overview.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">flair 0.14.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../glossary/index.html">
+                        Glossary
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       v0.14.0  
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="../../../master/tutorial/tutorial-hunflair2/tagging.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="tagging.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.14.0
+      
+    
+    
+    [x]
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/index.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.1
+      
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/index.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.0
+      
+    
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API reference
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../glossary/index.html">
+                        Glossary
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       v0.14.0  
+      <span class="caret"></span>
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      <a class="list-group-item list-group-item-action py-1" href="../../../master/tutorial/tutorial-hunflair2/tagging.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    latest (dev)
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="tagging.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.14.0
+      
+    
+    
+    [x]
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/index.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.1
+      
+    
+    </span>
+      </a>
+      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/index.html" data-version-name="dev" data-version="devdocs">
+      <span>
+    v0.13.0
+      
+    
+    </span>
+      </a>
+    </div>
+  </div>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
+            <label class="sr-only">GitHub</label></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
+            <label class="sr-only">PyPI</label></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-basics/index.html">Tutorial 1: Basic Tagging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-training/index.html">Tutorial 2: Training models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-embeddings/index.html">Tutorial 3: Embeddings</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tutorial: HunFlair2</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="overview.html">HunFlair2 - Overview</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">HunFlair2 - Tutorial 1: Tagging</a></li>
+<li class="toctree-l3"><a class="reference internal" href="linking.html">HunFlair2 - Tutorial 2: Entity Linking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="training-ner-models.html">HunFlair2 Tutorial 3: Training NER models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="customize-linking.html">HunFlair2 Tutorial 4: Customizing linking models</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../glossary/index.html">Glossary</a></li>
+</ul>
+</div>
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+<h3>Versions</h3>
+<ul>
+  <li><a href="../../../master/tutorial/tutorial-hunflair2/tagging.html">
+    
+    latest (master)
+    
+  </a></li>
+  <li><a href="tagging.html">
+    
+    v0.14.0
+      
+    
+  </a></li>
+  <li><a href="../../../v0.13.1/index.html">
+    
+    v0.13.1
+      
+    
+  </a></li>
+  <li><a href="../../../v0.13.0/index.html">
+    
+    v0.13.0
+      
+    
+  </a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Tutorials</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorial: HunFlair2</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">HunFlair2 - Tutorial 1: Tagging</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="hunflair2-tutorial-1-tagging">
+<h1>HunFlair2 - Tutorial 1: Tagging<a class="headerlink" href="#hunflair2-tutorial-1-tagging" title="Permalink to this heading">#</a></h1>
+<p>This is part 1 of the tutorial, in which we show how to use our pre-trained <em>HunFlair2</em> models to tag your text.</p>
+<section id="tagging-with-pre-trained-hunflair2-models">
+<h2>Tagging with Pre-trained HunFlair2-Models<a class="headerlink" href="#tagging-with-pre-trained-hunflair2-models" title="Permalink to this heading">#</a></h2>
+<p>Let’s use the pre-trained <em>HunFlair2</em> model for biomedical named entity recognition (NER).
+This model was trained over multiple biomedical NER data sets and can recognize 5 different entity types,
+i.e. cell lines, chemicals, disease, gene / proteins and species.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
+
+<span class="n">tagger</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s2">&quot;hunflair2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>All you need to do is use the predict() method of the tagger on a sentence.
+This will add predicted tags to the tokens in the sentence.
+Lets use a sentence with four named entities:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s2">&quot;Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome&quot;</span><span class="p">)</span>
+
+<span class="c1"># predict NER tags</span>
+<span class="n">tagger</span><span class="o">.</span><span class="kp">predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+
+<span class="c1"># print the predicted tags</span>
+<span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Span[0:2]: &quot;Behavioral abnormalities&quot; → Disease (1.0)</span>
+<span class="go">Span[4:5]: &quot;Fmr1&quot; → Gene (1.0)</span>
+<span class="go">Span[6:7]: &quot;Mouse&quot; → Species (1.0)</span>
+<span class="go">Span[9:12]: &quot;Fragile X Syndrome&quot; → Disease (1.0)</span>
+</pre></div>
+</div>
+<p>The output indicates that there are two diseases mentioned in the text (”<em>Behavioral Abnormalities</em>” and
+“<em>Fragile X Syndrome</em>”) as well as one gene (”<em>fmr1</em>”) and one species (”<em>Mouse</em>”). For each entity the
+text span in the sentence mention it is given and Label with a value and a score (confidence in the
+prediction). You can also get additional information, such as the position offsets of each entity
+in the sentence in a structured way by calling the <code class="docutils literal notranslate"><span class="pre">to_dict()</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="o">.</span><span class="kp">to_dict</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome&#39;</span><span class="p">,</span> 
+    <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="p">[],</span> 
+    <span class="s1">&#39;entities&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Behavioral abnormalities&#39;</span><span class="p">,</span> <span class="s1">&#39;start_pos&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;end_pos&#39;</span><span class="p">:</span> <span class="mi">24</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="s1">&#39;Disease&#39;</span><span class="p">,</span> <span class="s1">&#39;confidence&#39;</span><span class="p">:</span> <span class="mf">0.9999860525131226</span><span class="p">}]},</span> 
+        <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Fmr1&#39;</span><span class="p">,</span> <span class="s1">&#39;start_pos&#39;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s1">&#39;end_pos&#39;</span><span class="p">:</span> <span class="mi">36</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="s1">&#39;Gene&#39;</span><span class="p">,</span> <span class="s1">&#39;confidence&#39;</span><span class="p">:</span> <span class="mf">0.9999895095825195</span><span class="p">}]},</span> 
+        <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Mouse&#39;</span><span class="p">,</span> <span class="s1">&#39;start_pos&#39;</span><span class="p">:</span> <span class="mi">41</span><span class="p">,</span> <span class="s1">&#39;end_pos&#39;</span><span class="p">:</span> <span class="mi">46</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="s1">&#39;Species&#39;</span><span class="p">,</span> <span class="s1">&#39;confidence&#39;</span><span class="p">:</span> <span class="mf">0.9999873638153076</span><span class="p">}]},</span> 
+        <span class="p">{</span><span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Fragile X Syndrome&#39;</span><span class="p">,</span> <span class="s1">&#39;start_pos&#39;</span><span class="p">:</span> <span class="mi">56</span><span class="p">,</span> <span class="s1">&#39;end_pos&#39;</span><span class="p">:</span> <span class="mi">74</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="s1">&#39;Disease&#39;</span><span class="p">,</span> <span class="s1">&#39;confidence&#39;</span><span class="p">:</span> <span class="mf">0.9999928871790568</span><span class="p">}]}</span>
+      <span class="p">],</span>
+    <span class="c1"># further sentence information</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="using-a-biomedical-tokenizer">
+<h2>Using a Biomedical Tokenizer<a class="headerlink" href="#using-a-biomedical-tokenizer" title="Permalink to this heading">#</a></h2>
+<p>Tokenization, i.e. separating a text into tokens / words, is an important issue in natural language processing
+in general and biomedical text mining in particular. So far, we used a tokenizer for general domain text.
+This can be unfavourable if applied to biomedical texts.</p>
+<p><em>HunFlair2</em> integrates <a class="reference external" href="https://allenai.github.io/scispacy/">SciSpaCy</a>, a library specially designed to work with scientific text.
+To use the library we first have to install it and download one of its models:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">scispacy</span><span class="o">==</span><span class="mf">0.5.1</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">s3</span><span class="o">-</span><span class="n">us</span><span class="o">-</span><span class="n">west</span><span class="o">-</span><span class="mf">2.</span><span class="n">amazonaws</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">ai2</span><span class="o">-</span><span class="n">s2</span><span class="o">-</span><span class="n">scispacy</span><span class="o">/</span><span class="n">releases</span><span class="o">/</span><span class="n">v0</span><span class="mf">.5.1</span><span class="o">/</span><span class="n">en_core_sci_sm</span><span class="o">-</span><span class="mf">0.5.1</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
+</pre></div>
+</div>
+<p>Then we can use the <a class="reference internal" href="../../api/flair.tokenization.html#flair.tokenization.SciSpacyTokenizer" title="flair.tokenization.SciSpacyTokenizer"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code></span></a>, we just have to pass it as parameter to when instancing a sentence:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.tokenization</span> <span class="kn">import</span> <span class="n">SciSpacyTokenizer</span>
+
+<span class="n">tokenizer</span> <span class="o">=</span> <span class="n">SciSpacyTokenizer</span><span class="p">()</span>
+
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s2">&quot;Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome&quot;</span><span class="p">,</span>
+                    <span class="n">use_tokenizer</span><span class="o">=</span><span class="n">tokenizer</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="working-with-longer-texts">
+<h2>Working with longer Texts<a class="headerlink" href="#working-with-longer-texts" title="Permalink to this heading">#</a></h2>
+<p>Often, we are concerned with complete scientific abstracts or full-texts when performing biomedical text mining, e.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">abstract</span> <span class="o">=</span> <span class="s2">&quot;Fragile X syndrome (FXS) is a developmental disorder caused by a mutation in the X-linked FMR1 gene, &quot;</span> \
+           <span class="s2">&quot;coding for the FMRP protein which is largely involved in synaptic function. FXS patients present several &quot;</span> \
+           <span class="s2">&quot;behavioral abnormalities, including hyperactivity, anxiety, sensory hyper-responsiveness, and cognitive &quot;</span> \
+           <span class="s2">&quot;deficits. Autistic symptoms, e.g., altered social interaction and communication, are also often observed: &quot;</span> \
+           <span class="s2">&quot;FXS is indeed the most common monogenic cause of autism.&quot;</span>
+</pre></div>
+</div>
+<p>To work with complete abstracts or full-text, we first have to split them into separate sentences.
+We can apply the <a class="reference internal" href="../../api/flair.splitter.html#flair.splitter.SciSpacySentenceSplitter" title="flair.splitter.SciSpacySentenceSplitter"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code></span></a>, an integration of the <a class="reference external" href="https://allenai.github.io/scispacy/">SciSpaCy</a> library:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.splitter</span> <span class="kn">import</span> <span class="n">SciSpacySentenceSplitter</span>
+
+<span class="c1"># initialize the sentence splitter</span>
+<span class="n">splitter</span> <span class="o">=</span> <span class="n">SciSpacySentenceSplitter</span><span class="p">()</span>
+
+<span class="c1"># split text into a list of Sentence objects</span>
+<span class="n">sentences</span> <span class="o">=</span> <span class="n">splitter</span><span class="o">.</span><span class="kp">split</span><span class="p">(</span><span class="n">abstract</span><span class="p">)</span>
+
+<span class="c1"># you can apply the HunFlair tagger directly to this list</span>
+<span class="n">tagger</span><span class="o">.</span><span class="kp">predict</span><span class="p">(</span><span class="n">sentences</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can access the annotations of the single sentences by just iterating over the list:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">sentences</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="o">.</span><span class="kp">to_tagged_string</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>This should print:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Sentence[35]: &quot;Fragile X syndrome (FXS) is a developmental disorder caused by a mutation in the X-linked FMR1 gene, coding for the FMRP protein which is largely involved in synaptic function.&quot; \
+              → [&quot;Fragile X syndrome&quot;/Disease, &quot;FXS&quot;/Disease, &quot;developmental disorder&quot;/Disease, &quot;X-linked&quot;/Gene, &quot;FMR1&quot;/Gene, &quot;FMRP&quot;/Gene]
+Sentence[23]: &quot;FXS patients present several behavioral abnormalities, including hyperactivity, anxiety, sensory hyper-responsiveness, and cognitive deficits.&quot; \
+              → [&quot;FXS&quot;/Disease, &quot;patients&quot;/Species, &quot;behavioral abnormalities&quot;/Disease, &quot;hyperactivity&quot;/Disease, &quot;anxiety&quot;/Disease, &quot;sensory hyper-responsiveness&quot;/Disease, &quot;cognitive deficits&quot;/Disease]
+Sentence[27]: &quot;Autistic symptoms, e.g., altered social interaction and communication, are also often observed: FXS is indeed the most common monogenic cause of autism.&quot; \
+              → [&quot;Autistic symptoms&quot;/Disease, &quot;altered social interaction and communication&quot;/Disease, &quot;FXS&quot;/Disease, &quot;autism&quot;/Disease]
+</pre></div>
+</div>
+</section>
+</section>
+
+
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="overview.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">HunFlair2 - Overview</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="linking.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">HunFlair2 - Tutorial 2: Entity Linking</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tagging-with-pre-trained-hunflair2-models">Tagging with Pre-trained HunFlair2-Models</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-a-biomedical-tokenizer">Using a Biomedical Tokenizer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#working-with-longer-texts">Working with longer Texts</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/tutorial/tutorial-hunflair2/tagging.md.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
