@@ -459,7 +459,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                 spans.extend(sentence_spans)
                 sentences_to_embed.append(s)
                 # make sure there are not too many spans # todo any better option?
-            if len(spans) >=50:
+            if self.training and len(spans) >=50:
                 break
 
         if not spans:
