@@ -458,6 +458,10 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             if sentence_spans:
                 spans.extend(sentence_spans)
                 sentences_to_embed.append(s)
+                # make sure there are not too many spans # todo any better option?
+            if len(spans) >=50:
+                break
+
         if not spans:
             return None, None
 
@@ -624,11 +628,6 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         (spans, span_embeddings) = self._embed_spans(sentences)
         if spans is None:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
-
-        if len(spans) >50: # todo anything better?
-            spans = spans[:50]
-            span_embeddings = span_embeddings[:50]
-            #return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
         # get one embedding vector for each label
         labels = [sp.get_label(self.label_type).value for sp in spans]
