@@ -259,7 +259,7 @@ class LabelList:
     def sentence_object_for(self, item: str):
         return self._item2sentence.get(item, None)
 
-    def add_sentence_object_for(self, item: str, sentence_object = flair.data.Sentence):
+    def add_sentence_object_for(self, item: str, sentence_object: flair.data.Sentence):
         self._item2sentence[item] = sentence_object
 
 class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
@@ -682,7 +682,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                     return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
                 return
 
-            # After a forward loss the embeddings of the sampled labels might be outdated because the weights of the label encoder might have changed.
+            # After a forward loss the embeddings of the labels might be outdated because the weights of the label encoder have changed.
             # Also, after resampling of the labels the label embeddings might not yet exist
             # To avoid unnecessary work the labels only get embedded here (important for a large label set, might take very long)
             if self._next_prediction_needs_updated_label_embeddings:
@@ -698,7 +698,6 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
             # for inspection (and for the experiment with a different criterion) save the top 5 predictions:
             #top5_similarity, top5_index = torch.topk(similarity_span_all_labels, k=5, dim=1)
-
 
             for i, sp in enumerate(spans):
                 label_value = self._label_at(most_similar_label_index[i])
