@@ -639,11 +639,13 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
         # concatenate and embed together
         together = labels + negative_labels
-        together_sentence_objects = self.get_sentence_objects_for_labels(together)
-        together_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = together,
-                                                                                           labels_sentence_objects = together_sentence_objects,
-                                                                                           use_tqdm= False)
+        unique_labels, inverse_indices = np.unique(together, return_inverse=True)
 
+        unique_sentence_objects = self.get_sentence_objects_for_labels(unique_labels)
+        unique_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = unique_labels,
+                                                                                         labels_sentence_objects = unique_sentence_objects,
+                                                                                         use_tqdm= False)
+        together_label_embeddings = unique_label_embeddings[inverse_indices]
 
         # divide into (gold) label and negative embeddings (negatives must be shaped as negative_factor x num_spans x embedding_size)
         label_embeddings = together_label_embeddings[:len(labels)]
