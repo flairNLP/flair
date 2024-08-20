@@ -468,9 +468,11 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         return spans, torch.stack(embeddings, dim=0)
 
 
-    def _embed_labels_batchwise_return_stacked_embeddings(self, labels: List[str], labels_sentence_objects: List[flair.data.Sentence],
-                                                          clear_embeddings: bool = True, update_these_embeddings: bool = True,
+    def _embed_labels_batchwise_return_stacked_embeddings(self, labels: List[str], clear_embeddings: bool = True, update_these_embeddings: bool = True,
                                                           use_tqdm: bool = True, device: torch.device = None):
+
+        labels_sentence_objects = self.get_sentence_objects_for_labels(labels, use_tqdm = use_tqdm)
+
         final_embeddings = []
         batch_size = self._label_embedding_batch_size
         batch_iterator = range(0, len(labels_sentence_objects), batch_size)
@@ -579,11 +581,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         if self._label_embeddings is None:
             with torch.no_grad():
                 print("Updating label embeddings...")
-                print(" - Creating label objects...")
-                all_labels_sentence_objects = self.get_sentence_objects_for_labels(self._label_dict.items, use_tqdm=True)
-                print(" - Embedding label objects...")
+                print(" - Creating and embedding label objects...")
                 self._label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = [l for l in self._label_dict.items],
-                                                                                                labels_sentence_objects = all_labels_sentence_objects,
                                                                                                 update_these_embeddings = False,
                                                                                                 device=self._label_embeddings_storage_device)
         return self._label_embeddings
@@ -641,10 +640,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         together = labels + negative_labels
         unique_labels, inverse_indices = np.unique(together, return_inverse=True)
 
-        unique_sentence_objects = self.get_sentence_objects_for_labels(unique_labels)
-        unique_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = unique_labels,
-                                                                                         labels_sentence_objects = unique_sentence_objects,
-                                                                                         use_tqdm= False)
+        unique_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = unique_labels, use_tqdm=False)
+
         together_label_embeddings = unique_label_embeddings[inverse_indices]
 
         # divide into (gold) label and negative embeddings (negatives must be shaped as negative_factor x num_spans x embedding_size)
