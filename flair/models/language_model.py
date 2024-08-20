@@ -55,12 +55,14 @@ class CharacterTokenizer(LanguageModelTokenizer):
 
 
 class SubwordTokenizer(LanguageModelTokenizer):
-    def __init__(self, subtokenizer: Union[str, PreTrainedTokenizerBase]):
+    def __init__(self, subtokenizer: Union[str, PreTrainedTokenizerBase], padded_size=None):
 
         if isinstance(subtokenizer, str):
             self.subtokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(subtokenizer)
         else:
             self.subtokenizer = subtokenizer
+
+        self.padded_size = padded_size
 
     def encode_as_batch(self, texts: List[str]) -> torch.Tensor:
         self.subtokenizer.pad_token = self.subtokenizer.eos_token
@@ -73,6 +75,8 @@ class SubwordTokenizer(LanguageModelTokenizer):
         return ids
 
     def vocab_size(self) -> int:
+        if self.padded_size:
+            return self.padded_size
         return len(self.subtokenizer)
 
     def decode(self, ids: List[int]) -> str:
