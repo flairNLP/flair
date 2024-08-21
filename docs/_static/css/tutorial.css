@@ -14,18 +14,27 @@
         color: var(--blue-white);
         font-weight: 600;
         margin-top: 0.5em;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
     }
     h2 {
         font-size: 1.6rem;
         color: var(--blue-white);
         font-weight: 600;
         margin-top: 2em;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
     }
     h3 {
         font-size: 1.2rem;
         color: var(--blue-white);
         font-weight: 600;
         margin-top: 2em;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
     }
     p {
         color: var(--blue-white);
