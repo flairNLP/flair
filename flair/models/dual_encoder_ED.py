@@ -265,7 +265,7 @@ class LabelList:
 class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
     def __init__(self, token_encoder: TokenEmbeddings, label_encoder: DocumentEmbeddings, known_labels: List[str], gold_labels: List[str] = [],
-                 label_sample_negative_size: Union[int, None] = None, label_type: str = "nel", label_map: dict = {},
+                 label_type: str = "nel", label_map: dict = {},
                  negative_sampling_strategy: Literal["shift", "random", "hard"] = "hard", negative_sampling_factor: int = 1,
                  loss_function_name: Literal["triplet", "binary_embedding", "cross_entropy"] = "triplet",
                  similarity_metric_name: Literal ["euclidean", "cosine", "mm"] = "euclidean", constant_updating: bool = True,
@@ -279,8 +279,6 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :param label_encoder: Document embeddings to embed the label verbalizations.
         :param known_labels: List of all labels that the model can use, in addition to the gold labels.
         :param gold_labels: List of corpus specific gold labels that should be used during predictions.
-        :param label_sample_negative_size: The number of the sampled labels from known_labels that is used as a source for negative sampling and in prediction.
-                Ideally this would use all known_labels but this can be too expensive for memory (all need to be embedded).
         :param label_type: Label type to predict (e.g. "nel").
         :param label_map: Mapping of label values to more descriptive verbalizations, used for embedding the labels.
         :param negative_sampling_strategy: Strategy to search for negative samples. Must be one of "hard", "shift", "random".
@@ -300,7 +298,6 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self.label_map = label_map
         self.known_labels = known_labels
         self.gold_labels = gold_labels
-        #self._label_sample_negative_size = label_sample_negative_size
         self._label_embeddings = None
         self._next_prediction_needs_updated_label_embeddings = False
         self._label_embedding_batch_size = label_embedding_batch_size
