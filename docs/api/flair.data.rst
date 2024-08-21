@@ -3,6 +3,6 @@ flair.data
 
 .. toctree::
    :glob:
-   :maxdepth: 2
+   :maxdepth: 1
 
    data/*
