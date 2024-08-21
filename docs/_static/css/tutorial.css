@@ -348,4 +348,7 @@ table.table {border-collapse: collapse;
     .bd-header-article {
         margin-bottom: 3rem;
     }
+    pre, pre * {
+        font-size: 0.8rem;
+    }
 }
