@@ -1,4 +1,4 @@
 flair.device
 ============
 
-.. autoattribute:: flair.device
+.. autodata:: flair.device
