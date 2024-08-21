@@ -204,7 +204,75 @@
             .banner {
                 .right-side {
                     .card {
-                        background: red;
+                        margin-left: 0;
+                        margin-right: 2rem;
+                        width: 25%;
+                    }
+                }
+            }
+        }
+    }
+    @media screen and (max-width: 1250px) {
+        .landing-page {
+            .banner {
+                .right-side {
+                    .card {
+                        margin-right: 1rem;
+                        width: 28%;
+                    }
+                }
+            }
+        }
+    }
+    @media screen and (max-width: 1100px) {
+        .landing-page {
+            .banner {
+                height: auto;
+                flex-direction: column;
+                .left-side {
+                    margin-top: 3rem;
+                    width: 100%;
+                    svg {
+                        width: 50%;
+                    }
+                }
+                .right-side {
+                    width: 100%;
+                    padding: 0 10%;
+                    justify-content: space-between;
+                    .card {
+                        margin: 0;
+                        width: 23vw;
+                        height: 28vw;
+                    }
+                    margin-bottom: 5rem;
+                    margin-top: 2rem;
+                }
+            }
+        }
+    }
+    @media screen and (max-width: 700px) {
+        .landing-page {
+            .banner {
+                .right-side {
+                    .card {
+                        span {
+                            display: none;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    @media screen and (max-width: 700px) {
+        .landing-page {
+            .banner {
+                .left-side {
+                    svg {
+                        width: 75%;
+                    }
+                    span {
+                        font-size: 1.2rem;
                     }
                 }
             }
