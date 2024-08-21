@@ -79,23 +79,6 @@
             .navbar-item:not(:last-of-type) {
                 margin-right: 2rem;
             }
-            .navbar-item:first-of-type {
-                button.search-button {
-                    background-size: contain;
-                    background-repeat: no-repeat;
-                    background-position: center;
-                    border-radius: 0;
-                    height: 1.85rem;
-                    width: 1.85rem;
-                    i {
-                        visibility: hidden;
-                        &:focus, &, &:active {
-                            border: none;
-                            outline: none;
-                        }
-                    }
-                }
-            }
             .navbar-item:nth-of-type(2) {
                 svg {
                     cursor: pointer;
@@ -155,6 +138,28 @@
 .stroke-moon {
 	stroke: white;
 	fill: none;
+}
+
+button.search-button {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-radius: 0;
+    height: 1.85rem;
+    width: 1.85rem;
+    i {
+        visibility: hidden;
+        &:focus, &, &:active {
+            border: none;
+            outline: none;
+        }
+    }
+}
+
+.sidebar-toggle {
+    span {
+        color: white;
+    }
 }
 
 @media screen and (max-width: 1250px) {
