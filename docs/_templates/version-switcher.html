@@ -39,15 +39,7 @@ document.write(`
  document.querySelector('footer.bd-footer')
 </script>
 <style>
- .bd-header {
-    .bd-header__inner {
-        .navbar-header-items__end {
-            .navbar-item:first-of-type {
-                button.search-button {
-                    background-image: url("{{ pathto('_static/magnifying_glass_dark.svg', 1) }}");
-                }
-            }
-        }
-    }
+button.search-button {
+ background-image: url("{{ pathto('_static/magnifying_glass_dark.svg', 1) }}") !important;
 }
 </style>
