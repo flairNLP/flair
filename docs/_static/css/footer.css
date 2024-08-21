@@ -29,3 +29,46 @@
         }
     }
 }
+
+@media screen and (max-width: 959px) {
+    .bd-footer {
+        font-size: 0.8rem;
+        .bd-footer__inner {
+            .footer-items__end {
+                .footer-item:not(:last-of-type) {
+                    margin-right: 2rem;
+                }
+            }
+        }
+    }
+}
+
+
+
+@media screen and (max-width: 700px) {
+    .bd-footer {
+        font-size: 1rem;
+        .bd-footer__inner {
+            .footer-items__start {
+                display: none;
+            }
+            .footer-items__end {
+                width: 100%;
+                justify-content: space-between;
+                .footer-item:not(:last-of-type) {
+                    margin-right: 1rem;
+                }
+            }
+        }
+    }
+}
+
+
+
+
+@media screen and (max-width: 435px) {
+    .bd-footer {
+        font-size: 0.8rem;
+    }
+}
+

@@ -185,10 +185,18 @@ button.search-button {
 
 @media screen and (max-width: 959px) {
     .bd-sidebar-primary.bd-sidebar.hide-on-wide {
-        width: 100%;
+        width: 100vw;
         max-width: initial;
-        .bd-navbar-elements {
-            padding: 0 10%;
+        padding: 10vw;
+        box-sizing: border-box;
+        .sidebar-header-items {
+            flex-direction: row;
+            max-width: 100%;
+            justify-content: space-between;
+            align-items: flex-start;
+            .sidebar-header-items__title, .nav-item .nav-link {
+                color: var(--orange-white);
+            }
         }
     }
 }
