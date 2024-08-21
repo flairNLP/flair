@@ -1,5 +1,52 @@
 .bd-search-container {
     h1 {
-        color: white;
+        color: var(--blue-white);
+        font-size: 3rem;
+        font-weight: 600;
+    }
+    h2 {
+        color: var(--blue-white);
+        font-weight: 600;
+        font-size: 1.5rem;
+    }
+    form.bd-search {
+        i {
+            display: none;
+        }
+        input {
+            border: 2px var(--flair-orange) solid;
+            color: var(--flair-blue);
+            box-shadow: none;
+            padding: .25em 5.5em .25em .75em;
+            border-radius: 1rem;
+            font-size: 1.2rem;
+        }
+        .search-button__kbd-shortcut {
+            align-items: center;
+        }
+    }
+    p.search-summary {
+        color: var(--blue-white) !important;
+    }
+    ul.search {
+        li {
+            border-top: 2px solid var(--blue-white);
+            margin: 0 0 .05em 0;
+            &:first-of-type {
+                margin-top: 1rem;
+                border: none;
+            }
+            a {
+                font-weight: 400;
+            }
+            span {
+                color: var(--blue-white);
+            }
+            .highlighted {
+                background: var(--flair-orange);
+                color: white;
+                border-radius: 5px;
+            }
+        }
     }
 }
