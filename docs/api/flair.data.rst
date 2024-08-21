@@ -1,4 +1,4 @@
 flair.data
 ==========
 
-.. autoclass:: flair.data
+.. automodule:: flair.data
