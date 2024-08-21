@@ -1,4 +1,4 @@
 flair.cache_root
 ================
 
-.. autoclass:: flair.cache_root
+.. autodata:: flair.cache_root
