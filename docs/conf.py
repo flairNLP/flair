@@ -88,6 +88,7 @@ html_css_files = [
     'css/tutorial.css',
     'css/api.css',
     'css/legal-notice.css',
+    'css/search.css',
 ]
 
 html_logo = "_static/flair_logo_white.svg"
