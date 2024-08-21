@@ -19,9 +19,9 @@
     overflow-wrap: break-word;
     white-space: normal;
     span.pre {
-    word-break: break-word;
-    overflow-wrap: break-word;
-    white-space: normal;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
     }
     .linkcode-link {
         padding: 0;
@@ -143,6 +143,35 @@ blockquote {
     .class, .method, .function, .data {
         & dd {
             padding-left: 1.5rem !important;
+        }
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .sig, .sig * {
+        font-size: .8rem;
+    }
+    .class, .method, .function, .data {
+        & dd {
+            & dl.field-list {
+                padding: 1rem;
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 400px) {
+    dl {
+        * {
+            font-size: .8rem !important;
+        }
+        code {
+            font-size: .6rem !important;
+        }
+    }
+    .class, .method, .function, .data {
+        & dd {
+            padding-left: 1rem !important;
         }
     }
 }
