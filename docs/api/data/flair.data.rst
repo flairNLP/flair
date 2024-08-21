@@ -1,4 +1,4 @@
-flair.data
-==========
+flair.data.BoundingBox
+======================
 
 .. autoclass:: flair.data.BoundingBox
