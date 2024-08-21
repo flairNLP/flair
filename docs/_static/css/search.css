@@ -42,10 +42,30 @@
             span {
                 color: var(--blue-white);
             }
-            .highlighted {
-                background: var(--flair-orange);
-                color: white;
-                border-radius: 5px;
+        }
+    }
+}
+.highlighted {
+    background: var(--flair-orange) !important;
+    color: white !important;
+    border-radius: 5px !important;
+}
+div#searchbox {
+    p.highlight-link {
+        box-shadow: none !important;
+        margin: 1rem 0;
+        a {
+            background: var(--white-blue) !important;
+            border: 2px var(--flair-orange) solid;
+            color: var(--flair-orange);
+            transition: all 200ms ease-in-out;
+            &:hover {
+                background: var(--flair-orange) !important;
+                color: white !important;
+                box-shadow: none !important;
+            }
+            &::before {
+                content: none;
             }
         }
     }
