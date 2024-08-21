@@ -300,7 +300,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self.label_map = label_map
         self.known_labels = known_labels
         self.gold_labels = gold_labels
-        self._label_sample_negative_size = label_sample_negative_size
+        #self._label_sample_negative_size = label_sample_negative_size
         self._label_embeddings = None
         self._next_prediction_needs_updated_label_embeddings = False
         self._label_embedding_batch_size = label_embedding_batch_size
@@ -335,24 +335,11 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self._iteration_count = 0
 
         self._label_dict = None
-        self._sampled_label_indices = None
-        self._indices_of_sampled_labels = None
 
-        self._SAMPLE_INDEX_NOT_FOUND = torch.tensor(-1, device=flair.device, dtype=torch.int64)
+        self._INDEX_NOT_FOUND = torch.tensor(-1, device=flair.device, dtype=torch.int64)
 
         self.to(flair.device)
 
-        # Checking how many labels in known_labels are NOT found in the label_map
-        # if label_map:
-        #     print("Checking verbalizations...")
-        #     non_verbalized_labels = []
-        #     for label in tqdm(known_labels, position=0, leave=True):
-        #         if label not in label_map:
-        #             non_verbalized_labels.append(label)
-        #     print(f"Found {len(non_verbalized_labels)} non verbalized labels:")
-        #     for l in non_verbalized_labels:
-        #         is_gold = " (gold)" if l in gold_labels else ""
-        #         print(f"\t{l}{is_gold}")
 
     def _label_at(self, idx: int):
         """ Label at index in label_dict """
@@ -360,24 +347,10 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
     def _idx_for_label(self, label: str):
         """ Index of label in label_dict.items """
-        return self._label_dict.index_for(label)
-
-    def _sampled_label_at(self, idx: int):
-        """ Label at index in sampled labels """
-        label_idx = self._sampled_label_indices[idx]
-        return self._label_at(label_idx)
-
-    def _sample_idx_for_label(self, label: str):
-        """ Index of label in sampled labels """
-        idx = self._idx_for_label(label)
+        idx = self._label_dict.index_for(label)
         if idx is None:
-            return self._SAMPLE_INDEX_NOT_FOUND # torch.tensor(-1, device=flair.device)
-        return self._indices_of_sampled_labels[idx]
-
-    def _num_sampled_labels(self):
-        if self._sampled_label_indices is None:
-            self._resample_labels()
-        return len(self._sampled_label_indices)
+             return self._INDEX_NOT_FOUND # torch.tensor(-1, device=flair.device)
+        return idx
 
     def _update_some_label_embeddings(self, labels, new_label_embeddings):
         if self._label_embeddings is None:
@@ -408,26 +381,11 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         Giving the model a new set on known or gold labels. E.g. when predicting on a new corpus.
         :param known: List of all labels the model should be aware of. Same as known_labels in init.
         :param gold: List of gold labels. Same as gold_labels in init.
-        :param sample_negative_size:
         """
         self.known_labels = known
         self.gold_labels = gold
         self._label_dict = None
         self._create_label_dict()
-        self._resample_labels()
-
-
-    def _resample_labels(self):
-        n = len(self._label_dict.items)
-
-        # mapping from sampled index to index in complete label dict
-        self._sampled_label_indices = torch.randperm(n, device=flair.device)[:self._label_sample_negative_size]
-
-        # mapping from complete label dict to sample label index
-        # contains -1 for indices which are not in the sample
-        self._indices_of_sampled_labels = self._SAMPLE_INDEX_NOT_FOUND.expand([n]).clone()
-        self._indices_of_sampled_labels[self._sampled_label_indices] = torch.arange(len(self._sampled_label_indices), device=flair.device)
-        print(f"Resampled new sample labels of size {len(self._sampled_label_indices)}")
 
 
     def _create_label_dict(self):
@@ -458,7 +416,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             if sentence_spans:
                 spans.extend(sentence_spans)
                 sentences_to_embed.append(s)
-                # make sure there are not too many spans # todo any better option?
+            # make sure there are not too many spans # todo any better option?
             if self.training and len(spans) >=50:
                 break
 
@@ -503,7 +461,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
         return final_embeddings
 
-    def _negative_sampling_shift(self, spans: List[flair.data.Span], span_embeddings: torch.Tensor, batch_gold_labels: List[str]):
+    def _negative_sampling_shift(self, span_embeddings: torch.Tensor, batch_gold_labels: List[str]):
         """
         Shifting the labels to make them negatives for each other.
         :param span_embeddings: Not used in this strategy.
@@ -516,19 +474,19 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         return negative_samples
 
 
-    def _negative_sampling_random_over_all(self, spans: List[flair.data.Span], span_embeddings: torch.Tensor, batch_gold_labels: List[str]):
+    def _negative_sampling_random_over_all(self, span_embeddings: torch.Tensor, batch_gold_labels: List[str]):
          # todo: currently it's possibly that the gold label is samples as negative
          if self._label_dict is None:
              self._create_label_dict()
          negative_samples_indices = []
          for i in range(self._negative_sampling_factor):
-             negative_samples_indices.extend(random.sample(range(self._num_sampled_labels()), len(batch_gold_labels)))
+             negative_samples_indices.extend(random.sample(range(len(self._label_dict.items)), len(batch_gold_labels)))
 
-         negative_labels = [self._sampled_label_at(i) for i in negative_samples_indices]
+         negative_labels = [self.label_at(i) for i in negative_samples_indices]
 
          return negative_labels
 
-    def _negative_sampling_hard(self, spans: List[flair.data.Span], span_embeddings: torch.Tensor, batch_gold_labels: List[str]):
+    def _negative_sampling_hard(self, span_embeddings: torch.Tensor, batch_gold_labels: List[str]):
         """
         Look for difficult labels as negatives (i.e. similarity to mention embeddings).
         :param span_embeddings: Embeddings of the spans in this batch.
@@ -541,39 +499,32 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         with torch.no_grad():
             span_embeddings = span_embeddings.to(self._label_embeddings_storage_device)
 
-            # reembed the labels every N step to have more recent embeddings, also resample new for negative mining
+            # reembed the labels every N step to have more recent embeddings
             if self.constant_updating and self._iteration_count % 20000 == 0 and self._iteration_count > 0:
                 print(f"At step {self._iteration_count}, updating label embeddings...")
                 self._label_embeddings = None
-                # also resample new, if sample size given
-                if self._label_sample_negative_size:
-                    self._indices_of_sampled_labels = None
-                    self._sampled_label_indices = None
 
-            similarity_spans_sampled_labels = self.similarity_metric.similarity(span_embeddings, self.get_sampled_label_embeddings())
+            similarity_spans_labels = self.similarity_metric.similarity(span_embeddings, self.get_label_embeddings())
 
-            gold_label_indices = []
+            gold_label_indices = [ self._idx_for_label(label) for label in batch_gold_labels ]
+            gold_label_indices = torch.tensor(gold_label_indices).to(flair.device)
 
-            for nr, label in enumerate(batch_gold_labels):
-                idx = self._sample_idx_for_label(label)
-                gold_label_indices.append(idx)
+            # check which of the gold labels are in the label set (it is possible that some are not)
+            gold_is_in_sample = gold_label_indices != self._INDEX_NOT_FOUND # torch.tensor(-1, device=flair.device)
 
-            nr = torch.arange(len(batch_gold_labels), device=flair.device)
-            gold_label_indices = torch.stack(gold_label_indices)
-            gold_is_in_sample = gold_label_indices != self._SAMPLE_INDEX_NOT_FOUND # torch.tensor(-1, device=flair.device)
-            nr = nr[gold_is_in_sample]
+            # only keep the indices where the gold label exists in label set (for assigning -inf later):
+            spans_range = torch.arange(len(batch_gold_labels), device=flair.device)
+            spans_range = spans_range[gold_is_in_sample]
             gold_label_indices = gold_label_indices[gold_is_in_sample]
 
-            #gold_label_similarity = torch.full([len(batch_gold_labels)], torch.nan, device=flair.device)
-            #gold_label_similarity[nr] = similarity_spans_sampled_labels[nr, gold_label_indices]
+            # set the similarity to the true gold label to -inf, so it will not be sampled as negative
+            similarity_spans_labels[spans_range, gold_label_indices] = -torch.inf
 
-            similarity_spans_sampled_labels[nr, gold_label_indices] = -torch.inf
-
-            _, most_similar_label_index = torch.topk(similarity_spans_sampled_labels, self._negative_sampling_factor, dim=1)
+            _, most_similar_label_index = torch.topk(similarity_spans_labels, self._negative_sampling_factor, dim=1)
 
         most_similar_label_index = most_similar_label_index.T.flatten()
 
-        most_similar_labels = [self._sampled_label_at(i) for i in most_similar_label_index]
+        most_similar_labels = [self._label_at(i) for i in most_similar_label_index]
 
         return most_similar_labels
 
@@ -591,11 +542,6 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                                                                                                 device=self._label_embeddings_storage_device)
         return self._label_embeddings
 
-    def get_sampled_label_embeddings(self):
-        if self._sampled_label_indices is None:
-            self._resample_labels()
-        embeddings = self.get_label_embeddings()
-        return embeddings[self._sampled_label_indices]
 
     def get_sentence_objects_for_labels(self, labels, use_tqdm: bool = False):
         if not self._label_dict:
@@ -633,14 +579,13 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         labels = [sp.get_label(self.label_type).value for sp in spans]
 
         # sample negative labels
-        negative_labels = self._negative_sampling_fn(spans, span_embeddings, labels)
+        negative_labels = self._negative_sampling_fn(span_embeddings, labels)
 
         # concatenate and embed together
         together = labels + negative_labels
         unique_labels, inverse_indices = np.unique(together, return_inverse=True)
 
         unique_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = unique_labels, use_tqdm=False)
-
         together_label_embeddings = unique_label_embeddings[inverse_indices]
 
         # divide into (gold) label and negative embeddings (negatives must be shaped as negative_factor x num_spans x embedding_size)
@@ -686,7 +631,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             if self._next_prediction_needs_updated_label_embeddings:
                 self._label_embeddings = None
                 self._next_prediction_needs_updated_label_embeddings = False
-                self._sampled_label_indices = None
+                #self._sampled_label_indices = None
 
             label_embeddings = self.get_label_embeddings().to(flair.device)
             # Choosing the most similar label from the set of labels (might not include the true gold label)
