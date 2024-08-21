@@ -1,4 +1,4 @@
 flair.data
 ==========
 
-.. automodule:: flair.data
+.. autoclass:: flair.data.BoundingBox
