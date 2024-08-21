@@ -267,3 +267,25 @@ table.table {border-collapse: collapse;
         }
     }
 }
+
+@media screen and (max-width: 700px) {
+    .bd-article-container {
+        padding: 3rem !important;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    #flair-tutorials, #api-docs, #contributing, [id^="tutorial"], [id^="flair"] {
+        & .toctree-wrapper li[class^="toctree-l"] {
+            & > a {
+                font-size: 1rem;
+            }
+        }
+    }
+    .toctree-wrapper li[class^="toctree-l"] > ul {
+        padding-inline-start: 0;
+    }
+    .bd-article-container {
+        padding: 2rem !important;
+    }
+}
