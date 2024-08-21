@@ -1,4 +1,8 @@
 flair.data
 ==========
 
-.. automodule:: flair.data
+.. toctree::
+   :glob:
+   :maxdepth: 2
+
+   data/*
