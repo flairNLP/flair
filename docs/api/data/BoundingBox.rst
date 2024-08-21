@@ -1,4 +1,4 @@
-flair.datasets.BoundingBox
+flair.data.BoundingBox
 ==========================
 
-.. autoclass:: flair.datasets.BoundingBox
+.. autoclass:: flair.data.BoundingBox
