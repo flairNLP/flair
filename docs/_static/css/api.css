@@ -139,7 +139,7 @@ blockquote {
     }
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 1200px) {
     .class, .method, .function, .data {
         & dd {
             padding-left: 1.5rem !important;

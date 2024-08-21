@@ -298,3 +298,23 @@ table.table {border-collapse: collapse;
         padding: 2rem !important;
     }
 }
+
+@media screen and (max-width: 1200px) {
+    .bd-main .bd-content .bd-article-container .bd-article {
+
+        h1 {
+            font-size: 2rem;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+        }
+
+        h3 {
+            font-size: 1rem;
+        }
+    }
+    .bd-article-container {
+        padding: 4rem;
+    }
+}
