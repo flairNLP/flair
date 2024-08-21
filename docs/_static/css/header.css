@@ -184,19 +184,39 @@ button.search-button {
 
 
 @media screen and (max-width: 959px) {
-    .bd-sidebar-primary.bd-sidebar.hide-on-wide {
-        width: 100vw;
-        max-width: initial;
-        padding: 10vw;
-        box-sizing: border-box;
+    .bd-sidebar-primary.bd-sidebar {
+        width: 100vw !important;
+        background: var(--flair-orange) !important;
+        height: calc(100vh - var(--header-height));
+        max-width: initial !important;
+        display: block;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
         .sidebar-header-items {
             flex-direction: row;
             max-width: 100%;
             justify-content: space-between;
             align-items: flex-start;
             .sidebar-header-items__title, .nav-item .nav-link {
-                color: var(--orange-white);
+                color: white;
             }
+            padding: 10vw 10vw 5vw 10vw !important;
+        }
+        .sidebar-primary-items__start {
+            padding: 5vw 10vw 10vw 10vw !important;
+            border-top: 2px solid white;
+        }
+        .sidebar-header-items__end {
+            gap: 0;
+        }
+        .current {
+            color: var(--flair-blue) !important;
+        }
+        a:hover {
+            color: var(--flair-blue) !important;
+        }
+        * {
+            color: white !important;
         }
     }
 }
