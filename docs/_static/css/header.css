@@ -79,22 +79,6 @@
             .navbar-item:not(:last-of-type) {
                 margin-right: 2rem;
             }
-            .navbar-item:nth-of-type(2) {
-                svg {
-                    cursor: pointer;
-                    &:first-of-type {
-                        :root .dark-mode & {
-                            display: none;
-                        }
-                    }
-                    &:nth-of-type(2) {
-                        display: none;
-                        :root .dark-mode & {
-                            display: block;
-                        }
-                    }
-                }
-            }
             svg {
                 height: 35%;
                 width: auto;
@@ -159,6 +143,23 @@ button.search-button {
 .sidebar-toggle {
     span {
         color: white;
+        font-size: 2rem;
+        margin-right: 1rem;
+    }
+}
+
+.dark-mode-toggle svg {
+    cursor: pointer;
+    &:first-of-type {
+        :root .dark-mode & {
+            display: none;
+        }
+    }
+    &:nth-of-type(2) {
+        display: none;
+        :root .dark-mode & {
+            display: block;
+        }
     }
 }
 
@@ -177,6 +178,17 @@ button.search-button {
                     margin-right: 1rem;
                 }
             }
+        }
+    }
+}
+
+
+@media screen and (max-width: 959px) {
+    .bd-sidebar-primary.bd-sidebar.hide-on-wide {
+        width: 100%;
+        max-width: initial;
+        .bd-navbar-elements {
+            padding: 0 10%;
         }
     }
 }
