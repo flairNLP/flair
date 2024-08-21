@@ -6,6 +6,11 @@
 
 .bd-main .bd-content .bd-article-container .bd-article {
     padding: 0;
+    * {
+        word-break: break-word;
+        overflow-wrap: break-word;
+        white-space: normal;
+    }
     .headerlink {
         display: none;
     }
@@ -141,6 +146,9 @@
 }
 
 ul.bd-breadcrumbs {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
     li.breadcrumb-home .fa-home {
         &::before {
             content: "Home";
@@ -316,5 +324,28 @@ table.table {border-collapse: collapse;
     }
     .bd-article-container {
         padding: 4rem;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .bd-main .bd-content .bd-article-container .bd-article {
+
+        h1 {
+            font-size: 1.6rem;
+        }
+
+        h2 {
+            font-size: 1rem;
+        }
+
+        h3 {
+            font-size: 1rem;
+        }
+    }
+    .bd-article-container {
+        padding: 4rem;
+    }
+    .bd-header-article {
+        margin-bottom: 3rem;
     }
 }
