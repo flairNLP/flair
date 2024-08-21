@@ -250,16 +250,24 @@
                 }
             }
         }
-    }
-    @media screen and (max-width: 700px) {
-        .landing-page {
-            .banner {
-                .right-side {
-                    .card {
-                        span {
-                            display: none;
-                        }
+        .landing-page-illustrations {
+            flex-direction: column;
+            .item {
+                align-items: center;
+                padding: 2rem 0  5rem 0;
+                svg {
+                    width: 50%;
+                    height: auto;
+                    & + span {
+                        margin: 2rem 0 0 0;
                     }
+                }
+                &:not(:last-of-type) {
+                    border-right: none;
+                }
+                p {
+                    text-align: center;
+                    max-width: 500px;
                 }
             }
         }
@@ -274,6 +282,21 @@
                     span {
                         font-size: 1.2rem;
                     }
+                }
+                .right-side {
+                    .card {
+                        span {
+                            display: none;
+                        }
+                    }
+                }
+            }
+        }
+        .landing-page-illustrations {
+            padding: 3rem;
+            .item {
+                svg {
+                    width: 100%;
                 }
             }
         }
