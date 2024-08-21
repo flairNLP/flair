@@ -156,3 +156,22 @@
 	stroke: white;
 	fill: none;
 }
+
+@media screen and (max-width: 1250px) {
+    .bd-header {
+        .bd-header__inner {
+            nav {
+                ul.bd-navbar-elements {
+                    li.nav-item {
+                        margin-left: 2rem;
+                    }
+                }
+            }
+            .navbar-header-items__end {
+                .navbar-item:not(:last-of-type) {
+                    margin-right: 1rem;
+                }
+            }
+        }
+    }
+}
