@@ -15,6 +15,14 @@
     color: var(--blue-white);
     font-family: "Source Code Pro", monospace;
     line-height: 2em;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    span.pre {
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    }
     .linkcode-link {
         padding: 0;
         display: inline-block;
@@ -128,5 +136,13 @@ blockquote {
     }
     p {
         margin: 0 !important;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .class, .method, .function, .data {
+        & dd {
+            padding-left: 1.5rem !important;
+        }
     }
 }
