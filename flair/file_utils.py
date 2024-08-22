@@ -239,7 +239,7 @@ def get_from_cache(url: str, cache_dir: Path) -> Path:
         return cache_path
 
     # make HEAD request to check ETag
-    response = requests.head(url, headers={"User-Agent": "Flair"}, allow_redirects=True)
+    response = requests.head(url, headers={"User-Agent": "Flair"}, allow_redirects=True, proxies=url_proxies)
     if response.status_code != 200:
         raise OSError(f"HEAD request failed for url {url} with status code {response.status_code}.")
 
