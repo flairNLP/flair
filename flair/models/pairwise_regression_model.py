@@ -1,6 +1,5 @@
-import typing
 from pathlib import Path
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import torch
 from torch import nn
@@ -91,7 +90,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
 
     def get_used_tokens(
         self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
-    ) -> typing.Iterable[List[str]]:
+    ) -> Iterable[List[str]]:
         for sentence_pair in _iter_dataset(corpus.get_all_sentences()):
             yield [t.text for t in sentence_pair.first]
             yield [t.text for t in sentence_pair.first.left_context(context_length, respect_document_boundaries)]
@@ -204,10 +203,16 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         return model_state
 
     @classmethod
-    def _init_model_with_state_dict(cls, state, **kwargs):
-        # add DefaultClassifier arguments
+    def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs):
+        """Initializes a TextPairRegressor model from a state dictionary (exported by _get_state_dict).
+
+        Requires keys 'state_dict', 'document_embeddings', and 'label_type' in the state dictionary.
+        """
+        if "document_embeddings" in state:
+            state["embeddings"] = state.pop("document_embeddings")  # need to rename this parameter
+        # add Model arguments
         for arg in [
-            "document_embeddings",
+            "embeddings",
             "label_type",
             "embed_separately",
             "dropout",
