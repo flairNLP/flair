@@ -283,7 +283,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         out_path: Union[str, Path, None] = None,
         embedding_storage_mode: EmbeddingStorageMode = "none",
         mini_batch_size: int = 32,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        main_evaluation_metric: Tuple[str, str] = ("correlation", "pearson"),
         exclude_labels: Optional[List[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
