@@ -1073,7 +1073,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                 model, add_prefix_space=True, **transformers_tokenizer_kwargs, **kwargs
             )
             try:
-                self.feature_extractor = AutoFeatureExtractor.from_pretrained(model, apply_ocr=False)
+                self.feature_extractor = AutoFeatureExtractor.from_pretrained(model, apply_ocr=False, **kwargs)
             except OSError:
                 self.feature_extractor = None
         else:
