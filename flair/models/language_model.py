@@ -273,6 +273,7 @@ class LanguageModel(nn.Module):
             recurrent_type=state.get("recurrent_type", "lstm"),
             attention_heads=0,
             has_decoder=has_decoder,
+            decoder_bias=False,  # TODO: hack to get it working
         )
         model.load_state_dict(state["state_dict"], strict=has_decoder)
         model.eval()
