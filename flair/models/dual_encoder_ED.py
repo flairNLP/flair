@@ -383,7 +383,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self.gold_labels = gold
         self._label_dict = None
         self._create_label_dict()
-
+        self._recompute_label_embeddings()
 
     def _create_label_dict(self):
         """
@@ -396,9 +396,19 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             print("Need label embedding update")
             self._label_dict = LabelList()
             self._label_dict.add(labels)
-            self._label_embeddings = None
         else:
             print("Already existing label dict.")
+
+    def _recompute_label_embeddings(self):
+        if not self._label_dict:
+            self._create_label_dict()
+
+        with torch.no_grad():
+            print("Updating label embeddings...")
+            print(" - Creating and embedding label objects...")
+            self._label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = [l for l in self._label_dict.items],
+                                                                                            update_these_embeddings = False,
+                                                                                            device=self._label_embeddings_storage_device)
 
     def _embed_spans(self, sentences: List[Sentence]):
         """
@@ -430,7 +440,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
     def _embed_labels_batchwise_return_stacked_embeddings(self, labels: List[str], clear_embeddings: bool = True, update_these_embeddings: bool = True,
                                                           use_tqdm: bool = True, device: torch.device = None):
 
-        labels_sentence_objects = self.get_sentence_objects_for_labels(labels, use_tqdm = use_tqdm)
+        unique_labels, inverse_indices = np.unique(labels, return_inverse=True)
+
+        labels_sentence_objects = self.get_sentence_objects_for_labels(unique_labels, use_tqdm = use_tqdm)
 
         final_embeddings = []
         batch_size = self._label_embedding_batch_size
@@ -442,15 +454,18 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         for i in batch_iterator:
             batch = labels_sentence_objects[i:i + batch_size]
             self.label_encoder.embed(batch)
-            embeddings = torch.stack([l.get_embedding() for l in batch])
-            if device:
-                embeddings = embeddings.to(device)
-            final_embeddings.append(embeddings)
+            embeddings = [l.get_embedding() for l in batch]
+            #if device:
+            #    embeddings = embeddings.to(device)
+            final_embeddings.extend(embeddings)
             if clear_embeddings:
                 for l in batch:
                     l.clear_embeddings()
 
-        final_embeddings = torch.cat(final_embeddings)
+        final_embeddings = torch.stack(final_embeddings, dim = 0) # correct? todo
+        if device:
+            final_embeddings.to(device)
+        final_embeddings = final_embeddings[inverse_indices]
 
         if update_these_embeddings:
             if self.constant_updating:
@@ -499,7 +514,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             # reembed the labels every N step to have more recent embeddings
             if self.constant_updating and self._iteration_count % 20000 == 0 and self._iteration_count > 0:
                 print(f"At step {self._iteration_count}, updating label embeddings...")
-                self._label_embeddings = None
+                self._recompute_label_embeddings()
 
             similarity_spans_labels = self.similarity_metric.similarity(span_embeddings, self.get_label_embeddings())
 
@@ -517,7 +532,25 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             # set the similarity to the true gold label to -inf, so it will not be sampled as negative
             similarity_spans_labels[spans_range, gold_label_indices] = -torch.inf
 
-            _, most_similar_label_index = torch.topk(similarity_spans_labels, self._negative_sampling_factor, dim=1)
+            # Top K sampling (always the hardest)
+            #_, most_similar_label_index = torch.topk(similarity_spans_labels, self._negative_sampling_factor, dim=1)
+
+            # Multinomial sampling (with temperature)
+
+            temperature = 0.05
+            similarity_temperature = similarity_spans_labels.div(temperature)
+
+            # Susanna's method:
+            # similarity_as_probabilities = torch.softmax(similarity_temperature, dim=1)
+
+            # Alan's method:
+            # to prevent overflow problem with small temperature values, substract largest value from all
+            # this makes a vector in which the largest value is 0
+            max_values, _ = torch.max(similarity_temperature, dim=1, keepdim=True)
+            similarity_temperature = similarity_temperature - max_values
+            similarity_as_probabilities = similarity_temperature.exp()
+
+            most_similar_label_index = torch.multinomial(similarity_as_probabilities, self._negative_sampling_factor)
 
         most_similar_label_index = most_similar_label_index.T.flatten()
 
@@ -530,13 +563,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         if self._label_dict is None:
             self._create_label_dict()
 
-        if self._label_embeddings is None:
-            with torch.no_grad():
-                print("Updating label embeddings...")
-                print(" - Creating and embedding label objects...")
-                self._label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = [l for l in self._label_dict.items],
-                                                                                                update_these_embeddings = False,
-                                                                                                device=self._label_embeddings_storage_device)
+        elif self._label_embeddings is None:
+            self._recompute_label_embeddings()
+
         return self._label_embeddings
 
 
@@ -580,10 +609,12 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
         # concatenate and embed together
         together = labels + negative_labels
-        unique_labels, inverse_indices = np.unique(together, return_inverse=True)
+        #unique_labels, inverse_indices = np.unique(together, return_inverse=True)
 
-        unique_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = unique_labels, use_tqdm=False)
-        together_label_embeddings = unique_label_embeddings[inverse_indices]
+        #unique_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = unique_labels, use_tqdm=False)
+        #together_label_embeddings = unique_label_embeddings[inverse_indices]
+
+        together_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = together, use_tqdm=False)
 
         # divide into (gold) label and negative embeddings (negatives must be shaped as negative_factor x num_spans x embedding_size)
         label_embeddings = together_label_embeddings[:len(labels)]
@@ -626,9 +657,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             # Also, after resampling of the labels the label embeddings might not yet exist
             # To avoid unnecessary work the labels only get embedded here (important for a large label set, might take very long)
             if self._next_prediction_needs_updated_label_embeddings:
-                self._label_embeddings = None
+                self._recompute_label_embeddings()
                 self._next_prediction_needs_updated_label_embeddings = False
-                #self._sampled_label_indices = None
 
             label_embeddings = self.get_label_embeddings().to(flair.device)
             # Choosing the most similar label from the set of labels (might not include the true gold label)
