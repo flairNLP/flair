@@ -193,7 +193,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
     def _get_state_dict(self):
         model_state = {
             **super()._get_state_dict(),
-            "document_embeddings": self.embeddings.save_embeddings(use_state_dict=False),
+            "embeddings": self.embeddings.save_embeddings(use_state_dict=False),
             "label_type": self.label_type,
             "embed_separately": self.embed_separately,
             "dropout": self.dropout.p,
@@ -205,9 +205,12 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
+        if "document_embeddings" in state and "embeddings" not in state:
+            state["embeddings"] = state["document_embeddings"]
+
         # add DefaultClassifier arguments
         for arg in [
-            "document_embeddings",
+            "embeddings",
             "label_type",
             "embed_separately",
             "dropout",
