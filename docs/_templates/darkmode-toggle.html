@@ -143,10 +143,7 @@
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
     const toggleDarkMode = () => {
-        if (document.body.classList.contains("dark-mode")) {
-            document.body.classList.remove("dark-mode");
-        } else {
-            document.body.classList.add("dark-mode");
-        }
+        localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light");
+        applyTheme();
     }
 </script>
