@@ -130,8 +130,10 @@
         } else {
             if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
                 document.body.classList.add("dark-mode");
+                localStorage.setItem("theme", "dark");
             } else {
                 document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme", "light");
             }
         }
     }
@@ -141,8 +143,14 @@
         applyTheme();
     }
 
+    window.addEventListener('load', applyTheme);
+    window.addEventListener('DOMContentLoaded', applyTheme);
+    document.addEventListener('DOMContentLoaded', applyTheme);
+    document.addEventListener('DOMContentLoaded', applyTheme);
+    document.body.addEventListener('DOMContentLoaded', applyTheme);
+    document.body.addEventListener('DOMContentLoaded', applyTheme);
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
-    const toggleDarkMode = () => {
+    function toggleDarkMode() {
         const theme = localStorage.getItem("theme");
         localStorage.setItem("theme", theme === "dark" ? "light" : "dark");
         applyTheme();
