@@ -135,12 +135,13 @@
             }
         }
     }
-    applyTheme();
 
     function matchPreferredScheme (e) {
         localStorage.setItem("theme", e.matches ? "dark" : "light");
         applyTheme();
     }
+
+    document.body.addEventListener('load', applyTheme);
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
     const toggleDarkMode = () => {
