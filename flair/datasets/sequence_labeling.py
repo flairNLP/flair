@@ -272,6 +272,7 @@ class MultiFileColumnCorpus(Corpus):
         comment_symbol: Optional[str] = None,
         encoding: str = "utf-8",
         document_separator_token: Optional[str] = None,
+        document_level: Optional[bool] = False,
         skip_first_line: bool = False,
         in_memory: bool = True,
         label_name_map: Optional[Dict[str, str]] = None,
@@ -309,6 +310,7 @@ class MultiFileColumnCorpus(Corpus):
                         banned_sentences=banned_sentences,
                         in_memory=in_memory,
                         document_separator_token=document_separator_token,
+                        document_level=document_level,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
@@ -333,6 +335,7 @@ class MultiFileColumnCorpus(Corpus):
                         banned_sentences=banned_sentences,
                         in_memory=in_memory,
                         document_separator_token=document_separator_token,
+                        document_level=document_level,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
@@ -357,6 +360,7 @@ class MultiFileColumnCorpus(Corpus):
                         banned_sentences=banned_sentences,
                         in_memory=in_memory,
                         document_separator_token=document_separator_token,
+                        document_level=document_level,
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
@@ -433,6 +437,7 @@ class ColumnDataset(FlairDataset):
         banned_sentences: Optional[List[str]] = None,
         in_memory: bool = True,
         document_separator_token: Optional[str] = None,
+        document_level: Optional[bool] = False,
         encoding: str = "utf-8",
         skip_first_line: bool = False,
         label_name_map: Optional[Dict[str, str]] = None,
@@ -458,6 +463,7 @@ class ColumnDataset(FlairDataset):
         self.column_delimiter = re.compile(column_delimiter)
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
+        self.document_level = document_level
         self.label_name_map = label_name_map
         self.banned_sentences = banned_sentences
         self.default_whitespace_after = default_whitespace_after
@@ -621,14 +627,25 @@ class ColumnDataset(FlairDataset):
         lines = []
         line = file.readline()
         while line:
-            if not line.isspace():
-                lines.append(line)
+            document_boundary = False
 
-            # if sentence ends, break
-            if len(lines) > 0 and self.__line_completes_sentence(line):
+            end_of_sentence = self.__line_completes_sentence(line)
+
+            if self.document_level:
+                end_of_sentence = False
+                if line.strip() == self.document_separator_token:
+                    document_boundary = True
+                    if len(lines) > 0:
+                        end_of_sentence = True
+
+            if end_of_sentence:
                 break
 
+            if not line.isspace() and not document_boundary:
+                lines.append(line)
+
             line = file.readline()
+
         return lines
 
     def _convert_lines_to_sentence(
