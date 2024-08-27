@@ -1,12 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Afacad:ital,wght@0,400..700;1,400..700&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Afacad:ital,wght@0,400..700;1,400..700&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap");
 
 :root {
-    --flair-orange: #f79910;
+	--flair-orange: #f79910;
 	--flair-orange-light: #ffc063;
-    --flair-orange-transparent: rgba(247, 153, 16, .5);
-    --white-transparent: rgba(255, 255, 255, .5);
-    --flair-blue: #2f2e41;
-    --flair-dark-blue: #262635;
+	--flair-orange-transparent: rgba(247, 153, 16, 0.5);
+	--white-transparent: rgba(255, 255, 255, 0.5);
+	--flair-blue: #2f2e41;
+	--flair-dark-blue: #262635;
 	--light-gray: #e6e6e6;
 	--white-blue: white;
 	--blue-white: var(--flair-blue);
@@ -22,11 +22,11 @@
 	--track-color: #dddddd;
 	--track-thumb: #bbbbbb;
 	--track-thumb-hover: #999999;
-    font-family: "Afacad", sans-serif;
-    font-optical-sizing: auto;
-    font-weight: 400;
+	font-family: "Afacad", sans-serif;
+	font-optical-sizing: auto;
+	font-weight: 400;
 	font-size: 21px;
-    font-style: normal;
+	font-style: normal;
 }
 
 :root .dark-mode {
@@ -47,7 +47,6 @@
 	fill: var(--white-blue);
 	stroke: none;
 }
-
 
 .fill-orange {
 	fill: var(--flair-orange);
@@ -114,14 +113,16 @@ table {
 a {
 	color: var(--flair-orange);
 	text-decoration: none;
-	transition: color 200ms cubic-bezier(0,.35,.08,.89);
-	&:visited {
-		color: var(--flair-orange);
-	}
-	&:hover {
-		color: var(--flair-orange-light);
-		text-decoration: none;
-	}
+	transition: color 200ms cubic-bezier(0, 0.35, 0.08, 0.89);
+}
+
+a:visited {
+	color: var(--flair-orange);
+}
+
+a:hover {
+	color: var(--flair-orange-light);
+	text-decoration: none;
 }
 
 ::selection {
