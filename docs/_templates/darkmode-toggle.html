@@ -121,7 +121,7 @@
 </div>
 <script defer>
     function applyTheme() {
-        const theme = localStorage.getItem("theme");
+        const theme = localStorage.getItem("theme-color");
         if (theme === "dark") {
            document.body.classList.add("dark-mode");
         } else if (theme === "light") {
@@ -129,24 +129,25 @@
         } else {
             if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
                 document.body.classList.add("dark-mode");
-                localStorage.setItem("theme", "dark");
+                localStorage.setItem("theme-color", "dark");
             } else {
                 document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
             }
         }
-        console.log(localStorage.getItem("theme"))
+        console.log(theme)
     }
 
     function matchPreferredScheme (e) {
-        localStorage.setItem("theme", e.matches ? "dark" : "dark");
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
         applyTheme();
     }
 
     window.addEventListener('load', applyTheme);
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
     function toggleDarkMode() {
-        const theme = localStorage.getItem("theme");
-        localStorage.setItem("theme", theme === "dark" ? "dark" : "dark");
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
         applyTheme();
     }
 </script>
