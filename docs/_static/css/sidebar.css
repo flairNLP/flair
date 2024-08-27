@@ -71,7 +71,7 @@
 	margin-top: .8rem;
 }
 
-.bd-sidebar-primary.bd-sidebar .current {
+.bd-sidebar-primary.bd-sidebar .current, .bd-sidebar-primary.bd-sidebar .current * {
 	color: var(--flair-orange);
 }
 
