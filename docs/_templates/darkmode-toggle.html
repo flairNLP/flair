@@ -122,7 +122,6 @@
 <script defer>
     function applyTheme() {
         const theme = localStorage.getItem("theme");
-        console.log(theme)
         if (theme === "dark") {
            document.body.classList.add("dark-mode");
         } else if (theme === "light") {
@@ -136,6 +135,7 @@
                 localStorage.setItem("theme", "light");
             }
         }
+        console.log(localStorage.getItem("theme"))
     }
 
     function matchPreferredScheme (e) {
