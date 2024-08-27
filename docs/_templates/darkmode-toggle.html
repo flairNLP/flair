@@ -144,11 +144,6 @@
     }
 
     window.addEventListener('load', applyTheme);
-    window.addEventListener('DOMContentLoaded', applyTheme);
-    document.addEventListener('DOMContentLoaded', applyTheme);
-    document.addEventListener('DOMContentLoaded', applyTheme);
-    document.body.addEventListener('DOMContentLoaded', applyTheme);
-    document.body.addEventListener('DOMContentLoaded', applyTheme);
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
     function toggleDarkMode() {
         const theme = localStorage.getItem("theme");
