@@ -120,23 +120,33 @@
     </svg>
 </div>
 <script defer>
-   if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-       document.body.classList.add("dark-mode");
-   }
-   const matchPreferredScheme = (e) => {
-       if (e.matches) {
+    function applyTheme() {
+        const theme = localStorage.getItem("theme");
+        if (theme === "dark") {
            document.body.classList.add("dark-mode");
-       } else {
+        } else if (theme === "light") {
            document.body.classList.remove("dark-mode");
-       }
-   }
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+            } else {
+                document.body.classList.remove("dark-mode");
+            }
+        }
+    }
+    applyTheme();
 
-   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
-   const toggleDarkMode = () => {
-       if (document.body.classList.contains("dark-mode")) {
-           document.body.classList.remove("dark-mode");
-       } else {
-           document.body.classList.add("dark-mode");
-       }
-   }
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    const toggleDarkMode = () => {
+        if (document.body.classList.contains("dark-mode")) {
+            document.body.classList.remove("dark-mode");
+        } else {
+            document.body.classList.add("dark-mode");
+        }
+    }
 </script>
