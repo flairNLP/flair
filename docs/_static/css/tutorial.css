@@ -289,13 +289,34 @@ table.table {border-collapse: collapse;
     .bd-article-container {
         padding: 3rem !important;
     }
+    .admonition, div.admonition, .admonition.note, div.admonition.note {
+        p {
+            padding-left: 1rem !important;
+            &.admonition-title {
+                padding-left: 1rem !important;
+                &::after {
+                    position: relative;
+                    left: -0.1rem;
+                }
+            }
+        }
+    }
+    .deprecated {
+        padding-left: 1rem !important;
+        .deprecated {
+            padding-left: 0 !important;
+        }
+        &::before {
+            position: relative !important;
+        }
+    }
 }
 
 @media screen and (max-width: 500px) {
     #flair-tutorials, #api-docs, #contributing, [id^="tutorial"], [id^="flair"] {
-        & .toctree-wrapper li[class^="toctree-l"] {
-            & > a {
-                font-size: 1rem;
+        & .toctree-wrapper li[class^="toctree-l"]{
+            & > a, & > a span {
+                font-size: 1rem !important;
             }
         }
     }
