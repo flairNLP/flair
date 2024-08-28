@@ -148,6 +148,12 @@ blockquote p {
 	margin: 0 !important;
 }
 
+.rubric {
+	font-size: 2rem;
+	margin: 1em 0 .5em 0 !important;
+	border-bottom: none !important;
+}
+
 @media screen and (max-width: 1200px) {
 	.class dd, .method dd, .function dd, .data dd {
 		padding-left: 1.5rem !important;
