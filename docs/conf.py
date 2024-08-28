@@ -46,6 +46,7 @@ def linkcode_resolve(*args):
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    'sphinx.ext.autosummary',
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.ifconfig",
