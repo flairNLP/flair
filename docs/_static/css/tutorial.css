@@ -206,6 +206,10 @@ ul.bd-breadcrumbs li.breadcrumb-item:not(.breadcrumb-home) a {
 	font-size: 1rem;
 	font-weight: 400;
 }
+ul.bd-breadcrumbs li.breadcrumb-item:not(.breadcrumb-home) i {
+	color: var(--blue-white);
+}
+
 
 ul.bd-breadcrumbs li.breadcrumb-item:not(.breadcrumb-home) a:hover {
 	color: var(--flair-orange);
