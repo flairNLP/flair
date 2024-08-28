@@ -257,6 +257,7 @@ table.table tr th:last-of-type, table.table tr td:last-of-type {
 	color: var(--blue-white);
 	position: relative;
 	z-index: 1;
+	display: inline-block;
 }
 
 .docutils::before, .docutils.literal::before {
