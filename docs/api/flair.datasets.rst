@@ -7,4 +7,4 @@ flair.datasets
     :toctree: generated
     :nosignatures:
 
-   datasets/*
+    base
