@@ -12,7 +12,7 @@
    :file: _templates/landing-page-illustrations.html
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
    :hidden:
 
    Tutorials <tutorial/index>
