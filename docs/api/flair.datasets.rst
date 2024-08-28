@@ -3,6 +3,6 @@ flair.datasets
 
 .. toctree::
    :glob:
-   :maxdepth: 2
+   :maxdepth: 1
 
    datasets/*
