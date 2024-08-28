@@ -1,8 +1,10 @@
 flair.datasets
 ==============
 
-.. toctree::
-   :glob:
-   :maxdepth: 1
+.. currentmodule:: flair.datasets
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:
 
    datasets/*
