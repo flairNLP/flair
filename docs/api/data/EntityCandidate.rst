@@ -1,4 +1,4 @@
-flair.data.EntityCandidate
-==========================
+EntityCandidate
+===============
 
 .. autoclass:: flair.data.EntityCandidate

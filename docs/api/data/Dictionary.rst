@@ -1,4 +1,4 @@
-flair.data.Dictionary
-=====================
+Dictionary
+==========
 
 .. autoclass:: flair.data.Dictionary

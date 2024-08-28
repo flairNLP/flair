@@ -1,4 +1,4 @@
-flair.data.Label
-================
+Label
+=====
 
 .. autoclass:: flair.data.Label
