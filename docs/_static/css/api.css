@@ -154,6 +154,10 @@ blockquote p {
 	border-bottom: none !important;
 }
 
+table.autosummary {
+	margin-top: 1.5em;
+}
+
 @media screen and (max-width: 1200px) {
 	.class dd, .method dd, .function dd, .data dd {
 		padding-left: 1.5rem !important;
