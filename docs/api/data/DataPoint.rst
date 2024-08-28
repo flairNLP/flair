@@ -1,4 +1,4 @@
-flair.data.DataPoint
-====================
+DataPoint
+=========
 
 .. autoclass:: flair.data.DataPoint
