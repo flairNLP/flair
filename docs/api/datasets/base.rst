@@ -14,5 +14,5 @@ flair.datasets.base
     SentenceDataset
     StringDataset
     MongoDataset
-    find_train_dev_test_files()
+    find_train_dev_test_files
 

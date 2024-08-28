@@ -22,6 +22,6 @@ flair.data
     MultiCorpus
     FlairDataset
     ConcatFlairDataset
-    iob2()
-    randomly_split_into_two_datasets()
-    get_spans_from_bio()
+    iob2
+    randomly_split_into_two_datasets
+    get_spans_from_bio
