@@ -286,7 +286,7 @@ table.table tr th:last-of-type, table.table tr td:last-of-type {
 }
 
 #flair-tutorials li, #api-docs li, #contributing li, [id^="tutorial"] li, [id^="flair"] li {
-	list-style-type: "»";
+	list-style-type: "»" !important;
 	padding-left: 0.25em;
 	margin-top: .5em;
 }
@@ -301,7 +301,7 @@ table.table tr th:last-of-type, table.table tr td:last-of-type {
 }
 
 #flair-tutorials .toctree-wrapper li[class^="toctree-l"]::marker, #api-docs .toctree-wrapper li[class^="toctree-l"]::marker, #contributing .toctree-wrapper li[class^="toctree-l"]::marker, [id^="tutorial"] .toctree-wrapper li[class^="toctree-l"]::marker, [id^="flair"] .toctree-wrapper li[class^="toctree-l"]::marker {
-	font-size: 1.2rem;
+	font-size: 1.2rem !important;
 }
 
 #flair-tutorials .toctree-wrapper li[class^="toctree-l"] > a, #api-docs .toctree-wrapper li[class^="toctree-l"] > a, #contributing .toctree-wrapper li[class^="toctree-l"] > a, [id^="tutorial"] .toctree-wrapper li[class^="toctree-l"] > a, [id^="flair"] .toctree-wrapper li[class^="toctree-l"] > a {
