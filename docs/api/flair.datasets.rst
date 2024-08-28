@@ -5,6 +5,6 @@ flair.datasets
 
 .. autosummary::
     :toctree: generated
-    :nosignatures:
+    :recursive:
 
     base
