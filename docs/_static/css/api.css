@@ -158,6 +158,20 @@ table.autosummary {
 	margin-top: 1.5em;
 }
 
+table .field-odd, table .field-even {
+	color: var(--blue-white);
+	font-family: "Afacad", sans-serif;
+}
+
+table .field-odd p, table .field-even p {
+	margin: 0 !important;
+}
+
+table p:empty {
+	display: none;
+}
+
+
 @media screen and (max-width: 1200px) {
 	.class dd, .method dd, .function dd, .data dd {
 		padding-left: 1.5rem !important;
