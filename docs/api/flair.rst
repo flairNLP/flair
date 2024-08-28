@@ -3,6 +3,6 @@ flair
 
 .. toctree::
    :glob:
-   :maxdepth: 0
+   :maxdepth: 1
 
    flair/*
