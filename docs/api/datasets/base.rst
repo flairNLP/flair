@@ -5,4 +5,4 @@ flair.datasets.base
    :glob:
    :maxdepth: 1
 
-   datasets/base/*
+   base/*
