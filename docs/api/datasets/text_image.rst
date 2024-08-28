@@ -1,4 +1,14 @@
 flair.datasets.text_image
 =========================
 
-.. automodule:: flair.datasets.text_image
+.. currentmodule:: flair.datasets.text_image
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:
+
+
+
+    FeideggerCorpus
+    FeideggerDataset
+

@@ -1,4 +1,76 @@
 flair.datasets.sequence_labeling
 ================================
 
-.. automodule:: flair.datasets.sequence_labeling
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:
+
+
+
+    MultiFileJsonlCorpus
+    JsonlCorpus
+    JsonlDataset
+    MultiFileColumnCorpus
+    ColumnCorpus
+    ColumnDataset
+    ONTONOTES
+    CONLL_03
+    CONLL_03_GERMAN
+    CONLL_03_DUTCH
+    CONLL_03_SPANISH
+    CONLL_2000
+    WNUT_17
+    FEWNERD
+    BIOSCOPE
+    NER_ARABIC_ANER
+    NER_ARABIC_AQMAR
+    NER_BASQUE
+    NER_CHINESE_WEIBO
+    NER_DANISH_DANE
+    NER_ENGLISH_MOVIE_SIMPLE
+    NER_ENGLISH_MOVIE_COMPLEX
+    NER_ENGLISH_SEC_FILLINGS
+    NER_ENGLISH_RESTAURANT
+    NER_ENGLISH_STACKOVERFLOW
+    NER_ENGLISH_TWITTER
+    NER_ENGLISH_PERSON
+    NER_ENGLISH_WEBPAGES
+    NER_ENGLISH_WNUT_2020
+    NER_ENGLISH_WIKIGOLD
+    NER_FINNISH
+    NER_GERMAN_BIOFID
+    NER_GERMAN_EUROPARL
+    NER_GERMAN_LEGAL
+    NER_GERMAN_GERMEVAL
+    NER_GERMAN_POLITICS
+    NER_HUNGARIAN
+    NER_ICELANDIC
+    NER_JAPANESE
+    NER_MASAKHANE
+    NER_MULTI_CONER
+    NER_MULTI_CONER_V2
+    NER_MULTI_WIKIANN
+    NER_MULTI_XTREME
+    NER_MULTI_WIKINER
+    NER_SWEDISH
+    NER_TURKU
+    NER_UKRAINIAN
+    KEYPHRASE_SEMEVAL2017
+    KEYPHRASE_INSPEC
+    KEYPHRASE_SEMEVAL2010
+    UP_CHINESE
+    UP_ENGLISH
+    UP_FRENCH
+    UP_FINNISH
+    UP_GERMAN
+    UP_ITALIAN
+    UP_SPANISH
+    UP_SPANISH_ANCORA
+    NER_HIPE_2022
+    NER_ICDAR_EUROPEANA
+    NER_NERMUD
+    NER_GERMAN_MOBIE
+    MASAKHA_POS
+

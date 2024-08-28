@@ -1,4 +1,15 @@
 flair.datasets.ocr
 ==================
 
-.. automodule:: flair.datasets.ocr
+.. currentmodule:: flair.datasets.ocr
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:
+
+
+
+    OcrJsonDataset
+    OcrCorpus
+    SROIE
+
