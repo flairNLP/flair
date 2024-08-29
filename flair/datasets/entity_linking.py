@@ -523,6 +523,8 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
             dev_file="testa",
             test_file="testb",
             in_memory=in_memory,
+            document_separator_token="-DOCSTART-",
+            # banned_sentences=["-DOCSTART-"],
             **corpusargs,
         )
 

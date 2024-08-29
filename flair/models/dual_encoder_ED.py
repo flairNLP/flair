@@ -158,11 +158,18 @@ class SimilarityMetric:
 class DEEDTripletMarginLoss(torch.nn.TripletMarginWithDistanceLoss):
     def __init__(self, similarity_metric: SimilarityMetric = SimilarityMetric("euclidean"), **kwargs):
         kwargs["reduction"] = "none"
+        self.margin_step = 0.25
+        self.margin_adjustment_frequency = 500
         super(DEEDTripletMarginLoss, self).__init__(distance_function=similarity_metric.distance, **kwargs)
 
     def forward(self, anchor, positive, negative):
         loss = super(DEEDTripletMarginLoss, self).forward(anchor.unsqueeze(1), positive.unsqueeze(1), negative.transpose(0,1))
         return loss.mean()
+
+    def adjust_margin(self):
+        new_margin = self.margin + self.margin_step
+        self.margin = min(new_margin, 5.0)  # Ensure margin does not go above
+        print("Adjusted margin to:", self.margin)
 
 
 class DEEDEuclideanEmbeddingLoss(torch.nn.Module):
@@ -264,9 +271,12 @@ class LabelList:
 
 class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
-    def __init__(self, token_encoder: TokenEmbeddings, label_encoder: DocumentEmbeddings, known_labels: List[str], gold_labels: List[str] = [],
+    def __init__(self, token_encoder: TokenEmbeddings,
+                 label_encoder: Union[DocumentEmbeddings, TokenEmbeddings],
+                 known_labels: List[str], gold_labels: List[str] = [],
                  label_type: str = "nel", label_map: dict = {},
-                 negative_sampling_strategy: Literal["shift", "random", "hard"] = "hard", negative_sampling_factor: int = 1,
+                 embedding_pooling: Literal["first", "last", "mean", "first_last"] = "mean",
+                 negative_sampling_strategy: Literal["shift", "random", "hard", "hard_random"] = "hard", negative_sampling_factor: int = 1,
                  loss_function_name: Literal["triplet", "binary_embedding", "cross_entropy"] = "triplet",
                  similarity_metric_name: Literal ["euclidean", "cosine", "mm"] = "euclidean", constant_updating: bool = True,
                  label_embedding_batch_size: int = 128, label_embeddings_storage_device: torch.device = None, *args, **kwargs):
@@ -279,9 +289,10 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :param label_encoder: Document embeddings to embed the label verbalizations.
         :param known_labels: List of all labels that the model can use, in addition to the gold labels.
         :param gold_labels: List of corpus specific gold labels that should be used during predictions.
+        :param embedding_pooling: Pooling of both mention and label embeddings.
         :param label_type: Label type to predict (e.g. "nel").
         :param label_map: Mapping of label values to more descriptive verbalizations, used for embedding the labels.
-        :param negative_sampling_strategy: Strategy to search for negative samples. Must be one of "hard", "shift", "random".
+        :param negative_sampling_strategy: Strategy to search for negative samples. Must be one of "hard", "shift", "random", "hard_random".
         :param negative_sampling_factor: Number of negatives per positive, e.g. 1 (one negative sample per positive), 2 (two negative samples per positive).
         :param loss_function_name: Loss funtion to use, must be one of "triplet", "binary_embedding", "cross_entropy".
         :param similarity_metric_name: Similarity metric to use, must be one of "euclidean", "cosine", "mm".
@@ -298,6 +309,15 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self.label_map = label_map
         self.known_labels = known_labels
         self.gold_labels = gold_labels
+        self.embedding_pooling = embedding_pooling
+        if isinstance(self.label_encoder, DocumentEmbeddings):
+            if self.embedding_pooling != "mean" and self.label_encoder.cls_pooling == "mean":
+                raise Warning("Pooling method is not congruent.")
+            if self.embedding_pooling != "first" and self.label_encoder.cls_pooling == "first":
+                raise Warning("Pooling method is not congruent.")
+            if self.embedding_pooling == "first_last":
+                raise Warning("Pooling method is not congruent.")
+
         self._label_embeddings = None
         self._next_prediction_needs_updated_label_embeddings = False
         self._label_embedding_batch_size = label_embedding_batch_size
@@ -326,6 +346,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             self._negative_sampling_fn = self._negative_sampling_random_over_all
         elif negative_sampling_strategy == "hard":
             self._negative_sampling_fn = self._negative_sampling_hard
+        elif negative_sampling_strategy == "hard_random":
+            self._negative_sampling_fn = self._negative_sampling_hard_and_random
         else:
             raise ValueError(f"Negative Sampling Strategy {negative_sampling_strategy} not supported.")
         self._negative_sampling_factor = negative_sampling_factor
@@ -410,28 +432,45 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                                                                                             update_these_embeddings = False,
                                                                                             device=self._label_embeddings_storage_device)
 
-    def _embed_spans(self, sentences: List[Sentence]):
+    def _embed_spans(self, sentences: List[Sentence], max_nr_spans = 100, max_len_sentence = 2000):
         """
-        Embed sentences and get embeddings for their spans. Currently, we use mean pooling.
+        Embed sentences and get embeddings for their spans.
         :param sentences:
         :return:
         """
         spans = []
         sentences_to_embed = []
         for s in sentences:
+            if self.training and len(s) >=max_len_sentence:
+                #print(f"Not using sentence, because nr of tokens is huge: {len(s)} tokens")
+                break
             sentence_spans = s.get_spans(self.label_type)
             if sentence_spans:
                 spans.extend(sentence_spans)
                 sentences_to_embed.append(s)
             # make sure there are not too many spans # todo any better option?
-            if self.training and len(spans) >=50:
+            if self.training and len(spans) >max_nr_spans:
+                tmp = []
+                for t in sentences:
+                    tmp.extend(t.get_spans(self.label_type))
+                spans = spans[:max_nr_spans]
+                #print(f"Cutting at {max_nr_spans} spans. (Would have been {len(tmp)} spans)")
                 break
 
         if not spans:
             return None, None
 
         self.token_encoder.embed(sentences_to_embed)
-        embeddings = [torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0) for span in spans]
+
+        if self.embedding_pooling == "first":
+            embeddings = [span[0].get_embedding() for span in spans]
+        if self.embedding_pooling == "last":
+            embeddings = [span[-1].get_embedding() for span in spans]
+        if self.embedding_pooling == "mean":
+            embeddings = [torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0) for span in spans]
+        if self.embedding_pooling == "first_last":
+            embeddings = [torch.cat([span[0].get_embedding(), span[-1].get_embedding()]) for span in spans]
+
         for s in sentences_to_embed:
             s.clear_embeddings()
         return spans, torch.stack(embeddings, dim=0)
@@ -454,7 +493,19 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         for i in batch_iterator:
             batch = labels_sentence_objects[i:i + batch_size]
             self.label_encoder.embed(batch)
-            embeddings = [l.get_embedding() for l in batch]
+            if isinstance(self.label_encoder, DocumentEmbeddings):
+                embeddings = [l.get_embedding() for l in batch]
+            elif isinstance(self.label_encoder, TokenEmbeddings):
+                if self.embedding_pooling == "first_last":
+                    #embeddings = [torch.cat([l[0].get_embedding(), l[-1].get_embedding()], 0) for l in batch] # using the whole verbalization as span
+                    embeddings = [torch.cat([l[0].get_embedding(), l[int(l.get_label("last title token").value)].get_embedding()], 0) for l in batch] # using only the label title as span
+                if self.embedding_pooling == "first":
+                    embeddings = [l[0].get_embedding() for l in batch]
+                if self.embedding_pooling == "mean":
+                    #embeddings = [torch.mean(torch.stack([token.get_embedding() for token in l.tokens], 0), 0) for l in batch ] # using the whole verbalization as span
+                    embeddings = [torch.mean(torch.stack([token.get_embedding() for token in l.tokens[:int(l.get_label("last title token").value)+1]], 0), 0) for l in batch]  # using only the label title as span
+            else:
+                raise ValueError("Label Encoder not of either type DocumenEmbedding nor TokenEmbedding")
             #if device:
             #    embeddings = embeddings.to(device)
             final_embeddings.extend(embeddings)
@@ -494,7 +545,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
          for i in range(self._negative_sampling_factor):
              negative_samples_indices.extend(random.sample(range(len(self._label_dict.items)), len(batch_gold_labels)))
 
-         negative_labels = [self.label_at(i) for i in negative_samples_indices]
+         negative_labels = [self._label_at(i) for i in negative_samples_indices]
 
          return negative_labels
 
@@ -533,19 +584,19 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             similarity_spans_labels[spans_range, gold_label_indices] = -torch.inf
 
             # Top K sampling (always the hardest)
-            #_, most_similar_label_index = torch.topk(similarity_spans_labels, self._negative_sampling_factor, dim=1)
+            # _, most_similar_label_index = torch.topk(similarity_spans_labels, self._negative_sampling_factor, dim=1)
 
             # Multinomial sampling (with temperature)
 
             temperature = 0.05
             similarity_temperature = similarity_spans_labels.div(temperature)
-
-            # Susanna's method:
-            # similarity_as_probabilities = torch.softmax(similarity_temperature, dim=1)
-
-            # Alan's method:
-            # to prevent overflow problem with small temperature values, substract largest value from all
-            # this makes a vector in which the largest value is 0
+            #
+            # # Susanna's method:
+            # # similarity_as_probabilities = torch.softmax(similarity_temperature, dim=1)
+            #
+            # # Alan's method:
+            # # to prevent overflow problem with small temperature values, substract largest value from all
+            # # this makes a vector in which the largest value is 0
             max_values, _ = torch.max(similarity_temperature, dim=1, keepdim=True)
             similarity_temperature = similarity_temperature - max_values
             similarity_as_probabilities = similarity_temperature.exp()
@@ -557,6 +608,13 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         most_similar_labels = [self._label_at(i) for i in most_similar_label_index]
 
         return most_similar_labels
+
+    def _negative_sampling_hard_and_random(self, span_embeddings: torch.Tensor, batch_gold_labels: List[str]):
+        hard_negatives = self._negative_sampling_hard(span_embeddings, batch_gold_labels)
+        random_negatives = self._negative_sampling_random_over_all(span_embeddings, batch_gold_labels)
+
+        # chose randomly either the hard or the negative one per sample:
+        return [random.choice([hard, rand]) for hard, rand in zip(hard_negatives, random_negatives)]
 
 
     def get_label_embeddings(self):
@@ -585,6 +643,11 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             sentence_object = self._label_dict.sentence_object_for(l)
             if not sentence_object:
                 sentence_object = flair.data.Sentence(self.label_map.get(l,l.replace("_", " ")))
+                sentence_object.set_label("last title token", len(sentence_object)-1) # default is last token of whole verbalization
+                for token in sentence_object:
+                    if token.text == ";":
+                        sentence_object.set_label("last title token", token.idx-2) # set to the last token of title
+                        break
                 self._label_dict.add_sentence_object_for(l, sentence_object)
             sentence_objects.append(sentence_object)
 
@@ -609,10 +672,6 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
         # concatenate and embed together
         together = labels + negative_labels
-        #unique_labels, inverse_indices = np.unique(together, return_inverse=True)
-
-        #unique_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = unique_labels, use_tqdm=False)
-        #together_label_embeddings = unique_label_embeddings[inverse_indices]
 
         together_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = together, use_tqdm=False)
 
@@ -627,6 +686,10 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         self._next_prediction_needs_updated_label_embeddings = True
 
         self._iteration_count += 1
+
+        # if isinstance(self.loss_function, DEEDTripletMarginLoss):
+        #     if self._iteration_count % self.loss_function.margin_adjustment_frequency == 0 and self._iteration_count > 0:
+        #         self.loss_function.adjust_margin()
 
         return loss, len(spans)
 
@@ -796,17 +859,17 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
             spans.extend([sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)])
 
         # old method: choose n most confident per batch
-        # sorted_spans = sorted(spans, key = lambda sp: sp.get_label(label_name).score, reverse = True)
-        # chosen = sorted_spans[:n]
+        sorted_spans = sorted(spans, key = lambda sp: sp.get_label(label_name).score, reverse = True)
+        chosen = sorted_spans[:n]
 
-        # currently: chose the most confident per sentence:
-        chosen = []
-        for s in sentences:
-            spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)]
-            #spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type) and sp.get_label(label_name).value == sp.get_label(self.label_type).value] # experiment: only allow correct ones
-            if len(spans_in_sentence) > 0:
-                sorted_spans = sorted(spans_in_sentence, key=lambda sp: sp.get_label(label_name).score, reverse=True)
-                chosen.append(sorted_spans[0])
+        # alternative: chose the most confident per sentence:
+        # chosen = []
+        # for s in sentences:
+        #     spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)]
+        #     #spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type) and sp.get_label(label_name).value == sp.get_label(self.label_type).value] # experiment: only allow correct ones
+        #     if len(spans_in_sentence) > 0:
+        #         sorted_spans = sorted(spans_in_sentence, key=lambda sp: sp.get_label(label_name).score, reverse=True)
+        #         chosen.append(sorted_spans[0])
 
         # alternative: chose N most distinct (i.e. largest gap to the next probable label) labels
         # import heapq
@@ -864,7 +927,7 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         Predict labels for sentences. Uses the predict method from DualEncoderEntityDisambiguation, but in an iterative fashion.
         """
         original_sentences = sentences
-        step_size = 5
+        step_size = 10
         level = 0
         # iterate until all spans are predicted
         sentences_to_use = sentences
