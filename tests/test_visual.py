@@ -34,14 +34,6 @@ def test_plotting_training_curves_and_weights(resources_path):
     (resources_path / "visual/training.png").unlink()
 
 
-def mock_ner_span(text, tag, start, end):
-    span = Span([]).set_label("class", tag)
-    span.start_pos = start
-    span.end_pos = end
-    span.tokens = [Token(text[start:end])]
-    return span
-
-
 def test_html_rendering():
     text = (
         "Boris Johnson has been elected new Conservative leader in "

@@ -2,6 +2,7 @@ import bisect
 import logging
 import re
 import typing
+import weakref
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from operator import itemgetter
@@ -500,9 +501,17 @@ DT3 = typing.TypeVar("DT3", bound=DataPoint)
 
 
 class _PartOfSentence(DataPoint, ABC):
-    def __init__(self, sentence) -> None:
+    def __init__(self, sentence: Optional["Sentence"]) -> None:
         super().__init__()
-        self.sentence: Sentence = sentence
+        self.sentence = sentence
+
+    @property
+    def sentence(self) -> Optional["Sentence"]:
+        return self._sentence() if self._sentence is not None else None
+
+    @sentence.setter
+    def sentence(self, sentence: Optional["Sentence"]):
+        self._sentence = weakref.ref(sentence) if sentence is not None else None
 
     def add_label(self, typename: str, value: str, score: float = 1.0, **metadata):
         super().add_label(typename, value, score, **metadata)
@@ -629,17 +638,22 @@ class Token(_PartOfSentence):
 class Span(_PartOfSentence):
     """This class represents one textual span consisting of Tokens."""
 
-    def __init__(self, tokens: List[Token]) -> None:
-        super().__init__(tokens[0].sentence)
-        self.tokens = tokens
+    def __init__(self, parent_sentence: "Sentence", start: int, end: int) -> None:
+        super().__init__(parent_sentence)
+        self._start = start
+        self._end = end
+
+    @property
+    def tokens(self) -> List[Token]:
+        return self.sentence.tokens[self._start : self._end]
 
     @property
     def start_position(self) -> int:
-        return self.tokens[0].start_position
+        return self.sentence.tokens[self._start].start_position
 
     @property
     def end_position(self) -> int:
-        return self.tokens[-1].end_position
+        return self.sentence.tokens[self._end - 1].end_position
 
     @property
     def text(self) -> str:
@@ -664,7 +678,7 @@ class Span(_PartOfSentence):
         return iter(self.tokens)
 
     def __len__(self) -> int:
-        return len(self.tokens)
+        return self._end - self._start
 
     @property
     def embedding(self):
@@ -682,8 +696,16 @@ class Span(_PartOfSentence):
 class Relation(_PartOfSentence):
     def __init__(self, first: Span, second: Span) -> None:
         super().__init__(sentence=first.sentence)
-        self.first: Span = first
-        self.second: Span = second
+        self._first = weakref.ref(first)
+        self._second = weakref.ref(second)
+
+    @property
+    def first(self) -> Span:
+        return self._first()
+
+    @property
+    def second(self) -> Span:
+        return self._second()
 
     def __repr__(self) -> str:
         return str(self)
@@ -808,7 +830,7 @@ class Sentence(DataPoint):
             word_start_position: int = text.index(word, current_offset)
             delta_offset: int = word_start_position - current_offset
 
-            token: Token = Token(text=word, start_position=word_start_position)
+            token: Token = Token(text=word, start_position=word_start_position, sentence=self)
             self._add_token(token)
 
             if previous_token is not None:
@@ -851,7 +873,7 @@ class Sentence(DataPoint):
 
     def _add_token(self, token: Union[Token, str]):
         if isinstance(token, Token):
-            assert token.sentence is None
+            assert token.sentence is None or token.sentence is self
 
         if isinstance(token, str):
             token = Token(token)
@@ -1040,7 +1062,7 @@ class Sentence(DataPoint):
             identifier = Span._make_unlabeled_identifier(self.tokens[subscript])
 
             if identifier not in self._known_parts:
-                self._known_parts[identifier] = Span(self.tokens[subscript])
+                self._known_parts[identifier] = Span(self, subscript.start, subscript.stop)
 
             return self._known_parts[identifier]
         else:
