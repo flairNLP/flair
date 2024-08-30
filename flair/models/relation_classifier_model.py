@@ -387,7 +387,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
             # Obtain gold label, if existing
             gold_relation = sentence[head.span, tail.span]
-            gold_label: Optional[str] = gold_relation.get_label(self.label_type, zero_tag_value=None).value
+            gold_label: Optional[str] = gold_relation.get_label(self.label_type, zero_tag_value="O").value
+            if gold_label == "O":
+                gold_label = None
             yield head, tail, gold_label
 
     def _encode_sentence(

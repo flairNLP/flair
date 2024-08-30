@@ -571,19 +571,16 @@ class TARSTagger(FewshotClassifier):
 
                         already_set_indices: list[int] = []
 
-                        sorted_x = sorted(all_detected.items(), key=operator.itemgetter(1))
-                        sorted_x.reverse()
-                        for tuple in sorted_x:
-                            # get the span and its label
-                            label = tuple[0]
-
+                        sorted_x = sorted(all_detected.items(), key=operator.itemgetter(1), reverse=True)
+                        for label, _ in sorted_x:
+                            span = typing.cast(Span, label.data_point)
                             label_length = (
                                 0 if not self.prefix else len(label.value.split(" ")) + len(self.separator.split(" "))
                             )
 
                             # determine whether tokens in this span already have a label
                             tag_this = True
-                            for token in label.data_point:
+                            for token in span:
                                 corresponding_token = sentence.get_token(token.idx - label_length)
                                 if corresponding_token is None:
                                     tag_this = False
@@ -595,8 +592,8 @@ class TARSTagger(FewshotClassifier):
                             # only add if all tokens have no label
                             if tag_this:
                                 # make and add a corresponding predicted span
-                                start_pos = label.data_point.data_point[0].idx - label_length - 1
-                                end_pos = label.data_point.data_point[-1].idx - label_length
+                                start_pos = span.tokens[0].idx - label_length - 1
+                                end_pos = span.tokens[-1].idx - label_length
 
                                 predicted_span = sentence[start_pos:end_pos]
                                 predicted_span.add_label(label_name, value=label.value, score=label.score)
