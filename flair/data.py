@@ -1024,8 +1024,7 @@ class Sentence(DataPoint):
     def __getitem__(self, s: slice) -> Span: ...
 
     @typing.overload
-    def __getitem__(self, s: typing.Tuple[Span, Span]) -> Relation:
-        ...
+    def __getitem__(self, s: typing.Tuple[Span, Span]) -> Relation: ...
 
     def __getitem__(self, subscript):
         if isinstance(subscript, tuple):
