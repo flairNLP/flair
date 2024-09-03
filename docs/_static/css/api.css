@@ -158,6 +158,16 @@ table.autosummary {
 	margin-top: 1.5em;
 }
 
+table.autosummary .field-list {
+	margin-bottom: 0.5rem;
+	display: flex !important;
+	font-size: 1rem;
+}
+
+table.autosummary .field-list *:not(code) {
+	font-size: inherit !important;
+}
+
 table .field-odd, table .field-even {
 	color: var(--blue-white);
 	font-family: "Afacad", sans-serif;
