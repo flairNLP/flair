@@ -1,6 +1,8 @@
 import sys
 import logging
 import random
+from math import ceil
+
 from tqdm import tqdm
 #from tqdm.auto import tqdm
 from typing import Tuple, Dict, List, Callable, Literal
@@ -105,17 +107,18 @@ class SimilarityMetric:
 
     def similarity(self, tensor_a, tensor_b):
 
-        def chunked_cdist(tensor_a, tensor_b, chunk_size=200000):
+        def chunked_cdist(small_tensor, big_tensor, chunk_size=2000000):
             results = []
-            for i in range(0, tensor_a.size(0), chunk_size):
-                results_chunk_a = []
-                chunk_a = tensor_a[i:i + chunk_size]
-                for j in range(0, tensor_b.size(0), chunk_size):
-                    chunk_b = tensor_b[j:j + chunk_size]
-                    results_chunk_a.append(torch.cdist(chunk_a, chunk_b, compute_mode = "donot_use_mm_for_euclid_dist"))
-                results_chunk_a = torch.cat(results_chunk_a, dim=1)
-                results.append(results_chunk_a)
-            return torch.cat(results, dim=0)
+            small_len = small_tensor.size(0)
+            big_len = big_tensor.size(0)
+            # only process chunk_size entries at once
+            # chunk_size = a_len * b_chunk_size
+            # and b_chunk_size
+            chunk_size = ceil(chunk_size / small_len)
+            for j in range(0, big_len, chunk_size):
+                chunk_b = big_tensor[j:j + chunk_size]
+                results.append(torch.cdist(small_tensor, chunk_b, compute_mode = "donot_use_mm_for_euclid_dist"))
+            return torch.cat(results, dim=1)
 
         if self.metric_to_use == "euclidean":
             # if we do not use compute_mode = "donot_use_mm_for_euclid_dist", numerical deviations are very high on gpu, see https://github.com/pytorch/pytorch/issues/42479 and https://github.com/pytorch/pytorch/issues/57690
@@ -432,48 +435,128 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                                                                                             update_these_embeddings = False,
                                                                                             device=self._label_embeddings_storage_device)
 
-    def _embed_spans(self, sentences: List[Sentence], max_nr_spans = 100, max_len_sentence = 2000):
+    # Function to split sentences intelligently
+    def _split_sentence(self, sentence, max_tokens: int):
+
+        # Tokenize the sentence
+        num_tokens = len(sentence.tokens)
+
+        # If the sentence is short enough, return it as is
+        if num_tokens <= max_tokens:
+            return [sentence]
+
+        # Split the sentence
+        split_at = max_tokens # todo make this better, also respect (linguistic) sentence boundaries
+        # But make sure it is not split inside a span
+        #print(f"Moving split position {split_at}", end="")
+        for tmp in reversed(sentence.get_spans(self.label_type)):
+            if (tmp[0].idx-1) < split_at and tmp[-1].idx > split_at:
+                split_at = tmp[0].idx -2
+                #print(f" -> {split_at}", end="")
+
+        first_half_tokens = sentence.tokens[:split_at]
+        second_half_tokens = sentence.tokens[split_at:]
+
+        # Create the first and second sentence
+
+        first_half_sentence = Sentence([t.text for t in first_half_tokens])
+        second_half_sentence = Sentence([t.text for t in second_half_tokens])
+
+        # Adjust spans (annotations)
+        for span in sentence.get_spans(self.label_type):
+            start_token = span[0].idx-1
+            end_token = span[-1].idx
+            if end_token <= split_at:
+                new_sp = Span(first_half_sentence.tokens[start_token:end_token])
+                for k, labels in span.annotation_layers.items():
+                    for l in labels:
+                        new_sp.set_label(typename=k, value=l.value, score=l.score)
+            elif start_token >= split_at:
+                # Adjust indices for the second half
+                new_start_token = start_token - len(first_half_tokens)
+                new_end_token = end_token - len(first_half_tokens)
+                new_tokens = second_half_sentence.tokens[new_start_token:new_end_token]
+                new_sp = Span(new_tokens)
+                for k, labels in span.annotation_layers.items():
+                    for l in labels:
+                        new_sp.set_label(typename=k, value=l.value, score=l.score)
+            else:
+                # Should not happen that spans that are split across but check here
+                print("Split span problem encountered")
+
+        # Add the first half as context to the second half and vice versa
+        first_half_sentence._next_sentence = second_half_sentence
+        second_half_sentence._previous_sentence = first_half_sentence
+        # The second sentence could still be too long, so repeat
+        rest_sentences = self._split_sentence(second_half_sentence, max_tokens)
+        rest_sentences.insert(0, first_half_sentence)
+        return rest_sentences
+
+
+    def _embed_spans(self, sentences: List[Sentence], max_nr_spans = 50, max_len_sentence = 512, clear_embeddings = True):
         """
         Embed sentences and get embeddings for their spans.
         :param sentences:
         :return:
         """
+        # keep original span objects, not just the spans from the possibly split sentences (necessary for prediction!)
+        original_spans = []
+        for s in sentences:
+            original_spans.extend(s.get_spans(self.label_type))
+
+        # make sure the sentences are not too long, split them in case
+        split_sentences = []
+        for s in sentences:
+            if len(s) > max_len_sentence:
+                # too long documents are simply not used # todo keep them? now that we have batching?
+                if self.training and len(s) > 5000:
+                    break
+                split_sentences.extend(self._split_sentence(s, max_len_sentence))
+            else:
+                split_sentences.append(s)
+
         spans = []
         sentences_to_embed = []
-        for s in sentences:
-            if self.training and len(s) >=max_len_sentence:
-                #print(f"Not using sentence, because nr of tokens is huge: {len(s)} tokens")
-                break
+        for s in split_sentences:
             sentence_spans = s.get_spans(self.label_type)
             if sentence_spans:
                 spans.extend(sentence_spans)
                 sentences_to_embed.append(s)
-            # make sure there are not too many spans # todo any better option?
+            # make sure there are not too many spans, for sake of negative mining # todo any better option?
             if self.training and len(spans) >max_nr_spans:
-                tmp = []
-                for t in sentences:
-                    tmp.extend(t.get_spans(self.label_type))
                 spans = spans[:max_nr_spans]
-                #print(f"Cutting at {max_nr_spans} spans. (Would have been {len(tmp)} spans)")
                 break
 
         if not spans:
-            return None, None
+            return None, None, None
 
-        self.token_encoder.embed(sentences_to_embed)
+        span_embeddings = []
+        # calculate a good batch size based on nr of tokens in longest sentence
+        max_len = max([len(s) for s in sentences_to_embed])
+        batch_size = ceil(1500 / max_len)
 
-        if self.embedding_pooling == "first":
-            embeddings = [span[0].get_embedding() for span in spans]
-        if self.embedding_pooling == "last":
-            embeddings = [span[-1].get_embedding() for span in spans]
-        if self.embedding_pooling == "mean":
-            embeddings = [torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0) for span in spans]
-        if self.embedding_pooling == "first_last":
-            embeddings = [torch.cat([span[0].get_embedding(), span[-1].get_embedding()]) for span in spans]
+        batch_iterator = range(0, len(sentences_to_embed), batch_size)
+        for i in batch_iterator:
+            batch = sentences_to_embed[i:i + batch_size]
+            self.token_encoder.embed(batch)
 
-        for s in sentences_to_embed:
-            s.clear_embeddings()
-        return spans, torch.stack(embeddings, dim=0)
+            for span in spans:
+                if len(span.tokens[0].get_embedding()) != 0:
+                    if self.embedding_pooling == "first":
+                        span_embeddings.append(span[0].get_embedding())
+                    elif self.embedding_pooling == "last":
+                        span_embeddings.append(span[-1].get_embedding())
+                    elif self.embedding_pooling == "mean":
+                        span_embeddings.append(torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0))
+                    elif self.embedding_pooling == "first_last":
+                        span_embeddings.append(torch.cat([span[0].get_embedding(), span[-1].get_embedding()]))
+
+            if clear_embeddings:
+                for s in batch:
+                    s.clear_embeddings()
+
+        span_embeddings = torch.stack(span_embeddings, dim=0)
+        return spans, span_embeddings, original_spans
 
 
     def _embed_labels_batchwise_return_stacked_embeddings(self, labels: List[str], clear_embeddings: bool = True, update_these_embeddings: bool = True,
@@ -660,7 +743,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :param sentences: Sentences in batch.
         :return: Tuple(loss, number of spans)
         """
-        (spans, span_embeddings) = self._embed_spans(sentences)
+        (spans, span_embeddings, _) = self._embed_spans(sentences)
         if spans is None:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
@@ -710,7 +793,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         """
         with torch.no_grad():
 
-            (spans, span_embeddings) = self._embed_spans(sentences)
+            (spans, span_embeddings, original_spans) = self._embed_spans(sentences)
             if spans is None:
                 if return_loss:
                     return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
@@ -733,18 +816,19 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             #top5_similarity, top5_index = torch.topk(similarity_span_all_labels, k=5, dim=1)
 
             for i, sp in enumerate(spans):
+                original_span = original_spans[i]
                 label_value = self._label_at(most_similar_label_index[i])
                 label_score = most_similar_label_similarity[i].item()
-                # if sp.get_label(label_name).value != "O" and sp.get_label(label_name).value != label_value:
-                #    print("Difference:", sp.text, "|", sp.get_label("nel").value, "|", sp.get_label(label_name).value, "-->", label_value)
-                #    print(sp.sentence.text)
+                # if original_span.get_label(label_name).value != "O" and original_span.get_label(label_name).value != label_value:
+                #    print("Difference:", original_span.text, "|", original_span.get_label("nel").value, "|", original_span.get_label(label_name).value, "-->", label_value)
+                #    print(original_span.sentence.text)
                 #    print("-")
-                sp.set_label(label_name, label_value, score = label_score)
+                original_span.set_label(label_name, label_value, score = label_score)
 
                 #top5 = zip(top5_similarity[i], top5_index[i])
                 #for t_i, (t_sim, t_index) in enumerate(top5):
-                #    sp.set_label(typename=f"top_{t_i}", value=self._label_at(t_index.item()), score=t_sim.item())
-                #print(sp)
+                #    original_span.set_label(typename=f"top_{t_i}", value=self._label_at(t_index.item()), score=t_sim.item())
+                #print(original_span)
 
         if return_loss:
             # todo not yet implemented
