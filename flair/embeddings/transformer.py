@@ -26,6 +26,7 @@ from transformers import (
     LayoutLMv2FeatureExtractor,
     PretrainedConfig,
     PreTrainedTokenizer,
+    T5TokenizerFast,
 )
 from transformers.tokenization_utils_base import LARGE_INTEGER
 from transformers.utils import PaddingStrategy
@@ -444,7 +445,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         zip_obj = zipfile.ZipFile(zip_data)
         with tempfile.TemporaryDirectory() as temp_dir:
             zip_obj.extractall(temp_dir)
-            return AutoTokenizer.from_pretrained(temp_dir, add_prefix_space=True)
+            return AutoTokenizer.from_pretrained(temp_dir)
 
     @classmethod
     def _feature_extractor_from_bytes(cls, zip_data: Optional[BytesIO]) -> Optional[FeatureExtractionMixin]:
@@ -458,7 +459,13 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
     def __tokenizer_bytes(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             files = list(self.tokenizer.save_pretrained(temp_dir))
-            if self.tokenizer.is_fast and self.tokenizer.slow_tokenizer_class:
+            if (
+                self.tokenizer.is_fast
+                and self.tokenizer.slow_tokenizer_class
+                and not isinstance(
+                    self.tokenizer, T5TokenizerFast
+                )  # do not remove slow files for T5, as it can only be created from slow tokenizer with prefix space
+            ):
                 vocab_files = self.tokenizer.slow_tokenizer_class.vocab_files_names.values()
                 files = [f for f in files if all(v not in f for v in vocab_files)]
             zip_data = BytesIO()
