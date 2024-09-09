@@ -1,7 +1,7 @@
 import sys
 import logging
 import random
-from math import ceil
+from math import ceil, floor
 
 from tqdm import tqdm
 #from tqdm.auto import tqdm
@@ -10,6 +10,7 @@ import numpy as np
 
 import torch
 import torch.nn.functional as F
+import gc
 
 import flair
 from flair.data import DT, Dictionary, Optional, Sentence, Span, Union, Token
@@ -436,7 +437,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                                                                                             device=self._label_embeddings_storage_device)
 
     # Function to split sentences intelligently
-    def _split_sentence(self, sentence, max_tokens: int):
+    def _split_sentence(self, sentence, max_tokens: int, max_spans_per_split = 50):
 
         # Tokenize the sentence
         num_tokens = len(sentence.tokens)
@@ -493,70 +494,87 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         return rest_sentences
 
 
-    def _embed_spans(self, sentences: List[Sentence], max_nr_spans = 50, max_len_sentence = 512, clear_embeddings = True):
+    def _prepare_sentences(self, sentences: List[Sentence],
+                           max_len_sentence = 500,
+                           max_number_of_sentences = 20, # todo
+                           max_total_number_tokens = 4000, # todo
+                           max_number_spans_per_split_sentence = 50, # todo
+                           max_total_number_spans = 800 # todo
+                           ):
         """
-        Embed sentences and get embeddings for their spans.
-        :param sentences:
-        :return:
+        Prepares the sentences. In case some are too long, they get split up. Also, only the ones that have spans in them are kept.
+        The original spans are returned (mainly for use during prediction).
+        :param sentences: List of sentences to be embedded.
+        :param max_len_sentence: Maximum token length. Sentences are split otherwise.
+        :param max_total_number_spans: Cut sentences after this number of spans is reached
+        :return: List of sentences with maximum token length of max_len_sentence. Number of sentences increases.
         """
         # keep original span objects, not just the spans from the possibly split sentences (necessary for prediction!)
         original_spans = []
         for s in sentences:
             original_spans.extend(s.get_spans(self.label_type))
 
-        # make sure the sentences are not too long, split them in case
         split_sentences = []
         for s in sentences:
             if len(s) > max_len_sentence:
-                # too long documents are simply not used # todo keep them? now that we have batching?
-                if self.training and len(s) > 5000:
-                    break
                 split_sentences.extend(self._split_sentence(s, max_len_sentence))
             else:
                 split_sentences.append(s)
 
-        spans = []
+        span_counter = 0
+        token_counter = 0
         sentences_to_embed = []
         for s in split_sentences:
+            spans = s.get_spans(self.label_type)
+            if len(spans) > 0:
+                span_counter += len(spans)
+                token_counter += len(s)
+                # if self.training and span_counter > max_total_number_spans or token_counter > max_total_number_tokens or len(sentences_to_embed) == max_number_of_sentences:
+                #     print("Not using all of the text, because nr of spans or tokens would be too high.")
+                #     span_counter -= len(spans)
+                #     token_counter -= len(s)
+                #     print(f"Only using {len(sentences_to_embed)} of {len(split_sentences)} sentences and {span_counter} spans, {token_counter} tokens.")
+                #     break
+                sentences_to_embed.append(s)
+        print("Tokens in total:", token_counter)
+        return sentences_to_embed, original_spans, span_counter
+
+
+    def _embed_spans(self, sentences: List[Sentence], clear_embeddings = True):
+        """
+        Embed sentences and get embeddings for their spans.
+        :param sentences:
+        :return:
+        """
+
+        spans = []
+        for s in sentences:
             sentence_spans = s.get_spans(self.label_type)
             if sentence_spans:
                 spans.extend(sentence_spans)
-                sentences_to_embed.append(s)
-            # make sure there are not too many spans, for sake of negative mining # todo any better option?
-            if self.training and len(spans) >max_nr_spans:
-                spans = spans[:max_nr_spans]
-                break
 
         if not spans:
             return None, None, None
 
-        span_embeddings = []
-        # calculate a good batch size based on nr of tokens in longest sentence
-        max_len = max([len(s) for s in sentences_to_embed])
-        batch_size = ceil(1500 / max_len)
+        print(" Len Sentences:", len(sentences))
+        print(" Len Spans:", len(spans))
 
-        batch_iterator = range(0, len(sentences_to_embed), batch_size)
-        for i in batch_iterator:
-            batch = sentences_to_embed[i:i + batch_size]
-            self.token_encoder.embed(batch)
+        self.token_encoder.embed(sentences)
 
-            for span in spans:
-                if len(span.tokens[0].get_embedding()) != 0:
-                    if self.embedding_pooling == "first":
-                        span_embeddings.append(span[0].get_embedding())
-                    elif self.embedding_pooling == "last":
-                        span_embeddings.append(span[-1].get_embedding())
-                    elif self.embedding_pooling == "mean":
-                        span_embeddings.append(torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0))
-                    elif self.embedding_pooling == "first_last":
-                        span_embeddings.append(torch.cat([span[0].get_embedding(), span[-1].get_embedding()]))
+        if self.embedding_pooling == "first":
+            span_embeddings = [span[0].get_embedding() for span in spans]
+        if self.embedding_pooling == "last":
+            span_embeddings = [span[-1].get_embedding() for span in spans]
+        if self.embedding_pooling == "mean":
+            span_embeddings = [torch.mean(torch.stack([token.get_embedding() for token in span], 0), 0) for span in spans]
+        if self.embedding_pooling == "first_last":
+            span_embeddings = [torch.cat([span[0].get_embedding(), span[-1].get_embedding()]) for span in spans]
 
-            if clear_embeddings:
-                for s in batch:
-                    s.clear_embeddings()
+        if clear_embeddings:
+            for s in sentences:
+                s.clear_embeddings()
 
-        span_embeddings = torch.stack(span_embeddings, dim=0)
-        return spans, span_embeddings, original_spans
+        return spans, torch.stack(span_embeddings, dim=0)
 
 
     def _embed_labels_batchwise_return_stacked_embeddings(self, labels: List[str], clear_embeddings: bool = True, update_these_embeddings: bool = True,
@@ -565,6 +583,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         unique_labels, inverse_indices = np.unique(labels, return_inverse=True)
 
         labels_sentence_objects = self.get_sentence_objects_for_labels(unique_labels, use_tqdm = use_tqdm)
+        print(" Nr all labels:", len(labels_sentence_objects))
 
         final_embeddings = []
         batch_size = self._label_embedding_batch_size
@@ -575,6 +594,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
         for i in batch_iterator:
             batch = labels_sentence_objects[i:i + batch_size]
+            #print("  Len labels in batch to embed:", len(batch))
             self.label_encoder.embed(batch)
             if isinstance(self.label_encoder, DocumentEmbeddings):
                 embeddings = [l.get_embedding() for l in batch]
@@ -595,6 +615,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             if clear_embeddings:
                 for l in batch:
                     l.clear_embeddings()
+
+            del embeddings
 
         final_embeddings = torch.stack(final_embeddings, dim = 0) # correct? todo
         if device:
@@ -743,27 +765,59 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :param sentences: Sentences in batch.
         :return: Tuple(loss, number of spans)
         """
-        (spans, span_embeddings, _) = self._embed_spans(sentences)
-        if spans is None:
+
+        prepared_sentences, original_spans, span_counter = self._prepare_sentences(sentences)
+        if len(prepared_sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
-        # get one embedding vector for each label
-        labels = [sp.get_label(self.label_type).value for sp in spans]
+        # calculate a good batch size based on nr of tokens in longest sentence
+        max_len = max([len(s) for s in prepared_sentences])
+        #batch_size = floor(7000 / max_len)
+        batch_size = 1
+        print("Nr of prepared sentences:", len(prepared_sentences))
+        print("Nr of original spans:", len(original_spans))
+        print("Nr of used spans:", span_counter)
+        print("Max len:", max_len)
+        print("So BS:", batch_size)
 
-        # sample negative labels
-        negative_labels = self._negative_sampling_fn(span_embeddings, labels)
+        losses = []
+        batch_iterator = range(0, len(prepared_sentences), batch_size)
 
-        # concatenate and embed together
-        together = labels + negative_labels
+        for i in batch_iterator:
+            batch_sentences = prepared_sentences[i:i + batch_size]
 
-        together_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = together, use_tqdm=False)
+            (spans, span_embeddings) = self._embed_spans(batch_sentences)
+            if spans is None:
+                return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
-        # divide into (gold) label and negative embeddings (negatives must be shaped as negative_factor x num_spans x embedding_size)
-        label_embeddings = together_label_embeddings[:len(labels)]
-        negative_label_embeddings = torch.reshape(together_label_embeddings[len(labels):], (self._negative_sampling_factor, *span_embeddings.shape))
+            # get one embedding vector for each label
+            labels = [sp.get_label(self.label_type).value for sp in spans]
 
-        # calculate loss
-        loss = self.loss_function(span_embeddings, label_embeddings, negative_label_embeddings)
+            # sample negative labels
+            negative_labels = self._negative_sampling_fn(span_embeddings, labels)
+
+            # concatenate and embed together
+            together = labels + negative_labels
+
+            #print("Len pos and neg labels to embed:", len(together))
+            together_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = together, use_tqdm=False)
+
+            # divide into (gold) label and negative embeddings (negatives must be shaped as negative_factor x num_spans x embedding_size)
+            label_embeddings = together_label_embeddings[:len(labels)]
+            negative_label_embeddings = torch.reshape(together_label_embeddings[len(labels):], (self._negative_sampling_factor, *span_embeddings.shape))
+
+            # calculate loss
+            batch_loss = self.loss_function(span_embeddings, label_embeddings, negative_label_embeddings)
+            losses.append(batch_loss)
+            print(" -")
+
+            del together_label_embeddings, label_embeddings, negative_label_embeddings, span_embeddings, together, labels, negative_labels, spans
+            gc.collect()
+            torch.cuda.empty_cache()
+
+        print("Len Losses:", len(losses))
+        print("--")
+        loss = torch.mean(torch.stack(losses))
 
         # label samples will need updated embeddings in the prediction
         self._next_prediction_needs_updated_label_embeddings = True
@@ -774,7 +828,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         #     if self._iteration_count % self.loss_function.margin_adjustment_frequency == 0 and self._iteration_count > 0:
         #         self.loss_function.adjust_margin()
 
-        return loss, len(spans)
+
+        return loss, span_counter
 
     def predict(
             self,
@@ -793,7 +848,10 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         """
         with torch.no_grad():
 
-            (spans, span_embeddings, original_spans) = self._embed_spans(sentences)
+            prepared_sentences, original_spans, _ = self._prepare_sentences(sentences)
+
+            (spans, span_embeddings) = self._embed_spans(prepared_sentences)
+
             if spans is None:
                 if return_loss:
                     return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
