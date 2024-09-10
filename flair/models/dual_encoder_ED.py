@@ -554,7 +554,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                 spans.extend(sentence_spans)
 
         if not spans:
-            return None, None, None
+            return None, None
 
         print(" Len Sentences:", len(sentences))
         print(" Len Spans:", len(spans))
