@@ -574,7 +574,12 @@ class ModelTrainer(Pluggable):
 
                     self.dispatch("before_training_batch", **batch_kw)
 
-                    batch_steps = self.get_batch_steps(batch, mini_batch_chunk_size=mini_batch_chunk_size)
+                    custom_batching = getattr(self.model, "_custom_batching", None)
+                    if callable(custom_batching):
+                        batch_steps = custom_batching(batch, batch_size = mini_batch_chunk_size)
+                        #print("Len batch_steps:", len(batch_steps))
+                    else:
+                        batch_steps = self.get_batch_steps(batch, mini_batch_chunk_size=mini_batch_chunk_size)
 
                     # forward and backward for batch
                     for batch_step in batch_steps:

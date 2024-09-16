@@ -108,7 +108,7 @@ class SimilarityMetric:
 
     def similarity(self, tensor_a, tensor_b):
 
-        def chunked_cdist(small_tensor, big_tensor, chunk_size=2000000):
+        def chunked_cdist(small_tensor, big_tensor, chunk_size=500000):
             results = []
             small_len = small_tensor.size(0)
             big_len = big_tensor.size(0)
@@ -437,29 +437,54 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                                                                                             device=self._label_embeddings_storage_device)
 
     # Function to split sentences intelligently
-    def _split_sentence(self, sentence, max_tokens: int, max_spans_per_split = 50):
+    def _split_sentence(self, sentence,
+                        max_characters: int,
+                        max_spans_per_sentence: int,
+                        respect_full_stops: bool):
 
         # Tokenize the sentence
-        num_tokens = len(sentence.tokens)
+        num_characters = len(sentence.text)
+        num_spans = len(sentence.get_spans(self.label_type))
 
-        # If the sentence is short enough, return it as is
-        if num_tokens <= max_tokens:
+        # If the sentence is short enough and has not too many spans, return it as is
+        if num_characters <= max_characters and num_spans <= max_spans_per_sentence:
             return [sentence]
 
-        # Split the sentence
-        split_at = max_tokens # todo make this better, also respect (linguistic) sentence boundaries
+        # Otherwise: split the sentence
+        split_at = sentence.tokens[-1].start_position # start somewhere (when not length but span number is problem important)
+        for t in sentence.tokens:
+            if t.end_position >= max_characters:
+                split_at = t.idx-1
+                break
+
+        # make sure that not more than max_spans_per_sentence is in there:
+        span_counter = 0
+        for tmp in sentence.get_spans(self.label_type):
+            if (tmp[0].idx-1) < split_at and span_counter == max_spans_per_sentence:
+                split_at = tmp[0].idx -2
+                break
+            if (tmp[0].idx-1) > split_at:
+                break
+            span_counter +=1
+
+        if respect_full_stops:
+           # Move to the nearest " ." before (as rule for more sentence-like splitting)
+            period_indices = [i for i,t in enumerate(sentence.tokens[:split_at]) if t.text == "." ]
+
+            if len(period_indices) >0:
+                last_period_index = period_indices[-1]
+                if split_at - last_period_index <= 50: # if close enough, use it
+                    split_at = last_period_index +1
+
         # But make sure it is not split inside a span
-        #print(f"Moving split position {split_at}", end="")
         for tmp in reversed(sentence.get_spans(self.label_type)):
             if (tmp[0].idx-1) < split_at and tmp[-1].idx > split_at:
                 split_at = tmp[0].idx -2
-                #print(f" -> {split_at}", end="")
 
         first_half_tokens = sentence.tokens[:split_at]
         second_half_tokens = sentence.tokens[split_at:]
 
         # Create the first and second sentence
-
         first_half_sentence = Sentence([t.text for t in first_half_tokens])
         second_half_sentence = Sentence([t.text for t in second_half_tokens])
 
@@ -489,25 +514,36 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         first_half_sentence._next_sentence = second_half_sentence
         second_half_sentence._previous_sentence = first_half_sentence
         # The second sentence could still be too long, so repeat
-        rest_sentences = self._split_sentence(second_half_sentence, max_tokens)
+        rest_sentences = self._split_sentence(second_half_sentence, max_characters, max_spans_per_sentence, respect_full_stops)
         rest_sentences.insert(0, first_half_sentence)
         return rest_sentences
 
 
+    def _custom_batching(self, sentences,
+                         batch_size = None):
+
+        batched_sentences, _ = self._prepare_sentences(sentences,
+                                                       batch_size=batch_size)
+        return batched_sentences
+
     def _prepare_sentences(self, sentences: List[Sentence],
-                           max_len_sentence = 500,
-                           max_number_of_sentences = 20, # todo
-                           max_total_number_tokens = 4000, # todo
-                           max_number_spans_per_split_sentence = 50, # todo
-                           max_total_number_spans = 800 # todo
+                           max_characters_sentence = 2800,
+                           max_spans_per_sentence = 100,
+                           max_spans_per_batch = 200,
+                           max_characters_per_batch_with_context = 10000,
+                           respect_full_stops = True,
+                           batch_size: Union[int, None] = None,
                            ):
         """
         Prepares the sentences. In case some are too long, they get split up. Also, only the ones that have spans in them are kept.
         The original spans are returned (mainly for use during prediction).
         :param sentences: List of sentences to be embedded.
-        :param max_len_sentence: Maximum token length. Sentences are split otherwise.
-        :param max_total_number_spans: Cut sentences after this number of spans is reached
-        :return: List of sentences with maximum token length of max_len_sentence. Number of sentences increases.
+        :param max_characters_sentence: Maximum sentence length in characters. Sentences are split accordingly.
+        :param max_spans_per_sentence: Maximum number of spans per sentence. Sentences are split accordingly.
+        :param max_spans_per_batch: Maximum spans allowed to be in one batch. Sentences are split accordingly.
+        :param max_characters_per_batch_with_context: Maximum characters allowed in one batch (counting context!). Sentences are split accordingly.
+        :param batch_size: How many sentences are put together at max in a mini batch (if batch_size is given). If None, means no batching, all sentences as one batch.
+        :return: Tupel: List of lists of sentences, list of lists of original span objects per batch (important for prediction).
         """
         # keep original span objects, not just the spans from the possibly split sentences (necessary for prediction!)
         original_spans = []
@@ -516,8 +552,11 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
         split_sentences = []
         for s in sentences:
-            if len(s) > max_len_sentence:
-                split_sentences.extend(self._split_sentence(s, max_len_sentence))
+            if len(s.text) > max_characters_sentence or len(s.get_spans(self.label_type)) > max_spans_per_sentence:
+                split_sentences.extend(self._split_sentence(s,
+                                                            max_characters=max_characters_sentence,
+                                                            max_spans_per_sentence=max_spans_per_sentence,
+                                                            respect_full_stops=respect_full_stops))
             else:
                 split_sentences.append(s)
 
@@ -529,15 +568,43 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             if len(spans) > 0:
                 span_counter += len(spans)
                 token_counter += len(s)
-                # if self.training and span_counter > max_total_number_spans or token_counter > max_total_number_tokens or len(sentences_to_embed) == max_number_of_sentences:
-                #     print("Not using all of the text, because nr of spans or tokens would be too high.")
-                #     span_counter -= len(spans)
-                #     token_counter -= len(s)
-                #     print(f"Only using {len(sentences_to_embed)} of {len(split_sentences)} sentences and {span_counter} spans, {token_counter} tokens.")
-                #     break
                 sentences_to_embed.append(s)
-        print("Tokens in total:", token_counter)
-        return sentences_to_embed, original_spans, span_counter
+
+        if batch_size:
+            #batched_sentences = [sentences_to_embed[i:i + batch_size] for i in range(0, len(sentences_to_embed), batch_size)]
+
+            batched_sentences = []
+            batched_original_spans = []
+            current_batch_spans = []
+            current_batch = []
+            current_spans = 0
+            spans_index = 0
+            current_characters = 0
+            for sentence in sentences_to_embed:
+                num_spans = len(sentence.get_spans("nel"))
+
+                if len(current_batch) >= batch_size or current_spans + num_spans > max_spans_per_batch or current_characters > max_characters_per_batch_with_context:
+                    batched_sentences.append(current_batch)
+                    batched_original_spans.append(current_batch_spans)
+                    current_batch_spans = []
+                    current_batch = []
+                    current_spans = 0
+                    current_characters = 0
+
+                current_batch.append(sentence)
+                current_batch_spans.extend(original_spans[spans_index:spans_index+num_spans])
+                spans_index += num_spans
+                current_spans += num_spans
+                sentence_with_context, _ = self.token_encoder._expand_sentence_with_context(sentence)
+                current_characters += sum([len(t.text) for t in sentence_with_context])
+
+            if current_batch:
+                batched_sentences.append(current_batch)
+                batched_original_spans.append(current_batch_spans)
+
+            return batched_sentences, batched_original_spans
+        else:
+            return sentences_to_embed, original_spans
 
 
     def _embed_spans(self, sentences: List[Sentence], clear_embeddings = True):
@@ -556,8 +623,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         if not spans:
             return None, None
 
-        print(" Len Sentences:", len(sentences))
-        print(" Len Spans:", len(spans))
+        #print(" Len Sentences:", len(sentences))
+        #print(" Len Spans:", len(spans))
 
         self.token_encoder.embed(sentences)
 
@@ -583,7 +650,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         unique_labels, inverse_indices = np.unique(labels, return_inverse=True)
 
         labels_sentence_objects = self.get_sentence_objects_for_labels(unique_labels, use_tqdm = use_tqdm)
-        print(" Nr all labels:", len(labels_sentence_objects))
+        #print(" Nr all labels:", len(labels_sentence_objects))
 
         final_embeddings = []
         batch_size = self._label_embedding_batch_size
@@ -766,58 +833,40 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         :return: Tuple(loss, number of spans)
         """
 
-        prepared_sentences, original_spans, span_counter = self._prepare_sentences(sentences)
-        if len(prepared_sentences) == 0:
+        if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
-        # calculate a good batch size based on nr of tokens in longest sentence
-        max_len = max([len(s) for s in prepared_sentences])
-        #batch_size = floor(7000 / max_len)
-        batch_size = 1
-        print("Nr of prepared sentences:", len(prepared_sentences))
-        print("Nr of original spans:", len(original_spans))
-        print("Nr of used spans:", span_counter)
-        print("Max len:", max_len)
-        print("So BS:", batch_size)
+        #print("Nr sentences:", len(sentences), "Lengths Tokens:", [len(s) for s in sentences], "Lengths Chars:", [len(s.text) for s in sentences])
+        (spans, span_embeddings) = self._embed_spans(sentences)
 
-        losses = []
-        batch_iterator = range(0, len(prepared_sentences), batch_size)
+        if spans is None:
+            return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
-        for i in batch_iterator:
-            batch_sentences = prepared_sentences[i:i + batch_size]
+        nr_spans = len(spans)
+        #print(" --> Nr spans:", nr_spans)
 
-            (spans, span_embeddings) = self._embed_spans(batch_sentences)
-            if spans is None:
-                return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
+        # get one embedding vector for each label
+        labels = [sp.get_label(self.label_type).value for sp in spans]
 
-            # get one embedding vector for each label
-            labels = [sp.get_label(self.label_type).value for sp in spans]
+        # sample negative labels
+        negative_labels = self._negative_sampling_fn(span_embeddings, labels)
 
-            # sample negative labels
-            negative_labels = self._negative_sampling_fn(span_embeddings, labels)
+        # concatenate and embed together
+        together = labels + negative_labels
 
-            # concatenate and embed together
-            together = labels + negative_labels
+        #print("Len pos and neg labels to embed:", len(together))
+        together_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = together, use_tqdm=False)
 
-            #print("Len pos and neg labels to embed:", len(together))
-            together_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = together, use_tqdm=False)
+        # divide into (gold) label and negative embeddings (negatives must be shaped as negative_factor x num_spans x embedding_size)
+        label_embeddings = together_label_embeddings[:len(labels)]
+        negative_label_embeddings = torch.reshape(together_label_embeddings[len(labels):], (self._negative_sampling_factor, *span_embeddings.shape))
 
-            # divide into (gold) label and negative embeddings (negatives must be shaped as negative_factor x num_spans x embedding_size)
-            label_embeddings = together_label_embeddings[:len(labels)]
-            negative_label_embeddings = torch.reshape(together_label_embeddings[len(labels):], (self._negative_sampling_factor, *span_embeddings.shape))
+        # calculate loss
+        loss = self.loss_function(span_embeddings, label_embeddings, negative_label_embeddings)
 
-            # calculate loss
-            batch_loss = self.loss_function(span_embeddings, label_embeddings, negative_label_embeddings)
-            losses.append(batch_loss)
-            print(" -")
-
-            del together_label_embeddings, label_embeddings, negative_label_embeddings, span_embeddings, together, labels, negative_labels, spans
-            gc.collect()
-            torch.cuda.empty_cache()
-
-        print("Len Losses:", len(losses))
-        print("--")
-        loss = torch.mean(torch.stack(losses))
+        del together_label_embeddings, label_embeddings, negative_label_embeddings, span_embeddings, together, labels, negative_labels, spans
+        #gc.collect()
+        #torch.cuda.empty_cache()
 
         # label samples will need updated embeddings in the prediction
         self._next_prediction_needs_updated_label_embeddings = True
@@ -828,8 +877,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         #     if self._iteration_count % self.loss_function.margin_adjustment_frequency == 0 and self._iteration_count > 0:
         #         self.loss_function.adjust_margin()
 
-
-        return loss, span_counter
+        return loss, nr_spans
 
     def predict(
             self,
@@ -848,49 +896,52 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         """
         with torch.no_grad():
 
-            prepared_sentences, original_spans, _ = self._prepare_sentences(sentences)
+            batches, batches_original_spans = self._prepare_sentences(sentences,
+                                                                      batch_size=8,
+                                                                      max_characters_per_batch_with_context=20000)
 
-            (spans, span_embeddings) = self._embed_spans(prepared_sentences)
+            for batch, original_spans in zip(batches, batches_original_spans):
 
-            if spans is None:
-                if return_loss:
-                    return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
-                return
+                if not original_spans:
+                    continue
+                (spans, span_embeddings) = self._embed_spans(batch)
 
-            # After a forward loss the embeddings of the labels might be outdated because the weights of the label encoder have changed.
-            # Also, after resampling of the labels the label embeddings might not yet exist
-            # To avoid unnecessary work the labels only get embedded here (important for a large label set, might take very long)
-            if self._next_prediction_needs_updated_label_embeddings:
-                self._recompute_label_embeddings()
-                self._next_prediction_needs_updated_label_embeddings = False
+                # After a forward loss the embeddings of the labels might be outdated because the weights of the label encoder have changed.
+                # Also, after resampling of the labels the label embeddings might not yet exist
+                # To avoid unnecessary work the labels only get embedded here (important for a large label set, might take very long)
+                if self._next_prediction_needs_updated_label_embeddings:
+                    self._recompute_label_embeddings()
+                    self._next_prediction_needs_updated_label_embeddings = False
 
-            label_embeddings = self.get_label_embeddings().to(flair.device)
-            # Choosing the most similar label from the set of labels (might not include the true gold label)
-            similarity_span_all_labels = self.similarity_metric.similarity(span_embeddings, label_embeddings)
+                label_embeddings = self.get_label_embeddings().to(flair.device)
+                # Choosing the most similar label from the set of labels (might not include the true gold label)
+                similarity_span_all_labels = self.similarity_metric.similarity(span_embeddings, label_embeddings)
 
-            most_similar_label_similarity, most_similar_label_index = torch.max(similarity_span_all_labels, dim=1)
+                most_similar_label_similarity, most_similar_label_index = torch.max(similarity_span_all_labels, dim=1)
 
-            # for inspection (and for the experiment with a different criterion) save the top 5 predictions:
-            #top5_similarity, top5_index = torch.topk(similarity_span_all_labels, k=5, dim=1)
+                # for inspection (and for the experiment with a different criterion) save the top 5 predictions:
+                #top5_similarity, top5_index = torch.topk(similarity_span_all_labels, k=5, dim=1)
 
-            for i, sp in enumerate(spans):
-                original_span = original_spans[i]
-                label_value = self._label_at(most_similar_label_index[i])
-                label_score = most_similar_label_similarity[i].item()
-                # if original_span.get_label(label_name).value != "O" and original_span.get_label(label_name).value != label_value:
-                #    print("Difference:", original_span.text, "|", original_span.get_label("nel").value, "|", original_span.get_label(label_name).value, "-->", label_value)
-                #    print(original_span.sentence.text)
-                #    print("-")
-                original_span.set_label(label_name, label_value, score = label_score)
+                for i, sp in enumerate(spans):
+                    original_span = original_spans[i]
+                    label_value = self._label_at(most_similar_label_index[i])
+                    label_score = most_similar_label_similarity[i].item()
+                    # if original_span.get_label(label_name).value != "O" and original_span.get_label(label_name).value != label_value:
+                    #    print("Difference:", original_span.text, "|", original_span.get_label("nel").value, "|", original_span.get_label(label_name).value, "-->", label_value)
+                    #    print(original_span.sentence.text)
+                    #    print("-")
+                    original_span.set_label(label_name, label_value, score = label_score)
 
-                #top5 = zip(top5_similarity[i], top5_index[i])
-                #for t_i, (t_sim, t_index) in enumerate(top5):
-                #    original_span.set_label(typename=f"top_{t_i}", value=self._label_at(t_index.item()), score=t_sim.item())
-                #print(original_span)
+                    #top5 = zip(top5_similarity[i], top5_index[i])
+                    #for t_i, (t_sim, t_index) in enumerate(top5):
+                    #    original_span.set_label(typename=f"top_{t_i}", value=self._label_at(t_index.item()), score=t_sim.item())
+                    #print(original_span)
+
+                del label_embeddings, span_embeddings, similarity_span_all_labels
 
         if return_loss:
             # todo not yet implemented
-            return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=False), len(spans)
+            return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=False), sum([len(b) for b in batches_original_spans])
 
     def _print_predictions(self, batch, gold_label_type):
         lines = []
@@ -1069,8 +1120,11 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         Predict labels for sentences. Uses the predict method from DualEncoderEntityDisambiguation, but in an iterative fashion.
         """
         original_sentences = sentences
-        step_size = 10
+
+        # step_size = 10
+        step_size = round(sum([len(s.get_spans("nel")) for s in sentences]) / 10)
         level = 0
+
         # iterate until all spans are predicted
         sentences_to_use = sentences
         while True:
@@ -1085,7 +1139,9 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
                                   )
 
             # select the step_size highest confidence spans
-            chosen_spans = self.select_predicted_spans_to_use_for_label_verbalization(sentences_to_use, label_name, step_size)
+            chosen_spans = self.select_predicted_spans_to_use_for_label_verbalization(sentences_to_use,
+                                                                                      label_name,
+                                                                                      step_size)
 
             # if no spans remaining, break
             if len(chosen_spans) == 0:
