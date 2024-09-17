@@ -10,7 +10,7 @@
 	padding: 0;
 }
 
-.bd-main .bd-content .bd-article-container .bd-article * {
+.bd-main .bd-content .bd-article-container .bd-article *:not(pre) {
 	word-break: break-word;
 	overflow-wrap: break-word;
 	white-space: normal;
