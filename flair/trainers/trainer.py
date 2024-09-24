@@ -11,12 +11,14 @@ from typing import Optional, Union
 
 import torch
 from torch.optim.sgd import SGD
+from torch.utils.data import DistributedSampler
 from torch.utils.data.dataset import ConcatDataset
 
 import flair
 import flair.nn
 from flair.data import Corpus, Dictionary, _len_dataset
 from flair.datasets import DataLoader
+from flair.distributed_utils import DistributedModel, is_main_process
 from flair.samplers import FlairSampler
 from flair.trainers.plugins import (
     AnnealingPlugin,
@@ -420,6 +422,8 @@ class ModelTrainer(Pluggable):
                 base_path=base_path,
             ).attach_to(self)
 
+        if flair.distributed:
+            self.model = DistributedModel(self.model, device_ids=[flair.device.index])
         # === END BLOCK: ACTIVATE PLUGINS === #
 
         # derive parameters the function was called with (or defaults)
@@ -509,36 +513,37 @@ class ModelTrainer(Pluggable):
                 else "model from best epoch (best-model.pt)"
             )
 
-            log_line(log)
-            log.info(f'Model: "{self.model}"')
-            log_line(log)
-            log.info(f"{self.corpus}")
-            log_line(log)
-            log.info(f"Train:  {len(train_data)} sentences")
-            log.info(f"        (train_with_dev={train_with_dev}, train_with_test={train_with_test})")
-            log_line(log)
-            log.info("Training Params:")
-            log.info(
-                f' - learning_rate: "{learning_rate}" '
-                f'{"(decoder: " + str(decoder_learning_rate) + ")" if decoder_learning_rate else ""}'
-            )
-            log.info(f' - mini_batch_size: "{mini_batch_size}"')
-            log.info(f' - max_epochs: "{max_epochs}"')
-            log.info(f' - shuffle: "{shuffle}"')
-            log_line(log)
-            log.info("Plugins:")
-            for plugin in plugins:
-                log.info(" - " + str(plugin))
-            log_line(log)
-            log.info(f"Final evaluation on {final_eval_info}")
-            log.info(f' - metric: "{main_evaluation_metric}"')
-            log_line(log)
-            log.info("Computation:")
-            log.info(f" - compute on device: {flair.device}")
-            log.info(f" - embedding storage: {embeddings_storage_mode}")
-            log_line(log)
-            log.info(f'Model training base path: "{base_path}"')
-            log_line(log)
+            if is_main_process():
+                log_line(log)
+                log.info(f'Model: "{self.model}"')
+                log_line(log)
+                log.info(f"{self.corpus}")
+                log_line(log)
+                log.info(f"Train:  {len(train_data)} sentences")
+                log.info(f"        (train_with_dev={train_with_dev}, train_with_test={train_with_test})")
+                log_line(log)
+                log.info("Training Params:")
+                log.info(
+                    f' - learning_rate: "{learning_rate}" '
+                    f'{"(decoder: " + str(decoder_learning_rate) + ")" if decoder_learning_rate else ""}'
+                )
+                log.info(f' - mini_batch_size: "{mini_batch_size}"')
+                log.info(f' - max_epochs: "{max_epochs}"')
+                log.info(f' - shuffle: "{shuffle}"')
+                log_line(log)
+                log.info("Plugins:")
+                for plugin in plugins:
+                    log.info(" - " + str(plugin))
+                log_line(log)
+                log.info(f"Final evaluation on {final_eval_info}")
+                log.info(f' - metric: "{main_evaluation_metric}"')
+                log_line(log)
+                log.info("Computation:")
+                log.info(f" - compute on device: {flair.device}")
+                log.info(f" - embedding storage: {embeddings_storage_mode}")
+                log_line(log)
+                log.info(f'Model training base path: "{base_path}"')
+                log_line(log)
 
             # At any point you can hit Ctrl + C to break out of training early.
             try:
@@ -560,12 +565,21 @@ class ModelTrainer(Pluggable):
                     if not shuffle_first_epoch and epoch == 1:
                         shuffle_data_this_epoch = False
 
-                    batch_loader = DataLoader(
-                        train_data,
-                        batch_size=mini_batch_size,
-                        shuffle=shuffle_data_this_epoch,
-                        sampler=sampler,
-                    )
+                    if flair.distributed:
+                        batch_loader = DataLoader(
+                            train_data,
+                            batch_size=mini_batch_size,
+                            shuffle=False,
+                            sampler=DistributedSampler(train_data, shuffle=shuffle_data_this_epoch),
+                        )
+                        batch_loader.sampler.set_epoch(epoch)
+                    else:
+                        batch_loader = DataLoader(
+                            train_data,
+                            batch_size=mini_batch_size,
+                            shuffle=shuffle_data_this_epoch,
+                            sampler=sampler,
+                        )
 
                     self.model.train()
 
@@ -682,49 +696,50 @@ class ModelTrainer(Pluggable):
 
                     # Determine if this is the best model or if we need to anneal
                     current_epoch_has_best_model_so_far = False
-                    validation_scores: tuple
+                    validation_scores = ()
 
-                    for evaluation_split, evaluation_split_data in evaluation_splits.items():
-                        eval_result = self.model.evaluate(
-                            evaluation_split_data,
-                            out_path=base_path / f"{evaluation_split}.tsv",
-                            mini_batch_size=eval_batch_size,
-                            exclude_labels=exclude_labels,
-                            main_evaluation_metric=main_evaluation_metric,
-                            gold_label_dictionary=gold_label_dictionary_for_eval,
-                            embedding_storage_mode=embeddings_storage_mode,
-                            gold_label_type=self.model.label_type,
-                            gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
-                        )
+                    if is_main_process():
+                        for evaluation_split, evaluation_split_data in evaluation_splits.items():
+                            eval_result = self.model.evaluate(
+                                evaluation_split_data,
+                                out_path=base_path / f"{evaluation_split}.tsv",
+                                mini_batch_size=eval_batch_size,
+                                exclude_labels=exclude_labels,
+                                main_evaluation_metric=main_evaluation_metric,
+                                gold_label_dictionary=gold_label_dictionary_for_eval,
+                                embedding_storage_mode=embeddings_storage_mode,
+                                gold_label_type=self.model.label_type,
+                                gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
+                            )
 
-                        # log results
-                        log.info(
-                            f"{evaluation_split.upper()} : loss {eval_result.loss}"
-                            f" - {main_evaluation_metric[1]}"
-                            f" ({main_evaluation_metric[0]})"
-                            f"  {round(eval_result.main_score, 4)}"
-                        )
+                            # log results
+                            log.info(
+                                f"{evaluation_split.upper()} : loss {eval_result.loss}"
+                                f" - {main_evaluation_metric[1]}"
+                                f" ({main_evaluation_metric[0]})"
+                                f"  {round(eval_result.main_score, 4)}"
+                            )
 
-                        # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                        store_embeddings(evaluation_split_data, embeddings_storage_mode)
+                            # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                            store_embeddings(evaluation_split_data, embeddings_storage_mode)
 
-                        self._publish_eval_result(eval_result, evaluation_split, global_step=epoch)
+                            self._publish_eval_result(eval_result, evaluation_split, global_step=epoch)
 
-                        # use DEV split to determine if this is the best model so far
-                        if determine_best_epoch_using_dev_score and evaluation_split == "dev":
-                            validation_scores = eval_result.main_score, eval_result.loss
+                            # use DEV split to determine if this is the best model so far
+                            if determine_best_epoch_using_dev_score and evaluation_split == "dev":
+                                validation_scores = eval_result.main_score, eval_result.loss
 
-                            if eval_result.main_score > best_epoch_score:
+                                if eval_result.main_score > best_epoch_score:
+                                    current_epoch_has_best_model_so_far = True
+                                    best_epoch_score = eval_result.main_score
+
+                        # if not using DEV score, determine best model using train loss
+                        if not determine_best_epoch_using_dev_score:
+                            validation_scores = (train_loss,)
+
+                            if epoch_train_loss < best_epoch_score:
                                 current_epoch_has_best_model_so_far = True
-                                best_epoch_score = eval_result.main_score
-
-                    # if not using DEV score, determine best model using train loss
-                    if not determine_best_epoch_using_dev_score:
-                        validation_scores = (train_loss,)
-
-                        if epoch_train_loss < best_epoch_score:
-                            current_epoch_has_best_model_so_far = True
-                            best_epoch_score = train_loss
+                                best_epoch_score = train_loss
 
                     # - LossFilePlugin -> somehow prints all relevant metrics
                     # - AnnealPlugin -> scheduler step
@@ -776,41 +791,42 @@ class ModelTrainer(Pluggable):
                 self.dispatch("_training_finally")
 
             # test best model if test data is present
-            if self.corpus.test and not train_with_test:
-                log_line(log)
+            if is_main_process():
+                if self.corpus.test and not train_with_test:
+                    log_line(log)
 
-                self.model.eval()
+                    self.model.eval()
 
-                if (base_path / "best-model.pt").exists():
-                    log.info("Loading model from best epoch ...")
-                    self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
+                    if (base_path / "best-model.pt").exists():
+                        log.info("Loading model from best epoch ...")
+                        self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
+                    else:
+                        log.info("Testing using last state of model ...")
+
+                    test_results = self.model.evaluate(
+                        self.corpus.test,
+                        gold_label_type=self.model.label_type,
+                        mini_batch_size=eval_batch_size,
+                        out_path=base_path / "test.tsv",
+                        embedding_storage_mode="none",
+                        main_evaluation_metric=main_evaluation_metric,
+                        gold_label_dictionary=gold_label_dictionary_for_eval,
+                        exclude_labels=exclude_labels,
+                        return_loss=False,
+                    )
+
+                    log.info(test_results.detailed_results)
+                    log_line(log)
+
+                    # get and return the final test score of best model
+                    self.return_values["test_score"] = test_results.main_score
+
                 else:
-                    log.info("Testing using last state of model ...")
-
-                test_results = self.model.evaluate(
-                    self.corpus.test,
-                    gold_label_type=self.model.label_type,
-                    mini_batch_size=eval_batch_size,
-                    out_path=base_path / "test.tsv",
-                    embedding_storage_mode="none",
-                    main_evaluation_metric=main_evaluation_metric,
-                    gold_label_dictionary=gold_label_dictionary_for_eval,
-                    exclude_labels=exclude_labels,
-                    return_loss=False,
-                )
-
-                log.info(test_results.detailed_results)
-                log_line(log)
-
-                # get and return the final test score of best model
-                self.return_values["test_score"] = test_results.main_score
-
-            else:
-                if (base_path / "best-model.pt").exists():
-                    log.info("Loading model from best epoch ...")
-                    self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
-                self.return_values["test_score"] = 0
-                log.info("Test data not provided setting final score to 0")
+                    if (base_path / "best-model.pt").exists():
+                        log.info("Loading model from best epoch ...")
+                        self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
+                    self.return_values["test_score"] = 0
+                    log.info("Test data not provided setting final score to 0")
 
         # MetricHistoryPlugin -> stores the loss history in return_values
         self.dispatch("after_training")
