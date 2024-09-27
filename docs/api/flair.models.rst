@@ -1,31 +1,11 @@
 flair.models
 ============
 
-.. currentmodule:: flair.models
+.. currentmodule:: models
 
 .. autosummary::
     :toctree: generated
     :nosignatures:
+    :recursive:
 
-
-    EntityMentionLinker
-    SpanClassifier
-    LanguageModel
-    Lemmatizer
-    TextPairClassifier
-    TextTripleClassifier
-    TextPairRegressor
-    RelationClassifier
-    RelationExtractor
-    RegexpTagger
-    SequenceTagger
-    PrefixedSequenceTagger
-    TokenClassifier
-    WordTagger
-    FewshotClassifier
-    TARSClassifier
-    TARSTagger
-    TextClassifier
-    TextRegressor
-    ClusteringModel
-    MultitaskModel
+    models
