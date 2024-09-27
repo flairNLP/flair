@@ -6,13 +6,7 @@ flair.datasets.base
 .. autosummary::
     :toctree: generated
     :nosignatures:
+    :recursive:
 
-
-
-    DataLoader
-    FlairDatapointDataset
-    SentenceDataset
-    StringDataset
-    MongoDataset
-    find_train_dev_test_files
+    ..base
 
