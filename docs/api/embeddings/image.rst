@@ -6,10 +6,3 @@ flair.embeddings.image
 .. autosummary::
     :toctree: generated
     :nosignatures:
-
-
-    ImageEmbeddings
-    IdentityImageEmbeddings
-    PrecomputedImageEmbeddings
-    NetworkImageEmbeddings
-    ConvTransformNetworkImageEmbeddings
