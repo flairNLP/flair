@@ -6,9 +6,3 @@ flair.embeddings.legacy
 .. autosummary::
     :toctree: generated
     :nosignatures:
-
-
-    ELMoEmbeddings
-    CharLMEmbeddings
-    DocumentMeanEmbeddings
-    DocumentLSTMEmbeddings
