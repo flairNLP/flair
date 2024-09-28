@@ -10,6 +10,6 @@ Legal Notice
    :maxdepth: 3
    :hidden:
 
-   Tutorials <tutorial/index>
-   API <api/index>
-   Contributing <contributing/index>
+   Tutorials <../tutorial/index>
+   API <../api/index>
+   Contributing <../contributing/index>

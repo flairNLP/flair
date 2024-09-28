@@ -7,12 +7,3 @@ flair.splitter
     :toctree: generated
     :nosignatures:
 
-
-    SentenceSplitter
-    SegtokSentenceSplitter
-    SpacySentenceSplitter
-    SciSpacySentenceSplitter
-    TagSentenceSplitter
-    NewlineSentenceSplitter
-    NoSentenceSplitter
-

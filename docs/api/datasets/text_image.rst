@@ -6,9 +6,3 @@ flair.datasets.text_image
 .. autosummary::
     :toctree: generated
     :nosignatures:
-
-
-
-    FeideggerCorpus
-    FeideggerDataset
-
