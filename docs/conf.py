@@ -46,12 +46,12 @@ def linkcode_resolve(*args):
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary",
     "sphinx.ext.doctest",
     "sphinx.ext.intersphinx",
     "sphinx.ext.ifconfig",
     "sphinx.ext.napoleon",  # to render Google format docstrings
     "sphinx.ext.githubpages",
+    "sphinx_autosummary_autocollect",
     "myst_parser",
     "sphinx_github_style",
     "sphinx_autodoc_typehints",
@@ -59,6 +59,7 @@ extensions = [
     "sphinx_design",
 ]
 autosummary_generate = True
+autosummary_ignore_module_all = False
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
