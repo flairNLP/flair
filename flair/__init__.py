@@ -33,12 +33,6 @@ if torch.cuda.is_available() and device_id != "cpu":
 else:
     device = torch.device("cpu")
 
-distributed = False
-"""Experimental flag to indicate multiple GPUs are in use.
-
-Set by `launch_distributed` -- do not set manually.
-"""
-
 # global variable: version
 __version__ = "0.14.0"
 """The current version of the flair library installed."""

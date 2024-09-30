@@ -17,7 +17,6 @@ import flair
 from flair.class_utils import get_non_abstract_subclasses
 from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.distributed_utils import is_main_process
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
 from flair.file_utils import Tqdm, load_torch_state
@@ -47,6 +46,10 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         Implement this to enable training.
         """
         raise NotImplementedError
+
+    def forward(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
+        """Wraps forward_loss to maintain compatibility with hooks."""
+        return self.forward_loss(data_points)
 
     @abstractmethod
     def evaluate(
@@ -119,8 +122,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             model_file: the model file
             checkpoint: currently unused.
         """
-        if not is_main_process():
-            return
         model_state = self._get_state_dict()
 
         # write out a "model card" if one is set
