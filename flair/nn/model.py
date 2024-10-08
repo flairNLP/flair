@@ -47,6 +47,10 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         """
         raise NotImplementedError
 
+    def forward(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
+        """Wraps forward_loss to maintain compatibility with hooks."""
+        return self.forward_loss(data_points)
+
     @abstractmethod
     def evaluate(
         self,
