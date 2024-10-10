@@ -226,31 +226,3 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# Iris Sentiment Analysis
-
-## Overview
-
-This project implements a sentiment analysis model using the Iris dataset. The model predicts sentiment labels (Negative, Neutral, Positive) based on feature values from the dataset. It evaluates the model's performance using precision, recall, and F1-score metrics.
-
-## Features
-
-- **Sentiment Prediction**: Classifies Iris dataset samples into sentiment categories.
-- **Model Training and Evaluation**: Trains the model on the Iris dataset and evaluates its performance.
-- **Test Specific Sample Predictions**: Tests the model's predictions against expected sentiment values for specific samples.
-
-## Requirements
-
-Ensure you have the following packages installed:
-
-- `numpy`
-- `scikit-learn`
-- `unittest`
-- `sklearn`
-- `flair`
-
-You can install the required packages using pip:
-
-```bash
-pip install transfomers classifier ftfy
-
-

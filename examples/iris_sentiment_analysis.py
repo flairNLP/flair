@@ -9,6 +9,7 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import classification_report
 
 # Import Flair for embeddings
+import flair
 from flair.embeddings import TransformerDocumentEmbeddings
 from flair.data import Sentence
 
