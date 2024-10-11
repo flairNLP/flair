@@ -43,7 +43,15 @@ jobs:
         with:
           path: ./cache
           key: cache-v1.2
+      - name: Check Diskspace before tests
+        run: |
+          echo "Disk space before tests:"
+          df -h
       - name: Run tests
         run: |
           python -c 'import flair'
           pytest --runintegration -vv
+      - name: Check Diskspace after tests
+        run: |
+          echo "Disk space after tests:"
+          df -h
