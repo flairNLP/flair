@@ -5,6 +5,19 @@ on:
     branches: [master]
 
 jobs:
+  disk_space:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Free Disk Space Before Build
+        run: |
+          echo "Disk space before cleanup:"
+          df -h
+          echo "Disk space after cleanup:"
+          df -h
   test:
     runs-on: ubuntu-latest
     env:
