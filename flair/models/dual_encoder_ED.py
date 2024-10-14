@@ -530,8 +530,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
     def _prepare_sentences(self, sentences: List[Sentence],
                            max_characters_sentence = 2800,
-                           max_spans_per_sentence = 100,
-                           max_spans_per_batch = 200,
+                           max_spans_per_sentence = 50, #75,
+                           max_spans_per_batch = 100, #150,
                            max_characters_per_batch_with_context: Union[int, None] = 8000,
                            respect_full_stops = True,
                            batch_size: Union[int, None] = None,
@@ -1031,30 +1031,39 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         #number_of_spans_to_verbalize = random.randint(int(len(spans)/2), len(spans)) # experiment: use more verbalizations in training
         return random.sample(spans, number_of_spans_to_verbalize)
 
-    def select_predicted_spans_to_use_for_label_verbalization(self, sentences, label_name, n: int):
+    def select_predicted_spans_to_use_for_label_verbalization(self, sentences, label_name, nr_steps: int):
         """
         From all spans with label_tape (e.g. "nel") and label_name (e.g. "predicted") annotation, take the n spans with highest score.
         :param sentences: Sentences to select spans from.
         :param label_name: Label type that is storing the scores of predictions (e.g. "predicted").
-        :param n: Number of chosen highest scored spans.
+        :param nr_steps: Number of iterations (roughly).
         :return: n or less spans.
         """
+
+        if nr_steps < 1:
+            nr_steps = 1
         spans = []
         for s in sentences:
             spans.extend([sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)])
 
-        # old method: choose n most confident per batch
-        sorted_spans = sorted(spans, key = lambda sp: sp.get_label(label_name).score, reverse = True)
-        chosen = sorted_spans[:n]
-
-        # alternative: chose the most confident per sentence:
+        # sequential (natural order)
         # chosen = []
         # for s in sentences:
         #     spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)]
-        #     #spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type) and sp.get_label(label_name).value == sp.get_label(self.label_type).value] # experiment: only allow correct ones
         #     if len(spans_in_sentence) > 0:
-        #         sorted_spans = sorted(spans_in_sentence, key=lambda sp: sp.get_label(label_name).score, reverse=True)
-        #         chosen.append(sorted_spans[0])
+        #         chosen.extend(spans_in_sentence[:ceil(len(spans_in_sentence)/nr_steps)])
+
+        # first method: choose n most confident per batch
+        # sorted_spans = sorted(spans, key = lambda sp: sp.get_label(label_name).score, reverse = True)
+        # chosen = sorted_spans[:ceil(len(sorted_spans)/nr_steps)]
+
+        # alternative: chose the most confident per sentence:
+        chosen = []
+        for s in sentences:
+            spans_in_sentence = [sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)]
+            if len(spans_in_sentence) > 0:
+                sorted_spans_in_sentence = sorted(spans_in_sentence, key=lambda sp: sp.get_label(label_name).score, reverse=True)
+                chosen.extend(sorted_spans_in_sentence[:ceil(len(sorted_spans_in_sentence)/nr_steps)])
 
         # alternative: chose N most distinct (i.e. largest gap to the next probable label) labels
         # import heapq
@@ -1063,7 +1072,7 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         #     most_distinct_spans = heapq.nlargest(n, spans, key=lambda sp: abs(sp.get_label("top_0").score - sp.get_label("top_1").score))
         #     return most_distinct_spans
         #
-        # chosen = select_most_distinct_predictions(spans, n)
+        # chosen = select_most_distinct_predictions(spans, ceil(len(spans)/nr_steps))
 
         return chosen
 
@@ -1114,18 +1123,21 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         for s in sentences:
             s.remove_labels("sentence_input")
 
-        step_size = round(sum([len(s.get_spans("nel")) for s in sentences]) / 10)
+        original_nr_spans = sum([len(s.get_spans("nel")) for s in sentences])
+        nr_steps = 3
         level = 0
 
         # iterate until all spans are predicted
         sentences_to_use = sentences
         while True:
-
-            # do need to keep the initial predictions
             for s in sentences:
                 s.remove_labels("predicted")
-                s.remove_labels("verbalized:0")
-                s.remove_labels("input_sentence:0")
+
+            # no need to keep the initial predictions
+            # if level == 0:
+            #     for s in sentences:
+            #         s.remove_labels("verbalized:0")
+            #         s.remove_labels("input_sentence:0")
 
             super(GreedyDualEncoderEntityDisambiguation, self).predict(sentences_to_use,
                                   mini_batch_size=mini_batch_size,
@@ -1137,24 +1149,31 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
                                   )
 
             # select the step_size highest confidence spans
+            #if level > 3: # take all remaining
+            #    step_size = original_nr_spans
             chosen_spans = self.select_predicted_spans_to_use_for_label_verbalization(sentences_to_use,
-                                                                                      label_name,
-                                                                                      step_size)
-
-            # if no spans remaining, break
-            if len(chosen_spans) == 0:
-                break
+                                                                                      label_name=label_name,
+                                                                                      nr_steps = nr_steps)
 
             # verbalization markers for the current level
             verbalized_label_type = f"verbalized:{level}"
             input_sentence_label_type = f"input_sentence:{level}"
 
-            # add markers to the chosen spans
-            for sp in chosen_spans:
-                label = sp.get_label(label_name)
-                sp.set_label(verbalized_label_type, value=label.value, score=label.score)
-                span_marked_sentence = sp.sentence.text[:sp.start_position] + "[SPAN_START] " + sp.text + " [SPAN_END]" + sp.sentence.text[sp.end_position:]
-                sp.set_label(input_sentence_label_type, value=span_marked_sentence, score = 0.0)
+            predicted_spans = []
+            for s in sentences_to_use:
+                predicted_spans.extend([sp for sp in s.get_spans(label_name) if sp.has_label(self.label_type)])
+            # mark the chosen spans as well as the other ones accordingly:
+            for sp in predicted_spans:
+                predicted_label = sp.get_label(label_name)
+                sp.set_label(f"predicted:{level}", value= predicted_label.value, score = predicted_label.score)
+                if sp in chosen_spans:
+                    sp.set_label(verbalized_label_type, value=predicted_label.value, score=predicted_label.score)
+                    span_marked_sentence = sp.sentence.text[:sp.start_position] + "[SPAN_START] " + sp.text + " [SPAN_END]" + sp.sentence.text[sp.end_position:]
+                    sp.set_label(input_sentence_label_type, value=span_marked_sentence, score = 0.0)
+
+            # if no spans remaining, break
+            if len(chosen_spans) == 0:
+                break
 
             # insert the label verbalizations of the chosen spans
             verbalized_sentences = [
@@ -1173,6 +1192,7 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
             sentences_to_use = verbalized_sentences
             del verbalized_sentences
             level +=1
+            nr_steps -=1
 
 
         original_spans = []
@@ -1196,11 +1216,17 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
             # save the input sentence versions that were used for each span (that include the verbalizations at the time)
             input_sentence_key = next((key for key in pred.annotation_layers.keys() if key.startswith("input_sentence:")), None)
             if input_sentence_key:
+                predicted_at_step = int(input_sentence_key.split(":")[1])
                 orig.set_label("sentence_input", pred.get_label(input_sentence_key).value, score = 0.0)
-                orig.set_label("verbalized_at_step", value = int(input_sentence_key.split(":")[1]), score = 0.0)
+                orig.set_label("predicted_at_step", value = predicted_at_step, score = 0.0)
+
+                # also save the predictions of earlier steps:
+                for step in range(predicted_at_step +1):
+                    orig.set_label(f"predicted:{step}", value = pred.get_label(f"predicted:{step}").value, score = pred.get_label(f"predicted:{step}").score)
+
             else:
                 orig.set_label("sentence_input", orig.sentence.text, score = 0.0) # this should not happen but to be sure
-                orig.set_label("verbalized_at_step", value = "NA", score = 0.0)
+                orig.set_label("predicted_at_step", value = "NA", score = 0.0)
 
         del original_spans, predicted_spans, sentences_to_use
 
@@ -1219,9 +1245,24 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                     f' --> {span.get_label("predicted").value} ({symbol})\n'
                 )
+                prediction_steps = []
+                step = 0
+                while True:
+                    label = span.get_label(f"predicted:{step}").value
+                    if label == "O":
+                        break
+                    prediction_steps.append(label)
+                    step += 1
+
+                symbols = ["✓" if l == span.get_label(gold_label_type).value else "❌" for l in prediction_steps]
+
+                eval_line += (
+                    f'  (steps: {"-->".join(prediction_steps)}, so: {"".join(symbols)})\n'
+                )
+
                 if add_sentence_input:
                     eval_line += (
-                        f'  VERBALIZED AT STEP "{span.get_label("verbalized_at_step").value}"\n'
+                        f'  PREDICTED AT STEP "{span.get_label("predicted_at_step").value}"\n'
                     )
                     eval_line += (
                     f'  <-- "{span.get_label("sentence_input").value}"\n\n'
