@@ -1481,10 +1481,96 @@ class CLEANCONLL(ColumnCorpus):
         )
 
     @staticmethod
-    def download_and_prepare_data(data_folder: Path, base_path: Path):
+    def download_and_prepare_data(data_folder: Path):
+
+        def parse_patch(patch_file_path):
+            """
+            Parses a patch file and returns a structured representation of the changes.
+            """
+
+            changes = []
+            current_change = None
+
+            with open(patch_file_path, 'r') as patch_file:
+                for line in patch_file:
+
+                    # Check if the line is a change, delete or add command (like 17721c17703,17705 or 5728d5727)
+                    if line and (line[0].isdigit() and ('c' in line or 'd' in line or 'a' in line)):
+                        if current_change:
+                            # Append the previous change block to the changes list
+                            changes.append(current_change)
+
+                        # Start a new change block
+                        current_change = {'command': line, 'original': [], 'new': []}
+
+                    # Capture original lines (those marked with "<")
+                    elif line.startswith('<'):
+                        if current_change:
+                            current_change['original'].append(line[2:]) # Remove the "< " part
+
+                    # Capture new lines (those marked with ">")
+                    elif line.startswith('>'):
+                        if current_change:
+                            current_change['new'].append(line[2:]) # Remove the "> " part
+
+                # Append the last change block to the changes list
+                if current_change:
+                    changes.append(current_change)
+
+            return changes
+
+        def parse_line_range(line_range_str):
+            """
+            Utility function to parse a line range string like '17703,17705' or '5727' and returns a tuple (start, end)
+            """
+            parts = line_range_str.split(',')
+            if len(parts) == 1:
+                start = int(parts[0]) - 1
+                return (start, start+1)
+            else:
+                start = int(parts[0]) - 1
+                end = int(parts[1])
+                return (start, end)
+
+        def apply_patch_to_file(original_file, changes, output_file_path):
+            """
+            Applies the patch instructions to the content of the original file.
+            """
+            with open(original_file, 'r') as f:
+                original_lines = f.readlines()
+
+            modified_lines = original_lines[:]  # Make a copy of original lines
+
+            # Apply each change in reverse order (important to avoid index shift issues)
+            for change in reversed(changes):
+                command = change['command']
+
+                # Determine the type of the change: `c` for change, `d` for delete, `a` for add
+                if 'c' in command:
+                    # Example command: 17721c17703,17705
+                    original_line_range, new_line_range = command.split('c')
+                    original_line_range = parse_line_range(original_line_range)
+                    modified_lines[original_line_range[0]:original_line_range[1]] = change['new']
+
+                elif 'd' in command:
+                    # Example command: 5728d5727
+                    original_line_number = int(command.split('d')[0]) - 1
+                    del modified_lines[original_line_number]
+
+                elif 'a' in command:
+                    # Example command: 1000a1001,1002
+                    original_line_number = int(command.split('a')[0]) - 1
+                    insertion_point = original_line_number + 1
+                    for new_token in reversed(change['new']):
+                        modified_lines.insert(insertion_point, new_token)
+
+            # Write the modified content to the output file
+            with open(output_file_path, 'w') as output_file:
+                output_file.writelines(modified_lines)
 
         def apply_patch(file_path, patch_path, output_path):
-            subprocess.run(['patch', str(file_path), str(patch_path), '-o', output_path])
+            patch_instructions = parse_patch(patch_path)
+            apply_patch_to_file(file_path, patch_instructions, output_path)
 
         def extract_tokens(file_path: Path, output_path: Path):
             with open(file_path, 'r') as f_in, open(output_path, 'w') as f_out:
@@ -1499,12 +1585,16 @@ class CLEANCONLL(ColumnCorpus):
                         f_out.write('\n')
 
         def merge_annotations(tokens_file, annotations_file, output_file):
-            with open(tokens_file, 'r') as tokens, open(annotations_file, 'r') as annotations, open(output_file,
-                                                                                                    'w') as output:
+            with open(tokens_file, 'r') as tokens_file, \
+                    open(annotations_file, 'r') as annotations_file, \
+                    open(output_file, 'w') as output_file:
+                tokens = tokens_file.readlines()
+                annotations = annotations_file.readlines()
+
                 for token, annotation in zip(tokens, annotations):
                     # Strip the leading '[TOKEN]\t' from the annotation
                     stripped_annotation = '\t'.join(annotation.strip().split('\t')[1:])
-                    output.write(token.strip() + '\t' + stripped_annotation + '\n')
+                    output_file.write(token.strip() + '\t' + stripped_annotation + '\n')
 
         # Create a temporary directory
         with tempfile.TemporaryDirectory() as tmpdirname:
@@ -1562,89 +1652,6 @@ class CLEANCONLL(ColumnCorpus):
             merge_annotations(tokens_dir / 'test_tokens_updated.txt', cleanconll_annotations_dir / 'cleanconll_annotations.test', data_folder / 'cleanconll.test')
 
             print("Done with creating. CleanCoNLL files are placed here:", data_folder)
-
-
-
-# class CLEANCONLL(ColumnCorpus):
-#     def __init__(
-#             self,
-#             base_path: Optional[Union[str, Path]] = None,
-#             in_memory: bool = True,
-#             **corpusargs,
-#     ) -> None:
-#         """
-#         Initialize the CleanCoNLL corpus.
-#
-#         Args:
-#             base_path: Base directory for the dataset. If None, defaults to flair.cache_root / "datasets".
-#             in_memory: If True, keeps dataset in memory for faster training.
-#         """
-#         # Set the base path for the dataset
-#         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
-#
-#         # Define column format
-#         columns = {0: "text",
-#                    1: "pos",
-#                    2: "nel",
-#                    3: "ner*",
-#                    4: "ner"}
-#
-#         # Define dataset name
-#         dataset_name = self.__class__.__name__.lower()
-#
-#         # Define data folder path
-#         data_folder = base_path / dataset_name
-#
-#         # Check if the train data file exists, otherwise download and prepare the dataset
-#         train_set = data_folder / 'cleanconll.train'
-#
-#         if not train_set.exists():
-#             print("CleanCoNLL files not found, so downloading and creating them.")
-#
-#             github_url = "https://github.com/flairNLP/CleanCoNLL/archive/main.zip"
-#
-#             # Create a temporary directory
-#             with tempfile.TemporaryDirectory() as tmpdirname:
-#                 tmpdir = Path(tmpdirname)
-#
-#                 zip_path = cached_path(github_url, tmpdir)
-#                 unpack_file(zip_path, tmpdir, "zip", False)
-#
-#                 script_root = tmpdir / 'CleanCoNLL-main'
-#
-#                 # Verify the script path
-#                 create_script_path = script_root / 'create_cleanconll_from_conll03.sh'
-#                 print(f"Path to the create script: {create_script_path}")
-#
-#                 if not create_script_path.exists():
-#                     raise FileNotFoundError(f"Script not found: {create_script_path}")
-#
-#                 # Run shell script for creating corpus files
-#                 import subprocess
-#                 subprocess.call(['chmod', 'u+x', create_script_path])
-#                 subprocess.call(['bash', create_script_path], cwd=script_root)
-#
-#                 print("CleanCoNLL files created in temporary directory:", str(script_root / 'data/cleanconll'))
-#
-#                 # Ensure the final data folder exists
-#                 data_folder.mkdir(parents=True, exist_ok=True)
-#
-#                 # Copy the files to the final data folder
-#                 shutil.copytree(script_root / 'data/cleanconll', data_folder, dirs_exist_ok=True)
-#                 print("CleanCoNLL files are placed here:", data_folder)
-#
-#         else:
-#             print("Found files for CleanCoNLL in:", data_folder)
-#
-#         # Initialize the parent class with the specified parameters
-#         super().__init__(
-#             data_folder,
-#             columns,
-#             encoding="utf-8",
-#             in_memory=in_memory,
-#             document_separator_token="-DOCSTART-",
-#             **corpusargs,
-#         )
 
 
 class CONLL_2000(ColumnCorpus):
