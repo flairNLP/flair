@@ -9,10 +9,6 @@ import tarfile
 from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-import tempfile
-import shutil
-import requests
-import zipfile
 from typing import (
     Any,
     Optional,
@@ -20,6 +16,7 @@ from typing import (
     cast,
 )
 
+import requests
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
@@ -1508,7 +1505,7 @@ class CLEANCONLL(ColumnCorpus):
             return changes
 
         def parse_line_range(line_range_str):
-            """Utility function to parse a line range string like '17703,17705' or '5727' and returns a tuple (start, end)"""
+            """Utility function to parse a line range string like '17703,17705' or '5727' and returns a tuple (start, end)."""
             parts = line_range_str.split(",")
             if len(parts) == 1:
                 start = int(parts[0]) - 1
@@ -1519,9 +1516,7 @@ class CLEANCONLL(ColumnCorpus):
                 return (start, end)
 
         def apply_patch_to_file(original_file, changes, output_file_path):
-            """
-            Applies the patch instructions to the content of the original file.
-            """
+            """Applies the patch instructions to the content of the original file."""
             with open(original_file, encoding="utf-8") as f:
                 original_lines = f.readlines()
 
