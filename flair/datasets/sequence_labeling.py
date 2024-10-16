@@ -13,7 +13,6 @@ import tempfile
 import shutil
 import requests
 import zipfile
-import subprocess
 from typing import (
     Any,
     Optional,
@@ -1434,8 +1433,7 @@ class CLEANCONLL(ColumnCorpus):
         in_memory: bool = True,
         **corpusargs,
     ) -> None:
-        """
-        Initialize the CleanCoNLL corpus.
+        """Initialize the CleanCoNLL corpus.
 
         Args:
             base_path: Base directory for the dataset. If None, defaults to flair.cache_root / "datasets".
@@ -1478,14 +1476,11 @@ class CLEANCONLL(ColumnCorpus):
     @staticmethod
     def download_and_prepare_data(data_folder: Path):
         def parse_patch(patch_file_path):
-            """
-            Parses a patch file and returns a structured representation of the changes.
-            """
-
+            """Parses a patch file and returns a structured representation of the changes."""
             changes = []
             current_change = None
 
-            with open(patch_file_path, "r", encoding="utf-8") as patch_file:
+            with open(patch_file_path, encoding="utf-8") as patch_file:
                 for line in patch_file:
                     # Check if the line is a change, delete or add command (like 17721c17703,17705 or 5728d5727)
                     if line and (line[0].isdigit() and ("c" in line or "d" in line or "a" in line)):
@@ -1513,9 +1508,7 @@ class CLEANCONLL(ColumnCorpus):
             return changes
 
         def parse_line_range(line_range_str):
-            """
-            Utility function to parse a line range string like '17703,17705' or '5727' and returns a tuple (start, end)
-            """
+            """Utility function to parse a line range string like '17703,17705' or '5727' and returns a tuple (start, end)"""
             parts = line_range_str.split(",")
             if len(parts) == 1:
                 start = int(parts[0]) - 1
@@ -1529,7 +1522,7 @@ class CLEANCONLL(ColumnCorpus):
             """
             Applies the patch instructions to the content of the original file.
             """
-            with open(original_file, "r", encoding="utf-8") as f:
+            with open(original_file, encoding="utf-8") as f:
                 original_lines = f.readlines()
 
             modified_lines = original_lines[:]  # Make a copy of original lines
@@ -1566,7 +1559,7 @@ class CLEANCONLL(ColumnCorpus):
             apply_patch_to_file(file_path, patch_instructions, output_path)
 
         def extract_tokens(file_path: Path, output_path: Path):
-            with open(file_path, "r", encoding="utf-8") as f_in, open(output_path, "w", encoding="utf-8") as f_out:
+            with open(file_path, encoding="utf-8") as f_in, open(output_path, "w", encoding="utf-8") as f_out:
                 for line in f_in:
                     # Strip whitespace to check if the line is empty
                     stripped_line = line.strip()
@@ -1578,8 +1571,8 @@ class CLEANCONLL(ColumnCorpus):
                         f_out.write("\n")
 
         def merge_annotations(tokens_file, annotations_file, output_file):
-            with open(tokens_file, "r", encoding="utf-8") as tokens_file, open(
-                annotations_file, "r", encoding="utf-8"
+            with open(tokens_file, encoding="utf-8") as tokens_file, open(
+                annotations_file, encoding="utf-8"
             ) as annotations_file, open(output_file, "w", encoding="utf-8") as output_file:
                 tokens = tokens_file.readlines()
                 annotations = annotations_file.readlines()
