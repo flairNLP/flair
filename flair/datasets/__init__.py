@@ -171,11 +171,11 @@ from .relation_extraction import (
 # Expose all sequence labeling datasets
 from .sequence_labeling import (
     BIOSCOPE,
+    CLEANCONLL,
     CONLL_03,
     CONLL_03_DUTCH,
     CONLL_03_GERMAN,
     CONLL_03_SPANISH,
-    CLEANCONLL,
     CONLL_2000,
     FEWNERD,
     KEYPHRASE_INSPEC,
