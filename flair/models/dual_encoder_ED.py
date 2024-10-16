@@ -43,8 +43,8 @@ def insert_verbalizations_into_sentence(sentence: Sentence, label_type: str, lab
         verbalization_string = label_map.get(label, label.replace('_', ' '))
 
         # cutting off the label name
-        if ";" in verbalization_string:
-            verbalization_string = verbalization_string.split(";", 1)[1].strip()
+        #if ":" in verbalization_string:
+        #    verbalization_string = verbalization_string.split(":", 1)[1].strip()
 
         verbalization = Sentence(f" ({verbalization_string})") # using brackets
         #verbalization = Sentence(f" (the {verbalization_string})") # using brackets and "the"
@@ -813,7 +813,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                 sentence_object = flair.data.Sentence(self.label_map.get(l,l.replace("_", " ")))
                 sentence_object.set_label("last title token", len(sentence_object)-1) # default is last token of whole verbalization
                 for token in sentence_object:
-                    if token.text == ";":
+                    if token.text == ":":
                         sentence_object.set_label("last title token", token.idx-2) # set to the last token of title
                         break
                 self._label_dict.add_sentence_object_for(l, sentence_object)
@@ -941,10 +941,12 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             eval_line = f"\n{datapoint.to_original_text()}\n"
 
             for span in datapoint.get_spans(gold_label_type):
-                symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
+                pred = span.get_label("predicted").value
+                symbol = "✓" if span.get_label(gold_label_type).value == pred else "❌"
+                verbalization = self.label_map.get(pred,pred.replace("_", " "))
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
-                    f' --> {span.get_label("predicted").value} ({symbol})\n'
+                    f' --> {pred} ({symbol}) "{verbalization}"\n'
                 )
 
             lines.append(eval_line)
@@ -1029,6 +1031,8 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         spans = list(set(spans))
         number_of_spans_to_verbalize = random.randint(0, len(spans))
         #number_of_spans_to_verbalize = random.randint(int(len(spans)/2), len(spans)) # experiment: use more verbalizations in training
+
+        #number_of_spans_to_verbalize = np.random.binomial(len(spans), p=0.75)  # p > 0.5 makes larger sample sizes more likely
         return random.sample(spans, number_of_spans_to_verbalize)
 
     def select_predicted_spans_to_use_for_label_verbalization(self, sentences, label_name, nr_steps: int):
@@ -1240,10 +1244,13 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
             eval_line = f"\n{datapoint.to_original_text()}\n"
 
             for span in datapoint.get_spans(gold_label_type):
-                symbol = "✓" if span.get_label(gold_label_type).value == span.get_label("predicted").value else "❌"
+                pred = span.get_label("predicted").value
+                symbol = "✓" if span.get_label(gold_label_type).value == pred else "❌"
+                verbalization = self.label_map.get(pred,pred.replace("_", " "))
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
-                    f' --> {span.get_label("predicted").value} ({symbol})\n'
+                    f' --> {pred} ({symbol}) "{verbalization}"\n'
+
                 )
                 prediction_steps = []
                 step = 0
