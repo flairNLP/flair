@@ -82,7 +82,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
                 ):
                     continue
 
-                relation = Relation(span_1, span_2)
+                relation = sentence[span_1, span_2]
                 if self.training and self.train_on_gold_pairs_only and relation.get_label(self.label_type).value == "O":
                     continue
                 entity_pairs.append(relation)
