@@ -191,6 +191,10 @@ def fill_mean_token_embeddings(
 
     return all_token_embeddings
 
+@torch.jit.script_if_tracing
+def document_cls_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor) -> torch.Tensor:
+    return sentence_hidden_states[torch.arange(sentence_hidden_states.shape[0]), sentence_lengths - 1]
+
 
 @torch.jit.script_if_tracing
 def document_mean_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor) -> torch.Tensor:
@@ -1436,9 +1440,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             else:
                 assert sub_token_lengths is not None
                 if self.cls_pooling == "cls":
-                    document_embeddings = sentence_hidden_states[
-                        torch.arange(sentence_hidden_states.shape[0]), sub_token_lengths - 1
-                    ]
+                    document_embeddings = document_cls_pooling(sentence_hidden_states, sub_token_lengths)
                 elif self.cls_pooling == "mean":
                     document_embeddings = document_mean_pooling(sentence_hidden_states, sub_token_lengths)
                 elif self.cls_pooling == "max":
