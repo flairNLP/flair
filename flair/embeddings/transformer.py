@@ -8,18 +8,18 @@ import zipfile
 from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Any, cast, Dict, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union, cast
 
 import torch
 import transformers
 from packaging.version import Version
 from torch.jit import ScriptModule
 from transformers import (
+    CONFIG_MAPPING,
     AutoConfig,
     AutoFeatureExtractor,
     AutoModel,
     AutoTokenizer,
-    CONFIG_MAPPING,
     FeatureExtractionMixin,
     LayoutLMTokenizer,
     LayoutLMTokenizerFast,
@@ -32,8 +32,8 @@ from transformers.tokenization_utils_base import LARGE_INTEGER
 from transformers.utils import PaddingStrategy
 
 import flair
-from flair.data import log, Sentence, Token
-from flair.embeddings.base import DocumentEmbeddings, Embeddings, register_embeddings, TokenEmbeddings
+from flair.data import Sentence, Token, log
+from flair.embeddings.base import DocumentEmbeddings, Embeddings, TokenEmbeddings, register_embeddings
 
 SENTENCE_BOUNDARY_TAG: str = "[FLERT]"
 
@@ -190,6 +190,7 @@ def fill_mean_token_embeddings(
     all_token_embeddings = torch.nan_to_num(all_token_embeddings)
 
     return all_token_embeddings
+
 
 @torch.jit.script_if_tracing
 def document_cls_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor) -> torch.Tensor:
@@ -1130,7 +1131,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if peft_config is not None:
             # add adapters for finetuning
             try:
-                from peft import get_peft_model, prepare_model_for_kbit_training, TaskType
+                from peft import TaskType, get_peft_model, prepare_model_for_kbit_training
             except ImportError:
                 log.error("You cannot use the PEFT finetuning without peft being installed")
                 raise

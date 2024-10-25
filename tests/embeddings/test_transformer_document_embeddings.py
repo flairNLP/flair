@@ -4,7 +4,6 @@ from flair.data import Dictionary, Sentence
 from flair.embeddings import TransformerDocumentEmbeddings
 from flair.models import TextClassifier
 from flair.nn import Classifier
-
 from tests.embedding_test_utils import BaseEmbeddingsTest
 
 
