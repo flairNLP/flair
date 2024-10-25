@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 120
-target-version = ['py37']
+target-version = ['py39']
 exclude = '''
 (
   /(
@@ -49,7 +49,7 @@ ignore_errors = true
 
 [tool.ruff]
 line-length = 120
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 #select = ["ALL"]    # Uncommit to autofix all the things

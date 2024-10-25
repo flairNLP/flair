@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from flair.trainers.plugins.base import TrainerPlugin
 from flair.training_utils import WeightExtractor
@@ -21,7 +21,7 @@ class WeightExtractorPlugin(TrainerPlugin):
         if (iteration + 1) % modulo == 0:
             self.weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),
             "base_path": str(self.base_path),

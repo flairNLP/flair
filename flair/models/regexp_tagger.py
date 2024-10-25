@@ -1,7 +1,7 @@
 import re
 import typing
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 from flair.data import Sentence, Span, Token
 
@@ -15,8 +15,8 @@ class TokenCollection:
     """
 
     sentence: Sentence
-    __tokens_start_pos: List[int] = field(init=False, default_factory=list)
-    __tokens_end_pos: List[int] = field(init=False, default_factory=list)
+    __tokens_start_pos: list[int] = field(init=False, default_factory=list)
+    __tokens_end_pos: list[int] = field(init=False, default_factory=list)
 
     def __post_init__(self):
         for token in self.tokens:
@@ -24,10 +24,10 @@ class TokenCollection:
             self.__tokens_end_pos.append(token.end_position)
 
     @property
-    def tokens(self) -> List[Token]:
+    def tokens(self) -> list[Token]:
         return list(self.sentence)
 
-    def get_token_span(self, span: Tuple[int, int]) -> Span:
+    def get_token_span(self, span: tuple[int, int]) -> Span:
         """Find a span by the token character positions.
 
         Given an interval specified with start and end pos as tuple, this function returns a Span object
@@ -45,7 +45,7 @@ class TokenCollection:
 
 
 class RegexpTagger:
-    def __init__(self, mapping: Union[List[Tuple[str, str]], Tuple[str, str]]) -> None:
+    def __init__(self, mapping: Union[list[tuple[str, str]], tuple[str, str]]) -> None:
         r"""This tagger is capable of tagging sentence objects with given regexp -> label mappings.
 
         I.e: The tuple (r'(["\'])(?:(?=(\\?))\2.)*?\1', 'QUOTE') maps every match of the regexp to
@@ -58,14 +58,14 @@ class RegexpTagger:
         Args:
             mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
         """
-        self._regexp_mapping: Dict[str, typing.Pattern] = {}
+        self._regexp_mapping: dict[str, typing.Pattern] = {}
         self.register_labels(mapping=mapping)
 
     @property
     def registered_labels(self):
         return self._regexp_mapping
 
-    def register_labels(self, mapping: Union[List[Tuple[str, str]], Tuple[str, str]]):
+    def register_labels(self, mapping: Union[list[tuple[str, str]], tuple[str, str]]):
         """Register a regexp -> label mapping.
 
         Args:
@@ -81,7 +81,7 @@ class RegexpTagger:
                     f"Couldn't compile regexp '{regexp}' for label '{label}'. Aborted with error: '{err.msg}'"
                 )
 
-    def remove_labels(self, labels: Union[List[str], str]):
+    def remove_labels(self, labels: Union[list[str], str]):
         """Remove a registered regexp -> label mapping given by label.
 
         Args:
@@ -101,7 +101,7 @@ class RegexpTagger:
         else:
             return element
 
-    def predict(self, sentences: Union[List[Sentence], Sentence]) -> List[Sentence]:
+    def predict(self, sentences: Union[list[Sentence], Sentence]) -> list[Sentence]:
         """Predict the given sentences according to the registered mappings."""
         if not isinstance(sentences, list):
             sentences = [sentences]
@@ -122,7 +122,7 @@ class RegexpTagger:
 
         for label, pattern in self._regexp_mapping.items():
             for match in pattern.finditer(sentence.to_original_text()):
-                span: Tuple[int, int] = match.span()
+                span: tuple[int, int] = match.span()
                 try:
                     token_span = collection.get_token_span(span)
                 except ValueError:

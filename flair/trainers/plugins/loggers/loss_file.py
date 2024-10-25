@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 from flair.trainers.plugins.base import TrainerPlugin
 from flair.trainers.plugins.metric_records import MetricName
@@ -10,7 +10,7 @@ class LossFilePlugin(TrainerPlugin):
     """Plugin that manages the loss.tsv file output."""
 
     def __init__(
-        self, base_path, epoch: int, metrics_to_collect: Optional[Dict[Union[Tuple, str], str]] = None
+        self, base_path, epoch: int, metrics_to_collect: Optional[dict[Union[tuple, str], str]] = None
     ) -> None:
         super().__init__()
 
@@ -56,9 +56,9 @@ class LossFilePlugin(TrainerPlugin):
                 self.headers[metric_name] = f"{prefix.upper()}_{header}"
 
         # initialize the first log line
-        self.current_row: Optional[Dict[MetricName, str]] = None
+        self.current_row: Optional[dict[MetricName, str]] = None
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),
             "base_path": str(self.base_path),

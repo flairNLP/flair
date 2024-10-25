@@ -5,7 +5,7 @@ import typing
 from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 import torch.nn
 from torch import Tensor
@@ -31,7 +31,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     Every new type of model must implement these methods.
     """
 
-    model_card: Optional[Dict[str, Any]] = None
+    model_card: Optional[dict[str, Any]] = None
 
     @property
     @abstractmethod
@@ -40,7 +40,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def forward_loss(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, data_points: list[DT]) -> tuple[torch.Tensor, int]:
         """Performs a forward pass and returns a loss tensor for backpropagation.
 
         Implement this to enable training.
@@ -50,13 +50,13 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     @abstractmethod
     def evaluate(
         self,
-        data_points: Union[List[DT], Dataset],
+        data_points: Union[list[DT], Dataset],
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: EmbeddingStorageMode = "none",
         mini_batch_size: int = 32,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: Optional[List[str]] = None,
+        main_evaluation_metric: tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: Optional[list[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         **kwargs,
@@ -84,7 +84,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         exclude_labels = exclude_labels if exclude_labels is not None else []
         raise NotImplementedError
 
-    def _get_state_dict(self) -> Dict:
+    def _get_state_dict(self) -> dict:
         """Returns the state dictionary for this model."""
         # Always include the name of the Model class for which the state dict holds
         state_dict = {"state_dict": self.state_dict(), "__cls__": self.__class__.__name__}
@@ -92,7 +92,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         return state_dict
 
     @classmethod
-    def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs):
+    def _init_model_with_state_dict(cls, state: dict[str, Any], **kwargs):
         """Initialize the model from a state dictionary."""
         if "embeddings" in kwargs:
             embeddings = kwargs.pop("embeddings")
@@ -128,7 +128,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Model":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "Model":
         """Loads the model from the given file.
 
         Args:
@@ -238,7 +238,7 @@ class ReduceTransformerVocabMixin(ABC):
     @abstractmethod
     def get_used_tokens(
         self, corpus: Corpus, context_lenth: int = 0, respect_document_boundaries: bool = True
-    ) -> typing.Iterable[List[str]]:
+    ) -> typing.Iterable[list[str]]:
         pass
 
 
@@ -251,13 +251,13 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
 
     def evaluate(
         self,
-        data_points: Union[List[DT], Dataset],
+        data_points: Union[list[DT], Dataset],
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: EmbeddingStorageMode = "none",
         mini_batch_size: int = 32,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: Optional[List[str]] = None,
+        main_evaluation_metric: tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: Optional[list[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         **kwargs,
@@ -281,10 +281,10 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             average_over = 0
 
             # variables for printing
-            lines: List[str] = []
+            lines: list[str] = []
 
             # variables for computing scores
-            all_spans: Set[str] = set()
+            all_spans: set[str] = set()
             all_true_values = {}
             all_predicted_values = {}
 
@@ -476,7 +476,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             )
 
             # Create and populate score object for logging with all evaluation values, plus the loss
-            scores: Dict[Union[Tuple[str, ...], str], Any] = {}
+            scores: dict[Union[tuple[str, ...], str], Any] = {}
 
             for avg_type in ("micro avg", "macro avg"):
                 for metric_type in ("f1-score", "precision", "recall"):
@@ -514,7 +514,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
     @abstractmethod
     def predict(
         self,
-        sentences: Union[List[DT], DT],
+        sentences: Union[list[DT], DT],
         mini_batch_size: int = 32,
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
@@ -537,7 +537,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         """
         raise NotImplementedError
 
-    def _print_predictions(self, batch: List[DT], gold_label_type: str) -> List[str]:
+    def _print_predictions(self, batch: list[DT], gold_label_type: str) -> list[str]:
         lines = []
         for datapoint in batch:
             # check if there is a label mismatch
@@ -557,14 +557,14 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
 
     def get_used_tokens(
         self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
-    ) -> typing.Iterable[List[str]]:
+    ) -> typing.Iterable[list[str]]:
         for sentence in _iter_dataset(corpus.get_all_sentences()):
             yield [t.text for t in sentence]
             yield [t.text for t in sentence.left_context(context_length, respect_document_boundaries)]
             yield [t.text for t in sentence.right_context(context_length, respect_document_boundaries)]
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "Classifier":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "Classifier":
         from typing import cast
 
         return cast("Classifier", super().load(model_path=model_path))
@@ -589,7 +589,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         word_dropout: float = 0.0,
         multi_label: bool = False,
         multi_label_threshold: float = 0.5,
-        loss_weights: Optional[Dict[str, float]] = None,
+        loss_weights: Optional[dict[str, float]] = None,
         decoder: Optional[torch.nn.Module] = None,
         inverse_model: bool = False,
         train_on_gold_pairs_only: bool = False,
@@ -663,21 +663,21 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def _get_data_points_from_sentence(self, sentence: DT) -> List[DT2]:
+    def _get_data_points_from_sentence(self, sentence: DT) -> list[DT2]:
         """Returns the data_points to which labels are added.
 
         The results should be of any type that inherits from DataPoint (Sentence, Span, Token, ... objects).
         """
         raise NotImplementedError
 
-    def _get_data_points_for_batch(self, sentences: List[DT]) -> List[DT2]:
+    def _get_data_points_for_batch(self, sentences: list[DT]) -> list[DT2]:
         """Returns the data_points to which labels are added.
 
         The results should be of any type that inherits from DataPoint (Sentence, Span, Token, ... objects).
         """
         return [data_point for sentence in sentences for data_point in self._get_data_points_from_sentence(sentence)]
 
-    def _get_label_of_datapoint(self, data_point: DT2) -> List[str]:
+    def _get_label_of_datapoint(self, data_point: DT2) -> list[str]:
         """Extracts the labels from the data points.
 
         Each data point might return a list of strings, representing multiple labels.
@@ -701,7 +701,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         else:
             self._multi_label_threshold = {"default": x}
 
-    def _prepare_label_tensor(self, prediction_data_points: List[DT2]) -> torch.Tensor:
+    def _prepare_label_tensor(self, prediction_data_points: list[DT2]) -> torch.Tensor:
         labels = [self._get_label_of_datapoint(dp) for dp in prediction_data_points]
         if self.multi_label:
             return torch.tensor(
@@ -726,7 +726,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 device=flair.device,
             )
 
-    def _encode_data_points(self, sentences: List[DT], data_points: List[DT2]) -> Tensor:
+    def _encode_data_points(self, sentences: list[DT], data_points: list[DT2]) -> Tensor:
         # embed sentences
         if self.should_embed_sentence:
             self.embeddings.embed(sentences)
@@ -747,7 +747,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         """Classes that inherit from DefaultClassifier may optionally mask scores."""
         return scores
 
-    def forward_loss(self, sentences: List[DT]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, sentences: list[DT]) -> tuple[torch.Tensor, int]:
         # make a forward pass to produce embedded data points and labels
         sentences = [sentence for sentence in sentences if self._filter_data_point(sentence)]
 
@@ -773,10 +773,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         # calculate the loss
         return self._calculate_loss(scores, label_tensor)
 
-    def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> Tuple[torch.Tensor, int]:
+    def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, int]:
         return self.loss_function(scores, labels), labels.size(0)
 
-    def _sort_data(self, data_points: List[DT]) -> List[DT]:
+    def _sort_data(self, data_points: list[DT]) -> list[DT]:
         if len(data_points) == 0:
             return []
 
@@ -784,16 +784,16 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             return data_points
 
         # filter empty sentences
-        sentences = [sentence for sentence in typing.cast(List[Sentence], data_points) if len(sentence) > 0]
+        sentences = [sentence for sentence in typing.cast(list[Sentence], data_points) if len(sentence) > 0]
 
         # reverse sort all sequences by their length
         reordered_sentences = sorted(sentences, key=len, reverse=True)
 
-        return typing.cast(List[DT], reordered_sentences)
+        return typing.cast(list[DT], reordered_sentences)
 
     def predict(
         self,
-        sentences: Union[List[DT], DT],
+        sentences: Union[list[DT], DT],
         mini_batch_size: int = 32,
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
@@ -824,7 +824,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 sentences = [sentences]
 
             if isinstance(sentences[0], Sentence):
-                Sentence.set_context_for_sentences(typing.cast(List[Sentence], sentences))
+                Sentence.set_context_for_sentences(typing.cast(list[Sentence], sentences))
 
             reordered_sentences = self._sort_data(sentences)
 
@@ -832,7 +832,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 return sentences
 
             if len(reordered_sentences) > mini_batch_size:
-                batches: Union[DataLoader, List[List[DT]]] = DataLoader(
+                batches: Union[DataLoader, list[list[DT]]] = DataLoader(
                     dataset=FlairDatapointDataset(reordered_sentences),
                     batch_size=mini_batch_size,
                 )
@@ -990,7 +990,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         return state
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "DefaultClassifier":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "DefaultClassifier":
         from typing import cast
 
         return cast("DefaultClassifier", super().load(model_path=model_path))

@@ -1,7 +1,7 @@
 import logging
 import sys
 from abc import ABC, abstractmethod
-from typing import Callable, List
+from typing import Callable
 
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions, word_tokenizer
@@ -20,7 +20,7 @@ class Tokenizer(ABC):
     """
 
     @abstractmethod
-    def tokenize(self, text: str) -> List[str]:
+    def tokenize(self, text: str) -> list[str]:
         raise NotImplementedError
 
     @property
@@ -57,11 +57,11 @@ class SpacyTokenizer(Tokenizer):
                 "spacy model or the name of the model to load."
             )
 
-    def tokenize(self, text: str) -> List[str]:
+    def tokenize(self, text: str) -> list[str]:
         from spacy.tokens.doc import Doc
 
         doc: Doc = self.model.make_doc(text)
-        words: List[str] = []
+        words: list[str] = []
         for word in doc:
             if len(word.text.strip()) == 0:
                 continue
@@ -82,12 +82,12 @@ class SegtokTokenizer(Tokenizer):
     def __init__(self) -> None:
         super().__init__()
 
-    def tokenize(self, text: str) -> List[str]:
+    def tokenize(self, text: str) -> list[str]:
         return SegtokTokenizer.run_tokenize(text)
 
     @staticmethod
-    def run_tokenize(text: str) -> List[str]:
-        words: List[str] = []
+    def run_tokenize(text: str) -> list[str]:
+        words: list[str] = []
 
         sentences = split_single(text)
         for sentence in sentences:
@@ -105,12 +105,12 @@ class SpaceTokenizer(Tokenizer):
     def __init__(self) -> None:
         super().__init__()
 
-    def tokenize(self, text: str) -> List[str]:
+    def tokenize(self, text: str) -> list[str]:
         return SpaceTokenizer.run_tokenize(text)
 
     @staticmethod
-    def run_tokenize(text: str) -> List[str]:
-        tokens: List[str] = []
+    def run_tokenize(text: str) -> list[str]:
+        tokens: list[str] = []
         word = ""
         index = -1
         for index, char in enumerate(text):
@@ -166,8 +166,8 @@ class JapaneseTokenizer(Tokenizer):
         self.sentence_tokenizer = konoha.SentenceTokenizer()
         self.word_tokenizer = konoha.WordTokenizer(tokenizer, mode=sudachi_mode)
 
-    def tokenize(self, text: str) -> List[str]:
-        words: List[str] = []
+    def tokenize(self, text: str) -> list[str]:
+        words: list[str] = []
 
         sentences = self.sentence_tokenizer.tokenize(text)
         for sentence in sentences:
@@ -184,11 +184,11 @@ class JapaneseTokenizer(Tokenizer):
 class TokenizerWrapper(Tokenizer):
     """Helper class to wrap tokenizer functions to the class-based tokenizer interface."""
 
-    def __init__(self, tokenizer_func: Callable[[str], List[str]]) -> None:
+    def __init__(self, tokenizer_func: Callable[[str], list[str]]) -> None:
         super().__init__()
         self.tokenizer_func = tokenizer_func
 
-    def tokenize(self, text: str) -> List[str]:
+    def tokenize(self, text: str) -> list[str]:
         return self.tokenizer_func(text)
 
     @property
@@ -225,7 +225,7 @@ class SciSpacyTokenizer(Tokenizer):
                 "  Note that the scispacy version and the version of the model must match to work properly!"
             )
 
-        def combined_rule_prefixes() -> List[str]:
+        def combined_rule_prefixes() -> list[str]:
             """Helper function that returns the prefix pattern for the tokenizer.
 
             It is a helper function to accommodate spacy tests that only test prefixes.
@@ -270,9 +270,9 @@ class SciSpacyTokenizer(Tokenizer):
         self.model.tokenizer.prefix_search = prefix_re.search
         self.model.tokenizer.infix_finditer = infix_re.finditer
 
-    def tokenize(self, text: str) -> List[str]:
+    def tokenize(self, text: str) -> list[str]:
         sentence = self.model(text)
-        words: List[str] = []
+        words: list[str] = []
         for word in sentence:
             words.append(word.text)
         return words

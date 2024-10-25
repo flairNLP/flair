@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import List
 
 from transformer_smaller_training_vocab import reduce_train_vocab
 
@@ -57,7 +56,7 @@ class ReduceTransformerVocabPlugin(TrainerPlugin):
             self.model.save(self.base_path / "final-model.pt", checkpoint=self.save_optimizer_state)
 
 
-def get_transformer_embeddings(model: Model) -> List[TransformerEmbeddings]:
+def get_transformer_embeddings(model: Model) -> list[TransformerEmbeddings]:
     embeddings = model.tars_embeddings if isinstance(model, FewshotClassifier) else getattr(model, "embeddings", None)
 
     if embeddings is None:

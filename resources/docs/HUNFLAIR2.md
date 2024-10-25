@@ -14,7 +14,7 @@ NER tools on unseen corpora.
 ## Quick Start
 
 #### Requirements and Installation
-*HunFlair2* is based on Flair 0.14+ and Python 3.8+. If you do not have Python 3.8, install it first.
+*HunFlair2* is based on Flair 0.14+ and Python 3.9+. If you do not have Python 3.9, install it first.
 Then, in your favorite virtual environment, simply do:
 ```
 pip install flair

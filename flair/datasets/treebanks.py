@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import flair
 from flair.data import Corpus, FlairDataset, Sentence, Token
@@ -82,7 +82,7 @@ class UniversalDependenciesDataset(FlairDataset):
         with open(str(self.path_to_conll_file), encoding="utf-8") as file:
             # option 1: read only sentence boundaries as offset positions
             if not self.in_memory:
-                self.indices: List[int] = []
+                self.indices: list[int] = []
 
                 line = file.readline()
                 position = 0
@@ -97,7 +97,7 @@ class UniversalDependenciesDataset(FlairDataset):
 
             # option 2: keep everything in memory
             if self.in_memory:
-                self.sentences: List[Sentence] = []
+                self.sentences: list[Sentence] = []
 
                 while True:
                     sentence = self._read_next_sentence(file)
@@ -129,7 +129,7 @@ class UniversalDependenciesDataset(FlairDataset):
 
     def _read_next_sentence(self, file) -> Optional[Sentence]:
         line = file.readline()
-        tokens: List[Token] = []
+        tokens: list[Token] = []
 
         # current token ID
         token_idx = 0
@@ -143,7 +143,7 @@ class UniversalDependenciesDataset(FlairDataset):
         newline_reached = False
         while line:
             line = line.strip()
-            fields: List[str] = re.split("\t+", line)
+            fields: list[str] = re.split("\t+", line)
 
             # end of sentence
             if line == "":

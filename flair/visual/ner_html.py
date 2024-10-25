@@ -1,5 +1,5 @@
 import html
-from typing import List, Union
+from typing import Union
 
 from flair.data import Sentence
 
@@ -41,7 +41,7 @@ def split_to_spans(s: Sentence, label_name="ner"):
 
 
 def render_ner_html(
-    sentences: Union[List[Sentence], Sentence],
+    sentences: Union[list[Sentence], Sentence],
     title: str = "Flair",
     colors={
         "PER": "#F7FF53",

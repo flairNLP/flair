@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from flair.trainers.plugins.base import TrainerPlugin
 
@@ -72,7 +72,7 @@ class WandbLogger(TrainerPlugin):
     def _training_finally(self, **kw):
         self.writer.close()
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),
             "emit_alerts": self.emit_alerts,

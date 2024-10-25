@@ -1,7 +1,7 @@
 import logging
 import re
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import torch
 from deprecated.sphinx import deprecated
@@ -110,12 +110,12 @@ class ELMoEmbeddings(TokenEmbeddings):
     def use_layers_average(self, x):
         return torch.mean(torch.stack(x), 0)
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         # ELMoEmbeddings before Release 0.5 did not set self.embedding_mode_fn
         if not getattr(self, "embedding_mode_fn", None):
             self.embedding_mode_fn = self.use_layers_all
 
-        sentence_words: List[List[str]] = []
+        sentence_words: list[list[str]] = []
         for sentence in sentences:
             sentence_words.append([token.text for token in sentence])
 
@@ -394,7 +394,7 @@ class CharLMEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         # if cache is used, try setting embeddings from cache first
         if "cache" in self.__dict__ and self.cache is not None:
             # try populating embeddings from cache
@@ -463,7 +463,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
         version="0.3.1",
         reason="The functionality of this class is moved to 'DocumentPoolEmbeddings'",
     )
-    def __init__(self, token_embeddings: List[TokenEmbeddings]) -> None:
+    def __init__(self, token_embeddings: list[TokenEmbeddings]) -> None:
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -478,7 +478,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, sentences: Union[List[Sentence], Sentence]):
+    def embed(self, sentences: Union[list[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences. If embeddings are already added, updates
         only if embeddings are non-static.
         """
@@ -506,7 +506,7 @@ class DocumentMeanEmbeddings(DocumentEmbeddings):
 
                 sentence.set_embedding(self.name, mean_embedding)
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: list[Sentence]):
         pass
 
 
@@ -517,7 +517,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
     )
     def __init__(
         self,
-        embeddings: List[TokenEmbeddings],
+        embeddings: list[TokenEmbeddings],
         hidden_size=128,
         rnn_layers=1,
         reproject_words: bool = True,
@@ -587,7 +587,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, sentences: Union[List[Sentence], Sentence]):
+    def embed(self, sentences: Union[list[Sentence], Sentence]):
         """Add embeddings to all sentences in the given list of sentences. If embeddings are already added, update
         only if embeddings are non-static.
         """
@@ -604,7 +604,7 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
         longest_token_sequence_in_batch: int = len(sentences[0])
 
         all_sentence_tensors = []
-        lengths: List[int] = []
+        lengths: list[int] = []
 
         # go through each sentence in batch
         for _i, sentence in enumerate(sentences):
@@ -669,5 +669,5 @@ class DocumentLSTMEmbeddings(DocumentEmbeddings):
             sentence = sentences[sentence_no]
             sentence.set_embedding(self.name, embedding)
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: list[Sentence]):
         pass

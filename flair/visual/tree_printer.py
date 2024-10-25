@@ -1,5 +1,3 @@
-from typing import List
-
 from pptree import print_tree
 
 from flair.data import Sentence, Token
@@ -9,7 +7,7 @@ class NodeToken:
     def __init__(self, token: Token, tag_type: str) -> None:
         self.token: Token = token
         self.tag_type: str = tag_type
-        self.children: List[NodeToken] = []
+        self.children: list[NodeToken] = []
 
     def set_haed(self, parent):
         parent.children.append(self)
@@ -19,7 +17,7 @@ class NodeToken:
 
 
 def tree_printer(sentence: Sentence, tag_type: str):
-    tree: List[NodeToken] = [NodeToken(token, tag_type) for token in sentence]
+    tree: list[NodeToken] = [NodeToken(token, tag_type) for token in sentence]
     for x in tree:
         if x.token.head_id != 0:
             head_token = x.token.get_head()

@@ -1,5 +1,3 @@
-from typing import List
-
 from flair.data import Label, Relation, Sentence, Span
 
 
@@ -14,7 +12,7 @@ def test_token_tags():
     sentence[0].add_label("pos", "pronoun")
 
     # check if there are three POS labels with correct text and values
-    labels: List[Label] = sentence.get_labels("pos")
+    labels: list[Label] = sentence.get_labels("pos")
     assert len(labels) == 3
     assert labels[0].data_point.text == "I"
     assert labels[0].value == "pronoun"
@@ -24,7 +22,7 @@ def test_token_tags():
     assert labels[2].value == "proper noun"
 
     # check if there are is one SENTIMENT label with correct text and values
-    labels: List[Label] = sentence.get_labels("sentiment")
+    labels: list[Label] = sentence.get_labels("sentiment")
     assert len(labels) == 1
     assert labels[0].data_point.text == "love"
     assert labels[0].value == "positive"
@@ -45,7 +43,7 @@ def test_token_tags():
     # remove the pos label from the last word
     sentence[2].remove_labels("pos")
     # there should be 2 POS labels left
-    labels: List[Label] = sentence.get_labels("pos")
+    labels: list[Label] = sentence.get_labels("pos")
     assert len(labels) == 2
     assert len(sentence[0].get_labels("pos")) == 1
     assert len(sentence[1].get_labels("pos")) == 1
@@ -72,7 +70,7 @@ def test_span_tags():
     sentence[7:8].add_label("ner", "City")
 
     # check if there are three labels with correct text and values
-    labels: List[Label] = sentence.get_labels("ner")
+    labels: list[Label] = sentence.get_labels("ner")
     assert len(labels) == 3
     assert labels[0].data_point.text == "Humboldt Universität zu Berlin"
     assert labels[0].value == "Organization"
@@ -82,7 +80,7 @@ def test_span_tags():
     assert labels[2].value == "City"
 
     # check if there are two spans with correct text and values
-    spans: List[Span] = sentence.get_spans("ner")
+    spans: list[Span] = sentence.get_spans("ner")
     assert len(spans) == 2
     assert spans[0].text == "Humboldt Universität zu Berlin"
     assert len(spans[0].get_labels("ner")) == 2
@@ -92,12 +90,12 @@ def test_span_tags():
     # now delete the NER tags of "Humboldt-Universität zu Berlin"
     sentence[0:4].remove_labels("ner")
     # should be only one NER label left
-    labels: List[Label] = sentence.get_labels("ner")
+    labels: list[Label] = sentence.get_labels("ner")
     assert len(labels) == 1
     assert labels[0].data_point.text == "Berlin"
     assert labels[0].value == "City"
     # and only one NER span
-    spans: List[Span] = sentence.get_spans("ner")
+    spans: list[Span] = sentence.get_spans("ner")
     assert len(spans) == 1
     assert spans[0].text == "Berlin"
     assert spans[0].get_label("ner").value == "City"
@@ -111,7 +109,7 @@ def test_different_span_tags():
     sentence[7:8].add_label("ner", "City")
 
     # check if there are three labels with correct text and values
-    labels: List[Label] = sentence.get_labels("ner")
+    labels: list[Label] = sentence.get_labels("ner")
     assert len(labels) == 2
     assert labels[0].data_point.text == "Humboldt Universität zu Berlin"
     assert labels[0].value == "Organization"
@@ -119,7 +117,7 @@ def test_different_span_tags():
     assert labels[1].value == "City"
 
     # check if there are two spans with correct text and values
-    spans: List[Span] = sentence.get_spans("ner")
+    spans: list[Span] = sentence.get_spans("ner")
     assert len(spans) == 2
     assert spans[0].text == "Humboldt Universität zu Berlin"
     assert spans[0].get_label("ner").value == "Organization"
@@ -131,22 +129,22 @@ def test_different_span_tags():
     # now delete the NER tags of "Humboldt-Universität zu Berlin"
     sentence[0:4].remove_labels("ner")
     # should be only one NER label left
-    labels: List[Label] = sentence.get_labels("ner")
+    labels: list[Label] = sentence.get_labels("ner")
     assert len(labels) == 1
     assert labels[0].data_point.text == "Berlin"
     assert labels[0].value == "City"
     # and only one NER span
-    spans: List[Span] = sentence.get_spans("ner")
+    spans: list[Span] = sentence.get_spans("ner")
     assert len(spans) == 1
     assert spans[0].text == "Berlin"
     assert spans[0].get_label("ner").value == "City"
     # but there is also one orgtype span and label
-    labels: List[Label] = sentence.get_labels("orgtype")
+    labels: list[Label] = sentence.get_labels("orgtype")
     assert len(labels) == 1
     assert labels[0].data_point.text == "Humboldt Universität zu Berlin"
     assert labels[0].value == "University"
     # and only one NER span
-    spans: List[Span] = sentence.get_spans("orgtype")
+    spans: list[Span] = sentence.get_spans("orgtype")
     assert len(spans) == 1
     assert spans[0].text == "Humboldt Universität zu Berlin"
     assert spans[0].get_label("orgtype").value == "University"
@@ -154,7 +152,7 @@ def test_different_span_tags():
     # let's add the NER tag back
     sentence[0:4].add_label("ner", "Organization")
     # check if there are three labels with correct text and values
-    labels: List[Label] = sentence.get_labels("ner")
+    labels: list[Label] = sentence.get_labels("ner")
     print(labels)
     assert len(labels) == 2
     assert labels[0].data_point.text == "Humboldt Universität zu Berlin"
@@ -163,7 +161,7 @@ def test_different_span_tags():
     assert labels[1].value == "City"
 
     # check if there are two spans with correct text and values
-    spans: List[Span] = sentence.get_spans("ner")
+    spans: list[Span] = sentence.get_spans("ner")
     assert len(spans) == 2
     assert spans[0].text == "Humboldt Universität zu Berlin"
     assert spans[0].get_label("ner").value == "Organization"
@@ -194,17 +192,17 @@ def test_relation_tags():
     Relation(sentence[0:2], sentence[3:4]).add_label("syntactic", "apposition")
 
     # there should be two relation labels
-    labels: List[Label] = sentence.get_labels("rel")
+    labels: list[Label] = sentence.get_labels("rel")
     assert len(labels) == 2
     assert labels[0].value == "located in"
     assert labels[1].value == "university of"
 
     # there should be one syntactic labels
-    labels: List[Label] = sentence.get_labels("syntactic")
+    labels: list[Label] = sentence.get_labels("syntactic")
     assert len(labels) == 1
 
     # there should be two relations, one with two and one with one label
-    relations: List[Relation] = sentence.get_relations("rel")
+    relations: list[Relation] = sentence.get_relations("rel")
     assert len(relations) == 2
     assert len(relations[0].labels) == 1
     assert len(relations[1].labels) == 2
