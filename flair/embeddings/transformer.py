@@ -1353,6 +1353,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
     def to_params(self):
         config_dict = self.model.config.to_dict()
+
+        # do not switch the attention implementation upon reload.
+        config_dict["attn_implementation"] = self.model.config._attn_implementation
+        del config_dict["_attn_implementation_autoset"]
+
         super_params = super().to_params()
 
         # those parameters are only from the super class and will be recreated in the constructor.
