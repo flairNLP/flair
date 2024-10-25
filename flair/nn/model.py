@@ -17,6 +17,7 @@ import flair
 from flair.class_utils import get_non_abstract_subclasses
 from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.distributed_utils import is_main_process
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
 from flair.file_utils import Tqdm, load_torch_state
@@ -46,10 +47,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         Implement this to enable training.
         """
         raise NotImplementedError
-
-    def forward(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
-        """Wraps forward_loss to maintain compatibility with hooks."""
-        return self.forward_loss(data_points)
 
     @abstractmethod
     def evaluate(
@@ -295,7 +292,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             loader = DataLoader(data_points, batch_size=mini_batch_size)
 
             sentence_id = 0
-            for batch in Tqdm.tqdm(loader):
+            for batch in Tqdm.tqdm(loader, disable=not is_main_process()):
                 # remove any previously predicted labels
                 for datapoint in batch:
                     datapoint.remove_labels("predicted")

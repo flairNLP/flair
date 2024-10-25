@@ -29,6 +29,10 @@ class CheckpointPlugin(TrainerPlugin):
             model_name = "model_epoch_" + str(epoch) + ".pt"
             self.model.save(self.base_path / model_name, checkpoint=self.save_optimizer_state)
 
+    @property
+    def attach_to_all_processes(self) -> bool:
+        return False
+
     def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),

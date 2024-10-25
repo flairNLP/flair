@@ -34,6 +34,10 @@ class MetricHistoryPlugin(TrainerPlugin):
         """Returns metric history."""
         self.trainer.return_values.update(self.metric_history)
 
+    @property
+    def attach_to_all_processes(self) -> bool:
+        return False
+
     def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),
