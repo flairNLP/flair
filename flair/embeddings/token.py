@@ -513,7 +513,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             character_embeddings = self.char_embedding(chars).transpose(0, 1)
 
-            packed = torch.nn.utils.rnn.pack_padded_sequence(character_embeddings, chars2_length)  # type: ignore[arg-type]
+            packed = torch.nn.utils.rnn.pack_padded_sequence(character_embeddings, chars2_length)
 
             lstm_out, self.hidden = self.char_rnn(packed)
 

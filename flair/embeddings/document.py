@@ -371,7 +371,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
         # push through RNN
-        packed = pack_padded_sequence(sentence_tensor, lengths, enforce_sorted=False, batch_first=True)  # type: ignore[arg-type]
+        packed = pack_padded_sequence(sentence_tensor, lengths, enforce_sorted=False, batch_first=True)
         rnn_out, hidden = self.rnn(packed)
         outputs, output_lengths = pad_packed_sequence(rnn_out, batch_first=True)
 
