@@ -44,7 +44,7 @@ def test_if_loaded_embeddings_have_all_attributes(tasks_base_path):
 @pytest.mark.parametrize("cls_pooling", ["cls", "mean", "max"])
 def test_cls_pooling(cls_pooling):
     embeddings = TransformerDocumentEmbeddings(
-        model="xlm-roberta-base",
+        model="distilbert-base-uncased",
         layers="-1",
         cls_pooling=cls_pooling,
         allow_long_sentences=True,
