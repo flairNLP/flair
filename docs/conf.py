@@ -1,4 +1,5 @@
 # noqa: INP001
+import inspect
 
 import importlib_metadata
 
@@ -35,8 +36,10 @@ html_theme_options = {
 
 
 def linkcode_resolve(*args):
+    app = inspect.currentframe().f_back.f_locals.get("app")
+    current_version = app.config.smv_current_version
     # use smv_current_version as the git url
-    real_linkcode_url = linkcode_url + f"/blob/{smv_current_version}/" + "{filepath}#L{linestart}-L{linestop}"
+    real_linkcode_url = linkcode_url + f"/blob/{current_version}/" + "{filepath}#L{linestart}-L{linestop}"
     return get_linkcode_resolve(real_linkcode_url)(*args)
 
 
