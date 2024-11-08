@@ -21,7 +21,7 @@ import flair
 import flair.nn
 from flair.data import Corpus, Dictionary, _len_dataset
 from flair.datasets import DataLoader
-from flair.distributed_utils import aggregate, is_main_process
+from flair.distributed_utils import aggregate, is_main_process, validate_corpus_same_across_processes
 from flair.samplers import FlairSampler
 from flair.trainers.plugins import (
     AnnealingPlugin,
@@ -496,6 +496,8 @@ class ModelTrainer(Pluggable):
         if multi_gpu:
             if not torch.distributed.is_initialized():
                 raise RuntimeError("multi_gpu=True can only used inside flair.distributed_utils.launch_distributed()")
+            # Guard against each process initializing corpus differently due to e.g. different random seeds
+            validate_corpus_same_across_processes(self.corpus)
             self.ddp_model = DistributedDataParallel(
                 self.model, device_ids=[flair.device.index], find_unused_parameters=True
             )
@@ -788,14 +790,14 @@ class ModelTrainer(Pluggable):
 
                     if save_best_model and current_epoch_has_best_model_so_far:
                         log.info("saving best model")
-                        self._save_model(base_path / "best-model.pt", checkpoint=save_optimizer_state)
+                        self.model.save(base_path / "best-model.pt", checkpoint=save_optimizer_state)
 
                 # - SWAPlugin -> restores SGD weights from SWA
                 self.dispatch("after_training_loop")
 
                 # if we do not use dev data for model selection, save final model
                 if save_final_model:
-                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
 
             except KeyboardInterrupt:
                 log_line(log)
@@ -805,7 +807,7 @@ class ModelTrainer(Pluggable):
 
                 if save_final_model:
                     log.info("Saving model ...")
-                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
 
             except TrainingInterrupt as exc:
@@ -816,7 +818,7 @@ class ModelTrainer(Pluggable):
 
                 if save_final_model:
                     log.info("Saving model ...")
-                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
 
             except Exception:
@@ -957,23 +959,5 @@ class ModelTrainer(Pluggable):
     def _record(self, metric):
         self.dispatch("metric_recorded", metric)
 
-    def _save_model(self, model_file: Union[str, Path], checkpoint: bool = False) -> None:
-        """Saves the current model. Safe to call from a distributed context.
-
-        Args:
-            model_file: the model file
-            checkpoint: currently unused.
-        """
-        if is_main_process():
-            self.model.save(model_file, checkpoint)
-
-        if torch.distributed.is_initialized():
-            torch.distributed.barrier()  # Prevent any process from loading a model until writing is complete
-
     def _load_model(self, model_file: Union[str, Path]) -> None:
-        """Loads the model from the given file into the current state. Safe to call from a distributed context."""
         self.model.load_state_dict(self.model.load(model_file).state_dict())
-        if torch.distributed.is_initialized():
-            self.ddp_model = DistributedDataParallel(
-                self.model, device_ids=[flair.device.index], find_unused_parameters=True
-            )

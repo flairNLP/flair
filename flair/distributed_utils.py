@@ -1,5 +1,6 @@
 import logging
 import os
+import random
 from multiprocessing.connection import Connection
 from typing import Callable
 
@@ -7,8 +8,10 @@ import numpy as np
 import torch
 import torch.multiprocessing as mp
 from torch.distributed import destroy_process_group, init_process_group
+from torch.utils.data import Dataset
 
 import flair
+from flair.data import Corpus, _len_dataset
 
 log = logging.getLogger("flair")
 
@@ -66,3 +69,19 @@ def aggregate(value, aggregation_fn=np.mean):
     else:
         gathered_values = [value]
     return aggregation_fn(gathered_values)
+
+
+def validate_corpus_same_across_processes(corpus: Corpus) -> None:
+    for dataset in [corpus.train, corpus.dev, corpus.test]:
+        if dataset is not None:
+            validate_dataset_same_across_processes(dataset)
+
+
+def validate_dataset_same_across_processes(dataset: Dataset, sample_size: int = 10) -> None:
+    """Sanity checks a few examples to catch datasets that are obviously different, but not exhaustive to save time."""
+    random_indices = random.sample(range(_len_dataset(dataset)), min(sample_size, _len_dataset(dataset)))
+    for i in random_indices:
+        example = dataset[i]
+        examples = aggregate(example, list)
+        if not all(example == examples[0] for example in examples):
+            raise ValueError("Dataset must be the same on each process")

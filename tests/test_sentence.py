@@ -13,9 +13,15 @@ def test_sentence_context():
 def test_equality():
     assert Sentence("Guten Tag!") != Sentence("Good day!")
     assert Sentence("Guten Tag!", use_tokenizer=True) != Sentence("Guten Tag!", use_tokenizer=False)
+    sentence1 = Sentence("This sentence will be labeled")
+    sentence1[1].set_label("ner", "B-subject")
+    sentence2 = Sentence("This sentence will be labeled")
+    sentence2[1].set_label("ner", "B-object")
+    assert sentence1 != sentence2
 
-    # TODO: is this desirable? Or should two sentences with same text be considered same objects?
-    assert Sentence("Guten Tag!") != Sentence("Guten Tag!")
+    assert Sentence("Guten Tag!") == Sentence("Guten Tag!")
+    sentence2[1].set_label("ner", "B-subject")
+    assert sentence1 == sentence2
 
 
 def test_token_labeling():
