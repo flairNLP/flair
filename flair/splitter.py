@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Union
+from typing import Any, Optional, Union
 
 from segtok.segmenter import split_multi
 
@@ -25,7 +25,7 @@ class SentenceSplitter(ABC):
     the sentence splitter's configuration.
     """
 
-    def split(self, text: str, link_sentences: Optional[bool] = True) -> List[Sentence]:
+    def split(self, text: str, link_sentences: Optional[bool] = True) -> list[Sentence]:
         sentences = self._perform_split(text)
         if not link_sentences:
             return sentences
@@ -34,7 +34,7 @@ class SentenceSplitter(ABC):
         return sentences
 
     @abstractmethod
-    def _perform_split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> list[Sentence]:
         raise NotImplementedError
 
     @property
@@ -62,11 +62,11 @@ class SegtokSentenceSplitter(SentenceSplitter):
         super().__init__()
         self._tokenizer = tokenizer
 
-    def _perform_split(self, text: str) -> List[Sentence]:
-        plain_sentences: List[str] = split_multi(text)
+    def _perform_split(self, text: str) -> list[Sentence]:
+        plain_sentences: list[str] = split_multi(text)
         sentence_offset = 0
 
-        sentences: List[Sentence] = []
+        sentences: list[Sentence] = []
         for sentence in plain_sentences:
             try:
                 sentence_offset = text.index(sentence, sentence_offset)
@@ -133,7 +133,7 @@ class SpacySentenceSplitter(SentenceSplitter):
         else:
             self._tokenizer = tokenizer
 
-    def _perform_split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> list[Sentence]:
         document = self.model(text)
 
         sentences = [
@@ -192,7 +192,7 @@ class TagSentenceSplitter(SentenceSplitter):
         self._tokenizer = tokenizer
         self.tag = tag
 
-    def _perform_split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> list[Sentence]:
         plain_sentences = text.split(self.tag)
 
         sentences = []
@@ -252,7 +252,7 @@ class NoSentenceSplitter(SentenceSplitter):
         super().__init__()
         self._tokenizer = tokenizer
 
-    def _perform_split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> list[Sentence]:
         return [Sentence(text=text, use_tokenizer=self._tokenizer, start_position=0)]
 
     @property

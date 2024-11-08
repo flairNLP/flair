@@ -2,7 +2,7 @@ import logging
 import random
 import typing
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import torch
 
@@ -27,9 +27,9 @@ class MultitaskModel(flair.nn.Classifier):
 
     def __init__(
         self,
-        models: List[flair.nn.Classifier],
-        task_ids: Optional[List[str]] = None,
-        loss_factors: Optional[List[float]] = None,
+        models: list[flair.nn.Classifier],
+        task_ids: Optional[list[str]] = None,
+        loss_factors: Optional[list[float]] = None,
         use_all_tasks: bool = False,
     ) -> None:
         """Instantiates the MultiTaskModel.
@@ -42,10 +42,10 @@ class MultitaskModel(flair.nn.Classifier):
         """
         super().__init__()
 
-        task_ids_internal: List[str] = task_ids if task_ids else [f"Task_{i}" for i in range(len(models))]
+        task_ids_internal: list[str] = task_ids if task_ids else [f"Task_{i}" for i in range(len(models))]
 
-        self.tasks: Dict[str, flair.nn.Classifier] = {}
-        self.loss_factors: Dict[str, float] = {}
+        self.tasks: dict[str, flair.nn.Classifier] = {}
+        self.loss_factors: dict[str, float] = {}
         self.use_all_tasks = use_all_tasks
 
         if not loss_factors:
@@ -63,10 +63,10 @@ class MultitaskModel(flair.nn.Classifier):
     def forward(self, *args) -> torch.Tensor:
         raise NotImplementedError("`forward` is not used for multitask learning")
 
-    def _prepare_tensors(self, data_points: List[DT]) -> Tuple[torch.Tensor, ...]:
+    def _prepare_tensors(self, data_points: list[DT]) -> tuple[torch.Tensor, ...]:
         raise NotImplementedError("`_prepare_tensors` is not used for multitask learning")
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, sentences: Union[list[Sentence], Sentence]) -> tuple[torch.Tensor, int]:
         """Calls the respective forward loss of each model and sums them weighted by their loss factors.
 
         Args:
@@ -92,7 +92,9 @@ class MultitaskModel(flair.nn.Classifier):
             task.predict(sentences, **predictargs)
 
     @staticmethod
-    def split_batch_to_task_ids(sentences: Union[List[Sentence], Sentence], all_tasks: bool = False) -> Dict:
+    def split_batch_to_task_ids(
+        sentences: Union[list[Sentence], Sentence], all_tasks: bool = False
+    ) -> dict[str, list[int]]:
         """Splits a batch of sentences to its respective model.
 
         If single sentence is assigned to several tasks (i.e. same corpus but different tasks), then the model
@@ -104,7 +106,7 @@ class MultitaskModel(flair.nn.Classifier):
 
         Returns: Key-value pairs as (task_id, list of sentences ids in batch)
         """
-        batch_to_task_mapping: Dict[str, List[int]] = {}
+        batch_to_task_mapping: dict[str, list[int]] = {}
         for sentence_id, sentence in enumerate(sentences):
             if all_tasks:
                 multitask_ids = sentence.get_labels("multitask_id")
@@ -122,7 +124,7 @@ class MultitaskModel(flair.nn.Classifier):
         data_points,
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        main_evaluation_metric: tuple[str, str] = ("micro avg", "f1-score"),
         evaluate_all: bool = True,
         **evalargs,
     ) -> Result:
@@ -161,7 +163,7 @@ class MultitaskModel(flair.nn.Classifier):
         loss = torch.tensor(0.0, device=flair.device)
         main_score = 0.0
         all_detailed_results = ""
-        all_classification_report: Dict[str, Dict[str, Any]] = {}
+        all_classification_report: dict[str, dict[str, Any]] = {}
 
         for task_id, split in batch_split.items():
             result = self.tasks[task_id].evaluate(
@@ -203,7 +205,7 @@ class MultitaskModel(flair.nn.Classifier):
 
     def get_used_tokens(
         self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
-    ) -> typing.Iterable[List[str]]:
+    ) -> typing.Iterable[list[str]]:
         for model in self.tasks.values():
             yield from model.get_used_tokens(corpus, context_length, respect_document_boundaries)
 
@@ -272,7 +274,7 @@ class MultitaskModel(flair.nn.Classifier):
         return model_name
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "MultitaskModel":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "MultitaskModel":
         from typing import cast
 
         return cast("MultitaskModel", super().load(model_path=model_path))

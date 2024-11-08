@@ -12,8 +12,9 @@ import tempfile
 import typing
 import warnings
 import zipfile
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Sequence, Tuple, Union, cast
+from typing import Optional, Union, cast
 from urllib.parse import urlparse
 
 import boto3
@@ -28,10 +29,10 @@ import flair
 
 logger = logging.getLogger("flair")
 
-url_proxies: Optional[typing.Dict[str, str]] = None
+url_proxies: Optional[dict[str, str]] = None
 
 
-def set_proxies(proxies: typing.Dict[str, str]) -> None:
+def set_proxies(proxies: dict[str, str]) -> None:
     r"""Allows for data downloaded from urls to be forwarded to a proxy.
 
     see https://requests.readthedocs.io/en/latest/user/advanced/#proxies
@@ -74,7 +75,7 @@ def url_to_filename(url: str, etag: Optional[str] = None) -> str:
         return decoded
 
 
-def filename_to_url(filename: str) -> Tuple[str, Optional[str]]:
+def filename_to_url(filename: str) -> tuple[str, Optional[str]]:
     """Recovers the the url from the encoded filename.
 
     Returns it and the ETag (which may be ``None``)
@@ -374,7 +375,7 @@ def instance_lru_cache(*cache_args, **cache_kwargs):
     return decorator
 
 
-def load_torch_state(model_file: str) -> typing.Dict[str, typing.Any]:
+def load_torch_state(model_file: str) -> dict[str, typing.Any]:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
         # load_big_file is a workaround byhttps://github.com/highway11git

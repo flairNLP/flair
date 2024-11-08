@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Optional
 
 import pytest
 import torch
@@ -9,15 +9,15 @@ from flair.embeddings.base import load_embeddings
 
 
 class BaseEmbeddingsTest:
-    embedding_cls: Type[Embeddings[Sentence]]
+    embedding_cls: type[Embeddings[Sentence]]
     is_token_embedding: bool
     is_document_embedding: bool
-    default_args: Dict[str, Any]
-    valid_args: List[Dict[str, Any]] = []
-    invalid_args: List[Dict[str, Any]] = []
-    invalid_names: List[str] = []
+    default_args: dict[str, Any]
+    valid_args: list[dict[str, Any]] = []
+    invalid_args: list[dict[str, Any]] = []
+    invalid_names: list[str] = []
     name_field: Optional[str] = None
-    weired_texts: List[str] = [
+    weired_texts: list[str] = [
         "Hybrid mesons , qq ̄ states with an admixture",
         "typical proportionalities of \u223C 1nmV \u2212 1 [ 3,4 ] .",
         "🤟 🤟  🤟 hüllo",
@@ -33,7 +33,7 @@ class BaseEmbeddingsTest:
         kwargs.pop(self.name_field)
         return self.embedding_cls(name, **kwargs)  # type: ignore[call-arg]
 
-    def create_embedding_with_args(self, args: Dict[str, Any]):
+    def create_embedding_with_args(self, args: dict[str, Any]):
         kwargs = dict(self.default_args)
         for k, v in args.items():
             kwargs[k] = v

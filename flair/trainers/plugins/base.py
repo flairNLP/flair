@@ -1,19 +1,14 @@
 import logging
 from collections import defaultdict
+from collections.abc import Iterator, Sequence
 from inspect import isclass, signature
 from itertools import count
 from queue import Queue
 from typing import (
     Any,
     Callable,
-    Dict,
-    Iterator,
-    List,
     NewType,
     Optional,
-    Sequence,
-    Set,
-    Type,
     Union,
     cast,
 )
@@ -21,7 +16,7 @@ from typing import (
 log = logging.getLogger("flair")
 
 
-PluginArgument = Union["BasePlugin", Type["BasePlugin"]]
+PluginArgument = Union["BasePlugin", type["BasePlugin"]]
 HookHandleId = NewType("HookHandleId", int)
 
 EventIdenifier = str
@@ -34,7 +29,7 @@ class TrainingInterrupt(Exception):
 class Pluggable:
     """Dispatches events which attached plugins can react to."""
 
-    valid_events: Optional[Set[EventIdenifier]] = None
+    valid_events: Optional[set[EventIdenifier]] = None
 
     def __init__(self, *, plugins: Sequence[PluginArgument] = []) -> None:
         """Initialize a `Pluggable`.
@@ -42,11 +37,11 @@ class Pluggable:
         Args:
             plugins: Plugins which should be attached to this `Pluggable`.
         """
-        self._hook_handles: Dict[EventIdenifier, Dict[HookHandleId, HookHandle]] = defaultdict(dict)
+        self._hook_handles: dict[EventIdenifier, dict[HookHandleId, HookHandle]] = defaultdict(dict)
 
         self._hook_handle_id_counter = count()
 
-        self._plugins: List[BasePlugin] = []
+        self._plugins: list[BasePlugin] = []
 
         # This flag tracks, whether an event is currently being processed (otherwise it is added to the queue)
         self._processing_events = False
@@ -181,7 +176,7 @@ class BasePlugin:
 
     def __init__(self) -> None:
         """Initialize the base plugin."""
-        self._hook_handles: List[HookHandle] = []
+        self._hook_handles: list[HookHandle] = []
         self._pluggable: Optional[Pluggable] = None
 
     def attach_to(self, pluggable: Pluggable):
@@ -260,7 +255,7 @@ class BasePlugin:
     def __str__(self) -> str:
         return self.__class__.__name__
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return {"__cls__": f"{self.__module__}.{self.__class__.__name__}"}
 
 

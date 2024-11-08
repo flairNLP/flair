@@ -8,7 +8,7 @@ import zipfile
 from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union, cast
+from typing import Any, Literal, Optional, Union, cast
 
 import torch
 import transformers
@@ -44,7 +44,7 @@ SENTENCE_BOUNDARY_TAG: str = "[FLERT]"
 
 
 @torch.jit.script_if_tracing
-def pad_sequence_embeddings(all_hidden_states: List[torch.Tensor]) -> torch.Tensor:
+def pad_sequence_embeddings(all_hidden_states: list[torch.Tensor]) -> torch.Tensor:
     embedding_length = all_hidden_states[0].shape[1]
     longest_token_sequence_in_batch = 0
     for hidden_states in all_hidden_states:
@@ -218,13 +218,13 @@ def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths:
 
 
 def _legacy_reconstruct_word_ids(
-    embedding: "TransformerBaseEmbeddings", flair_tokens: List[List[str]]
-) -> List[List[Optional[int]]]:
+    embedding: "TransformerBaseEmbeddings", flair_tokens: list[list[str]]
+) -> list[list[Optional[int]]]:
     word_ids_list = []
     max_len = 0
     for tokens in flair_tokens:
         token_texts = embedding.tokenizer.tokenize(" ".join(tokens), is_split_into_words=True)
-        token_ids = cast(List[int], embedding.tokenizer.convert_tokens_to_ids(token_texts))
+        token_ids = cast(list[int], embedding.tokenizer.convert_tokens_to_ids(token_texts))
         expanded_token_ids = embedding.tokenizer.build_inputs_with_special_tokens(token_ids)
         j = 0
         for _i, token_id in enumerate(token_ids):
@@ -264,10 +264,10 @@ def _get_processed_token_text(tokenizer, token: str) -> str:
     return token_text.strip()
 
 
-def _reconstruct_word_ids_from_subtokens(embedding, tokens: List[str], subtokens: List[str]):
+def _reconstruct_word_ids_from_subtokens(embedding, tokens: list[str], subtokens: list[str]):
     word_iterator = iter(enumerate(_get_processed_token_text(embedding.tokenizer, token) for token in tokens))
     token_id, token_text = next(word_iterator)
-    word_ids: List[Optional[int]] = []
+    word_ids: list[Optional[int]] = []
     reconstructed_token = ""
     subtoken_count = 0
     processed_first_token = False
@@ -504,10 +504,10 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         return "word-level" if self.token_embedding else "sentence-level"
 
     @abstractmethod
-    def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
+    def _forward_tensors(self, tensors) -> dict[str, torch.Tensor]:
         return self(**tensors)
 
-    def prepare_tensors(self, sentences: List[Sentence], device: Optional[torch.device] = None):
+    def prepare_tensors(self, sentences: list[Sentence], device: Optional[torch.device] = None):
         if device is None:
             device = flair.device
         flair_tokens, offsets, lengths = self.__gather_flair_tokens(sentences)
@@ -535,13 +535,13 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
     def __build_transformer_model_inputs(
         self,
-        sentences: List[Sentence],
-        offsets: List[int],
-        sentence_lengths: List[int],
-        flair_tokens: List[List[Token]],
+        sentences: list[Sentence],
+        offsets: list[int],
+        sentence_lengths: list[int],
+        flair_tokens: list[list[Token]],
         device: torch.device,
     ):
-        tokenizer_kwargs: Dict[str, Any] = {}
+        tokenizer_kwargs: dict[str, Any] = {}
         if self.tokenizer_needs_ocr_boxes:
             tokenizer_kwargs["boxes"] = [[t.get_metadata("bbox") for t in tokens] for tokens in flair_tokens]
         else:
@@ -662,7 +662,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         return model_kwargs
 
-    def __gather_flair_tokens(self, sentences: List[Sentence]) -> Tuple[List[List[Token]], List[int], List[int]]:
+    def __gather_flair_tokens(self, sentences: list[Sentence]) -> tuple[list[list[Token]], list[int], list[int]]:
         offsets = []
         lengths = []
         if self.context_length > 0:
@@ -686,7 +686,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             lengths.append(len(sentence))
         return sentence_tokens, offsets, lengths
 
-    def _expand_sentence_with_context(self, sentence) -> Tuple[List[Token], int]:
+    def _expand_sentence_with_context(self, sentence) -> tuple[list[Token], int]:
         # fields to store left and right context
         left_context = []
         right_context = []
@@ -722,7 +722,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             for token_embedding, token in zip(token_embeddings, sentence):
                 token.set_embedding(self.name, token_embedding)
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: list[Sentence]):
         tensors = self.prepare_tensors(sentences, device=self.force_device)
         gradient_context = torch.enable_grad() if (self.fine_tune and self.training) else torch.no_grad()
         with gradient_context:
@@ -739,7 +739,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
 @register_embeddings
 class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
-    def __init__(self, onnx_model: str, providers: List = [], session_options: Optional[Dict] = None, **kwargs) -> None:
+    def __init__(self, onnx_model: str, providers: list = [], session_options: Optional[dict] = None, **kwargs) -> None:
         # onnx prepares numpy arrays, no mather if it runs on gpu or cpu, the input is on cpu first.
         super().__init__(**kwargs, force_device=torch.device("cpu"))
         self.onnx_model = onnx_model
@@ -756,7 +756,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         return params
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "TransformerOnnxEmbeddings":
+    def from_params(cls, params: dict[str, Any]) -> "TransformerOnnxEmbeddings":
         params["tokenizer"] = cls._tokenizer_from_bytes(params.pop("tokenizer_data"))
         params["feature_extractor"] = cls._feature_extractor_from_bytes(params.pop("feature_extractor_data", None))
         return cls(**params)
@@ -812,7 +812,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         self.onnx_model = quantize_model_path
         self.create_session()
 
-    def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
+    def _forward_tensors(self, tensors) -> dict[str, torch.Tensor]:
         input_array = {k: v.numpy() for k, v in tensors.items()}
         embeddings = self.session.run([], input_array)
 
@@ -854,9 +854,9 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
         cls,
         path: Union[str, Path],
         embedding: "TransformerEmbeddings",
-        example_sentences: List[Sentence],
+        example_sentences: list[Sentence],
         opset_version: int = 14,
-        providers: Optional[List] = None,
+        providers: Optional[list] = None,
         session_options: Optional[dict] = None,
     ):
         path = str(path)
@@ -903,7 +903,7 @@ class TransformerOnnxEmbeddings(TransformerBaseEmbeddings):
 
 @register_embeddings
 class TransformerJitEmbeddings(TransformerBaseEmbeddings):
-    def __init__(self, jit_model: Union[bytes, ScriptModule], param_names: List[str], **kwargs) -> None:
+    def __init__(self, jit_model: Union[bytes, ScriptModule], param_names: list[str], **kwargs) -> None:
         super().__init__(**kwargs)
         if isinstance(jit_model, bytes):
             buffer = BytesIO(jit_model)
@@ -925,12 +925,12 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
         return state
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
+    def from_params(cls, params: dict[str, Any]) -> "Embeddings":
         params["tokenizer"] = cls._tokenizer_from_bytes(params.pop("tokenizer_data"))
         params["feature_extractor"] = cls._feature_extractor_from_bytes(params.pop("feature_extractor_data", None))
         return cls(**params)
 
-    def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
+    def _forward_tensors(self, tensors) -> dict[str, torch.Tensor]:
         parameters = []
         for param in self.param_names:
             parameters.append(tensors[param])
@@ -945,13 +945,13 @@ class TransformerJitEmbeddings(TransformerBaseEmbeddings):
             raise ValueError("either 'token_embedding' or 'document_embedding' needs to be set.")
 
     @classmethod
-    def create_from_embedding(cls, module: ScriptModule, embedding: "TransformerEmbeddings", param_names: List[str]):
+    def create_from_embedding(cls, module: ScriptModule, embedding: "TransformerEmbeddings", param_names: list[str]):
         return cls(jit_model=module, param_names=param_names, **embedding.to_args())
 
     @classmethod
     def parameter_to_list(
-        cls, embedding: "TransformerEmbeddings", wrapper: torch.nn.Module, sentences: List[Sentence]
-    ) -> Tuple[List[str], List[torch.Tensor]]:
+        cls, embedding: "TransformerEmbeddings", wrapper: torch.nn.Module, sentences: list[Sentence]
+    ) -> tuple[list[str], list[torch.Tensor]]:
         tensors = embedding.prepare_tensors(sentences)
         param_names = list(inspect.signature(wrapper.forward).parameters.keys())
         params = []
@@ -998,7 +998,7 @@ class TransformerOnnxDocumentEmbeddings(DocumentEmbeddings, TransformerOnnxEmbed
 
 @register_embeddings
 class TransformerEmbeddings(TransformerBaseEmbeddings):
-    onnx_cls: Type[TransformerOnnxEmbeddings] = TransformerOnnxEmbeddings
+    onnx_cls: type[TransformerOnnxEmbeddings] = TransformerOnnxEmbeddings
 
     def __init__(
         self,
@@ -1021,11 +1021,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         force_max_length: bool = False,
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
-        transformers_tokenizer_kwargs: Dict[str, Any] = {},
-        transformers_config_kwargs: Dict[str, Any] = {},
-        transformers_model_kwargs: Dict[str, Any] = {},
+        transformers_tokenizer_kwargs: dict[str, Any] = {},
+        transformers_config_kwargs: dict[str, Any] = {},
+        transformers_model_kwargs: dict[str, Any] = {},
         peft_config=None,
-        peft_gradient_checkpointing_kwargs: Optional[Dict[str, Any]] = {},
+        peft_gradient_checkpointing_kwargs: Optional[dict[str, Any]] = {},
         **kwargs,
     ) -> None:
         """Instantiate transformers embeddings.
@@ -1353,6 +1353,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
     def to_params(self):
         config_dict = self.model.config.to_dict()
+
+        # do not switch the attention implementation upon reload.
+        config_dict["attn_implementation"] = self.model.config._attn_implementation
+        del config_dict["_attn_implementation_autoset"]
+
         super_params = super().to_params()
 
         # those parameters are only from the super class and will be recreated in the constructor.
@@ -1503,11 +1508,11 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             result["token_embeddings"] = all_token_embeddings
         return result
 
-    def _forward_tensors(self, tensors) -> Dict[str, torch.Tensor]:
+    def _forward_tensors(self, tensors) -> dict[str, torch.Tensor]:
         return self.forward(**tensors)
 
     def export_onnx(
-        self, path: Union[str, Path], example_sentences: List[Sentence], **kwargs
+        self, path: Union[str, Path], example_sentences: list[Sentence], **kwargs
     ) -> TransformerOnnxEmbeddings:
         """Export TransformerEmbeddings to OnnxFormat.
 

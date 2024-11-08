@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 from flair.embeddings import (
     DocumentCNNEmbeddings,
@@ -19,7 +19,7 @@ flair_embedding_back: TokenEmbeddings = FlairEmbeddings("news-backward-fast")
 class BaseDocumentsViaWordEmbeddingsTest(BaseEmbeddingsTest):
     is_document_embedding = True
     is_token_embedding = False
-    base_embeddings: List[TokenEmbeddings] = [word, flair_embedding]
+    base_embeddings: list[TokenEmbeddings] = [word, flair_embedding]
 
     def create_embedding_from_name(self, name: str):
         """Overwrite this method if it is more complex to load an embedding by name."""
@@ -28,7 +28,7 @@ class BaseDocumentsViaWordEmbeddingsTest(BaseEmbeddingsTest):
         kwargs.pop(self.name_field)
         return self.embedding_cls(name, **kwargs)  # type: ignore[call-arg]
 
-    def create_embedding_with_args(self, args: Dict[str, Any]):
+    def create_embedding_with_args(self, args: dict[str, Any]):
         kwargs = dict(self.default_args)
         for k, v in args.items():
             kwargs[k] = v
@@ -63,4 +63,4 @@ class TestDocumentCNNEmbeddings(BaseDocumentsViaWordEmbeddingsTest):
 class TestDocumentLMEmbeddings(BaseDocumentsViaWordEmbeddingsTest):
     embedding_cls = DocumentLMEmbeddings
     base_embeddings = [flair_embedding, flair_embedding_back]
-    default_args: Dict[str, Any] = {}
+    default_args: dict[str, Any] = {}

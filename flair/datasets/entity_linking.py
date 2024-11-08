@@ -4,8 +4,9 @@ import csv
 import logging
 import os
 import re
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Union
+from typing import Any, Optional, Union
 
 import requests
 from bioc import biocxml, pubtator
@@ -47,7 +48,7 @@ class EntityLinkingDictionary:
         self._idx_to_candidates = {candidate.concept_id: candidate for candidate in candidates}
 
         # one name can map to multiple concepts
-        self._text_to_index: Dict[str, List[str]] = {}
+        self._text_to_index: dict[str, list[str]] = {}
         for candidate in candidates:
             for text in [candidate.concept_name, *candidate.synonyms]:
                 if text not in self._text_to_index:
@@ -60,11 +61,11 @@ class EntityLinkingDictionary:
         return self._dataset_name
 
     @property
-    def text_to_index(self) -> Dict[str, List[str]]:
+    def text_to_index(self) -> dict[str, list[str]]:
         return self._text_to_index
 
     @property
-    def candidates(self) -> List[EntityCandidate]:
+    def candidates(self) -> list[EntityCandidate]:
         return list(self._idx_to_candidates.values())
 
     def __getitem__(self, item: str) -> EntityCandidate:
@@ -80,18 +81,18 @@ class EntityLinkingDictionary:
 # NOTE: EntityLinkingDictionary are lazy-loaded from a preprocessed file.
 # Use this class to load into memory all candidates
 class InMemoryEntityLinkingDictionary(EntityLinkingDictionary):
-    def __init__(self, candidates: List[EntityCandidate], dataset_name: str):
+    def __init__(self, candidates: list[EntityCandidate], dataset_name: str):
         self._dataset_name = dataset_name
         super().__init__(candidates, dataset_name=dataset_name)
 
-    def to_state(self) -> Dict[str, Any]:
+    def to_state(self) -> dict[str, Any]:
         return {
             "dataset_name": self._dataset_name,
             "candidates": [candidate.to_dict() for candidate in self._idx_to_candidates.values()],
         }
 
     @classmethod
-    def from_state(cls, state: Dict[str, Any]) -> "InMemoryEntityLinkingDictionary":
+    def from_state(cls, state: dict[str, Any]) -> "InMemoryEntityLinkingDictionary":
         return cls(
             dataset_name=state["dataset_name"],
             candidates=[EntityCandidate(**candidate) for candidate in state["candidates"]],
@@ -488,7 +489,7 @@ class ZELDA(MultiFileColumnCorpus):
             to point to a different folder but typically this should not be necessary.
         in_memory: bool
             If True, keeps dataset in memory giving speedups in training.
-        column_format: Dict[int, str]
+        column_format: dict[int, str]
             The column-format to specify which columns correspond to the text or label types.
         """
         base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
@@ -776,9 +777,10 @@ class NEL_GERMAN_HIPE(ColumnCorpus):
                     wiki_language + "_dev.tsv",
                 ],
             ):
-                with open(doc_path, encoding="utf-8") as read, open(
-                    data_folder / file_name, "w", encoding="utf-8"
-                ) as write:
+                with (
+                    open(doc_path, encoding="utf-8") as read,
+                    open(data_folder / file_name, "w", encoding="utf-8") as write,
+                ):
                     # ignore first line
                     read.readline()
                     line = read.readline()
@@ -1208,9 +1210,10 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
         if not parsed_dataset.exists():
             original_file_path = cached_path(f"{tweeki_gold_el_path}", Path("datasets") / dataset_name)
 
-            with open(original_file_path, encoding="utf-8") as read, open(
-                parsed_dataset, "w", encoding="utf-8"
-            ) as write:
+            with (
+                open(original_file_path, encoding="utf-8") as read,
+                open(parsed_dataset, "w", encoding="utf-8") as write,
+            ):
                 line = read.readline()
                 while line:
                     if line.startswith("#"):
@@ -1274,9 +1277,10 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
 
             with open(data_folder / corpus_file_name, "w", encoding="utf-8") as txtout:
                 # First parse the post titles
-                with open(data_folder / "posts.tsv", encoding="utf-8") as tsvin1, open(
-                    data_folder / "gold_post_annotations.tsv", encoding="utf-8"
-                ) as tsvin2:
+                with (
+                    open(data_folder / "posts.tsv", encoding="utf-8") as tsvin1,
+                    open(data_folder / "gold_post_annotations.tsv", encoding="utf-8") as tsvin2,
+                ):
                     posts = csv.reader(tsvin1, delimiter="\t")
                     self.post_annotations = csv.reader(tsvin2, delimiter="\t")
                     self.curr_annot = next(self.post_annotations)
@@ -1312,13 +1316,14 @@ class NEL_ENGLISH_REDDIT(ColumnCorpus):
                             )
 
                 # Then parse the comments
-                with open(data_folder / "comments.tsv", encoding="utf-8") as tsvin3, open(
-                    data_folder / "gold_comment_annotations.tsv", encoding="utf-8"
-                ) as tsvin4:
+                with (
+                    open(data_folder / "comments.tsv", encoding="utf-8") as tsvin3,
+                    open(data_folder / "gold_comment_annotations.tsv", encoding="utf-8") as tsvin4,
+                ):
                     self.comments = csv.reader(tsvin3, delimiter="\t")
                     self.comment_annotations = csv.reader(tsvin4, delimiter="\t")
                     self.curr_annot = next(self.comment_annotations)
-                    self.curr_row: Optional[List[str]] = next(self.comments)
+                    self.curr_row: Optional[list[str]] = next(self.comments)
                     self.stop_iter = False
 
                     # Iterate over the comments.tsv file, until the end is reached
@@ -1545,7 +1550,7 @@ def from_ufsac_to_tsv(
 
         return line
 
-    def split_span(word_fields: List[str], datasetname: str):
+    def split_span(word_fields: list[str], datasetname: str):
         """Function that splits a word if necessary, i.e. if it is a multiple-word-span.
 
         Parameters
@@ -1646,12 +1651,12 @@ def determine_tsv_file(filename: str, data_folder: Path, cut_multisense: bool = 
 class WSD_UFSAC(MultiCorpus):
     def __init__(
         self,
-        filenames: Union[str, List[str]] = ["masc", "semcor"],
+        filenames: Union[str, list[str]] = ["masc", "semcor"],
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         cut_multisense: bool = True,
         columns={0: "text", 3: "sense"},
-        banned_sentences: Optional[List[str]] = None,
+        banned_sentences: Optional[list[str]] = None,
         sample_missing_splits_in_multicorpus: Union[bool, str] = True,
         sample_missing_splits_in_each_corpus: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
@@ -1713,7 +1718,7 @@ class WSD_UFSAC(MultiCorpus):
         if isinstance(filenames, str):
             filenames = [filenames]
 
-        corpora: List[Corpus] = []
+        corpora: list[Corpus] = []
 
         log.info("Transforming data into column format and creating corpora...")
 
@@ -1784,8 +1789,8 @@ class WSD_RAGANATO_ALL(ColumnCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Optional[Dict[str, str]] = None,
-        banned_sentences: Optional[List[str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
+        banned_sentences: Optional[list[str]] = None,
         sample_missing_splits: bool = True,
         cut_multisense: bool = True,
     ) -> None:
@@ -1847,8 +1852,8 @@ class WSD_SEMCOR(ColumnCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Optional[Dict[str, str]] = None,
-        banned_sentences: Optional[List[str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
+        banned_sentences: Optional[list[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
@@ -1922,8 +1927,8 @@ class WSD_WORDNET_GLOSS_TAGGED(ColumnCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Optional[Dict[str, str]] = None,
-        banned_sentences: Optional[List[str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
+        banned_sentences: Optional[list[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
     ) -> None:
@@ -1994,8 +1999,8 @@ class WSD_MASC(ColumnCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Optional[Dict[str, str]] = None,
-        banned_sentences: Optional[List[str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
+        banned_sentences: Optional[list[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
@@ -2070,8 +2075,8 @@ class WSD_OMSTI(ColumnCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Optional[Dict[str, str]] = None,
-        banned_sentences: Optional[List[str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
+        banned_sentences: Optional[list[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         cut_multisense: bool = True,
         use_raganato_ALL_as_test_data: bool = False,
@@ -2147,8 +2152,8 @@ class WSD_TRAINOMATIC(ColumnCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         columns={0: "text", 3: "sense"},
-        label_name_map: Optional[Dict[str, str]] = None,
-        banned_sentences: Optional[List[str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
+        banned_sentences: Optional[list[str]] = None,
         sample_missing_splits: Union[bool, str] = True,
         use_raganato_ALL_as_test_data: bool = False,
     ) -> None:
@@ -2230,7 +2235,7 @@ class BigBioEntityLinkingCorpus(Corpus, abc.ABC):
         self,
         base_path: Optional[Union[str, Path]] = None,
         label_type: str = "el",
-        norm_keys: List[str] = ["db_name", "db_id"],
+        norm_keys: list[str] = ["db_name", "db_id"],
         **kwargs,
     ) -> None:
         self.label_type = label_type
@@ -2250,14 +2255,14 @@ class BigBioEntityLinkingCorpus(Corpus, abc.ABC):
         )
 
     @abc.abstractmethod
-    def _download_dataset(self, data_folder: Path) -> Dict[str, Union[Path, List[Path]]]:
+    def _download_dataset(self, data_folder: Path) -> dict[str, Union[Path, list[Path]]]:
         pass
 
     @abc.abstractmethod
-    def _file_to_dicts(self, filepath: Path) -> Iterator[Dict[str, Any]]:
+    def _file_to_dicts(self, filepath: Path) -> Iterator[dict[str, Any]]:
         pass
 
-    def _dict_to_sentences(self, entry: Dict[str, Any]) -> List[Sentence]:
+    def _dict_to_sentences(self, entry: dict[str, Any]) -> list[Sentence]:
         entities = [entity for entity in entry["entities"] if entity["normalized"]]
 
         tokenized_passages = [
@@ -2326,7 +2331,7 @@ class BigBioEntityLinkingCorpus(Corpus, abc.ABC):
                     sent_s[start_token_idx : end_token_idx + 1].add_label(self.label_type, mention_id)
         return passage_sentences
 
-    def _files_to_dataset(self, paths: Union[Path, List[Path]]) -> FlairDatapointDataset:
+    def _files_to_dataset(self, paths: Union[Path, list[Path]]) -> FlairDatapointDataset:
         if isinstance(paths, Path):
             paths = [paths]
         all_sentences = []
@@ -2347,7 +2352,7 @@ class BIGBIO_EL_NCBI_DISEASE(BigBioEntityLinkingCorpus):
     def __init__(self, base_path: Optional[Union[str, Path]] = None, label_type: str = "el-diseases", **kwargs) -> None:
         super().__init__(base_path, label_type, **kwargs)
 
-    def _download_dataset(self, data_folder: Path) -> Dict[str, Union[Path, List[Path]]]:
+    def _download_dataset(self, data_folder: Path) -> dict[str, Union[Path, list[Path]]]:
         download_urls = {
             "train": (
                 "NCBItrainset_corpus.txt",
@@ -2362,7 +2367,7 @@ class BIGBIO_EL_NCBI_DISEASE(BigBioEntityLinkingCorpus):
                 "https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/NCBItestset_corpus.zip",
             ),
         }
-        results_files: Dict[str, Union[Path, List[Path]]] = {}
+        results_files: dict[str, Union[Path, list[Path]]] = {}
 
         for split, (filename, url) in download_urls.items():
             result_path = data_folder / filename
@@ -2376,7 +2381,7 @@ class BIGBIO_EL_NCBI_DISEASE(BigBioEntityLinkingCorpus):
 
         return results_files
 
-    def _file_to_dicts(self, filepath: Path) -> Iterator[Dict[str, Any]]:
+    def _file_to_dicts(self, filepath: Path) -> Iterator[dict[str, Any]]:
         with open(filepath) as f:
             for doc in pubtator.iterparse(f):
                 unified_example = {
@@ -2449,7 +2454,7 @@ class BIGBIO_EL_BC5CDR_CHEMICAL(BigBioEntityLinkingCorpus):
     def __init__(self, base_path: Optional[Union[str, Path]] = None, label_type: str = "el-chemical", **kwargs) -> None:
         super().__init__(base_path, label_type, **kwargs)
 
-    def _download_dataset(self, data_folder: Path) -> Dict[str, Union[Path, List[Path]]]:
+    def _download_dataset(self, data_folder: Path) -> dict[str, Union[Path, list[Path]]]:
         url = "https://huggingface.co/datasets/bigbio/bc5cdr/resolve/main/CDR_Data.zip"
 
         path = cached_path(url, data_folder)
@@ -2458,7 +2463,7 @@ class BIGBIO_EL_BC5CDR_CHEMICAL(BigBioEntityLinkingCorpus):
             unpack_file(path, data_folder)
             assert data_folder.exists()
 
-        results_files: Dict[str, Union[Path, List[Path]]] = {
+        results_files: dict[str, Union[Path, list[Path]]] = {
             "train": data_path / "CDR_TrainingSet.BioC.xml",
             "dev": data_path / "CDR_DevelopmentSet.BioC.xml",
             "test": data_path / "CDR_TestSet.BioC.xml",
@@ -2497,7 +2502,7 @@ class BIGBIO_EL_BC5CDR_CHEMICAL(BigBioEntityLinkingCorpus):
             "normalized": normalized,
         }
 
-    def _file_to_dicts(self, filepath: Path) -> Iterator[Dict[str, Any]]:
+    def _file_to_dicts(self, filepath: Path) -> Iterator[dict[str, Any]]:
         reader = biocxml.BioCXMLDocumentReader(str(filepath))
 
         for i, xdoc in enumerate(reader):
@@ -2542,7 +2547,7 @@ class BIGBIO_EL_GNORMPLUS(BigBioEntityLinkingCorpus):
         self._re_tax_id = re.compile(r"(?P<db_id>\d+)\([tT]ax:(?P<tax_id>\d+)\)")
         super().__init__(base_path, label_type, norm_keys=["db_id"], **kwargs)
 
-    def _download_dataset(self, data_folder: Path) -> Dict[str, Union[Path, List[Path]]]:
+    def _download_dataset(self, data_folder: Path) -> dict[str, Union[Path, list[Path]]]:
         url = "https://www.ncbi.nlm.nih.gov/CBBresearch/Lu/Demo/tmTools/download/GNormPlus/GNormPlusCorpus.zip"
 
         path = cached_path(url, data_folder)
@@ -2551,7 +2556,7 @@ class BIGBIO_EL_GNORMPLUS(BigBioEntityLinkingCorpus):
             unpack_file(path, data_folder)
             assert data_folder.exists()
 
-        results_files: Dict[str, Union[Path, List[Path]]] = {
+        results_files: dict[str, Union[Path, list[Path]]] = {
             "train": [data_path / "BC2GNtrain.BioC.xml", data_path / "NLMIAT.BioC.xml"],
             "test": data_path / "BC2GNtest.BioC.xml",
         }
@@ -2595,7 +2600,7 @@ class BIGBIO_EL_GNORMPLUS(BigBioEntityLinkingCorpus):
             "normalized": normalized,
         }
 
-    def _adjust_entity_offsets(self, text: str, entities: List[Dict]):
+    def _adjust_entity_offsets(self, text: str, entities: list[dict]):
         for entity in entities:
             start, end = entity["offsets"][0]
             entity_mention = entity["text"][0]
@@ -2605,7 +2610,7 @@ class BIGBIO_EL_GNORMPLUS(BigBioEntityLinkingCorpus):
                 elif text[start : end - 1] == entity_mention:
                     entity["offsets"] = [(start, end - 1)]
 
-    def _file_to_dicts(self, filepath: Path) -> Iterator[Dict[str, Any]]:
+    def _file_to_dicts(self, filepath: Path) -> Iterator[dict[str, Any]]:
         with filepath.open("r") as f:
             collection = biocxml.load(f)
 

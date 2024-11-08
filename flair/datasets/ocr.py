@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 import gdown.download_folder
 import PIL
@@ -20,7 +20,7 @@ class OcrJsonDataset(FlairDataset):
         encoding: str = "utf-8",
         load_images: bool = False,
         normalize_coords_to_thousands: bool = True,
-        label_name_map: Optional[Dict[str, str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
     ) -> None:
         """Instantiates a Dataset from a OCR-Json format.
 
@@ -132,7 +132,7 @@ class OcrCorpus(Corpus):
         in_memory: bool = True,
         load_images: bool = False,
         normalize_coords_to_thousands: bool = True,
-        label_name_map: Optional[Dict[str, str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
         **corpusargs,
     ) -> None:
         """Instantiates a Corpus from a OCR-Json format.
@@ -205,7 +205,7 @@ class SROIE(OcrCorpus):
         in_memory: bool = True,
         load_images: bool = False,
         normalize_coords_to_thousands: bool = True,
-        label_name_map: Optional[Dict[str, str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
         **corpusargs,
     ) -> None:
         """Instantiates the SROIE corpus with perfect ocr boxes.

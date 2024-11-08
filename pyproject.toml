@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 120
-target-version = ['py37']
+target-version = ['py39']
 exclude = '''
 (
   /(
@@ -32,6 +32,7 @@ filterwarnings = [
     'ignore:`resume_download` is deprecated and will be removed in version 1.0.0. Downloads always resume when possible. If you want to force a new download, use `force_download=True`.',  # transformers calls deprecated hf_hub
     "ignore:`torch.cuda.amp.GradScaler",  # GradScaler changes in torch 2.3.0 but we want to be backwards compatible.
     "ignore:`clean_up_tokenization_spaces` was not set",  # Default behavior changes in transformers v4.45, raising irrelevant FutureWarning for serialized models.
+    "ignore:1Torch was not compiled with flash attention",  # You might want to install flash attention, but you don't have to.
 ]
 markers = [
     "integration",
@@ -49,7 +50,7 @@ ignore_errors = true
 
 [tool.ruff]
 line-length = 120
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 #select = ["ALL"]    # Uncommit to autofix all the things

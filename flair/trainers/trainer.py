@@ -7,7 +7,7 @@ import time
 import warnings
 from inspect import signature
 from pathlib import Path
-from typing import List, Optional, Tuple, Type, Union
+from typing import Optional, Union
 
 import torch
 from torch.optim.sgd import SGD
@@ -128,7 +128,7 @@ class ModelTrainer(Pluggable):
         base_path,
         anneal_factor: float = 0.5,
         patience: int = 3,
-        min_learning_rate: Union[float, List[float]] = 0.0001,
+        min_learning_rate: Union[float, list[float]] = 0.0001,
         initial_extra_patience: int = 0,
         anneal_with_restarts: bool = False,
         learning_rate: float = 0.1,
@@ -137,17 +137,17 @@ class ModelTrainer(Pluggable):
         eval_batch_size: int = 64,
         mini_batch_chunk_size: Optional[int] = None,
         max_epochs: int = 100,
-        optimizer: Type[torch.optim.Optimizer] = torch.optim.SGD,
+        optimizer: type[torch.optim.Optimizer] = torch.optim.SGD,
         train_with_dev: bool = False,
         train_with_test: bool = False,
         reduce_transformer_vocab: bool = False,
         # evaluation and monitoring
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        main_evaluation_metric: tuple[str, str] = ("micro avg", "f1-score"),
         monitor_test: bool = False,
         monitor_train_sample: float = 0.0,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: Optional[List[str]] = None,
+        exclude_labels: Optional[list[str]] = None,
         # sampling and shuffling
         sampler=None,
         shuffle: bool = True,
@@ -164,7 +164,7 @@ class ModelTrainer(Pluggable):
         create_loss_file: bool = True,
         write_weights: bool = False,
         # plugins
-        plugins: Optional[List[TrainerPlugin]] = None,
+        plugins: Optional[list[TrainerPlugin]] = None,
         attach_default_scheduler: bool = True,
         **kwargs,
     ):
@@ -211,17 +211,17 @@ class ModelTrainer(Pluggable):
         eval_batch_size: int = 16,
         mini_batch_chunk_size: Optional[int] = None,
         max_epochs: int = 10,
-        optimizer: Type[torch.optim.Optimizer] = torch.optim.AdamW,
+        optimizer: type[torch.optim.Optimizer] = torch.optim.AdamW,
         train_with_dev: bool = False,
         train_with_test: bool = False,
         reduce_transformer_vocab: bool = False,
         # evaluation and monitoring
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        main_evaluation_metric: tuple[str, str] = ("micro avg", "f1-score"),
         monitor_test: bool = False,
         monitor_train_sample: float = 0.0,
         use_final_model_for_eval: bool = True,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: Optional[List[str]] = None,
+        exclude_labels: Optional[list[str]] = None,
         # sampling and shuffling
         sampler=None,
         shuffle: bool = True,
@@ -240,7 +240,7 @@ class ModelTrainer(Pluggable):
         # amp
         use_amp: bool = False,
         # plugins
-        plugins: Optional[List[TrainerPlugin]] = None,
+        plugins: Optional[list[TrainerPlugin]] = None,
         attach_default_scheduler: bool = True,
         **kwargs,
     ):
@@ -304,20 +304,20 @@ class ModelTrainer(Pluggable):
         eval_batch_size: int = 64,
         mini_batch_chunk_size: Optional[int] = None,
         max_epochs: int = 100,
-        optimizer: Type[torch.optim.Optimizer] = SGD,
+        optimizer: type[torch.optim.Optimizer] = SGD,
         train_with_dev: bool = False,
         train_with_test: bool = False,
         max_grad_norm: Optional[float] = 5.0,
         reduce_transformer_vocab: bool = False,
         # evaluation and monitoring
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+        main_evaluation_metric: tuple[str, str] = ("micro avg", "f1-score"),
         monitor_test: bool = False,
         monitor_train_sample: float = 0.0,
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
-        exclude_labels: Optional[List[str]] = None,
+        exclude_labels: Optional[list[str]] = None,
         # sampling and shuffling
-        sampler: Optional[FlairSampler] = None,
+        sampler: Optional[Union[FlairSampler, type[FlairSampler]]] = None,
         shuffle: bool = True,
         shuffle_first_epoch: bool = True,
         # evaluation and monitoring
@@ -334,7 +334,7 @@ class ModelTrainer(Pluggable):
         # amp
         use_amp: bool = False,
         # plugins
-        plugins: Optional[List[TrainerPlugin]] = None,
+        plugins: Optional[list[TrainerPlugin]] = None,
         **kwargs,
     ) -> dict:
         """Trains any class that implements the flair.nn.Model interface.
@@ -475,7 +475,7 @@ class ModelTrainer(Pluggable):
         # initialize sampler if provided
         if sampler is not None:
             # init with default values if only class is provided
-            if inspect.isclass(sampler):
+            if isinstance(sampler, type):
                 sampler = sampler()
             # set dataset to sample from
             sampler.set_dataset(train_data)
