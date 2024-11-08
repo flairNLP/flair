@@ -1,11 +1,11 @@
-name: 'Build doc page'
+name: 'Build doc page for artifact'
 on:
   push:
     branches: "*"
 
 jobs:
-  publish_docs:
-    name: Build the docs using Sphinx and push to gh-pages
+  build_docs:
+    name: Build the docs using Sphinx and publish as artifact
     runs-on: ubuntu-latest
     env:
       python-version: 3.9
