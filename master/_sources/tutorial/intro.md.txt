@@ -16,7 +16,7 @@ In your favorite virtual environment, simply do:
 pip install flair
 ```
 
-Flair requires Python 3.8+. 
+Flair requires Python 3.9+. 
 
 ## Example 1: Tag Entities in Text
 

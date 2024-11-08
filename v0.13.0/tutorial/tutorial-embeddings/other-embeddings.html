@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=f17e68eb"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=d304bea3"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-embeddings/other-embeddings';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -539,7 +539,7 @@ document.write(`
 
 
   <section id="other-embeddings-in-flair">
-<h1>Other embeddings in Flair<a class="headerlink" href="#other-embeddings-in-flair" title="Permalink to this heading">#</a></h1>
+<h1>Other embeddings in Flair<a class="headerlink" href="#other-embeddings-in-flair" title="Link to this heading">#</a></h1>
 <p>Flair supports many other embedding types. This section introduces these embeddings.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -547,7 +547,7 @@ document.write(`
 for specific use cases or for comparison purposes.</p>
 </div>
 <section id="one-hot-embeddings">
-<h2>One-Hot Embeddings<a class="headerlink" href="#one-hot-embeddings" title="Permalink to this heading">#</a></h2>
+<h2>One-Hot Embeddings<a class="headerlink" href="#one-hot-embeddings" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.OneHotEmbeddings" title="flair.embeddings.token.OneHotEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings</span></code></span></a> are embeddings that encode each word in a vocabulary as a one-hot vector, followed by an embedding
 layer. These embeddings
 thus do not encode any prior knowledge as do most other embeddings. They also differ in that they
@@ -575,7 +575,7 @@ of all unique tokens contained in the corpus plus an UNK token for all rare word
 <p>By default, the ‘text’ of a token (i.e. its lexical value) is one-hot encoded and the embedding layer has a dimensionality
 of 300. However, this layer is randomly initialized, meaning that these embeddings do not make sense unless they are trained in a task.</p>
 <section id="vocabulary-size">
-<h3>Vocabulary size<a class="headerlink" href="#vocabulary-size" title="Permalink to this heading">#</a></h3>
+<h3>Vocabulary size<a class="headerlink" href="#vocabulary-size" title="Link to this heading">#</a></h3>
 <p>By default, all words that occur in the corpus at least 3 times are part of the vocabulary. You can change
 this using the <code class="docutils literal notranslate"><span class="pre">min_freq</span></code> parameter. For instance, if your corpus is very large you might want to set a
 higher <code class="docutils literal notranslate"><span class="pre">min_freq</span></code>:</p>
@@ -584,7 +584,7 @@ higher <code class="docutils literal notranslate"><span class="pre">min_freq</sp
 </div>
 </section>
 <section id="embedding-dimensionality">
-<h3>Embedding dimensionality<a class="headerlink" href="#embedding-dimensionality" title="Permalink to this heading">#</a></h3>
+<h3>Embedding dimensionality<a class="headerlink" href="#embedding-dimensionality" title="Link to this heading">#</a></h3>
 <p>By default, the embeddings have a dimensionality of 300. If you want to try higher or lower values, you can use the
 <code class="docutils literal notranslate"><span class="pre">embedding_length</span></code> parameter:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">embeddings</span> <span class="o">=</span> <span class="n">OneHotEmbeddings</span><span class="o">.</span><span class="n">from_corpus</span><span class="p">(</span><span class="n">corpus</span><span class="p">,</span> <span class="n">embedding_length</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
@@ -592,7 +592,7 @@ higher <code class="docutils literal notranslate"><span class="pre">min_freq</sp
 </div>
 </section>
 <section id="embedding-other-tags">
-<h3>Embedding other tags<a class="headerlink" href="#embedding-other-tags" title="Permalink to this heading">#</a></h3>
+<h3>Embedding other tags<a class="headerlink" href="#embedding-other-tags" title="Link to this heading">#</a></h3>
 <p>Sometimes, you want to embed something other than text. For instance, sometimes we have part-of-speech tags or
 named entity annotation available that we might want to use. If this field exists in your corpus, you can embed
 it by passing the field variable. For instance, the UD corpora have a universal part-of-speech tag for each
@@ -611,7 +611,7 @@ token (‘upos’). Embed it like so:</p>
 </section>
 </section>
 <section id="byte-pair-embeddings">
-<h2>Byte Pair Embeddings<a class="headerlink" href="#byte-pair-embeddings" title="Permalink to this heading">#</a></h2>
+<h2>Byte Pair Embeddings<a class="headerlink" href="#byte-pair-embeddings" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.BytePairEmbeddings" title="flair.embeddings.token.BytePairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></span></a> are word embeddings that are precomputed on the subword-level. This means that they are able to
 embed any word by splitting words into subwords and looking up their embeddings. <code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code> were proposed
 and computed by <a class="reference external" href="https://www.aclweb.org/anthology/L18-1473">Heinzerling and Strube (2018)</a> who found that they offer nearly the same accuracy as word embeddings, but at a fraction
@@ -646,7 +646,7 @@ You can instantiate it with:</p>
 </div>
 </section>
 <section id="document-pool-embeddings">
-<h2>Document Pool Embeddings<a class="headerlink" href="#document-pool-embeddings" title="Permalink to this heading">#</a></h2>
+<h2>Document Pool Embeddings<a class="headerlink" href="#document-pool-embeddings" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></span></a> calculate a pooling operation over all word embeddings in a document.
 The default operation is <code class="docutils literal notranslate"><span class="pre">mean</span></code> which gives us the mean of all words in the sentence.
 The resulting embedding is taken as document embedding.</p>
@@ -695,7 +695,7 @@ use the following code:</p>
 </tbody>
 </table>
 <section id="pooling-operation">
-<h3>Pooling operation<a class="headerlink" href="#pooling-operation" title="Permalink to this heading">#</a></h3>
+<h3>Pooling operation<a class="headerlink" href="#pooling-operation" title="Link to this heading">#</a></h3>
 <p>Next to the <code class="docutils literal notranslate"><span class="pre">mean</span></code> pooling operation you can also use <code class="docutils literal notranslate"><span class="pre">min</span></code> or <code class="docutils literal notranslate"><span class="pre">max</span></code> pooling. Simply pass the pooling operation you want
 to use to the initialization of the <code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">document_embeddings</span> <span class="o">=</span> <span class="n">DocumentPoolEmbeddings</span><span class="p">([</span><span class="n">glove_embedding</span><span class="p">],</span>  <span class="n">pooling</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">)</span>
@@ -703,7 +703,7 @@ to use to the initialization of the <code class="docutils literal notranslate"><
 </div>
 </section>
 <section id="fine-tune-mode">
-<h3>Fine-tune mode<a class="headerlink" href="#fine-tune-mode" title="Permalink to this heading">#</a></h3>
+<h3>Fine-tune mode<a class="headerlink" href="#fine-tune-mode" title="Link to this heading">#</a></h3>
 <p>You can also choose which fine-tuning operation you want, i.e. which transformation to apply before word embeddings get
 pooled. The default operation is ‘linear’ transformation, but if you only use simple word embeddings that are
 not task-trained you should probably use a ‘nonlinear’ transformation instead:</p>
@@ -726,7 +726,7 @@ are often better off doing no transformation at all. Do this by passing ‘none�
 </section>
 </section>
 <section id="document-rnn-embeddings">
-<h2>Document RNN Embeddings<a class="headerlink" href="#document-rnn-embeddings" title="Permalink to this heading">#</a></h2>
+<h2>Document RNN Embeddings<a class="headerlink" href="#document-rnn-embeddings" title="Link to this heading">#</a></h2>
 <p>Besides simple pooling we also support a method based on an RNN to obtain a <a class="reference internal" href="../../api/embeddings/base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></span></a>.
 The RNN takes the word embeddings of every token in the document as input and provides its last output state as document
 embedding. You can choose which type of RNN you wish to use.</p>
@@ -752,7 +752,7 @@ embedding. You can choose which type of RNN you wish to use.</p>
 <p>This will output a single embedding for the complete sentence. The embedding dimensionality depends on the number of
 hidden states you are using and whether the RNN is bidirectional or not.</p>
 <section id="rnn-type">
-<h3>RNN type<a class="headerlink" href="#rnn-type" title="Permalink to this heading">#</a></h3>
+<h3>RNN type<a class="headerlink" href="#rnn-type" title="Link to this heading">#</a></h3>
 <p>If you want to use a different type of RNN, you need to set the <code class="docutils literal notranslate"><span class="pre">rnn_type</span></code> parameter in the constructor. So,
 to initialize a document RNN embedding with an LSTM, do:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">DocumentRNNEmbeddings</span>
@@ -764,7 +764,7 @@ to initialize a document RNN embedding with an LSTM, do:</p>
 </div>
 </section>
 <section id="need-to-be-trained-on-a-task">
-<h3>Need to be trained on a task<a class="headerlink" href="#need-to-be-trained-on-a-task" title="Permalink to this heading">#</a></h3>
+<h3>Need to be trained on a task<a class="headerlink" href="#need-to-be-trained-on-a-task" title="Link to this heading">#</a></h3>
 <p>Note that while <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></span></a> are immediately meaningful, <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> need to be tuned on the
 downstream task. This happens automatically in Flair if you train a new model with these embeddings.</p>
 <p>Once the model is trained, you can access the tuned <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> object directly from the classifier object and use it to embed sentences.</p>
@@ -890,7 +890,7 @@ downstream task. This happens automatically in Flair if you train a new model wi
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

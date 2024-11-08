@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=361a893e"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-hunflair2/training-ner-models';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -540,14 +540,14 @@ document.write(`
 
 
   <section id="hunflair2-tutorial-3-training-ner-models">
-<h1>HunFlair2 Tutorial 3: Training NER models<a class="headerlink" href="#hunflair2-tutorial-3-training-ner-models" title="Permalink to this heading">#</a></h1>
+<h1>HunFlair2 Tutorial 3: Training NER models<a class="headerlink" href="#hunflair2-tutorial-3-training-ner-models" title="Link to this heading">#</a></h1>
 <p>This part of the tutorial shows how you can train your own biomedical named entity recognition models
 using state-of-the-art pretrained Transformers embeddings.</p>
 <p>For this tutorial, we assume that you’re familiar with the <a class="reference internal" href="../tutorial-basics/basic-types.html"><span class="std std-doc">base types</span></a> of Flair
 and how <a class="reference internal" href="../tutorial-training/how-to-train-sequence-tagger.html"><span class="std std-doc">transformers_word embeddings</span></a>.
 You should also know how to <a class="reference internal" href="../tutorial-training/how-to-load-prepared-dataset.html"><span class="std std-doc">load a corpus</span></a>.</p>
 <section id="train-a-biomedical-ner-model-from-scratch-single-entity-type">
-<h2>Train a biomedical NER model from scratch: single entity type<a class="headerlink" href="#train-a-biomedical-ner-model-from-scratch-single-entity-type" title="Permalink to this heading">#</a></h2>
+<h2>Train a biomedical NER model from scratch: single entity type<a class="headerlink" href="#train-a-biomedical-ner-model-from-scratch-single-entity-type" title="Link to this heading">#</a></h2>
 <p>Here is example code for a biomedical NER model trained on the <a class="reference internal" href="../../api/datasets/biomedical.html#flair.datasets.biomedical.NCBI_DISEASE" title="flair.datasets.biomedical.NCBI_DISEASE"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">NCBI_DISEASE</span></code></span></a> corpus using Transformer word embeddings.
 This will result in a tagger specialized for a single entity type, i.e. “Disease”.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">NCBI_DISEASE</span>
@@ -621,7 +621,7 @@ Just call the predict method of the model.</p>
 </div>
 </section>
 <section id="train-a-biomedical-ner-model-multiple-entity-types">
-<h2>Train a biomedical NER model: multiple entity types<a class="headerlink" href="#train-a-biomedical-ner-model-multiple-entity-types" title="Permalink to this heading">#</a></h2>
+<h2>Train a biomedical NER model: multiple entity types<a class="headerlink" href="#train-a-biomedical-ner-model-multiple-entity-types" title="Link to this heading">#</a></h2>
 <p>If you are dealing with multiple entity types, e.g. “Disease” and “Chemicals”, you can opt
 to train a single model capable of handling multiple entity types at once.
 This can be achieved by using the  <a class="reference internal" href="../../api/flair.models.html#flair.models.PrefixedSequenceTagger" title="flair.models.PrefixedSequenceTagger"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">PrefixedSequenceTagger()</span></code></span></a> class, which implements the method described in [1].
@@ -731,7 +731,7 @@ This is especially useful for training, as it allows to combine multiple corpora
 </div>
 </section>
 <section id="training-hunflair2-from-scratch">
-<h2>Training HunFlair2 from scratch<a class="headerlink" href="#training-hunflair2-from-scratch" title="Permalink to this heading">#</a></h2>
+<h2>Training HunFlair2 from scratch<a class="headerlink" href="#training-hunflair2-from-scratch" title="Link to this heading">#</a></h2>
 <p><em>HunFlair2</em> uses the <code class="docutils literal notranslate"><span class="pre">PrefixedSequenceTagger()</span></code> class as defined above but adds the following corpora to the training set instead:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets.biomedical</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">HUNER_ALL_BIORED</span><span class="p">,</span> <span class="n">HUNER_GENE_NLM_GENE</span><span class="p">,</span>
@@ -750,7 +750,7 @@ This is especially useful for training, as it allows to combine multiple corpora
 </div>
 </section>
 <section id="references">
-<h2>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
 <p>[1] Luo, L., Wei, C. H., Lai, P. T., Leaman, R., Chen, Q., &amp; Lu, Z. (2023). AIONER: all-in-one scheme-based biomedical named entity recognition using deep learning. Bioinformatics, 39(5), btad310.</p>
 </section>
 </section>
@@ -850,7 +850,7 @@ This is especially useful for training, as it allows to combine multiple corpora
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

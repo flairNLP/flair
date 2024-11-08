@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=f17e68eb"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=d304bea3"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-embeddings/transformer-embeddings';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -539,11 +539,11 @@ document.write(`
 
 
   <section id="transformer-embeddings">
-<h1>Transformer embeddings<a class="headerlink" href="#transformer-embeddings" title="Permalink to this heading">#</a></h1>
+<h1>Transformer embeddings<a class="headerlink" href="#transformer-embeddings" title="Link to this heading">#</a></h1>
 <p>Flair supports various Transformer-based architectures like BERT or XLNet from <a class="reference external" href="https://github.com/huggingface">HuggingFace</a>,
 with two classes <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings" title="flair.embeddings.token.TransformerWordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></span></a> (to embed words) and <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings" title="flair.embeddings.document.TransformerDocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></span></a> (to embed documents).</p>
 <section id="embeddings-words">
-<h2>Embeddings words<a class="headerlink" href="#embeddings-words" title="Permalink to this heading">#</a></h2>
+<h2>Embeddings words<a class="headerlink" href="#embeddings-words" title="Link to this heading">#</a></h2>
 <p>For instance, to load a standard BERT transformer model, do:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
 
@@ -573,7 +573,7 @@ with two classes <a class="reference internal" href="../../api/embeddings/token.
 <p>Use the <a class="reference external" href="https://huggingface.co/models">Huggingface Model hub</a> to find any open source text embedding model to use.</p>
 </section>
 <section id="embeddings-sentences">
-<h2>Embeddings sentences<a class="headerlink" href="#embeddings-sentences" title="Permalink to this heading">#</a></h2>
+<h2>Embeddings sentences<a class="headerlink" href="#embeddings-sentences" title="Link to this heading">#</a></h2>
 <p>To embed a whole sentence as one (instead of each word in the sentence), simply use the <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings" title="flair.embeddings.document.TransformerDocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></span></a>
 instead:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerDocumentEmbeddings</span>
@@ -590,7 +590,7 @@ instead:</p>
 </div>
 </section>
 <section id="arguments">
-<h2>Arguments<a class="headerlink" href="#arguments" title="Permalink to this heading">#</a></h2>
+<h2>Arguments<a class="headerlink" href="#arguments" title="Link to this heading">#</a></h2>
 <p>There are several options that you can set when you init the <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings" title="flair.embeddings.token.TransformerWordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></span></a>
 and <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings" title="flair.embeddings.document.TransformerDocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></span></a> classes:</p>
 <table class="table">
@@ -632,7 +632,7 @@ and <a class="reference internal" href="../../api/embeddings/document.html#flair
 </tbody>
 </table>
 <section id="layers">
-<h3>Layers<a class="headerlink" href="#layers" title="Permalink to this heading">#</a></h3>
+<h3>Layers<a class="headerlink" href="#layers" title="Link to this heading">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">layers</span></code> argument controls which transformer layers are used for the embedding. If you set this value to ‘-1,-2,-3,-4’, the top 4 layers are used to make an embedding. If you set it to ‘-1’, only the last layer is used. If you set it to “all”, then all layers are used.</p>
 <p>This affects the length of an embedding, since layers are just concatenated.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
@@ -669,7 +669,7 @@ and <a class="reference internal" href="../../api/embeddings/document.html#flair
 <p>I.e. the size of the embedding increases the mode layers we use (but ONLY if layer_mean is set to False, otherwise the length is always the same).</p>
 </section>
 <section id="pooling-operation">
-<span id="pooling"></span><h3>Pooling operation<a class="headerlink" href="#pooling-operation" title="Permalink to this heading">#</a></h3>
+<span id="pooling"></span><h3>Pooling operation<a class="headerlink" href="#pooling-operation" title="Link to this heading">#</a></h3>
 <p>Most of the Transformer-based models (except Transformer-XL) use subword tokenization. E.g. the following
 token <code class="docutils literal notranslate"><span class="pre">puppeteer</span></code> could be tokenized into the subwords: <code class="docutils literal notranslate"><span class="pre">pupp</span></code>, <code class="docutils literal notranslate"><span class="pre">##ete</span></code> and <code class="docutils literal notranslate"><span class="pre">##er</span></code>.</p>
 <p>We implement different pooling operations for these subwords to generate the final token representation:</p>
@@ -688,7 +688,7 @@ token <code class="docutils literal notranslate"><span class="pre">puppeteer</sp
 </div>
 </section>
 <section id="layer-mean">
-<span id="id1"></span><h3>Layer mean<a class="headerlink" href="#layer-mean" title="Permalink to this heading">#</a></h3>
+<span id="id1"></span><h3>Layer mean<a class="headerlink" href="#layer-mean" title="Link to this heading">#</a></h3>
 <p>The Transformer-based models have a certain number of layers. By default, all layers you select are
 concatenated as explained above. Alternatively, you can set layer_mean=True to do a mean over all
 selected layers. The resulting vector will then always have the same dimensionality as a single layer:</p>
@@ -706,7 +706,7 @@ selected layers. The resulting vector will then always have the same dimensional
 </div>
 </section>
 <section id="fine-tuneable-or-not">
-<h3>Fine-tuneable or not<a class="headerlink" href="#fine-tuneable-or-not" title="Permalink to this heading">#</a></h3>
+<h3>Fine-tuneable or not<a class="headerlink" href="#fine-tuneable-or-not" title="Link to this heading">#</a></h3>
 <p>In some setups, you may wish to fine-tune the transformer embeddings. In this case, set <code class="docutils literal notranslate"><span class="pre">fine_tune=True</span></code> in the init method.
 When fine-tuning, you should also only use the topmost layer, so best set <code class="docutils literal notranslate"><span class="pre">layers='-1'</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># use first and last subtoken for each word</span>
@@ -722,7 +722,7 @@ When fine-tuning, you should also only use the topmost layer, so best set <code 
 </div>
 </section>
 <section id="models">
-<h3>Models<a class="headerlink" href="#models" title="Permalink to this heading">#</a></h3>
+<h3>Models<a class="headerlink" href="#models" title="Link to this heading">#</a></h3>
 <p>Please have a look at the awesome <a class="reference external" href="https://huggingface.co/models">Huggingface Model hub</a> to find any open source text embedding model to use.</p>
 </section>
 </section>
@@ -829,7 +829,7 @@ When fine-tuning, you should also only use the topmost layer, so best set <code 
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=361a893e"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-to-train-span-classifier';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -542,13 +542,13 @@ document.write(`
 
 
   <section id="train-a-span-classifier">
-<h1>Train a span classifier<a class="headerlink" href="#train-a-span-classifier" title="Permalink to this heading">#</a></h1>
+<h1>Train a span classifier<a class="headerlink" href="#train-a-span-classifier" title="Link to this heading">#</a></h1>
 <p>Span Classification models are used to model problems such as entity linking, where you already have extracted some
 relevant spans
 within the <a class="reference internal" href="../../glossary/index.html#term-Sentence"><span class="xref std std-term">Sentence</span></a> and want to predict some more fine-grained labels.</p>
 <p>This tutorial section show you how to train models using the <a class="reference internal" href="../../api/flair.models.html#flair.models.SpanClassifier" title="flair.models.SpanClassifier"><span class="xref myst py py-class">Span Classifier</span></a> in Flair.</p>
 <section id="training-an-entity-linker-nel-model-with-transformers">
-<h2>Training an entity linker (NEL) model with transformers<a class="headerlink" href="#training-an-entity-linker-nel-model-with-transformers" title="Permalink to this heading">#</a></h2>
+<h2>Training an entity linker (NEL) model with transformers<a class="headerlink" href="#training-an-entity-linker-nel-model-with-transformers" title="Link to this heading">#</a></h2>
 <p>For a state-of-the-art NER sytem you should fine-tune transformer embeddings, and use full document context
 (see our <a class="reference external" href="https://arxiv.org/abs/2011.06993">FLERT</a> paper for details).</p>
 <p>Use the following script:</p>
@@ -611,7 +611,7 @@ Also, we set a <code class="docutils literal notranslate"><span class="pre">Cand
 This way we limit the classification to a small set of candidates that are chosen depending on the text of the respective span.</p>
 </section>
 <section id="loading-a-columncorpus">
-<h2>Loading a ColumnCorpus<a class="headerlink" href="#loading-a-columncorpus" title="Permalink to this heading">#</a></h2>
+<h2>Loading a ColumnCorpus<a class="headerlink" href="#loading-a-columncorpus" title="Link to this heading">#</a></h2>
 <p>In cases you want to train over a custom named entity linking dataset, you can load them with the <a class="reference internal" href="../../api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></span></a> object.
 Most sequence labeling datasets in NLP use some sort of column format in which each line is a word and each column is
 one level of linguistic annotation. See for instance this sentence:</p>
@@ -644,7 +644,7 @@ dataset, define the column structure as a dictionary and instantiate a <a class=
 </div>
 </section>
 <section id="constructing-a-dataset-in-memory">
-<h2>constructing a dataset in memory<a class="headerlink" href="#constructing-a-dataset-in-memory" title="Permalink to this heading">#</a></h2>
+<h2>constructing a dataset in memory<a class="headerlink" href="#constructing-a-dataset-in-memory" title="Link to this heading">#</a></h2>
 <p>If you have a pipeline where you need to construct your dataset from a different data source,
 you can always construct a <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class">Corpus</span></a> with <a class="reference internal" href="../../api/datasets/base.html#flair.datasets.base.FlairDatapointDataset" title="flair.datasets.base.FlairDatapointDataset"><span class="xref myst py py-class">FlairDatapointDataset</span></a> by hand.
 Let’s assume you create a function <code class="docutils literal notranslate"><span class="pre">create_datapoint(datapoint)</span> <span class="pre">-&gt;</span> <span class="pre">Sentence</span></code> that looks somewhat like this:</p>
@@ -673,7 +673,7 @@ Let’s assume you create a function <code class="docutils literal notranslate">
 <p>And use this to construct a corpus instead of loading a dataset.</p>
 </section>
 <section id="combining-nel-with-mention-detection">
-<h2>Combining NEL with Mention Detection<a class="headerlink" href="#combining-nel-with-mention-detection" title="Permalink to this heading">#</a></h2>
+<h2>Combining NEL with Mention Detection<a class="headerlink" href="#combining-nel-with-mention-detection" title="Link to this heading">#</a></h2>
 <p>often, you don’t just want to use a Named Entity Linking model alone, but combine it with a Mention Detection or Named Entity Recognition model.
 For this, you can use a <a class="reference internal" href="../../api/flair.models.html#flair.models.MultitaskModel" title="flair.models.MultitaskModel"><span class="xref myst py py-class">Multitask Model</span></a> to combine a <a class="reference internal" href="../../api/flair.models.html#flair.models.SequenceTagger" title="flair.models.SequenceTagger"><span class="xref myst py py-class">SequenceTagger</span></a> and a <a class="reference internal" href="../../api/flair.models.html#flair.models.SpanClassifier" title="flair.models.SpanClassifier"><span class="xref myst py py-class">Span Classifier</span></a>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">NER_MULTI_WIKINER</span><span class="p">,</span> <span class="n">ZELDA</span>
@@ -734,7 +734,7 @@ For this, you can use a <a class="reference internal" href="../../api/flair.mode
 </div>
 <p>Here, the <a class="reference internal" href="#flair.nn.multitask.make_multitask_model_and_corpus"><span class="xref myst">make_multitask_model_and_corpus</span></a> method creates a multitask model and a multicorpus where each sub-model is aligned for a sub-corpus.</p>
 <section id="multitask-with-aligned-training-data">
-<h3>Multitask with aligned training data<a class="headerlink" href="#multitask-with-aligned-training-data" title="Permalink to this heading">#</a></h3>
+<h3>Multitask with aligned training data<a class="headerlink" href="#multitask-with-aligned-training-data" title="Link to this heading">#</a></h3>
 <p>If you have sentences with both annotations for ner and for nel, you might want to use a single corpus for both models.</p>
 <p>This means, that you need to manually the <code class="docutils literal notranslate"><span class="pre">multitask_id</span></code> to the sentences:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
@@ -859,7 +859,7 @@ as the shared embedding will be calculated once but used twice (once for each mo
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

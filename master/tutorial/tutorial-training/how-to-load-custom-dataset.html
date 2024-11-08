@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=361a893e"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-to-load-custom-dataset';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -542,10 +542,10 @@ document.write(`
 
 
   <section id="how-to-load-a-custom-dataset">
-<h1>How to load a custom dataset<a class="headerlink" href="#how-to-load-a-custom-dataset" title="Permalink to this heading">#</a></h1>
+<h1>How to load a custom dataset<a class="headerlink" href="#how-to-load-a-custom-dataset" title="Link to this heading">#</a></h1>
 <p>This part of the tutorial shows how you can load a corpus for training a model.</p>
 <section id="loading-a-columncorpus">
-<h2>loading a ColumnCorpus<a class="headerlink" href="#loading-a-columncorpus" title="Permalink to this heading">#</a></h2>
+<h2>loading a ColumnCorpus<a class="headerlink" href="#loading-a-columncorpus" title="Link to this heading">#</a></h2>
 <p>In cases you want to train over a sequence labeling dataset that is not in the above list, you can load them with the <a class="reference internal" href="../../api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></span></a> object.
 Most sequence labeling datasets in NLP use some sort of column format in which each line is a word and each column is
 one level of linguistic annotation. See for instance this sentence:</p>
@@ -598,12 +598,12 @@ read from the example above, then executing these commands</p>
 </div>
 </section>
 <section id="reading-a-text-classification-dataset">
-<h2>Reading a text classification dataset<a class="headerlink" href="#reading-a-text-classification-dataset" title="Permalink to this heading">#</a></h2>
+<h2>Reading a text classification dataset<a class="headerlink" href="#reading-a-text-classification-dataset" title="Link to this heading">#</a></h2>
 <p>If you want to use your own text classification dataset, there are currently two methods to go about this:
 load specified text and labels from a simple CSV file or format your data to the
 <a class="reference external" href="https://fasttext.cc/docs/en/supervised-tutorial.html">FastText format</a>.</p>
 <section id="load-from-simple-csv-file">
-<h3>Load from simple CSV file<a class="headerlink" href="#load-from-simple-csv-file" title="Permalink to this heading">#</a></h3>
+<h3>Load from simple CSV file<a class="headerlink" href="#load-from-simple-csv-file" title="Link to this heading">#</a></h3>
 <p>Many text classification datasets are distributed as simple CSV files in which each row corresponds to a data point and
 columns correspond to text, labels, and other metadata.  You can load a CSV format classification dataset using
 <a class="reference internal" href="../../api/datasets/document_classification.html#flair.datasets.document_classification.CSVClassificationCorpus" title="flair.datasets.document_classification.CSVClassificationCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">CSVClassificationCorpus</span></code></span></a> by passing in a column format (like in <a class="reference internal" href="../../api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></span></a> above).  This column format indicates
@@ -632,7 +632,7 @@ dev, test splits in a folder.</p>
 </div>
 </section>
 <section id="fasttext-format">
-<h3>FastText format<a class="headerlink" href="#fasttext-format" title="Permalink to this heading">#</a></h3>
+<h3>FastText format<a class="headerlink" href="#fasttext-format" title="Link to this heading">#</a></h3>
 <p>If using <a class="reference internal" href="../../api/datasets/document_classification.html#flair.datasets.document_classification.CSVClassificationCorpus" title="flair.datasets.document_classification.CSVClassificationCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">CSVClassificationCorpus</span></code></span></a> is not practical, you may format your data to the FastText format, in which each line in the file represents a text document. A document can have one or multiple labels that are defined at the beginning of the line starting with the prefix <code class="docutils literal notranslate"><span class="pre">__label__</span></code>. This looks like this:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>__label__&lt;label_1&gt;<span class="w"> </span>&lt;text&gt;
 __label__&lt;label_1&gt;<span class="w"> </span>__label__&lt;label_2&gt;<span class="w"> </span>&lt;text&gt;
@@ -780,7 +780,7 @@ example we chose <code class="docutils literal notranslate"><span class="pre">la
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

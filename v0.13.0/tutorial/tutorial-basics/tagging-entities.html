@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=f17e68eb"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=d304bea3"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/tagging-entities';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -542,10 +542,10 @@ document.write(`
 
 
   <section id="tagging-entities">
-<h1>Tagging entities<a class="headerlink" href="#tagging-entities" title="Permalink to this heading">#</a></h1>
+<h1>Tagging entities<a class="headerlink" href="#tagging-entities" title="Link to this heading">#</a></h1>
 <p>This tutorials shows you how to do named entity recognition, showcases various NER models, and provides a full list of all NER models in Flair.</p>
 <section id="tagging-entities-with-our-standard-model">
-<h2>Tagging entities with our standard model​<a class="headerlink" href="#tagging-entities-with-our-standard-model" title="Permalink to this heading">#</a></h2>
+<h2>Tagging entities with our standard model​<a class="headerlink" href="#tagging-entities-with-our-standard-model" title="Link to this heading">#</a></h2>
 <p>Our standard model uses Flair embeddings and was trained over the English CoNLL-03 task and can recognize 4 different entity types. It offers a good tradeoff between accuracy and speed.</p>
 <p>As example, let’s use the sentence “<em>George Washington went to Washington.</em>”:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
@@ -571,7 +571,7 @@ document.write(`
 <p>The printout tells us that two entities are labeled in this sentence: “George Washington” as PER (person) and “Washington” as LOC (location).</p>
 </section>
 <section id="tagging-entities-with-our-best-model">
-<h2>Tagging entities with our best model​<a class="headerlink" href="#tagging-entities-with-our-best-model" title="Permalink to this heading">#</a></h2>
+<h2>Tagging entities with our best model​<a class="headerlink" href="#tagging-entities-with-our-best-model" title="Link to this heading">#</a></h2>
 <p>Our best 4-class model is trained using a very large transformer. Use it if accuracy is the most important to you, and speed/memory not so much.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
 <span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
@@ -597,10 +597,10 @@ This model also works with most languages.</p>
 </div>
 </section>
 <section id="tagging-entities-in-non-english-text">
-<h2>Tagging entities in non-English text<a class="headerlink" href="#tagging-entities-in-non-english-text" title="Permalink to this heading">#</a></h2>
+<h2>Tagging entities in non-English text<a class="headerlink" href="#tagging-entities-in-non-english-text" title="Link to this heading">#</a></h2>
 <p>We also have NER models for text in other languages.</p>
 <section id="tagging-a-german-sentence">
-<h3>Tagging a German sentence<a class="headerlink" href="#tagging-a-german-sentence" title="Permalink to this heading">#</a></h3>
+<h3>Tagging a German sentence<a class="headerlink" href="#tagging-a-german-sentence" title="Link to this heading">#</a></h3>
 <p>To tag a German sentence, just load the appropriate model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># load model</span>
 <span class="n">tagger</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;de-ner-large&#39;</span><span class="p">)</span>
@@ -621,7 +621,7 @@ This model also works with most languages.</p>
 </div>
 </section>
 <section id="tagging-an-arabic-sentence">
-<h3>Tagging an Arabic sentence<a class="headerlink" href="#tagging-an-arabic-sentence" title="Permalink to this heading">#</a></h3>
+<h3>Tagging an Arabic sentence<a class="headerlink" href="#tagging-an-arabic-sentence" title="Link to this heading">#</a></h3>
 <p>Flair also works for languages that write from right to left. To tag an Arabic sentence, just load the appropriate model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># load model</span>
 <span class="n">tagger</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;ar-ner&#39;</span><span class="p">)</span>
@@ -643,7 +643,7 @@ This model also works with most languages.</p>
 </section>
 </section>
 <section id="tagging-entities-with-18-classes">
-<h2>Tagging Entities with 18 Classes<a class="headerlink" href="#tagging-entities-with-18-classes" title="Permalink to this heading">#</a></h2>
+<h2>Tagging Entities with 18 Classes<a class="headerlink" href="#tagging-entities-with-18-classes" title="Link to this heading">#</a></h2>
 <p>We also ship models that distinguish between more than just 4 classes. For instance, use our ontonotes models
 to classify 18 different types of entities.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
@@ -669,7 +669,7 @@ to classify 18 different types of entities.</p>
 <p>Finding for instance that “Game of Thrones” is a work of art and that “September 1st” is a date.</p>
 </section>
 <section id="biomedical-data">
-<h2>Biomedical Data<a class="headerlink" href="#biomedical-data" title="Permalink to this heading">#</a></h2>
+<h2>Biomedical Data<a class="headerlink" href="#biomedical-data" title="Link to this heading">#</a></h2>
 <p>For biomedical data, we offer the hunflair models that detect 5 different types of biomedical entities.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
 <span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
@@ -694,7 +694,7 @@ to classify 18 different types of entities.</p>
 <p>Thus finding entities of classes “Species”, “Disease” and “Gene” in this text.</p>
 </section>
 <section id="list-of-ner-models">
-<h2>List of NER Models<a class="headerlink" href="#list-of-ner-models" title="Permalink to this heading">#</a></h2>
+<h2>List of NER Models<a class="headerlink" href="#list-of-ner-models" title="Link to this heading">#</a></h2>
 <p>We end this section with a list of all models we currently ship with Flair.</p>
 <table class="table">
 <thead>
@@ -948,7 +948,7 @@ to classify 18 different types of entities.</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

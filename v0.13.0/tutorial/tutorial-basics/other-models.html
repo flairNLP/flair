@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=f17e68eb"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=d304bea3"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/other-models';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -542,7 +542,7 @@ document.write(`
 
 
   <section id="tagging-other-things">
-<h1>Tagging other things<a class="headerlink" href="#tagging-other-things" title="Permalink to this heading">#</a></h1>
+<h1>Tagging other things<a class="headerlink" href="#tagging-other-things" title="Link to this heading">#</a></h1>
 <p>This tutorial gives you a tour of <strong>other crazy models</strong> shipped with Flair. These include:</p>
 <ul class="simple">
 <li><p>tagging semantic frames</p></li>
@@ -552,7 +552,7 @@ document.write(`
 </ul>
 <p>Let’s get started!</p>
 <section id="semantic-frame-detection">
-<h2>Semantic Frame Detection<a class="headerlink" href="#semantic-frame-detection" title="Permalink to this heading">#</a></h2>
+<h2>Semantic Frame Detection<a class="headerlink" href="#semantic-frame-detection" title="Link to this heading">#</a></h2>
 <p>For English, we provide a pre-trained model that detects semantic frames in text, trained using Propbank 3.0 frames.
 This provides a sort of word sense disambiguation for frame evoking words, and we are curious what researchers might
 do with this.</p>
@@ -589,7 +589,7 @@ do with this.</p>
 <p>As we can see, the frame detector makes a distinction in the sentence between two different meanings of the word ‘return’. ‘return.01’ means returning to a location, while ‘return.02’ means giving something back.</p>
 </section>
 <section id="syntactic-chunking">
-<h2>Syntactic Chunking<a class="headerlink" href="#syntactic-chunking" title="Permalink to this heading">#</a></h2>
+<h2>Syntactic Chunking<a class="headerlink" href="#syntactic-chunking" title="Link to this heading">#</a></h2>
 <p>For English, we provide a model for chunking verb and noun phrases, trained using CoNLL 2000.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
 <span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
@@ -618,7 +618,7 @@ do with this.</p>
 <p>This tells us for instance that “the quick brown fox” and “the lazy dog” form syntactic units in this sentence.</p>
 </section>
 <section id="tagging-relations">
-<h2>Tagging Relations<a class="headerlink" href="#tagging-relations" title="Permalink to this heading">#</a></h2>
+<h2>Tagging Relations<a class="headerlink" href="#tagging-relations" title="Link to this heading">#</a></h2>
 <p>Relations hold between two entities. For instance, a text like “<em>George was born in Washington</em>”
 names two entities and also expresses that there is a born_in relationship between
 both.</p>
@@ -666,7 +666,7 @@ You must use this model together with an entity tagger. Here is an example:</p>
 <p>Indicating that a <strong>born_in</strong> relationship holds between “George” and “Washington”!</p>
 </section>
 <section id="list-of-other-models">
-<h2>List of Other Models<a class="headerlink" href="#list-of-other-models" title="Permalink to this heading">#</a></h2>
+<h2>List of Other Models<a class="headerlink" href="#list-of-other-models" title="Link to this heading">#</a></h2>
 <p>We end this section with a list of all other models we currently ship with Flair:</p>
 <table class="table">
 <thead>
@@ -849,7 +849,7 @@ You must use this model together with an entity tagger. Here is an example:</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

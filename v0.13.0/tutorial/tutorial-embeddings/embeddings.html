@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=f17e68eb"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=d304bea3"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-embeddings/embeddings';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -539,12 +539,12 @@ document.write(`
 
 
   <section id="embeddings">
-<h1>Embeddings<a class="headerlink" href="#embeddings" title="Permalink to this heading">#</a></h1>
+<h1>Embeddings<a class="headerlink" href="#embeddings" title="Link to this heading">#</a></h1>
 <p>This tutorial shows you how to use Flair to produce <strong>embeddings</strong> for words and documents. Embeddings
 are vector representations that are useful for a variety of reasons. All Flair models are trained on
 top of embeddings, so if you want to train your own models, you should understand how embeddings work.</p>
 <section id="example-1-embeddings-words-with-transformers">
-<h2>Example 1: Embeddings Words with Transformers<a class="headerlink" href="#example-1-embeddings-words-with-transformers" title="Permalink to this heading">#</a></h2>
+<h2>Example 1: Embeddings Words with Transformers<a class="headerlink" href="#example-1-embeddings-words-with-transformers" title="Link to this heading">#</a></h2>
 <p>Let’s use a standard BERT model (bert-base-uncased) to embed the sentence “the grass is green”.</p>
 <p>Simply instantiate <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.TransformerWordEmbeddings" title="flair.embeddings.token.TransformerWordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></span></a> and call <a class="reference internal" href="../../api/embeddings/base.html#flair.embeddings.base.Embeddings.embed" title="flair.embeddings.base.Embeddings.embed"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">embed()</span></code></span></a> over an example sentence:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
@@ -585,7 +585,7 @@ each embedding like this:</p>
 <p>Transformer word embeddings are the most important concept in Flair. Check out more info in this dedicated chapter.</p>
 </section>
 <section id="example-2-embeddings-documents-with-transformers">
-<h2>Example 2: Embeddings Documents with Transformers<a class="headerlink" href="#example-2-embeddings-documents-with-transformers" title="Permalink to this heading">#</a></h2>
+<h2>Example 2: Embeddings Documents with Transformers<a class="headerlink" href="#example-2-embeddings-documents-with-transformers" title="Link to this heading">#</a></h2>
 <p>Sometimes you want to have an <strong>embedding for a whole document</strong>, not only individual words. In this case, use one of the
 DocumentEmbeddings classes in Flair.</p>
 <p>Let’s again use a standard BERT model to get an embedding for the entire sentence “the grass is green”:</p>
@@ -610,7 +610,7 @@ DocumentEmbeddings classes in Flair.</p>
 <p><a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.TransformerDocumentEmbeddings" title="flair.embeddings.document.TransformerDocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></span></a> are the most important concept in Flair. Check out more info in <a class="reference internal" href="transformer-embeddings.html"><span class="std std-doc">this</span></a> dedicated chapter.</p>
 </section>
 <section id="how-to-stack-embeddings">
-<h2>How to Stack Embeddings<a class="headerlink" href="#how-to-stack-embeddings" title="Permalink to this heading">#</a></h2>
+<h2>How to Stack Embeddings<a class="headerlink" href="#how-to-stack-embeddings" title="Link to this heading">#</a></h2>
 <p>Flair allows you to combine embeddings into “embedding stacks”. When not fine-tuning, using combinations of embeddings often gives best results!</p>
 <p>Use the <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.StackedEmbeddings" title="flair.embeddings.token.StackedEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings</span></code></span></a> class and instantiate it by passing a list of embeddings that you wish to combine. For instance, lets combine classic GloVe <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.WordEmbeddings" title="flair.embeddings.token.WordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></span></a> with forward and backward <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>.</p>
 <p>First, instantiate the two embeddings you wish to combine:</p>
@@ -746,7 +746,7 @@ vector is still a single PyTorch vector.</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

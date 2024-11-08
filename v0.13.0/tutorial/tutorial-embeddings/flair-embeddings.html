@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=f17e68eb"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=d304bea3"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-embeddings/flair-embeddings';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -539,7 +539,7 @@ document.write(`
 
 
   <section id="flair-embeddings">
-<h1>Flair embeddings<a class="headerlink" href="#flair-embeddings" title="Permalink to this heading">#</a></h1>
+<h1>Flair embeddings<a class="headerlink" href="#flair-embeddings" title="Link to this heading">#</a></h1>
 <p>Contextual string embeddings are <a class="reference external" href="https://drive.google.com/file/d/17yVpFA7MmXaQFTe-HDpZuqw9fJlmzg56/view?usp=sharing">powerful embeddings</a>
 that capture latent syntactic-semantic information that goes beyond
 standard word embeddings. Key differences are:</p>
@@ -761,7 +761,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 </pre></div>
 </div>
 <section id="recommended-flair-usage">
-<h2>Recommended Flair usage<a class="headerlink" href="#recommended-flair-usage" title="Permalink to this heading">#</a></h2>
+<h2>Recommended Flair usage<a class="headerlink" href="#recommended-flair-usage" title="Link to this heading">#</a></h2>
 <p>We recommend combining both forward and backward Flair embeddings. Depending on the task, we also recommend adding standard <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.WordEmbeddings" title="flair.embeddings.token.WordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></span></a> into the mix. So, our recommended <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.StackedEmbeddings" title="flair.embeddings.token.StackedEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings</span></code></span></a> for most English tasks is:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">FlairEmbeddings</span><span class="p">,</span> <span class="n">StackedEmbeddings</span>
 
@@ -788,7 +788,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 <p>Words are now embedded using a concatenation of three different embeddings. This combination often gives state-of-the-art accuracy.</p>
 </section>
 <section id="pooled-flair-embeddings">
-<h2>Pooled Flair embeddings<a class="headerlink" href="#pooled-flair-embeddings" title="Permalink to this heading">#</a></h2>
+<h2>Pooled Flair embeddings<a class="headerlink" href="#pooled-flair-embeddings" title="Link to this heading">#</a></h2>
 <p>We also developed a pooled variant of the <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>. These embeddings differ in that they <em>constantly evolve over time</em>, even at prediction time (i.e. after training is complete). This means that the same words in the same sentence at two different points in time may have different embeddings.</p>
 <p><a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings" title="flair.embeddings.token.PooledFlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></span></a> manage a ‘global’ representation of each distinct word by using a pooling operation of all past occurences. More details on how this works may be found in <a class="reference external" href="https://www.aclweb.org/anthology/N19-1078/">Akbik et al. (2019)</a>.</p>
 <p>You can instantiate and use <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings" title="flair.embeddings.token.PooledFlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></span></a> like <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>:</p>
@@ -901,7 +901,7 @@ Currently, the following contextual string embeddings are provided (note: replac
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

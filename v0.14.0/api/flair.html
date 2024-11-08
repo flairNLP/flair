@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=14605f76"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/documentation_options.js?v=361a893e"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/flair';</script>
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -542,10 +542,10 @@ document.write(`
 
 
   <section id="module-flair">
-<span id="flair"></span><h1>flair<a class="headerlink" href="#module-flair" title="Permalink to this heading">#</a></h1>
+<span id="flair"></span><h1>flair<a class="headerlink" href="#module-flair" title="Link to this heading">#</a></h1>
 <dl class="py data">
 <dt class="sig sig-object py" id="flair.cache_root">
-<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">cache_root</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PosixPath('/home/runner/.flair')</span></em><a class="headerlink" href="#flair.cache_root" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">cache_root</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PosixPath('/home/runner/.flair')</span></em><a class="headerlink" href="#flair.cache_root" title="Link to this definition">#</a></dt>
 <dd><p>The path to the cache folder Flair is using.</p>
 <p>This value defaults to <cite>&lt;Home Directory&gt;/.flair</cite>.
 You can choose the path by setting the <cite>FLAIR_CACHE_ROOT</cite> environment variable.</p>
@@ -553,7 +553,7 @@ You can choose the path by setting the <cite>FLAIR_CACHE_ROOT</cite> environment
 
 <dl class="py data">
 <dt class="sig sig-object py" id="flair.device">
-<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">device</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">device(type='cpu')</span></em><a class="headerlink" href="#flair.device" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">device</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">device(type='cpu')</span></em><a class="headerlink" href="#flair.device" title="Link to this definition">#</a></dt>
 <dd><p>Flair is using a single device for everything. You can set this device by overwriting this variable.</p>
 <p>The device will be automatically set to the first available GPU if a GPU is present and the ‘FLAIR_DEVICE’ environment
 variable is not set to ‘cpu’, otherwise it will default to the CPU, and a specific GPU can be chosen by setting the ‘FLAIR_DEVICE’
@@ -562,14 +562,14 @@ environment variable to its index.</p>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="flair.logger">
-<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;Logger</span> <span class="pre">flair</span> <span class="pre">(INFO)&gt;</span></em><a class="headerlink" href="#flair.logger" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;Logger</span> <span class="pre">flair</span> <span class="pre">(INFO)&gt;</span></em><a class="headerlink" href="#flair.logger" title="Link to this definition">#</a></dt>
 <dd><p>The logger used by Flair.</p>
 <p>You can reconfigure it to change the log output to your likings.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="flair.set_seed">
-<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">set_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/__init__.py#L75-L84"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.set_seed" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">set_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/__init__.py#L75-L84"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.set_seed" title="Link to this definition">#</a></dt>
 <dd><p>Set the seed for all random generators used in training.</p>
 <p>Use this method to guarantee reproducibility of experiments.</p>
 <dl class="field-list simple">
@@ -581,7 +581,7 @@ environment variable to its index.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="flair.set_proxies">
-<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">set_proxies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proxies</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/file_utils.py#L34-L43"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.set_proxies" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">flair.</span></span><span class="sig-name descname"><span class="pre">set_proxies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proxies</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/file_utils.py#L34-L43"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.set_proxies" title="Link to this definition">#</a></dt>
 <dd><p>Allows for data downloaded from urls to be forwarded to a proxy.</p>
 <p>see <a class="reference external" href="https://requests.readthedocs.io/en/latest/user/advanced/#proxies">https://requests.readthedocs.io/en/latest/user/advanced/#proxies</a></p>
 <dl class="field-list simple">
@@ -692,7 +692,7 @@ environment variable to its index.</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

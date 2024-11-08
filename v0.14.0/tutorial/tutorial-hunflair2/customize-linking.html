@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=361a893e"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-hunflair2/customize-linking';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -540,11 +540,11 @@ document.write(`
 
 
   <section id="hunflair2-tutorial-4-customizing-linking-models">
-<h1>HunFlair2 Tutorial 4: Customizing linking models<a class="headerlink" href="#hunflair2-tutorial-4-customizing-linking-models" title="Permalink to this heading">#</a></h1>
+<h1>HunFlair2 Tutorial 4: Customizing linking models<a class="headerlink" href="#hunflair2-tutorial-4-customizing-linking-models" title="Link to this heading">#</a></h1>
 <p>In this tutorial you’ll find information on how to customize the entity linking models according to your needs.
 As of now, fine-tuning the models is not supported.</p>
 <section id="customize-dictionary">
-<h2>Customize dictionary<a class="headerlink" href="#customize-dictionary" title="Permalink to this heading">#</a></h2>
+<h2>Customize dictionary<a class="headerlink" href="#customize-dictionary" title="Link to this heading">#</a></h2>
 <p>All linking models come with a pre-defined pairing of entity type and dictionary,
 e.g. “Disease” mentions are linked by default to the <a class="reference external" href="https://ctdbase.org/help/diseaseDetailHelp.jsp">CTD Diseases</a>.
 You can change the dictionary to which mentions are linked by following the steps below.
@@ -592,7 +592,7 @@ We’ll be using the <a class="reference external" href="https://hpo.jax.org/app
 See the section below for that.</p>
 </section>
 <section id="custom-pre-trained-model">
-<h2>Custom pre-trained model<a class="headerlink" href="#custom-pre-trained-model" title="Permalink to this heading">#</a></h2>
+<h2>Custom pre-trained model<a class="headerlink" href="#custom-pre-trained-model" title="Link to this heading">#</a></h2>
 <p>You can initialize a new <a class="reference internal" href="../../api/flair.models.html#flair.models.EntityMentionLinker" title="flair.models.EntityMentionLinker"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">EntityMentionLinker</span></code></span></a> with both a custom model and custom dictionary (see section above) like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">EntityMentionLinker</span>
 <span class="n">pretrained_model</span><span class="o">=</span><span class="s2">&quot;cambridgeltl/SapBERT-from-PubMedBERT-fulltext&quot;</span>
@@ -607,7 +607,7 @@ See the section below for that.</p>
 <p>Omitting the <code class="docutils literal notranslate"><span class="pre">dictionary</span></code> parameter will load the default dictionary for the specified <code class="docutils literal notranslate"><span class="pre">entity_type</span></code>.</p>
 </section>
 <section id="customizing-prediction-labels">
-<h2>Customizing Prediction Labels<a class="headerlink" href="#customizing-prediction-labels" title="Permalink to this heading">#</a></h2>
+<h2>Customizing Prediction Labels<a class="headerlink" href="#customizing-prediction-labels" title="Link to this heading">#</a></h2>
 <p>In the default setup all linker models output their prediction into the same annotation category <em>link</em>.
 To record the NEN annotation in separate categories, you can use the <code class="docutils literal notranslate"><span class="pre">pred_label_type</span></code> parameter of the
 <a class="reference internal" href="../../api/flair.models.html#flair.models.EntityMentionLinker.predict" title="flair.models.EntityMentionLinker.predict"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">predict()</span></code></span></a> method:</p>
@@ -763,7 +763,7 @@ annotation category and tag type using a dictionary. For instance:</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

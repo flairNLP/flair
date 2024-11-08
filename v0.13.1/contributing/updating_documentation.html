@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=583e1c8d"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/documentation_options.js?v=7a44cac5"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'contributing/updating_documentation';</script>
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -535,9 +535,9 @@ document.write(`
 
 
   <section id="updating-documentation">
-<h1>Updating documentation<a class="headerlink" href="#updating-documentation" title="Permalink to this heading">#</a></h1>
+<h1>Updating documentation<a class="headerlink" href="#updating-documentation" title="Link to this heading">#</a></h1>
 <section id="what-is-good-documentation">
-<h2>What is good documentation?<a class="headerlink" href="#what-is-good-documentation" title="Permalink to this heading">#</a></h2>
+<h2>What is good documentation?<a class="headerlink" href="#what-is-good-documentation" title="Link to this heading">#</a></h2>
 <p>Good Documentation</p>
 <ul class="simple">
 <li><p>Always refers to the enduser. Do not document <em>why</em> something is the way it is, but rather <em>how</em> to use it.</p></li>
@@ -546,7 +546,7 @@ document.write(`
 </ul>
 </section>
 <section id="tutorials">
-<h2>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this heading">#</a></h2>
+<h2>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading">#</a></h2>
 <p>All tutorials are markdown files stored at <a class="reference external" href="https://github.com/flairNLP/flair/tree/master/docs/tutorial">the tutorial folder</a>.
 When adding a new tutorial, you must add its name to the <code class="docutils literal notranslate"><span class="pre">index.rst</span></code> file in the respective folder.
 We are using the <a class="reference external" href="https://myst-parser.readthedocs.io/en/latest/syntax/typography.html">MyST parser</a> which adds
@@ -560,7 +560,7 @@ e.g.: <code class="docutils literal notranslate"><span class="pre">[entity-linki
 </div>
 </section>
 <section id="docstrings">
-<h2>Docstrings<a class="headerlink" href="#docstrings" title="Permalink to this heading">#</a></h2>
+<h2>Docstrings<a class="headerlink" href="#docstrings" title="Link to this heading">#</a></h2>
 <p>For docstrings we follow the <a class="reference external" href="https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html">Google docstring</a> format.
 We do not need to specify types or default values, as those will be extracted from the function signature.</p>
 <p>Docstrings have usual a 1 liner giving a simple explanation of the object. Then there is a more detailed explanation followed <strong>if required</strong>.
@@ -568,7 +568,7 @@ Ensure that you always use cross-references instead of just mentioning another o
 e.g. <code class="docutils literal notranslate"><span class="pre">:class:`flair.models.SequenceTagger`</span> </code> can be used to reference the SequenceTagger.</p>
 </section>
 <section id="building-the-local-docs">
-<h2>Building the local docs<a class="headerlink" href="#building-the-local-docs" title="Permalink to this heading">#</a></h2>
+<h2>Building the local docs<a class="headerlink" href="#building-the-local-docs" title="Link to this heading">#</a></h2>
 <p>For building the docs,</p>
 <ul class="simple">
 <li><p>Ensure that you have everything committed. Local changes won’t be used for building.</p></li>
@@ -676,7 +676,7 @@ E.g. if your branch is called <code class="docutils literal notranslate"><span c
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

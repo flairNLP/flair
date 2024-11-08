@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=f17e68eb"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/documentation_options.js?v=d304bea3"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'contributing/local_development';</script>
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -534,12 +534,12 @@ document.write(`
 
 
   <section id="local-development">
-<h1>Local Development<a class="headerlink" href="#local-development" title="Permalink to this heading">#</a></h1>
+<h1>Local Development<a class="headerlink" href="#local-development" title="Link to this heading">#</a></h1>
 <p>For contributors looking to get deeper into the API we suggest cloning the repository and checking out the unit
 tests for examples of how to call methods. Most classes and methods are documented, so finding your way around
 the code should hopefully be easy.</p>
 <section id="setup">
-<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this heading">#</a></h2>
+<h2>Setup<a class="headerlink" href="#setup" title="Link to this heading">#</a></h2>
 <p>Flair requires python-3.8 or higher. To make sure our code also runs on the oldest supported
 python version, it is recommended to use python-3.8.x for flair development.</p>
 <p>Create a python environment of your preference and run:</p>
@@ -549,7 +549,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 </div>
 </section>
 <section id="tests">
-<h2>Tests<a class="headerlink" href="#tests" title="Permalink to this heading">#</a></h2>
+<h2>Tests<a class="headerlink" href="#tests" title="Link to this heading">#</a></h2>
 <p>To only run typechecks and check the code formatting execute:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>flair
 </pre></div>
@@ -566,7 +566,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </s
 In general, it is recommended to ensure all basic tests are running through before testing the integration tests</p>
 </section>
 <section id="code-formatting">
-<h2>Code Formatting<a class="headerlink" href="#code-formatting" title="Permalink to this heading">#</a></h2>
+<h2>Code Formatting<a class="headerlink" href="#code-formatting" title="Link to this heading">#</a></h2>
 <p>To ensure a standardized code style we use the formatter <a class="reference external" href="https://github.com/ambv/black">black</a> and for standardizing imports we use <a class="reference external" href="https://github.com/charliermarsh/ruff">ruff</a>.
 If your code is not formatted properly, the tests will fail.</p>
 <p>We recommend configuring your IDE to run these formatters for you, but you can also always run them manually via
@@ -668,7 +668,7 @@ If your code is not formatted properly, the tests will fail.</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

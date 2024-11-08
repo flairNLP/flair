@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=f17e68eb"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=d304bea3"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/part-of-speech-tagging';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -542,13 +542,13 @@ document.write(`
 
 
   <section id="tagging-parts-of-speech">
-<h1>Tagging parts-of-speech<a class="headerlink" href="#tagging-parts-of-speech" title="Permalink to this heading">#</a></h1>
+<h1>Tagging parts-of-speech<a class="headerlink" href="#tagging-parts-of-speech" title="Link to this heading">#</a></h1>
 <p>This tutorials shows you how to do part-of-speech tagging in Flair, showcases univeral and language-specific models, and gives a list of all PoS models in Flair.</p>
 <section id="language-specific-parts-of-speech-pos">
-<h2>Language-specific parts-of-speech (PoS)<a class="headerlink" href="#language-specific-parts-of-speech-pos" title="Permalink to this heading">#</a></h2>
+<h2>Language-specific parts-of-speech (PoS)<a class="headerlink" href="#language-specific-parts-of-speech-pos" title="Link to this heading">#</a></h2>
 <p>Syntax is fundamentally language-specific, so each language has different fine-grained parts-of-speech. Flair offers models for many languages:</p>
 <section id="in-english">
-<h3>… in English<a class="headerlink" href="#in-english" title="Permalink to this heading">#</a></h3>
+<h3>… in English<a class="headerlink" href="#in-english" title="Link to this heading">#</a></h3>
 <p>For English, we offer several models trained over Ontonotes.</p>
 <p>Use like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
@@ -578,7 +578,7 @@ document.write(`
 </div>
 </section>
 <section id="in-german">
-<h3>… in German<a class="headerlink" href="#in-german" title="Permalink to this heading">#</a></h3>
+<h3>… in German<a class="headerlink" href="#in-german" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
 <span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
 
@@ -601,7 +601,7 @@ document.write(`
 </div>
 </section>
 <section id="in-ukrainian">
-<h3>… in Ukrainian<a class="headerlink" href="#in-ukrainian" title="Permalink to this heading">#</a></h3>
+<h3>… in Ukrainian<a class="headerlink" href="#in-ukrainian" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
 <span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
 
@@ -620,7 +620,7 @@ document.write(`
 </div>
 </section>
 <section id="in-arabic">
-<h3>… in Arabic<a class="headerlink" href="#in-arabic" title="Permalink to this heading">#</a></h3>
+<h3>… in Arabic<a class="headerlink" href="#in-arabic" title="Link to this heading">#</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
 <span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
 
@@ -640,7 +640,7 @@ document.write(`
 </section>
 </section>
 <section id="tagging-universal-parts-of-speech-upos">
-<h2>Tagging universal parts-of-speech (uPoS)​<a class="headerlink" href="#tagging-universal-parts-of-speech-upos" title="Permalink to this heading">#</a></h2>
+<h2>Tagging universal parts-of-speech (uPoS)​<a class="headerlink" href="#tagging-universal-parts-of-speech-upos" title="Link to this heading">#</a></h2>
 <p>Universal parts-of-speech are a set of minimal syntactic units that exist across languages. For instance, most languages
 will have VERBs or NOUNs.</p>
 <p>We ship models trained over 14 langages to tag upos in <strong>multilingual text</strong>. Use like this:</p>
@@ -671,7 +671,7 @@ will have VERBs or NOUNs.</p>
 <p>However note that they were trained for a mix of European languages and therefore will not work for other languages.</p>
 </section>
 <section id="list-of-pos-models">
-<h2>List of POS Models<a class="headerlink" href="#list-of-pos-models" title="Permalink to this heading">#</a></h2>
+<h2>List of POS Models<a class="headerlink" href="#list-of-pos-models" title="Link to this heading">#</a></h2>
 <p>We end this section with a list of all models we currently ship with Flair.</p>
 <table class="table">
 <thead>
@@ -889,7 +889,7 @@ will have VERBs or NOUNs.</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

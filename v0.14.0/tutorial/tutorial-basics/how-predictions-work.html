@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=361a893e"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/how-predictions-work';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -544,10 +544,10 @@ document.write(`
 
 
   <section id="how-predictions-work">
-<h1>How predictions work<a class="headerlink" href="#how-predictions-work" title="Permalink to this heading">#</a></h1>
+<h1>How predictions work<a class="headerlink" href="#how-predictions-work" title="Link to this heading">#</a></h1>
 <p>All taggers in Flair make predictions. This tutorial helps you understand what information you can get out of each prediction.</p>
 <section id="running-example">
-<h2>Running example<a class="headerlink" href="#running-example" title="Permalink to this heading">#</a></h2>
+<h2>Running example<a class="headerlink" href="#running-example" title="Link to this heading">#</a></h2>
 <p>Let’s use our standard NER example to illustrate how annotations work:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
 <span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
@@ -573,7 +573,7 @@ document.write(`
 as LOC (location.)</p>
 </section>
 <section id="getting-the-predictions">
-<h2>Getting the predictions<a class="headerlink" href="#getting-the-predictions" title="Permalink to this heading">#</a></h2>
+<h2>Getting the predictions<a class="headerlink" href="#getting-the-predictions" title="Link to this heading">#</a></h2>
 <p>A common question that gets asked is <strong>how to access these predictions directly</strong>. You can do this by using
 the <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence.get_labels" title="flair.data.Sentence.get_labels"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">get_labels()</span></code></span></a> method to iterate over all predictions:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
@@ -589,7 +589,7 @@ the <a class="reference internal" href="../../api/flair.data.html#flair.data.Sen
 The confidence of the prediction is indicated as a score in brackets.</p>
 </section>
 <section id="values-for-each-prediction">
-<h2>Values for each prediction<a class="headerlink" href="#values-for-each-prediction" title="Permalink to this heading">#</a></h2>
+<h2>Values for each prediction<a class="headerlink" href="#values-for-each-prediction" title="Link to this heading">#</a></h2>
 <p>For each prediction, you can even <strong>directly access</strong> the label value, and all other attributes of the <a class="reference internal" href="../../api/flair.data.html#flair.data.Label" title="flair.data.Label"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Label</span></code></span></a> class:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># iterate over all labels in the sentence</span>
 <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
@@ -707,7 +707,7 @@ The confidence of the prediction is indicated as a score in brackets.</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=f17e68eb"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=d304bea3"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-to-load-prepared-dataset';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -540,10 +540,10 @@ document.write(`
 
 
   <section id="how-to-load-a-prepared-dataset">
-<h1>How to load a prepared dataset<a class="headerlink" href="#how-to-load-a-prepared-dataset" title="Permalink to this heading">#</a></h1>
+<h1>How to load a prepared dataset<a class="headerlink" href="#how-to-load-a-prepared-dataset" title="Link to this heading">#</a></h1>
 <p>This part of the tutorial shows how you can load a corpus for training a model.</p>
 <section id="the-corpus-object">
-<h2>The Corpus Object<a class="headerlink" href="#the-corpus-object" title="Permalink to this heading">#</a></h2>
+<h2>The Corpus Object<a class="headerlink" href="#the-corpus-object" title="Link to this heading">#</a></h2>
 <p>The <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> represents a dataset that you use to train a model. It consists of a list of <code class="docutils literal notranslate"><span class="pre">train</span></code> sentences,
 a list of <code class="docutils literal notranslate"><span class="pre">dev</span></code> sentences, and a list of <code class="docutils literal notranslate"><span class="pre">test</span></code> sentences, which correspond to the training, validation and testing
 split during model training.</p>
@@ -584,7 +584,7 @@ you print out only the POS tags:</p>
 </div>
 <p>So the corpus is tagged and ready for training.</p>
 <section id="helper-functions">
-<h3>Helper functions<a class="headerlink" href="#helper-functions" title="Permalink to this heading">#</a></h3>
+<h3>Helper functions<a class="headerlink" href="#helper-functions" title="Link to this heading">#</a></h3>
 <p>A <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> contains a bunch of useful helper functions.
 For instance, you can downsample the data by calling <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.downsample" title="flair.data.Corpus.downsample"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.downsample()</span></code></span></a> and passing a ratio. So, if you normally get a
 corpus like this:</p>
@@ -615,7 +615,7 @@ corpus like this:</p>
 </div>
 </section>
 <section id="creating-label-dictionaries">
-<h3>Creating label dictionaries<a class="headerlink" href="#creating-label-dictionaries" title="Permalink to this heading">#</a></h3>
+<h3>Creating label dictionaries<a class="headerlink" href="#creating-label-dictionaries" title="Link to this heading">#</a></h3>
 <p>For many learning tasks you need to create a “dictionary” that contains all the labels you want to predict.
 You can generate this dictionary directly out of the <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> by calling the method <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a>
 and passing the desired <code class="docutils literal notranslate"><span class="pre">label_type</span></code>.</p>
@@ -634,7 +634,7 @@ Create label dictionaries for universal POS tags by passing <code class="docutil
 </pre></div>
 </div>
 <section id="dictionaries-for-other-label-types">
-<h4>Dictionaries for other label types<a class="headerlink" href="#dictionaries-for-other-label-types" title="Permalink to this heading">#</a></h4>
+<h4>Dictionaries for other label types<a class="headerlink" href="#dictionaries-for-other-label-types" title="Link to this heading">#</a></h4>
 <p>If you don’t know the label types in a corpus, just call <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a> with
 any random label name (e.g. <code class="docutils literal notranslate"><span class="pre">corpus.make_label_dictionary(label_type='abcd')</span></code>). This will print
 out statistics on all label types in the corpus:</p>
@@ -653,7 +653,7 @@ and a morphological number tagging task:</p>
 <p>If you print these dictionaries, you will find that the POS dictionary contains 50 tags and the number dictionary only 2 for this corpus (singular and plural).</p>
 </section>
 <section id="dictionaries-for-other-corpora-types">
-<h4>Dictionaries for other corpora types<a class="headerlink" href="#dictionaries-for-other-corpora-types" title="Permalink to this heading">#</a></h4>
+<h4>Dictionaries for other corpora types<a class="headerlink" href="#dictionaries-for-other-corpora-types" title="Link to this heading">#</a></h4>
 <p>The method <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a> can be used for any corpus, including text classification corpora:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create label dictionary for a text classification task</span>
 <span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">TREC_6</span>
@@ -664,7 +664,7 @@ and a morphological number tagging task:</p>
 </section>
 </section>
 <section id="the-multicorpus-object">
-<h3>The MultiCorpus Object<a class="headerlink" href="#the-multicorpus-object" title="Permalink to this heading">#</a></h3>
+<h3>The MultiCorpus Object<a class="headerlink" href="#the-multicorpus-object" title="Link to this heading">#</a></h3>
 <p>If you want to train multiple tasks at once, you can use the <a class="reference internal" href="../../api/flair.data.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> object.
 To initiate the <a class="reference internal" href="../../api/flair.data.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> you first need to create any number of <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> objects. Afterwards, you can pass
 a list of <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> to the <a class="reference internal" href="../../api/flair.data.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> object. For instance, the following snippet loads a combination corpus
@@ -683,7 +683,7 @@ consisting of the English, German and Dutch Universal Dependency Treebanks.</p>
 </section>
 </section>
 <section id="datasets-included-in-flair">
-<h2>Datasets included in Flair<a class="headerlink" href="#datasets-included-in-flair" title="Permalink to this heading">#</a></h2>
+<h2>Datasets included in Flair<a class="headerlink" href="#datasets-included-in-flair" title="Link to this heading">#</a></h2>
 <p>Flair supports many datasets out of the box. It usually automatically downloads and sets up the data the first time you
 call the corresponding constructor ID.
 The datasets are split into multiple modules, however they all can be imported from <code class="docutils literal notranslate"><span class="pre">flair.datasets</span></code> too.
@@ -836,7 +836,7 @@ You can look up the respective modules to find the possible datasets.</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

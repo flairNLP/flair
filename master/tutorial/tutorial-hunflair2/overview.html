@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=361a893e"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-hunflair2/overview';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -540,15 +540,15 @@ document.write(`
 
 
   <section id="hunflair2-overview">
-<h1>HunFlair2 - Overview<a class="headerlink" href="#hunflair2-overview" title="Permalink to this heading">#</a></h1>
+<h1>HunFlair2 - Overview<a class="headerlink" href="#hunflair2-overview" title="Link to this heading">#</a></h1>
 <p><em>HunFlair2</em> is a state-of-the-art named entity tagger and linker for biomedical texts. It comes with
 models for genes/proteins, chemicals, diseases, species and cell lines. <em>HunFlair2</em>
 builds on pretrained domain-specific language models and outperforms other biomedical
 NER tools on unseen corpora.</p>
 <section id="quick-start">
-<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this heading">#</a></h2>
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
 <section id="example-1-biomedical-ner">
-<h3>Example 1: Biomedical NER<a class="headerlink" href="#example-1-biomedical-ner" title="Permalink to this heading">#</a></h3>
+<h3>Example 1: Biomedical NER<a class="headerlink" href="#example-1-biomedical-ner" title="Link to this heading">#</a></h3>
 <p>Let’s run named entity recognition (NER) over an example sentence. All you need to do is
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
@@ -578,7 +578,7 @@ make a Sentence, load a pre-trained model and use it to predict tags for the sen
 </div>
 </section>
 <section id="example-2-biomedical-nen">
-<h3>Example 2: Biomedical NEN<a class="headerlink" href="#example-2-biomedical-nen" title="Permalink to this heading">#</a></h3>
+<h3>Example 2: Biomedical NEN<a class="headerlink" href="#example-2-biomedical-nen" title="Link to this heading">#</a></h3>
 <p>For improved integration and aggregation from multiple different documents linking / normalizing the entities to
 standardized ontologies or knowledge bases is required. Let’s perform entity normalization by using
 specialized models per entity type:</p>
@@ -627,7 +627,7 @@ much faster.</p>
 </section>
 </section>
 <section id="comparison-to-other-biomedical-entity-extraction-tools">
-<h2>Comparison to other biomedical entity extraction tools<a class="headerlink" href="#comparison-to-other-biomedical-entity-extraction-tools" title="Permalink to this heading">#</a></h2>
+<h2>Comparison to other biomedical entity extraction tools<a class="headerlink" href="#comparison-to-other-biomedical-entity-extraction-tools" title="Link to this heading">#</a></h2>
 <p>Tools for biomedical entity extraction are typically trained and evaluated on single, rather small gold standard
 data sets.  However, they are applied “in the wild” to a much larger collection of texts, often varying in
 topic, entity distribution, genre (e.g. patents vs. scientific articles) and text type (e.g. abstract
@@ -702,7 +702,7 @@ We allow a shift by max one character.</sub></p>
 <p>You can find detailed evaluations and discussions in <a class="reference external" href="https://arxiv.org/abs/2402.12372">our paper</a>.</p>
 </section>
 <section id="citing-hunflair2">
-<h2>Citing HunFlair2<a class="headerlink" href="#citing-hunflair2" title="Permalink to this heading">#</a></h2>
+<h2>Citing HunFlair2<a class="headerlink" href="#citing-hunflair2" title="Link to this heading">#</a></h2>
 <p>Please cite the following paper when using <em>HunFlair2</em>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@article</span><span class="p">{</span><span class="n">sanger2024hunflair2</span><span class="p">,</span>
   <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">HunFlair2</span> <span class="ow">in</span> <span class="n">a</span> <span class="n">cross</span><span class="o">-</span><span class="n">corpus</span> <span class="n">evaluation</span> <span class="n">of</span> <span class="n">biomedical</span> <span class="n">named</span> <span class="n">entity</span> <span class="n">recognition</span> <span class="ow">and</span> <span class="n">normalization</span> <span class="n">tools</span><span class="p">},</span>
@@ -813,7 +813,7 @@ We allow a shift by max one character.</sub></p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

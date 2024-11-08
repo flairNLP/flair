@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=583e1c8d"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=7a44cac5"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-model-training-works';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -540,11 +540,11 @@ document.write(`
 
 
   <section id="how-model-training-works-in-flair">
-<h1>How model training works in Flair<a class="headerlink" href="#how-model-training-works-in-flair" title="Permalink to this heading">#</a></h1>
+<h1>How model training works in Flair<a class="headerlink" href="#how-model-training-works-in-flair" title="Link to this heading">#</a></h1>
 <p>In this section, we explain the main ideas of model training in Flair.</p>
 <p>In particular, we give an introduction to the <a class="reference internal" href="../../api/flair.trainers.html#flair.trainers.ModelTrainer" title="flair.trainers.ModelTrainer"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ModelTrainer</span></code></span></a> class, and discuss what decisions you have to make to train good models.</p>
 <section id="example-training-a-part-of-speech-tagger">
-<h2>Example: Training a Part-of-Speech Tagger<a class="headerlink" href="#example-training-a-part-of-speech-tagger" title="Permalink to this heading">#</a></h2>
+<h2>Example: Training a Part-of-Speech Tagger<a class="headerlink" href="#example-training-a-part-of-speech-tagger" title="Link to this heading">#</a></h2>
 <p>As example in this chapter, we train a simple part-of-speech tagger for English. To make the example run fast</p>
 <ul class="simple">
 <li><p>we downsample the training data to 10%</p></li>
@@ -648,11 +648,11 @@ document.write(`
 <p>Congrats, you just trained your first model!</p>
 </section>
 <section id="step-by-step-walkthrough">
-<h2>Step-by-step walkthrough<a class="headerlink" href="#step-by-step-walkthrough" title="Permalink to this heading">#</a></h2>
+<h2>Step-by-step walkthrough<a class="headerlink" href="#step-by-step-walkthrough" title="Link to this heading">#</a></h2>
 <p>The above code showed you how to train a part-of-speech tagger.</p>
 <p>Now let’s individually look at each of the main steps in the above script:</p>
 <section id="step-1-load-a-corpus">
-<h3>Step 1: Load a Corpus<a class="headerlink" href="#step-1-load-a-corpus" title="Permalink to this heading">#</a></h3>
+<h3>Step 1: Load a Corpus<a class="headerlink" href="#step-1-load-a-corpus" title="Link to this heading">#</a></h3>
 <p>The first thing you need is data to train and evaluate your model on.</p>
 <p>In Flair, training is done using the <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> object that holds three “splits”: a <code class="docutils literal notranslate"><span class="pre">train</span></code>, a <code class="docutils literal notranslate"><span class="pre">dev</span></code> and a <code class="docutils literal notranslate"><span class="pre">test</span></code> split.</p>
 <div class="admonition note">
@@ -678,7 +678,7 @@ document.write(`
 </div>
 </section>
 <section id="step-2-choose-the-label-type">
-<h3>Step 2: Choose the label type<a class="headerlink" href="#step-2-choose-the-label-type" title="Permalink to this heading">#</a></h3>
+<h3>Step 2: Choose the label type<a class="headerlink" href="#step-2-choose-the-label-type" title="Link to this heading">#</a></h3>
 <p>After you load the corpus, you need to decide which label type to predict.</p>
 <p>We choose the label type <strong>‘upos’</strong>, since we want to predict universal part-of-speech tags in this example.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 2. what label do we want to predict?</span>
@@ -692,7 +692,7 @@ document.write(`
 </div>
 </section>
 <section id="step-3-creating-a-label-dictionary">
-<h3>Step 3: Creating a label dictionary<a class="headerlink" href="#step-3-creating-a-label-dictionary" title="Permalink to this heading">#</a></h3>
+<h3>Step 3: Creating a label dictionary<a class="headerlink" href="#step-3-creating-a-label-dictionary" title="Link to this heading">#</a></h3>
 <p>Our model needs to predict a set of labels. To determine the label set, run <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary()</span></code></span></a> on the corpus and pass the label type you want to predict. In this example, we pass <strong>‘upos’</strong> since we want to predict universal part-of-speech tags.</p>
 <p>Running these lines will compute and print the label dictionary from the corpus:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 3. make the label dictionary from the corpus</span>
@@ -707,7 +707,7 @@ document.write(`
 <p>Showing us that our label dictionary has 18 PoS tags, including one generic tag (<code class="docutils literal notranslate"><span class="pre">&lt;unk&gt;</span></code>) for all unknown labels.</p>
 </section>
 <section id="step-4-initialize-embeddings">
-<h3>Step 4: Initialize embeddings<a class="headerlink" href="#step-4-initialize-embeddings" title="Permalink to this heading">#</a></h3>
+<h3>Step 4: Initialize embeddings<a class="headerlink" href="#step-4-initialize-embeddings" title="Link to this heading">#</a></h3>
 <p>All models in Flair require you to choose embeddings. In most cases, you’ll want transformer embeddings. Choosing the right embeddings and parameters is crucial in order to train good models.</p>
 <p>In our example, we use simple GloVe embeddings:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 4. initialize embeddings</span>
@@ -717,7 +717,7 @@ document.write(`
 <p>But this is only to make the example code run fast. We generally advise to use transformer-based embeddings instead.</p>
 </section>
 <section id="step-5-initialize-the-model">
-<h3>Step 5: Initialize the Model<a class="headerlink" href="#step-5-initialize-the-model" title="Permalink to this heading">#</a></h3>
+<h3>Step 5: Initialize the Model<a class="headerlink" href="#step-5-initialize-the-model" title="Link to this heading">#</a></h3>
 <p>Depending on what you want to do, you need to initialize the appropriate model type.</p>
 <p>For this example, we use the <a class="reference internal" href="../../api/flair.models.html#flair.models.SequenceTagger" title="flair.models.SequenceTagger"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">SequenceTagger</span></code></span></a> since we do part-of-speech tagging:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 5. initialize sequence tagger</span>
@@ -735,7 +735,7 @@ document.write(`
 </div>
 </section>
 <section id="step-6-initialize-the-trainer">
-<h3>Step 6: Initialize the Trainer<a class="headerlink" href="#step-6-initialize-the-trainer" title="Permalink to this heading">#</a></h3>
+<h3>Step 6: Initialize the Trainer<a class="headerlink" href="#step-6-initialize-the-trainer" title="Link to this heading">#</a></h3>
 <p>The <a class="reference internal" href="../../api/flair.trainers.html#flair.trainers.ModelTrainer" title="flair.trainers.ModelTrainer"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ModelTrainer</span></code></span></a> is initialized simply by passing the model and the corpus because that is all it needs.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 6. initialize trainer</span>
 <span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
@@ -743,7 +743,7 @@ document.write(`
 </div>
 </section>
 <section id="step-7-train">
-<h3>Step 7: Train<a class="headerlink" href="#step-7-train" title="Permalink to this heading">#</a></h3>
+<h3>Step 7: Train<a class="headerlink" href="#step-7-train" title="Link to this heading">#</a></h3>
 <p>Once the trainer is initialized, you can call <a class="reference internal" href="../../api/flair.trainers.html#flair.trainers.ModelTrainer.train" title="flair.trainers.ModelTrainer.train"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">ModelTrainer.train()</span></code></span></a> to launch a standard training run.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 7. start training</span>
 <span class="n">trainer</span><span class="o">.</span><span class="kp">train</span><span class="p">(</span><span class="s1">&#39;resources/taggers/example-upos&#39;</span><span class="p">,</span>
@@ -760,7 +760,7 @@ document.write(`
 </div>
 </section>
 <section id="step-8-predict">
-<h3>Step 8: Predict<a class="headerlink" href="#step-8-predict" title="Permalink to this heading">#</a></h3>
+<h3>Step 8: Predict<a class="headerlink" href="#step-8-predict" title="Link to this heading">#</a></h3>
 <p>Once the model is trained you can use it to predict tags for new sentences. Just call the <a class="reference internal" href="../../api/flair.nn.html#flair.nn.Classifier.predict" title="flair.nn.Classifier.predict"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">.predict()</span></code></span></a> method of the model.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># load the model you trained</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;resources/taggers/example-upos/final-model.pt&#39;</span><span class="p">)</span>
@@ -778,7 +778,7 @@ document.write(`
 </section>
 </section>
 <section id="summary">
-<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this heading">#</a></h2>
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">#</a></h2>
 <p>This tutorial gave you a general overview of the main steps to train a model:</p>
 <ul class="simple">
 <li><p>load a corpus</p></li>
@@ -896,7 +896,7 @@ document.write(`
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

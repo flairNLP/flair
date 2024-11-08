@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=f17e68eb"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=d304bea3"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/basic-types';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -542,7 +542,7 @@ document.write(`
 
 
   <section id="basics">
-<h1>Basics<a class="headerlink" href="#basics" title="Permalink to this heading">#</a></h1>
+<h1>Basics<a class="headerlink" href="#basics" title="Link to this heading">#</a></h1>
 <p>This tutorial explains the basic concepts used in Flair:</p>
 <ul class="simple">
 <li><p>what is a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a></p></li>
@@ -550,7 +550,7 @@ document.write(`
 </ul>
 <p>You should be familiar with these two concepts in order to get the most out of Flair.</p>
 <section id="what-is-a-sentence">
-<h2>What is a Sentence<a class="headerlink" href="#what-is-a-sentence" title="Permalink to this heading">#</a></h2>
+<h2>What is a Sentence<a class="headerlink" href="#what-is-a-sentence" title="Link to this heading">#</a></h2>
 <p>If you want to tag a sentence, you need to first make a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> object for it.</p>
 <p>For example, say you want to tag the text “<em>The grass is green.</em>”.</p>
 <p>Let’s start by making a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> object for this sentence.</p>
@@ -574,7 +574,7 @@ document.write(`
 <p>A token is an atomic unit of the text, often a word or punctuation. The printout is therefore telling us that the sentence “<em>The grass is green.</em>” consists of 5 such atomic units.</p>
 </div>
 <section id="iterating-over-the-tokens-in-a-sentence">
-<h3>Iterating over the tokens in a Sentence<a class="headerlink" href="#iterating-over-the-tokens-in-a-sentence" title="Permalink to this heading">#</a></h3>
+<h3>Iterating over the tokens in a Sentence<a class="headerlink" href="#iterating-over-the-tokens-in-a-sentence" title="Link to this heading">#</a></h3>
 <p>So what are the 5 tokens in this example sentence?</p>
 <p>You can iterate over all tokens in a sentence like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">sentence</span><span class="p">:</span>
@@ -592,7 +592,7 @@ document.write(`
 <p>This printout is telling us that the 5 tokens in the text are the words “<em>The</em>”, “<em>grass</em>”, “<em>is</em>”, “<em>green</em>”, with a separate token for the full stop at the end. The tokens therefore correspond to the words and the punctuation of the text.</p>
 </section>
 <section id="directly-accessing-a-token">
-<h3>Directly accessing a token<a class="headerlink" href="#directly-accessing-a-token" title="Permalink to this heading">#</a></h3>
+<h3>Directly accessing a token<a class="headerlink" href="#directly-accessing-a-token" title="Link to this heading">#</a></h3>
 <p>You can access the tokens of a sentence via their token id or with their index:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># using the token id</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="o">.</span><span class="kp">get_token</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
@@ -607,7 +607,7 @@ document.write(`
 <p>This print-out includes the token index (3) and the lexical value of the token (“green”).</p>
 </section>
 <section id="tokenization">
-<h3>Tokenization<a class="headerlink" href="#tokenization" title="Permalink to this heading">#</a></h3>
+<h3>Tokenization<a class="headerlink" href="#tokenization" title="Link to this heading">#</a></h3>
 <p>When you create a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> as above, the text is automatically tokenized (segmented into words) using the <a class="reference external" href="https://pypi.org/project/segtok/">segtok</a> library.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -616,10 +616,10 @@ document.write(`
 </section>
 </section>
 <section id="what-is-a-label">
-<h2>What is a Label<a class="headerlink" href="#what-is-a-label" title="Permalink to this heading">#</a></h2>
+<h2>What is a Label<a class="headerlink" href="#what-is-a-label" title="Link to this heading">#</a></h2>
 <p>All Flair models predict labels. For instance, our sentiment analysis models will predict labels for a sentence. Our NER models will predict labels for tokens in a sentence.</p>
 <section id="example-1-labeling-a-token-in-a-sentence">
-<h3>Example 1: Labeling a token in a sentence<a class="headerlink" href="#example-1-labeling-a-token-in-a-sentence" title="Permalink to this heading">#</a></h3>
+<h3>Example 1: Labeling a token in a sentence<a class="headerlink" href="#example-1-labeling-a-token-in-a-sentence" title="Link to this heading">#</a></h3>
 <p>To illustrate how labels work, let’s use the same example sentence as above: “<em>The grass is green.</em>”.</p>
 <p>Let us label all “color words” in this sentence. Since the sentence contains only one color word (namely “green”), we only need to add a label to one of the tokens.</p>
 <p>We access token 3 in the sentence, and set a label for it:</p>
@@ -658,7 +658,7 @@ iterate through each token and print it to see if it has labels:</p>
 </div>
 </section>
 <section id="example-2-labeling-a-whole-sentence">
-<h3>Example 2: Labeling a whole sentence<a class="headerlink" href="#example-2-labeling-a-whole-sentence" title="Permalink to this heading">#</a></h3>
+<h3>Example 2: Labeling a whole sentence<a class="headerlink" href="#example-2-labeling-a-whole-sentence" title="Link to this heading">#</a></h3>
 <p>Sometimes you want to label an entire sentence instead of only a token. Do this by calling <a class="reference internal" href="../../api/flair.data.html#flair.data.DataPoint.add_label" title="flair.data.DataPoint.add_label"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">add_label</span></code></span></a> for the whole sentence.</p>
 <p>For example, say we want to add a sentiment label to the sentence “<em>The grass is green.</em>”:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
@@ -676,7 +676,7 @@ iterate through each token and print it to see if it has labels:</p>
 <p>Indicating that this sentence is now labeled as having a positive sentiment.</p>
 </section>
 <section id="multiple-labels">
-<h3>Multiple labels<a class="headerlink" href="#multiple-labels" title="Permalink to this heading">#</a></h3>
+<h3>Multiple labels<a class="headerlink" href="#multiple-labels" title="Link to this heading">#</a></h3>
 <p>Importantly, in Flair you can add as many labels to a sentence as you like.</p>
 <p>Let’s bring the two examples above together: We will label the sentence “<em>The grass is green.</em>” with an overall positive sentiment, and also add a “color” tag to the token “grass”:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
@@ -698,7 +698,7 @@ iterate through each token and print it to see if it has labels:</p>
 <p>Indicating that the sentence is now labeled with two different types of information.</p>
 </section>
 <section id="accessing-labels">
-<h3>Accessing labels<a class="headerlink" href="#accessing-labels" title="Permalink to this heading">#</a></h3>
+<h3>Accessing labels<a class="headerlink" href="#accessing-labels" title="Link to this heading">#</a></h3>
 <p>You can iterate through all labels of a sentence using the <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence.get_labels" title="flair.data.Sentence.get_labels"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">get_labels()</span></code></span></a> method:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># iterate over all labels and print</span>
 <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">():</span>
@@ -736,7 +736,7 @@ Token[3]: &quot;green&quot; → color (1.0)
 </div>
 </section>
 <section id="information-for-each-label">
-<h3>Information for each label<a class="headerlink" href="#information-for-each-label" title="Permalink to this heading">#</a></h3>
+<h3>Information for each label<a class="headerlink" href="#information-for-each-label" title="Link to this heading">#</a></h3>
 <p>Each label is of class <code class="docutils literal notranslate"><span class="pre">Label</span></code> which next to the value has a score indicating confidence. It also has a pointer back to the data point to which it attaches.</p>
 <p>This means that you can print the value, the confidence and the labeled text of each label:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
@@ -865,7 +865,7 @@ Token[3]: &quot;green&quot; → color (1.0)
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

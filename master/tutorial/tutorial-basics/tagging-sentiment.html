@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=361a893e"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-basics/tagging-sentiment';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -544,10 +544,10 @@ document.write(`
 
 
   <section id="tagging-sentiment">
-<h1>Tagging sentiment<a class="headerlink" href="#tagging-sentiment" title="Permalink to this heading">#</a></h1>
+<h1>Tagging sentiment<a class="headerlink" href="#tagging-sentiment" title="Link to this heading">#</a></h1>
 <p>This tutorials shows you how to do sentiment analysis in Flair.</p>
 <section id="tagging-sentiment-with-our-standard-model">
-<h2>Tagging sentiment with our standard model<a class="headerlink" href="#tagging-sentiment-with-our-standard-model" title="Permalink to this heading">#</a></h2>
+<h2>Tagging sentiment with our standard model<a class="headerlink" href="#tagging-sentiment-with-our-standard-model" title="Link to this heading">#</a></h2>
 <p>Our standard sentiment analysis model uses distilBERT embeddings and was trained over a mix of corpora, notably
 the Amazon review corpus, and can thus handle a variety of domains and language.</p>
 <p>Let’s use an example sentence:</p>
@@ -574,7 +574,7 @@ the Amazon review corpus, and can thus handle a variety of domains and language.
 <p>Showing us that the sentence overall is tagged to be of POSITIVE sentiment.</p>
 </section>
 <section id="tagging-sentiment-with-our-fast-model">
-<h2>Tagging sentiment with our fast model<a class="headerlink" href="#tagging-sentiment-with-our-fast-model" title="Permalink to this heading">#</a></h2>
+<h2>Tagging sentiment with our fast model<a class="headerlink" href="#tagging-sentiment-with-our-fast-model" title="Link to this heading">#</a></h2>
 <p>We also offer an RNN-based variant which is faster but less accurate. Use it like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
 <span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
@@ -599,7 +599,7 @@ the Amazon review corpus, and can thus handle a variety of domains and language.
 <p>This indicates that the sentence is of NEGATIVE sentiment. As you can see, its the same code as above, just loading the
 ‘<strong>sentiment-fast</strong>’ model instead of ‘<strong>sentiment</strong>’.</p>
 <section id="list-of-sentiment-models">
-<h3>List of Sentiment Models<a class="headerlink" href="#list-of-sentiment-models" title="Permalink to this heading">#</a></h3>
+<h3>List of Sentiment Models<a class="headerlink" href="#list-of-sentiment-models" title="Link to this heading">#</a></h3>
 <p>We end this section with a list of all models we currently ship with Flair:</p>
 <table class="table">
 <thead>
@@ -731,7 +731,7 @@ the Amazon review corpus, and can thus handle a variety of domains and language.
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>

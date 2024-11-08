@@ -30,16 +30,16 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
-    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
 
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=14605f76"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
-    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script src="../../_static/documentation_options.js?v=361a893e"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/embeddings/base';</script>
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -546,79 +546,69 @@ document.write(`
 
 
   <section id="module-flair.embeddings.base">
-<span id="flair-embeddings-base"></span><h1>flair.embeddings.base<a class="headerlink" href="#module-flair.embeddings.base" title="Permalink to this heading">#</a></h1>
+<span id="flair-embeddings-base"></span><h1>flair.embeddings.base<a class="headerlink" href="#module-flair.embeddings.base" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">Embeddings</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L15-L107"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">Embeddings</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L16-L105"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">DT</span></code>]</p>
 <p>Abstract base class for all embeddings. Every new type of embedding must implement these methods.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#flair.embeddings.base.Embeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#flair.embeddings.base.Embeddings.embeddings_name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L20-L27"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L21-L28"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Set some attributes that would otherwise result in errors. Overwrite these in your embedding class.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.embedding_length">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.base.Embeddings.embedding_length" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.base.Embeddings.embedding_length" title="Link to this definition">#</a></dt>
 <dd><p>Returns the length of the embedding vector.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.embedding_type">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.base.Embeddings.embedding_type" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.base.Embeddings.embedding_type" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.embed">
-<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_points</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L40-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.embed" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">embed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_points</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L41-L53"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.embed" title="Link to this definition">#</a></dt>
 <dd><p>Add embeddings to all words in a list of sentences.</p>
 <p>If embeddings are already added, updates only if embeddings are non-static.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">DT</span></code>, bound= <a class="reference internal" href="../flair.data.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a>)]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">DT</span></code>, bound= <a class="reference internal" href="../flair.data.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a>)]</span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings._add_embeddings_internal">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_add_embeddings_internal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L57-L59"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings._add_embeddings_internal" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_add_embeddings_internal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L58-L60"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings._add_embeddings_internal" title="Link to this definition">#</a></dt>
 <dd><p>Private method for adding embeddings to all words in a list of sentences.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.get_names">
-<span class="sig-name descname"><span class="pre">get_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L61-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.get_names" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L62-L69"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.get_names" title="Link to this definition">#</a></dt>
 <dd><p>Returns a list of embedding names.</p>
 <p>In most cases, it is just a list with one item, namely the name of
 this embedding. But in some cases, the embedding is made up by different embeddings (StackedEmbedding).
 Then, the list contains the names of all embeddings in the stack.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.get_named_embeddings_dict">
-<span class="sig-name descname"><span class="pre">get_named_embeddings_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L70-L71"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.get_named_embeddings_dict" title="Permalink to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.get_instance_parameters">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_instance_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">locals</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L73-L84"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.get_instance_parameters" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_instance_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">locals</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L71-L82"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.get_instance_parameters" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></span></p>
@@ -628,7 +618,7 @@ Then, the list contains the names of all embeddings in the stack.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.from_params">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L86-L88"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.from_params" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L84-L86"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.from_params" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.embeddings.base.Embeddings" title="flair.embeddings.base.Embeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">Embeddings</span></code></a></span></p>
@@ -638,29 +628,29 @@ Then, the list contains the names of all embeddings in the stack.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.to_params">
-<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L90-L91"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.to_params" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L88-L89"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.to_params" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.load_embedding">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L93-L100"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.load_embedding" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L91-L98"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.load_embedding" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.save_embeddings">
-<span class="sig-name descname"><span class="pre">save_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_state_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L102-L107"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.save_embeddings" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">save_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">use_state_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L100-L105"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.save_embeddings" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.embeddings.base.ScalarMix">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">ScalarMix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mixture_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L110-L180"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.ScalarMix" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">ScalarMix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mixture_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L108-L178"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.ScalarMix" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
 <p>Mixes several tensors by a learned weighting.</p>
 <p>Computes a parameterised scalar mixture of N tensors.
@@ -671,7 +661,7 @@ It can be found under:
 <a class="github reference external" href="https://github.com/allenai/allennlp/blob/master/allennlp/modules/scalar_mix.py">allenai/allennlp</a>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.ScalarMix.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mixture_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L122-L156"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.ScalarMix.__init__" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mixture_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L120-L154"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.ScalarMix.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Inits scalar mix implementation.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mixture</span> <span class="pre">=</span> <span class="pre">gamma</span> <span class="pre">*</span> <span class="pre">sum(s_k</span> <span class="pre">*</span> <span class="pre">tensor_k)</span></code> where <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">=</span> <span class="pre">softmax(w)</span></code>, with <code class="docutils literal notranslate"><span class="pre">w</span></code> and <code class="docutils literal notranslate"><span class="pre">gamma</span></code> scalar parameters.</p>
 <dl class="field-list simple">
@@ -686,13 +676,13 @@ It can be found under:
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.ScalarMix.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensors</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L158-L180"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.ScalarMix.forward" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensors</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L156-L178"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.ScalarMix.forward" title="Link to this definition">#</a></dt>
 <dd><p>Forward pass of scalar mix.</p>
 <p>Computes a weighted average of the <code class="docutils literal notranslate"><span class="pre">tensors</span></code>.  The input tensors an be any shape
 with at least two dimensions, but must all be the same shape.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>tensors</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span>) – list of input tensors</p>
+<dd class="field-odd"><p><strong>tensors</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span>) – list of input tensors</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
@@ -701,75 +691,40 @@ with at least two dimensions, but must all be the same shape.</p>
 <p>Returns: computed weighted average of input tensors</p>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.base.ScalarMix.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><a class="headerlink" href="#flair.embeddings.base.ScalarMix.training" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.embeddings.base.DocumentEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">DocumentEmbeddings</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L183-L188"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.DocumentEmbeddings" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">DocumentEmbeddings</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L181-L186"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.DocumentEmbeddings" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.embeddings.base.Embeddings" title="flair.embeddings.base.Embeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">Embeddings</span></code></a>[<a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</p>
 <p>Abstract base class for all document-level embeddings. Every new type of document embedding must implement these methods.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.embeddings.base.DocumentEmbeddings.embedding_type">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.base.DocumentEmbeddings.embedding_type" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.base.DocumentEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#flair.embeddings.base.DocumentEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.base.DocumentEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.base.DocumentEmbeddings.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.base.DocumentEmbeddings.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.base.DocumentEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.base.DocumentEmbeddings.embedding_type" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.embeddings.base.TokenEmbeddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">TokenEmbeddings</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L191-L203"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.TokenEmbeddings" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">TokenEmbeddings</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L189-L201"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.TokenEmbeddings" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.embeddings.base.Embeddings" title="flair.embeddings.base.Embeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">Embeddings</span></code></a>[<a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</p>
 <p>Abstract base class for all token-level embeddings. Ever new type of word embedding must implement these methods.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.embeddings.base.TokenEmbeddings.embedding_type">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.base.TokenEmbeddings.embedding_type" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.base.TokenEmbeddings.embeddings_name">
-<span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#flair.embeddings.base.TokenEmbeddings.embeddings_name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.base.TokenEmbeddings.name">
-<span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.base.TokenEmbeddings.name" title="Permalink to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.embeddings.base.TokenEmbeddings.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.embeddings.base.TokenEmbeddings.training" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.embeddings.base.TokenEmbeddings.embedding_type" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="flair.embeddings.base.register_embeddings">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">register_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L209-L225"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.register_embeddings" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">register_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L207-L223"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.register_embeddings" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="flair.embeddings.base.load_embeddings">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">load_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/base.py#L228-L231"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.load_embeddings" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.base.</span></span><span class="sig-name descname"><span class="pre">load_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/embeddings/base.py#L226-L229"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.load_embeddings" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.embeddings.base.Embeddings" title="flair.embeddings.base.Embeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">Embeddings</span></code></a></span></p>
@@ -835,7 +790,6 @@ with at least two dimensions, but must all be the same shape.</p>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.Embeddings.embed"><code class="docutils literal notranslate"><span class="pre">Embeddings.embed()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.Embeddings._add_embeddings_internal"><code class="docutils literal notranslate"><span class="pre">Embeddings._add_embeddings_internal()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.Embeddings.get_names"><code class="docutils literal notranslate"><span class="pre">Embeddings.get_names()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.Embeddings.get_named_embeddings_dict"><code class="docutils literal notranslate"><span class="pre">Embeddings.get_named_embeddings_dict()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.Embeddings.get_instance_parameters"><code class="docutils literal notranslate"><span class="pre">Embeddings.get_instance_parameters()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.Embeddings.from_params"><code class="docutils literal notranslate"><span class="pre">Embeddings.from_params()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.Embeddings.to_params"><code class="docutils literal notranslate"><span class="pre">Embeddings.to_params()</span></code></a></li>
@@ -846,21 +800,14 @@ with at least two dimensions, but must all be the same shape.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.ScalarMix"><code class="docutils literal notranslate"><span class="pre">ScalarMix</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.ScalarMix.__init__"><code class="docutils literal notranslate"><span class="pre">ScalarMix.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.ScalarMix.forward"><code class="docutils literal notranslate"><span class="pre">ScalarMix.forward()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.ScalarMix.training"><code class="docutils literal notranslate"><span class="pre">ScalarMix.training</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.DocumentEmbeddings"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.DocumentEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings.embedding_type</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.DocumentEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.DocumentEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.DocumentEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings.training</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.TokenEmbeddings"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.TokenEmbeddings.embedding_type"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings.embedding_type</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.TokenEmbeddings.embeddings_name"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings.embeddings_name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.TokenEmbeddings.name"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.TokenEmbeddings.training"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings.training</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.embeddings.base.register_embeddings"><code class="docutils literal notranslate"><span class="pre">register_embeddings()</span></code></a></li>
@@ -908,7 +855,7 @@ with at least two dimensions, but must all be the same shape.</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     <br/>
   </p>
 </div>
