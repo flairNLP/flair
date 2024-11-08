@@ -26,16 +26,22 @@ jobs:
         run: pip install -r docs/requirements.txt
       - name: Fetch git tags
         run: git fetch --tags origin
+      - name: Change config to current branch
+        run: |
+          sed -i 's/^smv_branch_whitelist = r"^master$"/smv_branch_whitelist = r"^${{ env.BRANCH_NAME }}$"/' docs/conf.py
+          sed -i 's/^smv_released_pattern = r"^refs\/tags\/v\\d+\\.\\d+\\.\\d+$"/smv_released_pattern = ""/' docs/conf.py
       - name: Build docs
         run: |
           sphinx-multiversion docs doc_build/
       - name: Add redirect to stable doc
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
         run: |
           cp assets/redirect.html doc_build/index.html
           cp assets/redirect.html doc_build/404.html
           cp assets/README.md doc_build/README.md
-          sed -i "s/\[VERSION\]/$(python -c 'import flair;print(flair.__version__)')/g" doc_build/index.html
-          sed -i "s/\[VERSION\]/$(python -c 'import flair;print(flair.__version__)')/g" doc_build/404.html
+          sed -i "s/\[VERSION\]/${{ env.BRANCH_NAME }}/g" doc_build/index.html
+          sed -i "s/\[VERSION\]/${{ env.BRANCH_NAME }}/g" doc_build/404.html
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
         with:
