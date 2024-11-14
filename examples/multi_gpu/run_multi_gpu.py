@@ -13,10 +13,10 @@ def main(multi_gpu):
     # This code will run multiple times -- each GPU gets its own process and each process runs this code. We need to
     # ensure that the corpus has the same elements and order on all processes, despite sampling. We do that by using
     # the same seed on all processes.
-    flair.set_seed(1336)
+    flair.set_seed(42)
 
     corpus = IMDB()
-    corpus.downsample(0.01)
+    corpus.downsample(0.1)
     label_type = "sentiment"
     label_dictionary = corpus.make_label_dictionary(label_type)
 
@@ -35,7 +35,7 @@ def main(multi_gpu):
     # process 32 examples at the same time, then the optimizer will step.
 
     trainer = ModelTrainer(model, corpus)
-    trainer.train(
+    trainer.fine_tune(
         "resources/taggers/multi-gpu",
         multi_gpu=multi_gpu,  # Required for multi-gpu
         max_epochs=2,

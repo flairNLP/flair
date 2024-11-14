@@ -71,17 +71,18 @@ def aggregate(value, aggregation_fn=np.mean):
     return aggregation_fn(gathered_values)
 
 
-def validate_corpus_same_across_processes(corpus: Corpus) -> None:
+def validate_corpus_same_each_process(corpus: Corpus) -> None:
+    """Catches most cases in which a corpus is not the same on each process. However, there is no guarantee for two
+    reasons: 1) It uses a sample for speed 2) It compares strings to avoid requiring the datasets to be serializable"""
     for dataset in [corpus.train, corpus.dev, corpus.test]:
         if dataset is not None:
-            validate_dataset_same_across_processes(dataset)
+            _validate_dataset_same_each_process(dataset)
 
 
-def validate_dataset_same_across_processes(dataset: Dataset, sample_size: int = 10) -> None:
-    """Sanity checks a few examples to catch datasets that are obviously different, but not exhaustive to save time."""
+def _validate_dataset_same_each_process(dataset: Dataset, sample_size: int = 10) -> None:
     random_indices = random.sample(range(_len_dataset(dataset)), min(sample_size, _len_dataset(dataset)))
     for i in random_indices:
-        example = dataset[i]
+        example = str(dataset[i])
         examples = aggregate(example, list)
         if not all(example == examples[0] for example in examples):
             raise ValueError("Dataset must be the same on each process")

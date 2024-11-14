@@ -1072,11 +1072,6 @@ class Sentence(DataPoint):
     def __repr__(self) -> str:
         return self.__str__()
 
-    def __eq__(self, o: object) -> bool:
-        if not isinstance(o, Sentence):
-            return False
-        return self.to_dict() == o.to_dict()
-
     @property
     def start_position(self) -> int:
         return self._start_position

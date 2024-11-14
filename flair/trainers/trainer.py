@@ -7,8 +7,7 @@ import time
 import warnings
 from inspect import signature
 from pathlib import Path
-from queue import Queue
-from typing import Optional, Tuple, Type, Union
+from typing import Optional, Union
 
 import numpy as np
 import torch
@@ -21,7 +20,7 @@ import flair
 import flair.nn
 from flair.data import Corpus, Dictionary, _len_dataset
 from flair.datasets import DataLoader
-from flair.distributed_utils import aggregate, is_main_process, validate_corpus_same_across_processes
+from flair.distributed_utils import aggregate, is_main_process, validate_corpus_same_each_process
 from flair.samplers import FlairSampler
 from flair.trainers.plugins import (
     AnnealingPlugin,
@@ -497,7 +496,7 @@ class ModelTrainer(Pluggable):
             if not torch.distributed.is_initialized():
                 raise RuntimeError("multi_gpu=True can only used inside flair.distributed_utils.launch_distributed()")
             # Guard against each process initializing corpus differently due to e.g. different random seeds
-            validate_corpus_same_across_processes(self.corpus)
+            validate_corpus_same_each_process(self.corpus)
             self.ddp_model = DistributedDataParallel(
                 self.model, device_ids=[flair.device.index], find_unused_parameters=True
             )
