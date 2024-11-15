@@ -1,5 +1,7 @@
 from typing import Any
 
+import pytest
+
 from flair.embeddings import MuseCrosslingualEmbeddings, NILCEmbeddings, WordEmbeddings
 from tests.embedding_test_utils import BaseEmbeddingsTest
 
@@ -21,6 +23,11 @@ class TestMuseCrosslingualEmbeddings(BaseEmbeddingsTest):
     default_args: dict[str, Any] = {}
 
 
+@pytest.mark.skip(
+    "the download page for NILC embeddings is currently down."
+    "you can check http://www.nilc.icmc.usp.br/embeddings"
+    "if the embeddings are downloadable again by clicking the links"
+)
 class TestNILCEmbeddings(BaseEmbeddingsTest):
     embedding_cls = NILCEmbeddings
     is_token_embedding = True
