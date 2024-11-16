@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 import torch
 
@@ -56,7 +56,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         embedding_names = self.embeddings.get_names()
         return prediction_data_point.get_embedding(embedding_names)
 
-    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Sentence]:
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> list[Sentence]:
         return [sentence]
 
     def _get_state_dict(self):
@@ -133,7 +133,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         return self._label_type
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TextClassifier":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "TextClassifier":
         from typing import cast
 
         return cast("TextClassifier", super().load(model_path=model_path))

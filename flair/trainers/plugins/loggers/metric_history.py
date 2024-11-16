@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Dict, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from flair.trainers.plugins.base import TrainerPlugin
 
@@ -17,7 +18,7 @@ class MetricHistoryPlugin(TrainerPlugin):
     def __init__(self, metrics_to_collect: Mapping = default_metrics_to_collect) -> None:
         super().__init__()
 
-        self.metric_history: Dict[str, list] = {}
+        self.metric_history: dict[str, list] = {}
         self.metrics_to_collect: Mapping = metrics_to_collect
         for target in self.metrics_to_collect.values():
             self.metric_history[target] = []
@@ -33,7 +34,7 @@ class MetricHistoryPlugin(TrainerPlugin):
         """Returns metric history."""
         self.trainer.return_values.update(self.metric_history)
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),
             "metrics_to_collect": dict(self.metrics_to_collect),

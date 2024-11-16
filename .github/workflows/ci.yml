@@ -12,11 +12,11 @@ jobs:
       FLAIR_CACHE_ROOT: ./cache/flair
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         id: setup-python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Install Torch cpu
         run: pip install torch --index-url https://download.pytorch.org/whl/cpu
       - name: Install Flair dependencies

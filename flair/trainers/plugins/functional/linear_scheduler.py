@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from flair.optim import LinearSchedulerWithWarmup
 from flair.trainers.plugins.base import TrainerPlugin
@@ -62,7 +62,7 @@ class LinearSchedulerPlugin(TrainerPlugin):
     def __str__(self) -> str:
         return f"LinearScheduler | warmup_fraction: '{self.warmup_fraction}'"
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),
             "warmup_fraction": self.warmup_fraction,

@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Optional
 
 import pytest
 
@@ -11,13 +11,13 @@ from flair.trainers import ModelTrainer
 
 
 class BaseModelTest:
-    model_cls: Type[Model]
+    model_cls: type[Model]
     pretrained_model: Optional[str] = None
     empty_sentence = Sentence("       ")
     train_label_type: str
-    multiclass_prediction_labels: List[str]
-    model_args: Dict[str, Any] = {}
-    training_args: Dict[str, Any] = {}
+    multiclass_prediction_labels: list[str]
+    model_args: dict[str, Any] = {}
+    training_args: dict[str, Any] = {}
     finetune_instead_of_train: bool = False
 
     @pytest.fixture()

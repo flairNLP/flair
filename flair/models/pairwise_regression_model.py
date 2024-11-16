@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import torch
 from torch import nn
@@ -90,7 +91,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
 
     def get_used_tokens(
         self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
-    ) -> Iterable[List[str]]:
+    ) -> Iterable[list[str]]:
         for sentence_pair in _iter_dataset(corpus.get_all_sentences()):
             yield [t.text for t in sentence_pair.first]
             yield [t.text for t in sentence_pair.first.left_context(context_length, respect_document_boundaries)]
@@ -99,14 +100,14 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
             yield [t.text for t in sentence_pair.second.left_context(context_length, respect_document_boundaries)]
             yield [t.text for t in sentence_pair.second.right_context(context_length, respect_document_boundaries)]
 
-    def forward_loss(self, pairs: List[TextPair]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, pairs: list[TextPair]) -> tuple[torch.Tensor, int]:
         loss, num = self._forward_loss_and_scores(pairs=pairs, return_num=True, return_scores=False)
         assert isinstance(loss, torch.Tensor)
         assert isinstance(num, int)
 
         return loss, num
 
-    def _forward_loss_and_scores(self, pairs: List[TextPair], return_num=True, return_scores=True) -> Tuple:
+    def _forward_loss_and_scores(self, pairs: list[TextPair], return_num=True, return_scores=True) -> tuple:
         # make a forward pass to produce embedded data points and labels
         pairs = [pair for pair in pairs if self._filter_data_point(pair)]
 
@@ -128,7 +129,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         # calculate the loss
         loss, num = self._calculate_loss(scores, target_tensor)
 
-        return_value: Tuple[Any, ...] = (loss,)
+        return_value: tuple[Any, ...] = (loss,)
 
         if return_num:
             return_value += (num,)
@@ -138,10 +139,10 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
 
         return return_value
 
-    def _calculate_loss(self, scores: torch.Tensor, target_tensor: torch.Tensor) -> Tuple[torch.Tensor, int]:
+    def _calculate_loss(self, scores: torch.Tensor, target_tensor: torch.Tensor) -> tuple[torch.Tensor, int]:
         return self.loss_function(scores, target_tensor), target_tensor.size(0)
 
-    def _prepare_target_tensor(self, pairs: List[TextPair]):
+    def _prepare_target_tensor(self, pairs: list[TextPair]):
         target_values = [
             torch.tensor([float(label.value) for label in pair.get_labels(self.label_name)], dtype=torch.float)
             for pair in pairs
@@ -152,7 +153,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
     def _filter_data_point(self, pair: TextPair) -> bool:
         return len(pair) > 0
 
-    def _encode_data_points(self, data_points: List[TextPair]) -> torch.Tensor:
+    def _encode_data_points(self, data_points: list[TextPair]) -> torch.Tensor:
         # get a tensor of data points
         data_point_tensor = torch.stack([self._get_embedding_for_data_point(data_point) for data_point in data_points])
 
@@ -203,7 +204,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         return model_state
 
     @classmethod
-    def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs):
+    def _init_model_with_state_dict(cls, state: dict[str, Any], **kwargs):
         """Initializes a TextPairRegressor model from a state dictionary (exported by _get_state_dict).
 
         Requires keys 'state_dict', 'document_embeddings', and 'label_type' in the state dictionary.
@@ -227,12 +228,12 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
 
     def predict(
         self,
-        pairs: Union[TextPair, List[TextPair]],
+        pairs: Union[TextPair, list[TextPair]],
         mini_batch_size: int = 32,
         verbose: bool = False,
         label_name: Optional[str] = None,
         embedding_storage_mode="none",
-    ) -> List[TextPair]:
+    ) -> list[TextPair]:
         if label_name is None:
             label_name = self.label_name if self.label_name is not None else "label"
 
@@ -278,13 +279,13 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
 
     def evaluate(
         self,
-        data_points: Union[List[TextPair], Dataset],
+        data_points: Union[list[TextPair], Dataset],
         gold_label_type: str,
         out_path: Union[str, Path, None] = None,
         embedding_storage_mode: EmbeddingStorageMode = "none",
         mini_batch_size: int = 32,
-        main_evaluation_metric: Tuple[str, str] = ("correlation", "pearson"),
-        exclude_labels: Optional[List[str]] = None,
+        main_evaluation_metric: tuple[str, str] = ("correlation", "pearson"),
+        exclude_labels: Optional[list[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         **kwargs,

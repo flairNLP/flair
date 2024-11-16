@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 import torch
 
@@ -18,7 +18,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         embeddings: flair.embeddings.TokenEmbeddings,
         label_type: str,
         entity_label_type: str,
-        entity_pair_filters: Optional[List[Tuple[str, str]]] = None,
+        entity_pair_filters: Optional[list[tuple[str, str]]] = None,
         pooling_operation: str = "first_last",
         train_on_gold_pairs_only: bool = False,
         **classifierargs,
@@ -56,13 +56,13 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
 
         # whether to use gold entity pairs, and whether to filter entity pairs by type
         if entity_pair_filters is not None:
-            self.entity_pair_filters: Optional[Set[Tuple[str, str]]] = set(entity_pair_filters)
+            self.entity_pair_filters: Optional[set[tuple[str, str]]] = set(entity_pair_filters)
         else:
             self.entity_pair_filters = None
 
         self.to(flair.device)
 
-    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Relation]:
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> list[Relation]:
         entity_pairs = []
         entity_spans = sentence.get_spans(self.entity_label_type)
 
@@ -172,7 +172,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         return model_name
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "RelationExtractor":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "RelationExtractor":
         from typing import cast
 
         return cast("RelationExtractor", super().load(model_path=model_path))

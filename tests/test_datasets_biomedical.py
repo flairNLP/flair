@@ -2,7 +2,7 @@ import logging
 import os
 import tempfile
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 from flair.datasets.biomedical import (
     CoNLLWriter,
@@ -84,7 +84,7 @@ def test_conll_writer_one_token_multiple_entities2():
 
 def assert_conll_writer_output(
     dataset: InternalBioNerDataset,
-    expected_output: List[str],
+    expected_output: list[str],
     sentence_splitter: Optional[SentenceSplitter] = None,
 ):
     fd, outfile_path = tempfile.mkstemp()

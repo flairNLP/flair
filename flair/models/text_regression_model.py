@@ -1,7 +1,7 @@
 import logging
 import typing
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import torch
 from torch import nn
@@ -43,7 +43,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
     def label_type(self):
         return self.label_name
 
-    def _prepare_tensors(self, sentences: List[Sentence]) -> Tuple[torch.Tensor]:
+    def _prepare_tensors(self, sentences: list[Sentence]) -> tuple[torch.Tensor]:
         self.document_embeddings.embed(sentences)
         embedding_names = self.document_embeddings.get_names()
         text_embedding_list = [sentence.get_embedding(embedding_names).unsqueeze(0) for sentence in sentences]
@@ -55,14 +55,14 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         label_scores = self.decoder(text_embedding_tensor)
         return label_scores
 
-    def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, sentences: list[Sentence]) -> tuple[torch.Tensor, int]:
         labels = self._labels_to_tensor(sentences)
         text_embedding_tensor = self._prepare_tensors(sentences)
         scores = self.forward(*text_embedding_tensor)
 
         return self.loss_function(scores.squeeze(1), labels), len(sentences)
 
-    def _labels_to_tensor(self, sentences: List[Sentence]):
+    def _labels_to_tensor(self, sentences: list[Sentence]):
         indices = [
             torch.tensor([float(label.value) for label in sentence.get_labels(self.label_name)], dtype=torch.float)
             for sentence in sentences
@@ -74,12 +74,12 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
 
     def predict(
         self,
-        sentences: Union[Sentence, List[Sentence]],
+        sentences: Union[Sentence, list[Sentence]],
         mini_batch_size: int = 32,
         verbose: bool = False,
         label_name: Optional[str] = None,
         embedding_storage_mode: EmbeddingStorageMode = "none",
-    ) -> List[Sentence]:
+    ) -> list[Sentence]:
         if label_name is None:
             label_name = self.label_name if self.label_name is not None else "label"
 
@@ -123,7 +123,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
 
             return sentences
 
-    def forward_labels_and_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def forward_labels_and_loss(self, sentences: list[Sentence]) -> tuple[torch.Tensor, torch.Tensor]:
         labels = self._labels_to_tensor(sentences)
         text_embedding_tensor = self._prepare_tensors(sentences)
         scores = self.forward(*text_embedding_tensor)
@@ -132,13 +132,13 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
 
     def evaluate(
         self,
-        data_points: Union[List[Sentence], Dataset],
+        data_points: Union[list[Sentence], Dataset],
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: EmbeddingStorageMode = "none",
         mini_batch_size: int = 32,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: Optional[List[str]] = None,
+        main_evaluation_metric: tuple[str, str] = ("micro avg", "f1-score"),
+        exclude_labels: Optional[list[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         **kwargs,
@@ -154,7 +154,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
 
             metric = MetricRegression("Evaluation")
 
-            lines: List[str] = []
+            lines: list[str] = []
             total_count = 0
             for batch in data_loader:
                 if isinstance(batch, Sentence):
@@ -227,21 +227,21 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         )
 
     @staticmethod
-    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+    def _filter_empty_sentences(sentences: list[Sentence]) -> list[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
             log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
         return filtered_sentences
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TextRegressor":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "TextRegressor":
         from typing import cast
 
         return cast("TextRegressor", super().load(model_path=model_path))
 
     def get_used_tokens(
         self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
-    ) -> typing.Iterable[List[str]]:
+    ) -> typing.Iterable[list[str]]:
         for sentence in _iter_dataset(corpus.get_all_sentences()):
             yield [t.text for t in sentence]
             yield [t.text for t in sentence.left_context(context_length, respect_document_boundaries)]

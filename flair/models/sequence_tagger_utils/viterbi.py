@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import numpy as np
 import torch
 import torch.nn
@@ -7,7 +5,7 @@ from torch.nn.functional import softmax
 from torch.nn.utils.rnn import pack_padded_sequence
 
 import flair
-from flair.data import Dictionary, Label, List, Sentence
+from flair.data import Dictionary, Label, Sentence
 
 START_TAG: str = "<START>"
 STOP_TAG: str = "<STOP>"
@@ -141,8 +139,8 @@ class ViterbiDecoder:
         self.stop_tag = tag_dictionary.get_idx_for_item(STOP_TAG)
 
     def decode(
-        self, features_tuple: tuple, probabilities_for_all_classes: bool, sentences: List[Sentence]
-    ) -> Tuple[List, List]:
+        self, features_tuple: tuple, probabilities_for_all_classes: bool, sentences: list[Sentence]
+    ) -> tuple[list[list[tuple[str, float]]], list[list[list[Label]]]]:
         """Decoding function returning the most likely sequence of tags.
 
         Args:
@@ -211,7 +209,7 @@ class ViterbiDecoder:
         scores = softmax(scores_upto_t, dim=2)
         confidences = torch.max(scores, dim=2)
 
-        tags = []
+        tags: list[list[tuple[str, float]]] = []
         for tag_seq, tag_seq_conf, length_seq in zip(decoded, confidences.values, lengths):
             tags.append(
                 [
@@ -230,7 +228,7 @@ class ViterbiDecoder:
         score_tensor: torch.Tensor,
         tag_sequences: torch.Tensor,
         lengths: torch.IntTensor,
-        sentences: List[Sentence],
+        sentences: list[Sentence],
     ):
         """Returns all scores for each tag in tag dictionary."""
         scores = score_tensor.numpy()

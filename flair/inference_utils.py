@@ -126,7 +126,7 @@ class WordEmbeddingsStore:
         Also deletes the original vectors to save memory.
         """
         for embedding in WordEmbeddingsStore._word_embeddings(model):
-            if type(embedding) == WordEmbeddings:
+            if isinstance(embedding, WordEmbeddings):
                 WordEmbeddingsStore(embedding, backend)
                 del embedding.precomputed_word_embeddings
 
@@ -135,7 +135,7 @@ class WordEmbeddingsStore:
         """Loads the db versions of all word embeddings in the model."""
         embeds = WordEmbeddingsStore._word_embeddings(model)
         for i, embedding in enumerate(embeds):
-            if type(embedding) == WordEmbeddings:
+            if isinstance(embedding, WordEmbeddings):
                 embeds[i] = WordEmbeddingsStore(embedding, backend)
 
     @staticmethod

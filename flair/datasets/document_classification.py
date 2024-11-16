@@ -2,8 +2,9 @@ import csv
 import json
 import logging
 import os
+import tarfile
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import flair
 from flair.data import (
@@ -36,8 +37,8 @@ class ClassificationCorpus(Corpus):
         filter_if_longer_than: int = -1,
         tokenizer: Union[bool, Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
-        label_name_map: Optional[Dict[str, str]] = None,
-        skip_labels: Optional[List[str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
+        skip_labels: Optional[list[str]] = None,
         allow_examples_without_labels=False,
         sample_missing_splits: bool = True,
         encoding: str = "utf-8",
@@ -131,8 +132,8 @@ class ClassificationDataset(FlairDataset):
         filter_if_longer_than: int = -1,
         tokenizer: Union[bool, Tokenizer] = SegtokTokenizer(),
         memory_mode: str = "partial",
-        label_name_map: Optional[Dict[str, str]] = None,
-        skip_labels: Optional[List[str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
+        skip_labels: Optional[list[str]] = None,
         allow_examples_without_labels=False,
         encoding: str = "utf-8",
     ) -> None:
@@ -277,11 +278,7 @@ class ClassificationDataset(FlairDataset):
         return None
 
     def is_in_memory(self) -> bool:
-        if self.memory_mode == "disk":
-            return False
-        if self.memory_mode == "partial":
-            return False
-        return True
+        return self.memory_mode not in ["disk", "partial"]
 
     def __len__(self) -> int:
         return self.total_sentence_count
@@ -309,7 +306,7 @@ class CSVClassificationCorpus(Corpus):
     def __init__(
         self,
         data_folder: Union[str, Path],
-        column_name_map: Dict[int, str],
+        column_name_map: dict[int, str],
         label_type: str,
         name: str = "csv_corpus",
         train_file=None,
@@ -404,7 +401,7 @@ class CSVClassificationDataset(FlairDataset):
     def __init__(
         self,
         path_to_file: Union[str, Path],
-        column_name_map: Dict[int, str],
+        column_name_map: dict[int, str],
         label_type: str,
         max_tokens_per_doc: int = -1,
         max_chars_per_doc: int = -1,
@@ -453,8 +450,8 @@ class CSVClassificationDataset(FlairDataset):
         self.total_sentence_count: int = 0
 
         # most data sets have the token text in the first column, if not, pass 'text' as column
-        self.text_columns: List[int] = []
-        self.pair_columns: List[int] = []
+        self.text_columns: list[int] = []
+        self.pair_columns: list[int] = []
         for column in column_name_map:
             if column_name_map[column] == "text":
                 self.text_columns.append(column)
@@ -567,7 +564,7 @@ class AMAZON_REVIEWS(ClassificationCorpus):
     def __init__(
         self,
         split_max: int = 30000,
-        label_name_map: Dict[str, str] = {
+        label_name_map: dict[str, str] = {
             "1.0": "NEGATIVE",
             "2.0": "NEGATIVE",
             "3.0": "NEGATIVE",
@@ -955,9 +952,10 @@ class AGNEWS(ClassificationCorpus):
         original_filenames = original_filenames[:-1]
         if not data_file.is_file():
             for original_filename, new_filename in zip(original_filenames, new_filenames):
-                with open(data_folder / "original" / original_filename, encoding="utf-8") as open_fp, open(
-                    data_folder / new_filename, "w", encoding="utf-8"
-                ) as write_fp:
+                with (
+                    open(data_folder / "original" / original_filename, encoding="utf-8") as open_fp,
+                    open(data_folder / new_filename, "w", encoding="utf-8") as write_fp,
+                ):
                     csv_reader = csv.reader(
                         open_fp, quotechar='"', delimiter=",", quoting=csv.QUOTE_ALL, skipinitialspace=True
                     )
@@ -1048,9 +1046,10 @@ class STACKOVERFLOW(ClassificationCorpus):
                     label_list.append(labels[int(line) - 1])
 
             # handle data file
-            with (data_path / "original" / "title_StackOverflow.txt").open(encoding="latin1") as open_fp, (
-                data_folder / "train.txt"
-            ).open("w", encoding="utf-8") as write_fp:
+            with (
+                (data_path / "original" / "title_StackOverflow.txt").open(encoding="latin1") as open_fp,
+                (data_folder / "train.txt").open("w", encoding="utf-8") as write_fp,
+            ):
                 for idx, line in enumerate(open_fp):
                     line = line.rstrip()
 
@@ -1104,9 +1103,10 @@ class SENTIMENT_140(ClassificationCorpus):
                 os.makedirs(data_folder)
 
             # create train.txt file from CSV
-            with open(data_folder / "train.txt", "w") as train_file, open(
-                senteval_folder / "training.1600000.processed.noemoticon.csv", encoding="latin-1"
-            ) as csv_train:
+            with (
+                open(data_folder / "train.txt", "w") as train_file,
+                open(senteval_folder / "training.1600000.processed.noemoticon.csv", encoding="latin-1") as csv_train,
+            ):
                 csv_reader = csv.reader(csv_train)
 
                 for row in csv_reader:
@@ -1115,9 +1115,10 @@ class SENTIMENT_140(ClassificationCorpus):
                     train_file.write(f"__label__{label} {text}\n")
 
             # create test.txt file from CSV
-            with (data_folder / "test.txt").open("w", encoding="utf-8") as train_file, (
-                senteval_folder / "testdata.manual.2009.06.14.csv"
-            ).open(encoding="latin-1") as csv_train:
+            with (
+                (data_folder / "test.txt").open("w", encoding="utf-8") as train_file,
+                (senteval_folder / "testdata.manual.2009.06.14.csv").open(encoding="latin-1") as csv_train,
+            ):
                 csv_reader = csv.reader(csv_train)
 
                 for row in csv_reader:
@@ -1384,9 +1385,10 @@ class SENTEVAL_SST_BINARY(ClassificationCorpus):
 
             # create train dev and test files in fasttext format
             for new_filename, original_filename in zip(new_filenames, original_filenames):
-                with open(data_folder / new_filename, "a") as out_file, open(
-                    data_folder / "raw" / original_filename
-                ) as in_file:
+                with (
+                    open(data_folder / new_filename, "a") as out_file,
+                    open(data_folder / "raw" / original_filename) as in_file,
+                ):
                     for line in in_file:
                         fields = line.split("\t")
                         label = "POSITIVE" if fields[1].rstrip() == "1" else "NEGATIVE"
@@ -1437,9 +1439,10 @@ class SENTEVAL_SST_GRANULAR(ClassificationCorpus):
 
             # convert to FastText format
             for split in ["train", "dev", "test"]:
-                with (data_folder / f"{split}.txt").open("w", encoding="utf-8") as train_file, (
-                    data_folder / "raw" / f"stsa.fine.{split}"
-                ).open(encoding="latin1") as file:
+                with (
+                    (data_folder / f"{split}.txt").open("w", encoding="utf-8") as train_file,
+                    (data_folder / "raw" / f"stsa.fine.{split}").open(encoding="latin1") as file,
+                ):
                     for line in file:
                         train_file.write(f"__label__{line[0]} {line[2:]}")
 
@@ -1496,9 +1499,10 @@ class GLUE_COLA(ClassificationCorpus):
 
             # create train and dev splits in fasttext format
             for split in ["train", "dev"]:
-                with open(data_folder / "CoLA" / (split + ".txt"), "a") as out_file, open(
-                    data_folder / "CoLA" / "original" / (split + ".tsv")
-                ) as in_file:
+                with (
+                    open(data_folder / "CoLA" / (split + ".txt"), "a") as out_file,
+                    open(data_folder / "CoLA" / "original" / (split + ".tsv")) as in_file,
+                ):
                     for line in in_file:
                         fields = line.rstrip().split("\t")
                         label = int(fields[1])
@@ -1506,9 +1510,10 @@ class GLUE_COLA(ClassificationCorpus):
                         out_file.write(f"__label__{label_map[label]} {sentence}\n")
 
             # create eval_dataset file with no labels
-            with open(data_folder / "CoLA" / "eval_dataset.txt", "a") as out_file, open(
-                data_folder / "CoLA" / "original" / "test.tsv"
-            ) as in_file:
+            with (
+                open(data_folder / "CoLA" / "eval_dataset.txt", "a") as out_file,
+                open(data_folder / "CoLA" / "original" / "test.tsv") as in_file,
+            ):
                 for line in in_file:
                     fields = line.rstrip().split("\t")
                     sentence = fields[1]
@@ -1702,9 +1707,10 @@ class GO_EMOTIONS(ClassificationCorpus):
             data_path = flair.cache_root / "datasets" / dataset_name / "raw"
             # create correctly formated txt files
             for name in ["train", "test", "dev"]:
-                with (data_folder / (name + ".txt")).open("w", encoding="utf-8") as txt_file, (
-                    data_path / (name + ".tsv")
-                ).open(encoding="utf-8") as tsv_file:
+                with (
+                    (data_folder / (name + ".txt")).open("w", encoding="utf-8") as txt_file,
+                    (data_path / (name + ".tsv")).open(encoding="utf-8") as tsv_file,
+                ):
                     lines = tsv_file.readlines()
                     for line in lines:
                         row = line.split("\t")
@@ -1764,9 +1770,10 @@ class TREC_50(ClassificationCorpus):
 
         if not data_file.is_file():
             for original_filename, new_filename in zip(original_filenames, new_filenames):
-                with (data_folder / "original" / original_filename).open(encoding="latin1") as open_fp, (
-                    data_folder / new_filename
-                ).open("w", encoding="utf-8") as write_fp:
+                with (
+                    (data_folder / "original" / original_filename).open(encoding="latin1") as open_fp,
+                    (data_folder / new_filename).open("w", encoding="utf-8") as write_fp,
+                ):
                     for line in open_fp:
                         line = line.rstrip()
                         fields = line.split()
@@ -1820,9 +1827,10 @@ class TREC_6(ClassificationCorpus):
 
         if not data_file.is_file():
             for original_filename, new_filename in zip(original_filenames, new_filenames):
-                with (data_folder / "original" / original_filename).open(encoding="latin1") as open_fp, (
-                    data_folder / new_filename
-                ).open("w", encoding="utf-8") as write_fp:
+                with (
+                    (data_folder / "original" / original_filename).open(encoding="latin1") as open_fp,
+                    (data_folder / new_filename).open("w", encoding="utf-8") as write_fp,
+                ):
                     for line in open_fp:
                         line = line.rstrip()
                         fields = line.split()
@@ -1887,21 +1895,20 @@ class YAHOO_ANSWERS(ClassificationCorpus):
         if not (data_folder / "train.txt").is_file():
             cached_path(url, original)
 
-            import tarfile
+            with tarfile.open(original / "yahoo_answers_csv.tgz", "r:gz") as tar:
+                members = []
 
-            tar = tarfile.open(original / "yahoo_answers_csv.tgz", "r:gz")
-            members = []
+                for member in tar.getmembers():
+                    if "test.csv" in member.name or "train.csv" in member.name:
+                        members.append(member)
 
-            for member in tar.getmembers():
-                if "test.csv" in member.name or "train.csv" in member.name:
-                    members.append(member)
-
-            tar.extractall(original, members=members)
+                tar.extractall(original, members=members)
 
             for name in ["train", "test"]:
-                with (original / "yahoo_answers_csv" / (name + ".csv")).open(encoding="utf-8") as file, (
-                    data_folder / (name + ".txt")
-                ).open("w", encoding="utf-8") as writer:
+                with (
+                    (original / "yahoo_answers_csv" / (name + ".csv")).open(encoding="utf-8") as file,
+                    (data_folder / (name + ".txt")).open("w", encoding="utf-8") as writer,
+                ):
                     reader = csv.reader(file)
                     for row in reader:
                         writer.write("__label__" + label_map[row[0]] + " " + row[1] + "\n")
@@ -1963,9 +1970,10 @@ class GERMEVAL_2018_OFFENSIVE_LANGUAGE(ClassificationCorpus):
 
         if not data_file.is_file():
             for original_filename, new_filename in zip(original_filenames, new_filenames):
-                with (data_folder / "original" / original_filename).open(encoding="utf-8") as open_fp, (
-                    data_folder / task_setting / new_filename
-                ).open("w", encoding="utf-8") as write_fp:
+                with (
+                    (data_folder / "original" / original_filename).open(encoding="utf-8") as open_fp,
+                    (data_folder / task_setting / new_filename).open("w", encoding="utf-8") as write_fp,
+                ):
                     for line in open_fp:
                         line = line.rstrip()
                         fields = line.split("\t")

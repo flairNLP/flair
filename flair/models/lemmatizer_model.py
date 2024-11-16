@@ -1,6 +1,6 @@
 import logging
 from math import inf
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import torch
 from torch import nn
@@ -159,7 +159,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
     def words_to_char_indices(
         self,
-        tokens: List[str],
+        tokens: list[str],
         end_symbol=True,
         start_symbol=False,
         padding_in_front=False,
@@ -202,7 +202,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         return tensor
 
-    def forward_pass(self, sentences: Union[List[Sentence], Sentence]):
+    def forward_pass(self, sentences: Union[list[Sentence], Sentence]):
         if isinstance(sentences, Sentence):
             sentences = [sentences]
 
@@ -247,7 +247,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         output_vectors = self.character_decoder(output)
         return output_vectors, hidden
 
-    def _prepare_tensors(self, sentences: List[Sentence]) -> Tuple[Optional[torch.Tensor], ...]:
+    def _prepare_tensors(self, sentences: list[Sentence]) -> tuple[Optional[torch.Tensor], ...]:
         # get all tokens
         tokens = [token for sentence in sentences for token in sentence]
 
@@ -290,7 +290,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
         encoder_input_indices: Optional[torch.Tensor],
         lengths: Optional[torch.Tensor],
         token_embedding_hidden: Optional[torch.Tensor],
-    ) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, Optional[torch.Tensor]]:
         # variable to store initial hidden states for decoder
         initial_hidden_for_decoder = []
 
@@ -340,7 +340,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         return initial_hidden, all_encoder_outputs
 
-    def encode(self, sentences: List[Sentence]):
+    def encode(self, sentences: list[Sentence]):
         tensors = self._prepare_tensors(sentences)
         return self.forward(*tensors)
 
@@ -396,14 +396,14 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         return self.loss(scores_in_correct_format, target), len(labels)
 
-    def forward_loss(self, sentences: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, sentences: Union[list[Sentence], Sentence]) -> tuple[torch.Tensor, int]:
         scores, labels = self.forward_pass(sentences)
 
         return self._calculate_loss(scores, labels)
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence],
+        sentences: Union[list[Sentence], Sentence],
         mini_batch_size: int = 16,
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
@@ -474,7 +474,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                 # option 1: greedy decoding
                 if self.beam_size == 1:
                     # predictions
-                    predicted: List[List[Union[int, float]]] = [[] for _ in range(number_tokens)]
+                    predicted: list[list[Union[int, float]]] = [[] for _ in range(number_tokens)]
 
                     for _decode_step in range(max_length):
                         # decode next character
@@ -525,7 +525,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
                     # keep track of how many hypothesis were completed for each token
                     n_completed = [0 for _ in range(number_tokens)]  # cpu
-                    final_candidates: List[List[Tuple[torch.Tensor, float]]] = [[] for _ in range(number_tokens)]  # cpu
+                    final_candidates: list[list[tuple[torch.Tensor, float]]] = [[] for _ in range(number_tokens)]  # cpu
 
                     # if all_encoder_outputs returned, expand them to beam size (otherwise keep this as None)
                     batched_encoding_output = (
@@ -552,24 +552,24 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
                         # check if an end symbol <E> has been predicted and, in that case, set hypothesis aside
                         end_symbols = (index_candidates == self.end_index).nonzero(as_tuple=False)
-                        for tuple in end_symbols:
+                        for row in end_symbols:
                             # if the sequence is already ended, do not record as candidate
-                            if sequences[tuple[0], -1].item() == self.end_index:
+                            if sequences[row[0], -1].item() == self.end_index:
                                 continue
 
                             # index of token in in list tokens_in_batch
-                            token_number = torch.div(tuple[0], self.beam_size, rounding_mode="trunc")
+                            token_number = torch.div(row[0], self.beam_size, rounding_mode="trunc")
                             # print(token_number)
-                            seq = sequences[tuple[0], :]  # hypothesis sequence
+                            seq = sequences[row[0], :]  # hypothesis sequence
                             # hypothesis score
-                            score = (scores[tuple[0]] + log_probabilities[tuple[0], tuple[1]]) / (len(seq) + 1)
+                            score = (scores[row[0]] + log_probabilities[row[0], row[1]]) / (len(seq) + 1)
 
                             final_candidates[token_number].append((seq, score.item()))
                             # TODO: remove token if number of completed hypothesis exceeds given value
                             n_completed[token_number] += 1
 
                             # set score of corresponding entry to -inf so it will not be expanded
-                            log_probabilities[tuple[0], tuple[1]] = -inf
+                            log_probabilities[row[0], row[1]] = -inf
 
                         # get leading_indices for next expansion
                         # find highest scoring hypothesis among beam_size*beam_size possible ones for each token
@@ -594,8 +594,8 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
                         # a list of length beam_size*batch_size
                         # where the first three inidices belong to the first token, the next three to the second token,
                         # and so on
-                        beam_numbers: List[int] = []
-                        seq_numbers: List[int] = []
+                        beam_numbers: list[int] = []
+                        seq_numbers: list[int] = []
 
                         for i, row in enumerate(indices_per_token):
                             beam_numbers.extend(i * self.beam_size + index.item() // self.beam_size for index in row)

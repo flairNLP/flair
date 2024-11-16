@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict
+from typing import Any
 
 from flair.trainers.plugins.base import TrainerPlugin
 from flair.training_utils import log_line
@@ -59,7 +59,7 @@ class TensorboardLogger(TrainerPlugin):
         assert self.writer is not None
         self.writer.close()
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),
             "log_dir": str(self.log_dir) if self.log_dir is not None else None,

@@ -3,7 +3,7 @@ import typing
 from abc import ABC
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import torch
@@ -30,14 +30,14 @@ log = logging.getLogger("flair")
 class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
     def __init__(self) -> None:
         self._current_task = None
-        self._task_specific_attributes: Dict[str, Dict[str, Any]] = {}
+        self._task_specific_attributes: dict[str, dict[str, Any]] = {}
         self.label_nearest_map = None
         self.tars_model: flair.nn.Classifier[Sentence]
         self.separator: str
 
         super().__init__()
 
-    def forward_loss(self, data_points: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, data_points: Union[list[Sentence], Sentence]) -> tuple[torch.Tensor, int]:
         if not isinstance(data_points, list):
             data_points = [data_points]
 
@@ -54,7 +54,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
     def _get_tars_formatted_sentence(self, label, sentence):
         raise NotImplementedError
 
-    def _get_tars_formatted_sentences(self, sentences: List[Sentence]):
+    def _get_tars_formatted_sentences(self, sentences: list[Sentence]):
         label_text_pairs = []
         all_labels = [label.decode("utf-8") for label in self.get_current_label_dictionary().idx2item]
         for sentence in sentences:
@@ -173,7 +173,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
     def add_and_switch_to_new_task(
         self,
         task_name: str,
-        label_dictionary: Union[List, Set, Dictionary, str],
+        label_dictionary: Union[list, set, Dictionary, str],
         label_type: str,
         multi_label: bool = True,
         force_switch: bool = False,
@@ -219,7 +219,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
 
         self.switch_to_task(task_name)
 
-    def list_existing_tasks(self) -> Set[str]:
+    def list_existing_tasks(self) -> set[str]:
         """Lists existing tasks in the loaded TARS model on the console."""
         return set(self._task_specific_attributes.keys())
 
@@ -246,7 +246,7 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
             log.warning("No task exists with the name `%s`.", task_name)
 
     @staticmethod
-    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+    def _filter_empty_sentences(sentences: list[Sentence]) -> list[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
             log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
@@ -258,8 +258,8 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
 
     def predict_zero_shot(
         self,
-        sentences: Union[List[Sentence], Sentence],
-        candidate_label_set: Union[List[str], Set[str], str],
+        sentences: Union[list[Sentence], Sentence],
+        candidate_label_set: Union[list[str], set[str], str],
         multi_label: bool = True,
     ):
         """Make zero shot predictions from the TARS model.
@@ -307,14 +307,14 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
 
     def get_used_tokens(
         self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
-    ) -> typing.Iterable[List[str]]:
+    ) -> typing.Iterable[list[str]]:
         yield from super().get_used_tokens(corpus, context_length, respect_document_boundaries)
         for label in self.get_current_label_dictionary().idx2item:
             yield [label.decode("utf-8")]
         yield [self.separator]
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "FewshotClassifier":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "FewshotClassifier":
         from typing import cast
 
         return cast("FewshotClassifier", super().load(model_path=model_path))
@@ -472,7 +472,7 @@ class TARSTagger(FewshotClassifier):
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence],
+        sentences: Union[list[Sentence], Sentence],
         mini_batch_size=32,
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
@@ -532,12 +532,12 @@ class TARSTagger(FewshotClassifier):
                 if not batch:
                     continue
 
-                tars_sentences: List[Sentence] = []
-                all_labels_to_sentence: List[Dict[str, Sentence]] = []
+                tars_sentences: list[Sentence] = []
+                all_labels_to_sentence: list[dict[str, Sentence]] = []
                 for sentence in batch:
                     # always remove tags first
                     sentence.remove_labels(label_name)
-                    labels_to_sentence: Dict[str, Sentence] = {}
+                    labels_to_sentence: dict[str, Sentence] = {}
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
                         tars_sentences.append(tars_sentence)
@@ -570,7 +570,7 @@ class TARSTagger(FewshotClassifier):
                     if most_probable_first:
                         import operator
 
-                        already_set_indices: List[int] = []
+                        already_set_indices: list[int] = []
 
                         sorted_x = sorted(all_detected.items(), key=operator.itemgetter(1))
                         sorted_x.reverse()
@@ -648,7 +648,7 @@ class TARSTagger(FewshotClassifier):
         return lines
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TARSTagger":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "TARSTagger":
         from typing import cast
 
         return cast("TARSTagger", super().load(model_path=model_path))
@@ -832,7 +832,7 @@ class TARSClassifier(FewshotClassifier):
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence],
+        sentences: Union[list[Sentence], Sentence],
         mini_batch_size=32,
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
@@ -907,12 +907,12 @@ class TARSClassifier(FewshotClassifier):
                 if not batch:
                     continue
 
-                tars_sentences: List[Sentence] = []
-                all_labels_to_sentence: List[Dict[str, Sentence]] = []
+                tars_sentences: list[Sentence] = []
+                all_labels_to_sentence: list[dict[str, Sentence]] = []
                 for sentence in batch:
                     # always remove tags first
                     sentence.remove_labels(label_name)
-                    labels_to_sentence: Dict[str, Sentence] = {}
+                    labels_to_sentence: dict[str, Sentence] = {}
                     for label in all_labels:
                         tars_sentence = self._get_tars_formatted_sentence(label, sentence)
                         tars_sentences.append(tars_sentence)
@@ -972,7 +972,7 @@ class TARSClassifier(FewshotClassifier):
         return None
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TARSClassifier":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "TARSClassifier":
         from typing import cast
 
         return cast("TARSClassifier", super().load(model_path=model_path))

@@ -3,7 +3,6 @@ import logging
 import os
 import urllib
 from pathlib import Path
-from typing import List
 
 import numpy as np
 import torch.utils.data.dataloader
@@ -40,13 +39,13 @@ class FeideggerCorpus(Corpus):
 
         feidegger_dataset: Dataset = FeideggerDataset(dataset_info, **kwargs)
 
-        train_indices = list(np.where(np.in1d(feidegger_dataset.split, list(range(8))))[0])  # type: ignore[attr-defined]
+        train_indices = list(np.where(np.isin(feidegger_dataset.split, list(range(8))))[0])  # type: ignore[attr-defined]
         train = torch.utils.data.dataset.Subset(feidegger_dataset, train_indices)
 
-        dev_indices = list(np.where(np.in1d(feidegger_dataset.split, [8]))[0])  # type: ignore[attr-defined]
+        dev_indices = list(np.where(np.isin(feidegger_dataset.split, [8]))[0])  # type: ignore[attr-defined]
         dev = torch.utils.data.dataset.Subset(feidegger_dataset, dev_indices)
 
-        test_indices = list(np.where(np.in1d(feidegger_dataset.split, [9]))[0])  # type: ignore[attr-defined]
+        test_indices = list(np.where(np.isin(feidegger_dataset.split, [9]))[0])  # type: ignore[attr-defined]
         test = torch.utils.data.dataset.Subset(feidegger_dataset, test_indices)
 
         super().__init__(train, dev, test, name="feidegger")
@@ -56,8 +55,8 @@ class FeideggerDataset(FlairDataset):
     def __init__(self, dataset_info, **kwargs) -> None:
         super().__init__()
 
-        self.data_points: List[DataPair] = []
-        self.split: List[int] = []
+        self.data_points: list[DataPair] = []
+        self.split: list[int] = []
 
         def identity(x):
             return x

@@ -4,9 +4,10 @@ import logging
 import re
 import string
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from enum import Enum, auto
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Type, Union, cast
+from typing import Any, Optional, Union, cast
 
 import numpy as np
 import torch
@@ -89,7 +90,7 @@ ENTITY_TYPE_TO_DICTIONARY = {
     "chemical": "ctd-chemicals",
 }
 
-BIOMEDICAL_DICTIONARIES: Dict[str, Type] = {
+BIOMEDICAL_DICTIONARIES: dict[str, type] = {
     "ctd-diseases": CTD_DISEASES_DICTIONARY,
     "ctd-chemicals": CTD_CHEMICALS_DICTIONARY,
     "ncbi-gene": NCBI_GENE_HUMAN_DICTIONARY,
@@ -151,7 +152,7 @@ def load_dictionary(
 class EntityPreprocessor(ABC):
     """A pre-processor used to transform / clean both entity mentions and entity names."""
 
-    def initialize(self, sentences: List[Sentence]) -> None:
+    def initialize(self, sentences: list[Sentence]) -> None:
         """Initializes the pre-processor for a batch of sentences.
 
         This may be necessary for more sophisticated transformations.
@@ -187,14 +188,14 @@ class EntityPreprocessor(ABC):
         """
 
     @classmethod
-    def _from_state(cls, state_dict: Dict[str, Any]) -> "EntityPreprocessor":
+    def _from_state(cls, state_dict: dict[str, Any]) -> "EntityPreprocessor":
         if inspect.isabstract(cls):
             cls_name = state_dict.pop("__cls__", None)
             return get_state_subclass_by_name(cls, cls_name)._from_state(state_dict)
         else:
             return cls(**state_dict)
 
-    def _get_state(self) -> Dict[str, Any]:
+    def _get_state(self) -> dict[str, Any]:
         return {"__cls__": self.__class__.__name__}
 
 
@@ -237,7 +238,7 @@ class BioSynEntityPreprocessor(EntityPreprocessor):
 
         return entity_name
 
-    def _get_state(self) -> Dict[str, Any]:
+    def _get_state(self) -> dict[str, Any]:
         return {
             **super()._get_state(),
             "lowercase": self.lowercase,
@@ -270,9 +271,9 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         self.ab3p = pyab3p.Ab3p()
 
         self.preprocessor = preprocessor
-        self.abbreviation_dict: Dict[str, Dict[str, str]] = {}
+        self.abbreviation_dict: dict[str, dict[str, str]] = {}
 
-    def initialize(self, sentences: List[Sentence]) -> None:
+    def initialize(self, sentences: list[Sentence]) -> None:
         self.abbreviation_dict = self._build_abbreviation_dict(sentences)
 
     def process_mention(self, entity_mention: str, sentence: Optional[Sentence] = None) -> str:
@@ -303,7 +304,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
 
         return entity_name
 
-    def _build_abbreviation_dict(self, sentences: List[flair.data.Sentence]) -> Dict[str, Dict[str, str]]:
+    def _build_abbreviation_dict(self, sentences: list[flair.data.Sentence]) -> dict[str, dict[str, str]]:
         """Processes the given sentences with the Ab3P tool.
 
         The function returns a (nested) dictionary containing the abbreviations found for each sentence, e.g.:
@@ -321,7 +322,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         Returns:
             abbreviation_dict: abbreviations and their resolution detected in each input sentence
         """
-        abbreviation_dict: Dict[str, Dict[str, str]] = {}
+        abbreviation_dict: dict[str, dict[str, str]] = {}
 
         for sentence in sentences:
             sentence_text = sentence.to_original_text()
@@ -331,14 +332,14 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
 
         return abbreviation_dict
 
-    def _get_state(self) -> Dict[str, Any]:
+    def _get_state(self) -> dict[str, Any]:
         return {
             **super()._get_state(),
             "preprocessor": None if self.preprocessor is None else self.preprocessor._get_state(),
         }
 
     @classmethod
-    def _from_state(cls, state_dict: Dict[str, Any]) -> "EntityPreprocessor":
+    def _from_state(cls, state_dict: dict[str, Any]) -> "EntityPreprocessor":
         return cls(
             preprocessor=(
                 None
@@ -364,7 +365,7 @@ class CandidateSearchIndex(ABC):
         """
 
     @abstractmethod
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, float]]]:
+    def search(self, entity_mentions: list[str], top_k: int) -> list[list[tuple[str, float]]]:
         """Returns the top-k entity / concept identifiers for each entity mention.
 
         Args:
@@ -376,14 +377,14 @@ class CandidateSearchIndex(ABC):
         """
 
     @classmethod
-    def _from_state(cls, state_dict: Dict[str, Any]) -> "CandidateSearchIndex":
+    def _from_state(cls, state_dict: dict[str, Any]) -> "CandidateSearchIndex":
         if inspect.isabstract(cls):
             cls_name = state_dict.pop("__cls__", None)
             return get_state_subclass_by_name(cls, cls_name)._from_state(state_dict)
         else:
             return cls(**state_dict)
 
-    def _get_state(self) -> Dict[str, Any]:
+    def _get_state(self) -> dict[str, Any]:
         return {"__cls__": self.__class__.__name__}
 
 
@@ -396,7 +397,7 @@ class ExactMatchCandidateSearchIndex(CandidateSearchIndex):
         Args:
             name_to_id_index: internal state, should only be set when loading an initialized index.
         """
-        self.name_to_id_index: Dict[str, str] = {}
+        self.name_to_id_index: dict[str, str] = {}
 
     def index(self, dictionary: EntityLinkingDictionary, preprocessor: Optional[EntityPreprocessor] = None) -> None:
         def p(text: str) -> str:
@@ -407,8 +408,8 @@ class ExactMatchCandidateSearchIndex(CandidateSearchIndex):
             for synonym in candidate.synonyms:
                 self.name_to_id_index[p(synonym)] = candidate.concept_id
 
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, float]]]:
-        results: List[List[Tuple[str, float]]] = []
+    def search(self, entity_mentions: list[str], top_k: int) -> list[list[tuple[str, float]]]:
+        results: list[list[tuple[str, float]]] = []
         for mention in entity_mentions:
             dict_entry = self.name_to_id_index.get(mention)
             if dict_entry is None:
@@ -419,12 +420,12 @@ class ExactMatchCandidateSearchIndex(CandidateSearchIndex):
         return results
 
     @classmethod
-    def _from_state(cls, state_dict: Dict[str, Any]) -> "CandidateSearchIndex":
+    def _from_state(cls, state_dict: dict[str, Any]) -> "CandidateSearchIndex":
         index = cls()
         index.name_to_id_index = state_dict["name_to_id_index"]
         return index
 
-    def _get_state(self) -> Dict[str, Any]:
+    def _get_state(self) -> dict[str, Any]:
         return {
             **super()._get_state(),
             "name_to_id_index": self.name_to_id_index,
@@ -436,7 +437,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
 
     def __init__(
         self,
-        embeddings: Dict[str, DocumentEmbeddings],
+        embeddings: dict[str, DocumentEmbeddings],
         hybrid_search: bool,
         similarity_metric: SimilarityMetric = SimilarityMetric.INNER_PRODUCT,
         sparse_weight: float = DEFAULT_SPARSE_WEIGHT,
@@ -460,8 +461,8 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         self.show_progress = show_progress
         self.batch_size = batch_size
 
-        self.ids: List[str] = []
-        self._precomputed_embeddings: Dict[str, np.ndarray] = {"sparse": np.array([]), "dense": np.array([])}
+        self.ids: list[str] = []
+        self._precomputed_embeddings: dict[str, np.ndarray] = {"sparse": np.array([]), "dense": np.array([])}
 
     @classmethod
     def bi_encoder(
@@ -479,7 +480,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         if model_name_or_path in PRETRAINED_MODELS:
             similarity_metric = PRETRAINED_MODEL_TO_SIMILARITY_METRIC[model_name_or_path]
 
-        embeddings: Dict[str, DocumentEmbeddings] = {"dense": TransformerDocumentEmbeddings(model_name_or_path)}
+        embeddings: dict[str, DocumentEmbeddings] = {"dense": TransformerDocumentEmbeddings(model_name_or_path)}
 
         if hybrid_search:
             if dictionary is None:
@@ -515,7 +516,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         def p(text: str) -> str:
             return preprocessor.process_entity_name(text) if preprocessor is not None else text
 
-        texts: List[str] = []
+        texts: list[str] = []
         self.ids = []
         for candidate in dictionary.candidates:
             texts.append(p(candidate.concept_name))
@@ -564,8 +565,8 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
                 sent.clear_embeddings()
             self._precomputed_embeddings["sparse"] = np.stack(sparse_embs, axis=0)
 
-    def embed(self, entity_mentions: List[str]) -> Dict[str, np.ndarray]:
-        query_embeddings: Dict[str, List] = {"dense": []}
+    def embed(self, entity_mentions: list[str]) -> dict[str, np.ndarray]:
+        query_embeddings: dict[str, list[np.ndarray]] = {"dense": []}
 
         inputs = [Sentence(name) for name in entity_mentions]
 
@@ -600,7 +601,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
 
         return {k: np.stack(v, axis=0) for k, v in query_embeddings.items()}
 
-    def search(self, entity_mentions: List[str], top_k: int) -> List[List[Tuple[str, float]]]:
+    def search(self, entity_mentions: list[str], top_k: int) -> list[list[tuple[str, float]]]:
         """Returns the top-k entity / concept identifiers for each entity mention.
 
         Args:
@@ -634,10 +635,10 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         return results
 
     @classmethod
-    def _from_state(cls, state_dict: Dict[str, Any]) -> "SemanticCandidateSearchIndex":
+    def _from_state(cls, state_dict: dict[str, Any]) -> "SemanticCandidateSearchIndex":
         index = cls(
             embeddings=cast(
-                Dict[str, DocumentEmbeddings], {k: load_embeddings(emb) for k, emb in state_dict["embeddings"].items()}
+                dict[str, DocumentEmbeddings], {k: load_embeddings(emb) for k, emb in state_dict["embeddings"].items()}
             ),
             similarity_metric=SimilarityMetric(state_dict["similarity_metric"]),
             sparse_weight=state_dict["sparse_weight"],
@@ -649,7 +650,7 @@ class SemanticCandidateSearchIndex(CandidateSearchIndex):
         index._precomputed_embeddings = state_dict["precomputed_embeddings"]
         return index
 
-    def _get_state(self) -> Dict[str, Any]:
+    def _get_state(self) -> dict[str, Any]:
         return {
             **super()._get_state(),
             "embeddings": {k: emb.save_embeddings() for k, emb in self.embeddings.items()},
@@ -670,7 +671,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         self,
         candidate_generator: CandidateSearchIndex,
         preprocessor: EntityPreprocessor,
-        entity_label_types: Union[str, Sequence[str], Dict[str, Set[str]]],
+        entity_label_types: Union[str, Sequence[str], dict[str, set[str]]],
         label_type: str,
         dictionary: EntityLinkingDictionary,
         batch_size: int = 1024,
@@ -698,8 +699,8 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         super().__init__()
 
     def get_entity_label_types(
-        self, entity_label_types: Union[str, Sequence[str], Dict[str, Set[str]]]
-    ) -> Dict[str, Set[str]]:
+        self, entity_label_types: Union[str, Sequence[str], dict[str, set[str]]]
+    ) -> dict[str, set[str]]:
         """Find out what NER labels to extract from sentence.
 
         Args:
@@ -709,9 +710,9 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
                                 To use all labels from 'ner', pass 'ner'
         """
         if isinstance(entity_label_types, str):
-            entity_label_types = cast(Dict[str, Set[str]], {entity_label_types: {}})
+            entity_label_types = cast(dict[str, set[str]], {entity_label_types: {}})
         elif isinstance(entity_label_types, Sequence):
-            entity_label_types = cast(Dict[str, Set[str]], {label: {} for label in entity_label_types})
+            entity_label_types = cast(dict[str, set[str]], {label: {} for label in entity_label_types})
 
         entity_label_types = {
             label: {normalize_entity_type(e) for e in entity_types}
@@ -728,9 +729,9 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
     def dictionary(self) -> EntityLinkingDictionary:
         return self._dictionary
 
-    def extract_entities_mentions(self, sentence: Sentence, entity_label_types: Dict[str, Set[str]]) -> List[Label]:
+    def extract_entities_mentions(self, sentence: Sentence, entity_label_types: dict[str, set[str]]) -> list[Label]:
         """Extract tagged mentions from sentences."""
-        entities_mentions: List[Label] = []
+        entities_mentions: list[Label] = []
 
         # NOTE: This is a hacky workaround for the fact that
         # the `label_type`s in `Classifier.load('hunflair)` are
@@ -762,10 +763,10 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence],
+        sentences: Union[list[Sentence], Sentence],
         top_k: int = 1,
         pred_label_type: Optional[str] = None,
-        entity_label_types: Optional[Union[str, Sequence[str], Dict[str, Set[str]]]] = None,
+        entity_label_types: Optional[Union[str, Sequence[str], dict[str, set[str]]]] = None,
         batch_size: Optional[int] = None,
     ) -> None:
         """Predicts the best matching top-k entity / concept identifiers of all named entities annotated with tag input_entity_annotation_layer.
@@ -859,7 +860,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         return hf_download(model_name)
 
     @classmethod
-    def _init_model_with_state_dict(cls, state: Dict[str, Any], **kwargs) -> "EntityMentionLinker":
+    def _init_model_with_state_dict(cls, state: dict[str, Any], **kwargs) -> "EntityMentionLinker":
         candidate_generator = CandidateSearchIndex._from_state(state["candidate_search_index"])
         preprocessor = EntityPreprocessor._from_state(state["entity_preprocessor"])
         entity_label_types = state["entity_label_types"]
@@ -961,7 +962,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         model_name_or_path: str,
         entity_type: Optional[str] = None,
         hybrid_search: bool = False,
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """Try to figure out what model the user wants."""
         if model_name_or_path not in MODELS and model_name_or_path not in ENTITY_TYPES:
             raise ValueError(
@@ -1039,24 +1040,24 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
 
         return dictionary_name_or_path
 
-    def forward_loss(self, data_points: List[DT]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, data_points: list[DT]) -> tuple[torch.Tensor, int]:
         raise NotImplementedError("The EntityLinker cannot be trained")
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "EntityMentionLinker":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "EntityMentionLinker":
         from typing import cast
 
         return cast("EntityMentionLinker", super().load(model_path=model_path))
 
     def evaluate(
         self,
-        data_points: Union[List[Sentence], Dataset],
+        data_points: Union[list[Sentence], Dataset],
         gold_label_type: str,
         out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: str = "none",
         mini_batch_size: int = 32,
-        main_evaluation_metric: Tuple[str, str] = ("accuracy", "f1-score"),
-        exclude_labels: Optional[List[str]] = None,
+        main_evaluation_metric: tuple[str, str] = ("accuracy", "f1-score"),
+        exclude_labels: Optional[list[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
         k: int = 1,

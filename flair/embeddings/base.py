@@ -1,7 +1,8 @@
 import inspect
 import logging
 from abc import abstractmethod
-from typing import Any, Dict, Generic, List, Sequence, Type, Union
+from collections.abc import Sequence
+from typing import Any, Generic, Union
 
 import torch
 from torch.nn import Parameter, ParameterList
@@ -37,7 +38,7 @@ class Embeddings(torch.nn.Module, Generic[DT]):
     def embedding_type(self) -> str:
         raise NotImplementedError
 
-    def embed(self, data_points: Union[DT, List[DT]]) -> List[DT]:
+    def embed(self, data_points: Union[DT, list[DT]]) -> list[DT]:
         """Add embeddings to all words in a list of sentences.
 
         If embeddings are already added, updates only if embeddings are non-static.
@@ -55,10 +56,10 @@ class Embeddings(torch.nn.Module, Generic[DT]):
         return all(self.name in data_point._embeddings for data_point in data_points)
 
     @abstractmethod
-    def _add_embeddings_internal(self, sentences: List[DT]):
+    def _add_embeddings_internal(self, sentences: list[DT]):
         """Private method for adding embeddings to all words in a list of sentences."""
 
-    def get_names(self) -> List[str]:
+    def get_names(self) -> list[str]:
         """Returns a list of embedding names.
 
         In most cases, it is just a list with one item, namely the name of
@@ -66,9 +67,6 @@ class Embeddings(torch.nn.Module, Generic[DT]):
         Then, the list contains the names of all embeddings in the stack.
         """
         return [self.name]
-
-    def get_named_embeddings_dict(self) -> Dict:
-        return {self.name: self}
 
     @staticmethod
     def get_instance_parameters(locals: dict) -> dict:
@@ -84,14 +82,14 @@ class Embeddings(torch.nn.Module, Generic[DT]):
         return instance_parameters
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
+    def from_params(cls, params: dict[str, Any]) -> "Embeddings":
         raise NotImplementedError
 
-    def to_params(self) -> Dict[str, Any]:
+    def to_params(self) -> dict[str, Any]:
         raise NotImplementedError
 
     @classmethod
-    def load_embedding(cls, params: Dict[str, Any]):
+    def load_embedding(cls, params: dict[str, Any]):
         state_dict = params.pop("state_dict", None)
 
         embedding = cls.from_params(params)
@@ -155,7 +153,7 @@ class ScalarMix(torch.nn.Module):
             requires_grad=trainable,
         )
 
-    def forward(self, tensors: List[torch.Tensor]) -> torch.Tensor:
+    def forward(self, tensors: list[torch.Tensor]) -> torch.Tensor:
         """Forward pass of scalar mix.
 
         Computes a weighted average of the ``tensors``.  The input tensors an be any shape
@@ -203,7 +201,7 @@ class TokenEmbeddings(Embeddings[Sentence]):
         return True
 
 
-EMBEDDING_CLASSES: Dict[str, Type[Embeddings]] = {}
+EMBEDDING_CLASSES: dict[str, type[Embeddings]] = {}
 
 
 def register_embeddings(*args):
@@ -225,7 +223,7 @@ def register_embeddings(*args):
     return _register
 
 
-def load_embeddings(params: Dict[str, Any]) -> Embeddings:
+def load_embeddings(params: dict[str, Any]) -> Embeddings:
     cls_name = params.pop("__cls__")
     cls = EMBEDDING_CLASSES[cls_name]
     return cls.load_embedding(params)

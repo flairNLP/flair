@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 
 import flair
@@ -492,5 +490,5 @@ def test_line_separator_is_ignored():
     assert Sentence(with_separator).to_original_text() == Sentence(without_separator).to_original_text()
 
 
-def no_op_tokenizer(text: str) -> List[str]:
+def no_op_tokenizer(text: str) -> list[str]:
     return [text]
