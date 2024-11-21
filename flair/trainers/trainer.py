@@ -789,14 +789,14 @@ class ModelTrainer(Pluggable):
 
                     if save_best_model and current_epoch_has_best_model_so_far:
                         log.info("saving best model")
-                        self.model.save(base_path / "best-model.pt", checkpoint=save_optimizer_state)
+                        self._save_model(base_path / "best-model.pt", checkpoint=save_optimizer_state)
 
                 # - SWAPlugin -> restores SGD weights from SWA
                 self.dispatch("after_training_loop")
 
                 # if we do not use dev data for model selection, save final model
                 if save_final_model:
-                    self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
 
             except KeyboardInterrupt:
                 log_line(log)
@@ -806,7 +806,7 @@ class ModelTrainer(Pluggable):
 
                 if save_final_model:
                     log.info("Saving model ...")
-                    self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
 
             except TrainingInterrupt as exc:
@@ -817,7 +817,7 @@ class ModelTrainer(Pluggable):
 
                 if save_final_model:
                     log.info("Saving model ...")
-                    self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
 
             except Exception:
@@ -960,3 +960,9 @@ class ModelTrainer(Pluggable):
 
     def _load_model(self, model_file: Union[str, Path]) -> None:
         self.model.load_state_dict(self.model.load(model_file).state_dict())
+
+    def _save_model(self, model_file: Union[str, Path], checkpoint: bool = False) -> None:
+        if is_main_process():
+            self.model.save(model_file, checkpoint)
+        if torch.distributed.is_initialized():
+            torch.distributed.barrier()  # Prevent any process from loading a model until writing is complete

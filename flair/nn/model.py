@@ -126,11 +126,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             model_state["model_card"] = self.model_card
 
         # save model
-        if is_main_process():
-            torch.save(model_state, str(model_file), pickle_protocol=4)
-
-        if torch.distributed.is_initialized():
-            torch.distributed.barrier()  # Prevent any process from loading a model until writing is complete
+        torch.save(model_state, str(model_file), pickle_protocol=4)
 
     @classmethod
     def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "Model":
