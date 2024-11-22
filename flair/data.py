@@ -565,7 +565,7 @@ class Token(_PartOfSentence):
         head_id: Optional[int] = None,
         whitespace_after: int = 1,
         start_position: int = 0,
-        sentence=None,
+        sentence: Optional["Sentence"] = None,
     ) -> None:
         super().__init__(sentence=sentence)
 
