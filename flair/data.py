@@ -122,18 +122,18 @@ class Dictionary:
         return list(results)
 
     def get_items(self) -> list[str]:
-        items = []
-        for item in self.idx2item:
-            items.append(item.decode("UTF-8"))
-        return items
+        return [item.decode("UTF-8") for item in self.idx2item]
 
     def __len__(self) -> int:
         return len(self.idx2item)
 
-    def get_item_for_index(self, idx):
+    def get_item_for_index(self, idx: int) -> str:
         return self.idx2item[idx].decode("UTF-8")
 
-    def set_start_stop_tags(self):
+    def has_item(self, item: str) -> bool:
+        return item.encode("utf-8") in self.item2idx
+
+    def set_start_stop_tags(self) -> None:
         self.add_item("<START>")
         self.add_item("<STOP>")
 
@@ -1659,7 +1659,7 @@ class Corpus(typing.Generic[T_co]):
                 unked_count += count
 
         if len(label_dictionary.idx2item) == 0 or (
-            len(label_dictionary.idx2item) == 1 and "<unk>" in label_dictionary.get_items()
+            len(label_dictionary.idx2item) == 1 and label_dictionary.has_item("<unk>")
         ):
             log.error(f"ERROR: You specified label_type='{label_type}' which is not in this dataset!")
             contained_labels = ", ".join(
