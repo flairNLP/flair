@@ -21,5 +21,9 @@ class LogFilePlugin(TrainerPlugin):
         self.log_handler.close()
         log.removeHandler(self.log_handler)
 
+    @property
+    def attach_to_all_processes(self) -> bool:
+        return False
+
     def get_state(self) -> dict[str, Any]:
         return {**super().get_state(), "base_path": str(self.base_path)}

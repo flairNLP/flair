@@ -59,6 +59,10 @@ class TensorboardLogger(TrainerPlugin):
         assert self.writer is not None
         self.writer.close()
 
+    @property
+    def attach_to_all_processes(self) -> bool:
+        return False
+
     def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),

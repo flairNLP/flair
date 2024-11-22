@@ -21,6 +21,10 @@ class WeightExtractorPlugin(TrainerPlugin):
         if (iteration + 1) % modulo == 0:
             self.weight_extractor.extract_weights(self.model.state_dict(), iteration)
 
+    @property
+    def attach_to_all_processes(self) -> bool:
+        return False
+
     def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),
