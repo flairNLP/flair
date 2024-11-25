@@ -1,6 +1,8 @@
 import logging
 from typing import Any
 
+import torch
+
 from flair.trainers.plugins.base import TrainerPlugin
 
 log = logging.getLogger("flair")
@@ -28,6 +30,12 @@ class CheckpointPlugin(TrainerPlugin):
             )
             model_name = "model_epoch_" + str(epoch) + ".pt"
             self.model.save(self.base_path / model_name, checkpoint=self.save_optimizer_state)
+            if torch.distributed.is_initialized():
+                torch.distributed.barrier()  # Prevent any process from loading a model until writing is complete
+
+    @property
+    def attach_to_all_processes(self) -> bool:
+        return False
 
     def get_state(self) -> dict[str, Any]:
         return {

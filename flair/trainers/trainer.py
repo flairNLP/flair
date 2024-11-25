@@ -9,14 +9,18 @@ from inspect import signature
 from pathlib import Path
 from typing import Optional, Union
 
+import numpy as np
 import torch
+from torch.nn.parallel import DistributedDataParallel
 from torch.optim.sgd import SGD
+from torch.utils.data import DistributedSampler
 from torch.utils.data.dataset import ConcatDataset
 
 import flair
 import flair.nn
 from flair.data import Corpus, Dictionary, _len_dataset
 from flair.datasets import DataLoader
+from flair.distributed_utils import aggregate, is_main_process, validate_corpus_same_each_process
 from flair.samplers import FlairSampler
 from flair.trainers.plugins import (
     AnnealingPlugin,
@@ -163,6 +167,8 @@ class ModelTrainer(Pluggable):
         create_file_logs: bool = True,
         create_loss_file: bool = True,
         write_weights: bool = False,
+        # acceleration
+        multi_gpu: bool = False,
         # plugins
         plugins: Optional[list[TrainerPlugin]] = None,
         attach_default_scheduler: bool = True,
@@ -237,8 +243,9 @@ class ModelTrainer(Pluggable):
         create_file_logs: bool = True,
         create_loss_file: bool = True,
         write_weights: bool = False,
-        # amp
+        # acceleration
         use_amp: bool = False,
+        multi_gpu: bool = False,
         # plugins
         plugins: Optional[list[TrainerPlugin]] = None,
         attach_default_scheduler: bool = True,
@@ -287,8 +294,9 @@ class ModelTrainer(Pluggable):
             create_file_logs=create_file_logs,
             create_loss_file=create_loss_file,
             write_weights=write_weights,
-            # amp
+            # acceleration
             use_amp=use_amp,
+            multi_gpu=multi_gpu,
             # plugins
             plugins=plugins,
             **kwargs,
@@ -331,8 +339,9 @@ class ModelTrainer(Pluggable):
         create_file_logs: bool = True,
         create_loss_file: bool = True,
         write_weights: bool = False,
-        # amp
+        # acceleration
         use_amp: bool = False,
+        multi_gpu: bool = False,
         # plugins
         plugins: Optional[list[TrainerPlugin]] = None,
         **kwargs,
@@ -375,6 +384,7 @@ class ModelTrainer(Pluggable):
             create_file_logs: If True, logging output is written to a file
             create_loss_file: If True, a loss file logging output is created
             use_amp: If True, uses the torch automatic mixed precision
+            multi_gpu: If True, distributes training across local GPUs
             write_weights: If True, write weights to weights.txt on each batch logging event.
             plugins: Any additional plugins you want to pass to the trainer
             **kwargs: Additional arguments, for instance for the optimizer
@@ -481,6 +491,18 @@ class ModelTrainer(Pluggable):
             sampler.set_dataset(train_data)
             shuffle = False
 
+        # configure special behavior to use multiple GPUs
+        if multi_gpu:
+            if not torch.distributed.is_initialized():
+                raise RuntimeError("multi_gpu=True can only used inside flair.distributed_utils.launch_distributed()")
+            # Guard against each process initializing corpus differently due to e.g. different random seeds
+            validate_corpus_same_each_process(self.corpus)
+            self.ddp_model = DistributedDataParallel(
+                self.model, device_ids=[flair.device.index], find_unused_parameters=True
+            )
+            log.disabled = not is_main_process()  # Only print logs once
+            original_forward = self.model.forward
+
         # this field stores the names of all dynamic embeddings in the model (determined after first forward pass)
         dynamic_embeddings = None
 
@@ -508,6 +530,9 @@ class ModelTrainer(Pluggable):
                 if use_final_model_for_eval
                 else "model from best epoch (best-model.pt)"
             )
+            computation_device_info = aggregate(
+                flair.device, lambda devices: ", ".join([str(device) for device in devices])
+            )
 
             log_line(log)
             log.info(f'Model: "{self.model}"')
@@ -534,7 +559,7 @@ class ModelTrainer(Pluggable):
             log.info(f' - metric: "{main_evaluation_metric}"')
             log_line(log)
             log.info("Computation:")
-            log.info(f" - compute on device: {flair.device}")
+            log.info(f" - compute on device: {computation_device_info}")
             log.info(f" - embedding storage: {embeddings_storage_mode}")
             log_line(log)
             log.info(f'Model training base path: "{base_path}"')
@@ -560,12 +585,24 @@ class ModelTrainer(Pluggable):
                     if not shuffle_first_epoch and epoch == 1:
                         shuffle_data_this_epoch = False
 
-                    batch_loader = DataLoader(
-                        train_data,
-                        batch_size=mini_batch_size,
-                        shuffle=shuffle_data_this_epoch,
-                        sampler=sampler,
-                    )
+                    if multi_gpu:
+                        distributed_sampler: DistributedSampler = DistributedSampler(
+                            train_data, shuffle=shuffle_data_this_epoch
+                        )
+                        distributed_sampler.set_epoch(epoch - 1)
+                        batch_loader = DataLoader(
+                            train_data,
+                            batch_size=mini_batch_size,
+                            shuffle=False,
+                            sampler=distributed_sampler,
+                        )
+                    else:
+                        batch_loader = DataLoader(
+                            train_data,
+                            batch_size=mini_batch_size,
+                            shuffle=shuffle_data_this_epoch,
+                            sampler=sampler,
+                        )
 
                     self.model.train()
 
@@ -603,7 +640,18 @@ class ModelTrainer(Pluggable):
                         for batch_step in batch_steps:
                             # forward pass
                             with torch.autocast(device_type=flair.device.type, enabled=use_amp):
-                                loss, datapoint_count = self.model.forward_loss(batch_step)
+                                if multi_gpu:
+                                    # We need to __call__ ddp_model() because this triggers hooks that sync gradients.
+                                    # But that calls forward rather than forward_loss. So we patch forward to redirect
+                                    # to forward_loss. Then undo the patch in case forward_loss itself calls forward.
+                                    def wrapped_forward_loss(*args, **kwargs2):
+                                        self.model.forward = original_forward
+                                        return self.model.forward_loss(*args, **kwargs2)
+
+                                    self.model.forward = wrapped_forward_loss
+                                    loss, datapoint_count = self.ddp_model(batch_step)
+                                else:
+                                    loss, datapoint_count = self.model.forward_loss(batch_step)
 
                             batch_train_samples += datapoint_count
                             batch_train_loss += loss.item()
@@ -649,8 +697,11 @@ class ModelTrainer(Pluggable):
                                 if epoch_train_samples > 0
                                 else epoch_train_samples / (batch_no + 1)
                             )
+                            intermittent_loss = aggregate(intermittent_loss)
 
                             current_time = time.time()
+                            samples_per_second = epoch_train_samples / (current_time - epoch_start_time)
+                            samples_per_second = aggregate(samples_per_second, np.sum)
 
                             lr_info, momentum_info = self._get_current_lr_and_momentum(batch_count)
                             log.info(
@@ -658,7 +709,7 @@ class ModelTrainer(Pluggable):
                                 f" - iter {batch_no + 1}/{len(batch_loader)}"
                                 f" - loss {intermittent_loss:.8f}"
                                 f" - time (sec): {(current_time - epoch_start_time):.2f}"
-                                f" - samples/sec: {epoch_train_samples / (current_time - epoch_start_time):.2f}"
+                                f" - samples/sec: {samples_per_second:.2f}"
                                 f"{lr_info}{momentum_info}"
                             )
 
@@ -667,6 +718,7 @@ class ModelTrainer(Pluggable):
                         self.dispatch("after_training_batch", **batch_kw)
 
                     train_loss = epoch_train_loss / epoch_train_samples
+                    train_loss = aggregate(train_loss)
                     self._record(MetricRecord.scalar(("train", "loss"), train_loss, epoch))
 
                     total_train_samples += epoch_train_samples
@@ -682,7 +734,7 @@ class ModelTrainer(Pluggable):
 
                     # Determine if this is the best model or if we need to anneal
                     current_epoch_has_best_model_so_far = False
-                    validation_scores: tuple
+                    validation_scores: tuple = ()
 
                     for evaluation_split, evaluation_split_data in evaluation_splits.items():
                         eval_result = self.model.evaluate(
@@ -722,7 +774,7 @@ class ModelTrainer(Pluggable):
                     if not determine_best_epoch_using_dev_score:
                         validation_scores = (train_loss,)
 
-                        if epoch_train_loss < best_epoch_score:
+                        if train_loss < best_epoch_score:
                             current_epoch_has_best_model_so_far = True
                             best_epoch_score = train_loss
 
@@ -737,14 +789,14 @@ class ModelTrainer(Pluggable):
 
                     if save_best_model and current_epoch_has_best_model_so_far:
                         log.info("saving best model")
-                        self.model.save(base_path / "best-model.pt", checkpoint=save_optimizer_state)
+                        self._save_model(base_path / "best-model.pt", checkpoint=save_optimizer_state)
 
                 # - SWAPlugin -> restores SGD weights from SWA
                 self.dispatch("after_training_loop")
 
                 # if we do not use dev data for model selection, save final model
                 if save_final_model:
-                    self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
 
             except KeyboardInterrupt:
                 log_line(log)
@@ -754,7 +806,7 @@ class ModelTrainer(Pluggable):
 
                 if save_final_model:
                     log.info("Saving model ...")
-                    self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
 
             except TrainingInterrupt as exc:
@@ -765,7 +817,7 @@ class ModelTrainer(Pluggable):
 
                 if save_final_model:
                     log.info("Saving model ...")
-                    self.model.save(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
                 log.info("Done.")
 
             except Exception:
@@ -783,7 +835,7 @@ class ModelTrainer(Pluggable):
 
                 if (base_path / "best-model.pt").exists():
                     log.info("Loading model from best epoch ...")
-                    self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
+                    self._load_model(base_path / "best-model.pt")
                 else:
                     log.info("Testing using last state of model ...")
 
@@ -808,7 +860,7 @@ class ModelTrainer(Pluggable):
             else:
                 if (base_path / "best-model.pt").exists():
                     log.info("Loading model from best epoch ...")
-                    self.model.load_state_dict(self.model.load(base_path / "best-model.pt").state_dict())
+                    self._load_model(base_path / "best-model.pt")
                 self.return_values["test_score"] = 0
                 log.info("Test data not provided setting final score to 0")
 
@@ -905,3 +957,12 @@ class ModelTrainer(Pluggable):
 
     def _record(self, metric):
         self.dispatch("metric_recorded", metric)
+
+    def _load_model(self, model_file: Union[str, Path]) -> None:
+        self.model.load_state_dict(self.model.load(model_file).state_dict())
+
+    def _save_model(self, model_file: Union[str, Path], checkpoint: bool = False) -> None:
+        if is_main_process():
+            self.model.save(model_file, checkpoint)
+        if torch.distributed.is_initialized():
+            torch.distributed.barrier()  # Prevent any process from loading a model until writing is complete

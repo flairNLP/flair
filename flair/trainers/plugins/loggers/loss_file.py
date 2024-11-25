@@ -113,3 +113,7 @@ class LossFilePlugin(TrainerPlugin):
                 f.write("\t".join([str(self.current_row[col]) for col in self.headers]) + "\n")
 
             self.current_row = {}
+
+    @property
+    def attach_to_all_processes(self) -> bool:
+        return False

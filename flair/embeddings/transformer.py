@@ -1356,7 +1356,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
         # do not switch the attention implementation upon reload.
         config_dict["attn_implementation"] = self.model.config._attn_implementation
-        del config_dict["_attn_implementation_autoset"]
+        config_dict.pop("_attn_implementation_autoset", None)
 
         super_params = super().to_params()
 

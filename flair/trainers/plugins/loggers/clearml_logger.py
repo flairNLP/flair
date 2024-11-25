@@ -40,3 +40,7 @@ class ClearmlLoggerPlugin(TrainerPlugin):
             self.logger.report_text(record.value, print_console=False)
         elif record.is_histogram:
             self.logger.report_histogram(record_name, record_name, record.value, record.global_step)
+
+    @property
+    def attach_to_all_processes(self) -> bool:
+        return False
