@@ -643,7 +643,7 @@ document.write(`
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.get_items">
-<span class="sig-name descname"><span class="pre">get_items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/data.py#L124-L128"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_items" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/data.py#L124-L125"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_items" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
@@ -653,13 +653,33 @@ document.write(`
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.get_item_for_index">
-<span class="sig-name descname"><span class="pre">get_item_for_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/data.py#L133-L134"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_item_for_index" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">get_item_for_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/data.py#L130-L131"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_item_for_index" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.data.Dictionary.has_item">
+<span class="sig-name descname"><span class="pre">has_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/data.py#L133-L134"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.has_item" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.set_start_stop_tags">
 <span class="sig-name descname"><span class="pre">set_start_stop_tags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/data.py#L136-L138"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.set_start_stop_tags" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.is_span_prediction_problem">
@@ -1776,6 +1796,7 @@ label value (relevant for class-dependent label noise simulation).</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.data.Dictionary.get_idx_for_items"><code class="docutils literal notranslate"><span class="pre">Dictionary.get_idx_for_items()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.data.Dictionary.get_items"><code class="docutils literal notranslate"><span class="pre">Dictionary.get_items()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.data.Dictionary.get_item_for_index"><code class="docutils literal notranslate"><span class="pre">Dictionary.get_item_for_index()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.data.Dictionary.has_item"><code class="docutils literal notranslate"><span class="pre">Dictionary.has_item()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.data.Dictionary.set_start_stop_tags"><code class="docutils literal notranslate"><span class="pre">Dictionary.set_start_stop_tags()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.data.Dictionary.is_span_prediction_problem"><code class="docutils literal notranslate"><span class="pre">Dictionary.is_span_prediction_problem()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.data.Dictionary.start_stop_tags_are_set"><code class="docutils literal notranslate"><span class="pre">Dictionary.start_stop_tags_are_set()</span></code></a></li>
