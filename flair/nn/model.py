@@ -877,9 +877,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                         filtered_indices = []
                         has_unknown_label = False
                         for idx, dp in enumerate(data_points):
-                            if all(
-                                label in self.label_dictionary.get_items() for label in self._get_label_of_datapoint(dp)
-                            ):
+                            if all(self.label_dictionary.has_item(label) for label in self._get_label_of_datapoint(dp)):
                                 filtered_indices.append(idx)
                             else:
                                 has_unknown_label = True
