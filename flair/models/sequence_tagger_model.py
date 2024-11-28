@@ -208,8 +208,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         self.calculate_sample_metrics = calculate_sample_metrics
 
         if self.calculate_and_log_metrics:
-            self.metrics_list = ['confidence','variability','correctness','msp','BvSB','cross_entropy','entropy','iter_norm','pehist']
-            self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness_sum','last_iteration','hist_prediction']
+            self.metrics_list = ['confidence','variability','correctness','msp','BvSB','cross_entropy','entropy','iter_norm','pehist','mild_m','mild_f','mild']
+            self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness_sum','last_iteration','hist_prediction', 'hist_MILD']
             self.max_certainty = -np.log(1.0 / float(self.tagset_size))
 
         self.print_out_path = None
@@ -298,7 +298,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 history_metrics_dict[metric].extend(metric_list)
 
         for metric in self.metrics_history_variables_list:
-            if metric == "hist_prediction":
+            if metric == "hist_prediction" or metric == "hist_MILD":
                 history_metrics_dict[metric] = torch.stack(history_metrics_dict[metric], dim=0)
 
             else:
@@ -317,7 +317,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                             "clean\t" + 
                             "noisy_flag\t")
                 for metric in self.metrics_history_variables_list:
-                    if metric == "hist_prediction":
+                    if metric == "hist_prediction"or metric == "hist_MILD":
                         continue
                     outfile.write(f"{metric}\t")
                 for metric in self.metrics_list:
@@ -335,6 +335,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     dp.set_metric('last_correctness_sum', 0 )
                     dp.set_metric('last_iteration', 0 )
                     dp.set_metric("hist_prediction", torch.zeros(17, device=flair.device))
+                    dp.set_metric("hist_MILD", torch.zeros(1, device=flair.device))
+
     
     def _log_metrics(self, epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, gold_labels, clean_labels):
         i=0
@@ -379,6 +381,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     token.set_metric('last_correctness_sum', updated_history_metrics_dict['last_correctness_sum'][i].item() )
                     token.set_metric('last_iteration',updated_history_metrics_dict['last_iteration'][i].item() )
                     token.set_metric("hist_prediction", updated_history_metrics_dict["hist_prediction"][i])
+                    token.set_metric("hist_MILD", updated_history_metrics_dict["hist_MILD"][i])
                     # new dp properties: last_iter; last_pred; last_conf, last_sq_sum   
                     i+=1 
                     token_ind+=1
@@ -428,11 +431,31 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         pe_hist_entropy = -torch.sum(temp2, dim=-1)  # sum over all labels.
         pe_hist_entropy = pe_hist_entropy / self.max_certainty
         pe_hist_entropy[pe_hist_entropy == 0] = 0.0
+
+        mild_history = history_metrics_dict["hist_MILD"]
+        prediction_correct = (pred == gold_labels).int()
+        mild_history_new = torch.column_stack((mild_history, prediction_correct))
+
+        mild_m_list = []
+        mild_f_list = []
+        mild_list = []
+
+        for i, x in enumerate(mild_history_new.cpu().numpy()):
+            mild_m = self.mild_m(x)
+            mild_m_list.append(mild_m)
+            mild_f = self.mild_f(x)
+            mild_f_list.append(mild_f)
+            mild = mild_m - mild_f
+            mild_list.append(mild)
+
+        mild_f_tensor = torch.tensor(mild_f_list)
+        mild_m_tensor = torch.tensor(mild_m_list)
+        mild_tensor = torch.tensor(mild_list)
         entropy = -torch.sum(torch.mul(softmax, torch.log(softmax)), dim=-1)
 
         # calculate cross entropy for each data point
         cross_entropy = torch.nn.functional.nll_loss(torch.log(softmax), gold_labels, reduction='none')
-        metrics_dict = {'confidence':confidence, 'BvSB':BvSB, 'msp':msp,'correctness':correctness, 'iter_norm':iter_norm, 'entropy':entropy, 'cross_entropy':cross_entropy,'variability':variability,'pehist':pe_hist_entropy}
+        metrics_dict = {'confidence':confidence, 'BvSB':BvSB, 'msp':msp,'correctness':correctness, 'iter_norm':iter_norm, 'entropy':entropy, 'cross_entropy':cross_entropy,'variability':variability,'pehist':pe_hist_entropy,'mild_m':mild_m_tensor,'mild_f':mild_f_tensor,'mild':mild_tensor}
         
         #update history metrics
         updated_history_metrics_dict = {}
@@ -442,6 +465,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         updated_history_metrics_dict['last_sq_difference_sum'] = sq_difference_sum
         updated_history_metrics_dict['last_correctness_sum'] = correctness_sum
         updated_history_metrics_dict["hist_prediction"] = pehist
+        updated_history_metrics_dict["hist_MILD"] = mild_history_new
+        
         return pred, metrics_dict, updated_history_metrics_dict
 
     def _convert_bioes_to_bio(self, label_indices):
