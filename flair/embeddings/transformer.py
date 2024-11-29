@@ -33,12 +33,7 @@ from transformers.utils import PaddingStrategy
 
 import flair
 from flair.data import Sentence, Token, log
-from flair.embeddings.base import (
-    DocumentEmbeddings,
-    Embeddings,
-    TokenEmbeddings,
-    register_embeddings,
-)
+from flair.embeddings.base import DocumentEmbeddings, Embeddings, TokenEmbeddings, register_embeddings
 
 SENTENCE_BOUNDARY_TAG: str = "[FLERT]"
 
@@ -198,7 +193,12 @@ def fill_mean_token_embeddings(
 
 
 @torch.jit.script_if_tracing
-def document_mean_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor):
+def document_cls_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor) -> torch.Tensor:
+    return sentence_hidden_states[torch.arange(sentence_hidden_states.shape[0]), sentence_lengths - 1]
+
+
+@torch.jit.script_if_tracing
+def document_mean_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor) -> torch.Tensor:
     result = torch.zeros(
         sentence_hidden_states.shape[0], sentence_hidden_states.shape[2], dtype=sentence_hidden_states.dtype
     )
@@ -206,15 +206,19 @@ def document_mean_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths
     for i in torch.arange(sentence_hidden_states.shape[0]):
         result[i] = sentence_hidden_states[i, : sentence_lengths[i]].mean(dim=0)
 
+    return result
+
 
 @torch.jit.script_if_tracing
-def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor):
+def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths: torch.Tensor) -> torch.Tensor:
     result = torch.zeros(
         sentence_hidden_states.shape[0], sentence_hidden_states.shape[2], dtype=sentence_hidden_states.dtype
     )
 
     for i in torch.arange(sentence_hidden_states.shape[0]):
         result[i], _ = sentence_hidden_states[i, : sentence_lengths[i]].max(dim=0)
+
+    return result
 
 
 def _legacy_reconstruct_word_ids(
@@ -1127,11 +1131,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         if peft_config is not None:
             # add adapters for finetuning
             try:
-                from peft import (
-                    TaskType,
-                    get_peft_model,
-                    prepare_model_for_kbit_training,
-                )
+                from peft import TaskType, get_peft_model, prepare_model_for_kbit_training
             except ImportError:
                 log.error("You cannot use the PEFT finetuning without peft being installed")
                 raise
@@ -1446,9 +1446,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             else:
                 assert sub_token_lengths is not None
                 if self.cls_pooling == "cls":
-                    document_embeddings = sentence_hidden_states[
-                        torch.arange(sentence_hidden_states.shape[0]), sub_token_lengths - 1
-                    ]
+                    document_embeddings = document_cls_pooling(sentence_hidden_states, sub_token_lengths)
                 elif self.cls_pooling == "mean":
                     document_embeddings = document_mean_pooling(sentence_hidden_states, sub_token_lengths)
                 elif self.cls_pooling == "max":
