@@ -19,11 +19,11 @@ class BaseEmbeddingsTest:
     name_field: Optional[str] = None
     weired_texts: list[str] = [
         "Hybrid mesons , qq ̄ states with an admixture",
-        "typical proportionalities of \u223c 1nmV \u2212 1 [ 3,4 ] .",
+        "typical proportionalities of \u223C 1nmV \u2212 1 [ 3,4 ] .",
         "🤟 🤟  🤟 hüllo",
         "🤟hallo 🤟 🤟 🤟 🤟",
         "🤟",
-        "\uf8f9",
+        "\uF8F9",
     ]
 
     def create_embedding_from_name(self, name: str):
@@ -150,17 +150,9 @@ class BaseEmbeddingsTest:
 
         if self.is_token_embedding:
             for token_old, token_new in zip(sentence_old, sentence_new):
-                assert torch.allclose(
-                    token_old.get_embedding(names_old),
-                    token_new.get_embedding(names_new),
-                    atol=1e-6,
-                )
+                assert (token_old.get_embedding(names_old) == token_new.get_embedding(names_new)).all()
         if self.is_document_embedding:
-            assert torch.allclose(
-                sentence_old.get_embedding(names_old),
-                sentence_new.get_embedding(names_new),
-                atol=1e-6,
-            )
+            assert (sentence_old.get_embedding(names_old) == sentence_new.get_embedding(names_new)).all()
 
     def test_default_embeddings_stay_the_same_after_saving_and_loading(self):
         embeddings = self.create_embedding_with_args(self.default_args)
@@ -184,17 +176,9 @@ class BaseEmbeddingsTest:
 
         if self.is_token_embedding:
             for token_old, token_new in zip(sentence_old, sentence_new):
-                assert torch.allclose(
-                    token_old.get_embedding(names_old),
-                    token_new.get_embedding(names_new),
-                    atol=1e-6,
-                )
+                assert (token_old.get_embedding(names_old) == token_new.get_embedding(names_new)).all()
         if self.is_document_embedding:
-            assert torch.allclose(
-                sentence_old.get_embedding(names_old),
-                sentence_new.get_embedding(names_new),
-                atol=1e-6,
-            )
+            assert (sentence_old.get_embedding(names_old) == sentence_new.get_embedding(names_new)).all()
 
     def test_embeddings_load_in_eval_mode(self):
         embeddings = self.create_embedding_with_args(self.default_args)
