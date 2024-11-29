@@ -1,0 +1,421 @@
+@charset "UTF-8";
+
+.bd-main .bd-content .bd-article-container {
+	max-width: initial;
+	padding: 4rem 30% 4rem 5rem;
+	box-sizing: border-box;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article {
+	padding: 0;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article *:not(pre) {
+	word-break: break-word;
+	overflow-wrap: break-word;
+	white-space: normal;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .headerlink {
+	display: none;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article h1 {
+	font-size: 3rem;
+	color: var(--blue-white);
+	font-weight: 600;
+	margin-top: 0.5em;
+	word-break: break-word;
+	overflow-wrap: break-word;
+	white-space: normal;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article h2 {
+	font-size: 1.6rem;
+	color: var(--blue-white);
+	font-weight: 600;
+	margin-top: 2em;
+	word-break: break-word;
+	overflow-wrap: break-word;
+	white-space: normal;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article h3 {
+	font-size: 1.2rem;
+	color: var(--blue-white);
+	font-weight: 600;
+	margin-top: 2em;
+	word-break: break-word;
+	overflow-wrap: break-word;
+	white-space: normal;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article p {
+	color: var(--blue-white);
+	margin: 0.4em 0 0.9em 0;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article ul {
+	list-style-type: "»";
+	margin-left: .6em;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article ul li {
+	padding-left: .3em;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article ul ::marker {
+	color: var(--blue-white);
+	font-size: inherit;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight {
+	background: transparent;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre {
+	font-family: "Source Code Pro", monospace;
+	padding: 1.1em 1.5em;
+	border-radius: 1rem;
+	background: var(--gray-dark-blue);
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .nn, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .n, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .o, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .p, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .kp {
+	color: var(--blue-white);
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .kn, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .k, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .ow, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .kc {
+	color: #CF8E6D;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .nb {
+	color: #8888C6;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .nf {
+	color: #56A8F5;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .c1 {
+	color: #7A7E85;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .s1, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .s2, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .sa, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .si {
+	color: #6AAB73;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .mi, .bd-main .bd-content .bd-article-container .bd-article .highlight-python .highlight pre .mf {
+	color: #2AACB8;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article [class^="highlight-"]:not(.highlight-python) * {
+	color: var(--blue-white);
+}
+
+.bd-main .bd-content .bd-article-container .bd-article [class^="highlight-"]:not(.highlight-python) .highlight {
+	background: transparent;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article [class^="highlight-"]:not(.highlight-python) pre {
+	font-family: "Source Code Pro", monospace;
+	border-radius: 1rem;
+	padding: 1.1em 1.5em;
+	background: var(--gray-dark-blue);
+	color: var(--blue-white);
+}
+
+.bd-main .bd-content .bd-article-container .bd-article [class^="highlight-"]:not(.highlight-python) pre .go {
+	font-size: inherit;
+	padding-right: 1.1em;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .admonition, .bd-main .bd-content .bd-article-container .bd-article div.admonition, .bd-main .bd-content .bd-article-container .bd-article .admonition.note, .bd-main .bd-content .bd-article-container .bd-article div.admonition.note {
+	box-shadow: none !important;
+	background: linear-gradient(180deg, var(--flair-orange) 0, var(--flair-orange) 2rem, var(--white-blue) 2rem, var(--white-blue) 100%);
+	border: 2px var(--flair-orange) solid;
+	border-radius: 1rem;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .admonition p.admonition-title, .bd-main .bd-content .bd-article-container .bd-article div.admonition p.admonition-title, .bd-main .bd-content .bd-article-container .bd-article .admonition.note p.admonition-title, .bd-main .bd-content .bd-article-container .bd-article div.admonition.note p.admonition-title {
+	background: var(--flair-orange);
+	border-radius: 0 0 1rem 1rem;
+	margin: 0;
+	font-size: 1.5rem;
+	font-weight: 400;
+	padding: 0.5em 2.2em;
+	position: relative;
+	line-height: 1em;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .admonition p.admonition-title::before, .bd-main .bd-content .bd-article-container .bd-article div.admonition p.admonition-title::before, .bd-main .bd-content .bd-article-container .bd-article .admonition.note p.admonition-title::before, .bd-main .bd-content .bd-article-container .bd-article div.admonition.note p.admonition-title::before {
+	content: none;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .admonition p.admonition-title::after, .bd-main .bd-content .bd-article-container .bd-article div.admonition p.admonition-title::after, .bd-main .bd-content .bd-article-container .bd-article .admonition.note p.admonition-title::after, .bd-main .bd-content .bd-article-container .bd-article div.admonition.note p.admonition-title::after {
+	color: white;
+	margin-left: 0.4em;
+	font-size: 0.9em;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .admonition p:not(.admonition-title), .bd-main .bd-content .bd-article-container .bd-article div.admonition p:not(.admonition-title), .bd-main .bd-content .bd-article-container .bd-article .admonition.note p:not(.admonition-title), .bd-main .bd-content .bd-article-container .bd-article div.admonition.note p:not(.admonition-title) {
+	padding: 0.5em 2.2em 0.25em 3.3em;
+}
+
+.bd-main .bd-content .bd-article-container .bd-article .admonition [class^="highlight-"], .bd-main .bd-content .bd-article-container .bd-article div.admonition [class^="highlight-"], .bd-main .bd-content .bd-article-container .bd-article .admonition.note [class^="highlight-"], .bd-main .bd-content .bd-article-container .bd-article div.admonition.note [class^="highlight-"] {
+	margin-bottom: 0.7rem;
+}
+
+.header-article-items.header-article__inner {
+	padding: 0;
+}
+
+ul.bd-breadcrumbs {
+	word-break: break-word;
+	overflow-wrap: break-word;
+	white-space: normal;
+}
+
+ul.bd-breadcrumbs li.breadcrumb-home .fa-home::before {
+	content: "Home";
+	font-family: "Afacad", sans-serif;
+	font-size: 1rem;
+	font-weight: 400;
+	color: var(--blue-white);
+	transition: color 200ms ease-in-out;
+}
+
+ul.bd-breadcrumbs li.breadcrumb-home a:hover .fa-home::before {
+	color: var(--flair-orange);
+}
+
+ul.bd-breadcrumbs li.breadcrumb-item:not(.breadcrumb-home)::before {
+	content: "";
+	width: 1px;
+	height: 1rem;
+	background: var(--blue-white);
+	display: inline-block;
+	padding: 0;
+	transform: rotate(30deg);
+	margin: 0 .6rem;
+}
+
+ul.bd-breadcrumbs li.breadcrumb-item:not(.breadcrumb-home) a {
+	color: var(--blue-white);
+	font-size: 1rem;
+	font-weight: 400;
+}
+ul.bd-breadcrumbs li.breadcrumb-item:not(.breadcrumb-home) i {
+	color: var(--blue-white);
+}
+
+
+ul.bd-breadcrumbs li.breadcrumb-item:not(.breadcrumb-home) a:hover {
+	color: var(--flair-orange);
+}
+
+ul.bd-breadcrumbs li.breadcrumb-item:not(.breadcrumb-home).active {
+	color: var(--blue-white);
+	font-size: 1rem;
+	font-weight: 400;
+}
+
+table.table {
+	border-collapse: collapse;
+	border-radius: 1rem;
+	box-shadow: 0 0 0 2px var(--blue-white);
+}
+
+table.table tr:not(:last-of-type), table.table tr:has(th) {
+	border-bottom: 2px var(--blue-white) solid;
+}
+
+table.table tr th {
+	font-weight: 600;
+}
+
+table.table tr th, table.table tr td {
+	padding: .4em .2em 0 .2em;
+}
+
+table.table tr th:first-of-type, table.table tr td:first-of-type {
+	padding-left: .5em;
+}
+
+table.table tr th:last-of-type, table.table tr td:last-of-type {
+	padding-right: .5em;
+}
+
+.docutils, .docutils.literal {
+	border: none;
+	background: transparent;
+	border-radius: 0.5em;
+	font-weight: 400;
+	font-family: "Source Code Pro", monospace;
+	font-size: 0.8em;
+	color: var(--blue-white);
+	position: relative;
+	z-index: 1;
+	display: inline-block;
+}
+
+.docutils::before, .docutils.literal::before {
+	content: "";
+	width: 100%;
+	height: 90%;
+	top: 50%;
+	left: 0;
+	transform: translateY(-50%);
+	border-radius: 0.5em;
+	border: 2px var(--blue-white) solid;
+	position: absolute;
+}
+
+.reference .docutils, .reference .docutils.literal {
+	transition: color 200ms ease-in-out;
+}
+
+.reference .docutils:hover, .reference .docutils.literal:hover {
+	color: white;
+}
+
+.reference .docutils:hover::before, .reference .docutils.literal:hover::before {
+	background: var(--flair-orange);
+}
+
+.reference .docutils::before, .reference .docutils.literal::before {
+	z-index: -1;
+	border-color: var(--flair-orange);
+	transition: background-color 200ms ease-in-out;
+}
+
+#flair-tutorials li, #api-docs li, #contributing li, [id^="tutorial"] li, [id^="flair"] li {
+	list-style-type: "»" !important;
+	padding-left: 0.25em;
+	margin-top: .5em;
+}
+
+#flair-tutorials li ::marker, #api-docs li ::marker, #contributing li ::marker, [id^="tutorial"] li ::marker, [id^="flair"] li ::marker {
+	color: var(--blue-white);
+	font-size: 1.2rem;
+}
+
+#flair-tutorials .toctree-wrapper li[class^="toctree-l"], #api-docs .toctree-wrapper li[class^="toctree-l"], #contributing .toctree-wrapper li[class^="toctree-l"], [id^="tutorial"] .toctree-wrapper li[class^="toctree-l"], [id^="flair"] .toctree-wrapper li[class^="toctree-l"] {
+	margin-top: .5em;
+}
+
+#flair-tutorials .toctree-wrapper li[class^="toctree-l"]::marker, #api-docs .toctree-wrapper li[class^="toctree-l"]::marker, #contributing .toctree-wrapper li[class^="toctree-l"]::marker, [id^="tutorial"] .toctree-wrapper li[class^="toctree-l"]::marker, [id^="flair"] .toctree-wrapper li[class^="toctree-l"]::marker {
+	font-size: 1.2rem !important;
+}
+
+#flair-tutorials .toctree-wrapper li[class^="toctree-l"] > a, #api-docs .toctree-wrapper li[class^="toctree-l"] > a, #contributing .toctree-wrapper li[class^="toctree-l"] > a, [id^="tutorial"] .toctree-wrapper li[class^="toctree-l"] > a, [id^="flair"] .toctree-wrapper li[class^="toctree-l"] > a {
+	font-size: 1.2rem;
+}
+
+#flair-tutorials .docutils:not(.py), #api-docs .docutils:not(.py), #contributing .docutils:not(.py), [id^="tutorial"] .docutils:not(.py), [id^="flair"] .docutils:not(.py) {
+	color: var(--flair-orange);
+}
+
+#flair-tutorials .docutils:not(.py):hover, #api-docs .docutils:not(.py):hover, #contributing .docutils:not(.py):hover, [id^="tutorial"] .docutils:not(.py):hover, [id^="flair"] .docutils:not(.py):hover {
+	color: var(--flair-orange-light);
+}
+
+#flair-tutorials .docutils:not(.py)::before, #api-docs .docutils:not(.py)::before, #contributing .docutils:not(.py)::before, [id^="tutorial"] .docutils:not(.py)::before, [id^="flair"] .docutils:not(.py)::before {
+	content: none;
+}
+
+#flair-tutorials .docutils:not(.py) .pre, #api-docs .docutils:not(.py) .pre, #contributing .docutils:not(.py) .pre, [id^="tutorial"] .docutils:not(.py) .pre, [id^="flair"] .docutils:not(.py) .pre {
+	font-family: "Afacad", sans-serif;
+	text-overflow: ellipsis;
+	font-size: 1.2rem;
+}
+
+@media screen and (max-width: 700px) {
+	.bd-article-container {
+		padding: 3rem !important;
+	}
+
+	.admonition p, div.admonition p, .admonition.note p, div.admonition.note p {
+		padding-left: 1rem !important;
+	}
+
+	.admonition p.admonition-title, div.admonition p.admonition-title, .admonition.note p.admonition-title, div.admonition.note p.admonition-title {
+		padding-left: 1rem !important;
+	}
+
+	.admonition p.admonition-title::after, div.admonition p.admonition-title::after, .admonition.note p.admonition-title::after, div.admonition.note p.admonition-title::after {
+		position: relative;
+		left: -0.1rem;
+	}
+
+	.deprecated {
+		padding-left: 1rem !important;
+	}
+
+	.deprecated .deprecated {
+		padding-left: 0 !important;
+	}
+
+	.deprecated::before {
+		position: relative !important;
+	}
+}
+
+@media screen and (max-width: 500px) {
+	#flair-tutorials .toctree-wrapper li[class^="toctree-l"] > a, #flair-tutorials .toctree-wrapper li[class^="toctree-l"] > a span, #api-docs .toctree-wrapper li[class^="toctree-l"] > a, #api-docs .toctree-wrapper li[class^="toctree-l"] > a span, #contributing .toctree-wrapper li[class^="toctree-l"] > a, #contributing .toctree-wrapper li[class^="toctree-l"] > a span, [id^="tutorial"] .toctree-wrapper li[class^="toctree-l"] > a, [id^="tutorial"] .toctree-wrapper li[class^="toctree-l"] > a span, [id^="flair"] .toctree-wrapper li[class^="toctree-l"] > a, [id^="flair"] .toctree-wrapper li[class^="toctree-l"] > a span {
+		font-size: 1rem !important;
+	}
+
+	.toctree-wrapper li[class^="toctree-l"] > ul {
+		padding-inline-start: 0;
+	}
+
+	.bd-article-container {
+		padding: 2rem !important;
+	}
+}
+
+@media screen and (max-width: 1200px) {
+	.bd-main .bd-content .bd-article-container .bd-article h1 {
+		font-size: 2rem;
+	}
+
+	.bd-main .bd-content .bd-article-container .bd-article h2 {
+		font-size: 1.2rem;
+	}
+
+	.bd-main .bd-content .bd-article-container .bd-article h3 {
+		font-size: 1rem;
+	}
+
+	.bd-article-container {
+		padding: 4rem;
+	}
+}
+
+@media screen and (max-width: 900px) {
+	.bd-main .bd-content .bd-article-container .bd-article h1 {
+		font-size: 1.6rem;
+	}
+
+	.bd-main .bd-content .bd-article-container .bd-article h2 {
+		font-size: 1rem;
+	}
+
+	.bd-main .bd-content .bd-article-container .bd-article h3 {
+		font-size: 1rem;
+	}
+
+	.bd-article-container {
+		padding: 4rem;
+	}
+
+	.bd-header-article {
+		margin-bottom: 3rem;
+	}
+
+	pre, pre * {
+		font-size: 0.8rem;
+	}
+}

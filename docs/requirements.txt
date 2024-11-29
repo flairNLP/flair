@@ -1,11 +1,12 @@
 sphinx-github-style<=1.0.2  # 1.0.3 changes logic that breaks with sphinx-multiversion
 sphinx-autodoc-typehints
 myst-parser
-sphinx
+sphinx<8.0.0
 importlib-metadata
 sphinx-multiversion
 pydata-sphinx-theme<0.14
 sphinx_design
+sphinx-autosummary-autocollect
 
 # previous dependencies that are required to build docs for later versions too.
 semver

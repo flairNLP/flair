@@ -168,7 +168,7 @@ from flair.data import MultiCorpus
 multi_corpus = MultiCorpus([english_corpus, german_corpus, dutch_corpus])
 ```
 
-The [`MultiCorpus`](#flair.data.MultiCorpus) inherits from `[`Corpus`](#flair.data.Corpus), so you can use it like any other corpus to train your models.
+The [`MultiCorpus`](#flair.data.MultiCorpus) inherits from [`Corpus`](#flair.data.Corpus), so you can use it like any other corpus to train your models.
 
 ## Datasets included in Flair
 
