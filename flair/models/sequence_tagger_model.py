@@ -26,6 +26,19 @@ from flair.training_utils import store_embeddings, Result
 
 log = logging.getLogger("flair")
 
+def calculate_mild_f(seq):
+    #seq = [0 if x == False else 1 for x in n.values ]
+    tmp = ''.join([str(int(item)) for item in seq])
+    tmp1 = [item for item in tmp.split('0') if item]
+    p1 = len(''.join(tmp1)) if len(tmp1) != 0 else 0
+    return p1
+
+def calculate_mild_m(seq):
+    #seq = [0 if x == False else 1 for x in n.values ]
+    tmp = ''.join([str(int(item)) for item in seq])
+    tmp2 = [item for item in tmp.split('1') if item]
+    p2 = len(''.join(tmp2)) if len(tmp2) != 0 else 0
+    return p2
 
 class SequenceTagger(flair.nn.Classifier[Sentence]):
     def __init__(
@@ -441,9 +454,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         mild_list = []
 
         for i, x in enumerate(mild_history_new.cpu().numpy()):
-            mild_m = self.mild_m(x)
+            mild_m = calculate_mild_m(x)
             mild_m_list.append(mild_m)
-            mild_f = self.mild_f(x)
+            mild_f = calculate_mild_f(x)
             mild_f_list.append(mild_f)
             mild = mild_m - mild_f
             mild_list.append(mild)
