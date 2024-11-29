@@ -1,0 +1,52 @@
+name: 'Build doc page for artifact'
+on:
+  push:
+    branches: "*"
+
+jobs:
+  build_docs:
+    name: Build the docs using Sphinx and publish as artifact
+    runs-on: ubuntu-latest
+    env:
+      python-version: 3.9
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: setup python ${{ env.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.python-version }}
+      - name: Install Torch cpu
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Install Flair dependencies
+        run: pip install -e .
+      - name: Install unittest dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Install doc dependencies
+        run: pip install -r docs/requirements.txt
+      - name: Fetch git tags
+        run: git fetch --tags origin
+      - name: Change config to current branch
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          sed -i 's/^smv_branch_whitelist = r"^master$"/smv_branch_whitelist = r"^${{ env.BRANCH_NAME }}$"/' docs/conf.py
+          sed -i 's/^smv_tag_whitelist = r"^v\d+\.\d+\.\d+$"/smv_tag_whitelist = "^$"/' docs/conf.py
+          cat docs/conf.py
+      - name: Build docs
+        run: |
+          sphinx-multiversion docs doc_build/
+      - name: Add redirect to stable doc
+        env:
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          cp assets/redirect.html doc_build/index.html
+          cp assets/redirect.html doc_build/404.html
+          cp assets/README.md doc_build/README.md
+          sed -i "s/\[VERSION\]/${{ env.BRANCH_NAME }}/g" doc_build/index.html
+          sed -i "s/\[VERSION\]/${{ env.BRANCH_NAME }}/g" doc_build/404.html
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: website
+          path: doc_build

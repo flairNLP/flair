@@ -1,0 +1,213 @@
+.sidebar-primary-item .docutils::before {
+	content: none;
+}
+
+.sidebar-primary-item .docutils .pre {
+	font-family: "Afacad", sans-serif;
+	font-size: 1rem;
+	text-overflow: ellipsis;
+}
+
+.sig {
+	color: var(--blue-white);
+	font-family: "Source Code Pro", monospace;
+	line-height: 2em;
+	word-break: break-word;
+	overflow-wrap: break-word;
+	white-space: normal;
+}
+
+.sig span.pre {
+	word-break: break-word;
+	overflow-wrap: break-word;
+	white-space: normal;
+}
+
+.sig .linkcode-link {
+	padding: 0;
+	display: inline-block;
+	width: 1rem;
+	height: 1rem;
+	transform: translateY(10%) scale(1.5);
+}
+
+.sig .linkcode-link .pre {
+	display: none;
+}
+
+.sig .linkcode-link::after {
+	content: "";
+	background-image: url("../../_static/octocat.svg");
+	background-size: cover;
+	display: inline-block;
+	width: 100%;
+	height: 100%;
+}
+
+.sig-name.descname {
+	color: var(--flair-orange);
+}
+
+.sig {
+	margin-top: 2rem;
+	margin-bottom: .5em;
+	padding-bottom: .5em;
+	padding-top: .5em;
+}
+
+.sig:target {
+	background: rgba(47, 46, 65, 0.15);
+	border-radius: .5rem;
+}
+
+:root .dark-mode .sig:target {
+	background: rgba(255, 255, 255, 0.15);
+}
+
+.class dd, .method dd, .function dd, .data dd {
+	margin-left: 0 !important;
+	padding-left: 3rem !important;
+	border-left: 2px var(--gray-white) solid;
+}
+
+.class dd dl.field-list, .method dd dl.field-list, .function dd dl.field-list, .data dd dl.field-list {
+	background-color: transparent;
+	border: 2px var(--flair-orange) solid;
+	border-radius: 1rem;
+	padding: 1rem 1.5rem;
+}
+
+.class dd dl.field-list ul, .method dd dl.field-list ul, .function dd dl.field-list ul, .data dd dl.field-list ul {
+	padding-left: 0 !important;
+}
+
+.class dd dl.field-list dt, .method dd dl.field-list dt, .function dd dl.field-list dt, .data dd dl.field-list dt {
+	background-color: transparent !important;
+	color: var(--blue-white);
+	font-weight: 600;
+	font-size: 1.5rem;
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+.class dd dl.field-list dd, .method dd dl.field-list dd, .function dd dl.field-list dd, .data dd dl.field-list dd {
+	margin: 0 !important;
+	padding: 0 !important;
+	border-left: none;
+}
+
+.class .n, .method .n, .function .n, .data .n {
+	color: #2AACB8;
+}
+
+.class .default_value, .method .default_value, .function .default_value, .data .default_value {
+	color: #8888C6;
+}
+
+div.deprecated {
+	box-shadow: none !important;
+	background: var(--error-red);
+	border: 2px var(--error-red) solid;
+	border-radius: 1rem;
+	padding: 0.5em 2.2em 0 2.2em;
+	box-sizing: border-box;
+}
+
+div.deprecated p span.versionmodified.deprecated::before {
+	color: white;
+}
+
+div.deprecated p::before {
+	content: none;
+}
+
+a.github::before {
+	content: "";
+	height: 1em;
+	width: 1em;
+	display: inline-block;
+	background-image: url("../../_static/octocat.svg");
+	background-size: contain;
+	background-position: center;
+	transform: translateY(25%);
+}
+
+blockquote {
+	font-family: "Source Code Pro", monospace;
+	border-radius: 1rem;
+	padding: 1.1em 1.5em;
+	background: var(--gray-dark-blue);
+	color: var(--blue-white);
+}
+
+blockquote::before {
+	content: none;
+}
+
+blockquote p {
+	margin: 0 !important;
+}
+
+.rubric {
+	font-size: 2rem;
+	margin: 1em 0 .5em 0 !important;
+	border-bottom: none !important;
+}
+
+table.autosummary {
+	margin-top: 1.5em;
+}
+
+table.autosummary .field-list {
+	margin-bottom: 0.5rem;
+	display: flex !important;
+	font-size: 1rem;
+}
+
+table.autosummary .field-list *:not(code) {
+	font-size: inherit !important;
+}
+
+table .field-odd, table .field-even {
+	color: var(--blue-white);
+	font-family: "Afacad", sans-serif;
+}
+
+table .field-odd p, table .field-even p {
+	margin: 0 !important;
+}
+
+table p:empty {
+	display: none;
+}
+
+
+@media screen and (max-width: 1200px) {
+	.class dd, .method dd, .function dd, .data dd {
+		padding-left: 1.5rem !important;
+	}
+}
+
+@media screen and (max-width: 900px) {
+	.sig, .sig * {
+		font-size: .8rem;
+	}
+
+	.class dd dl.field-list, .method dd dl.field-list, .function dd dl.field-list, .data dd dl.field-list {
+		padding: 1rem;
+	}
+}
+
+@media screen and (max-width: 400px) {
+	dl * {
+		font-size: .8rem !important;
+	}
+
+	dl code {
+		font-size: .6rem !important;
+	}
+
+	.class dd, .method dd, .function dd, .data dd {
+		padding-left: 1rem !important;
+	}
+}

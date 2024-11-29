@@ -1,4 +1,5 @@
 # noqa: INP001
+import inspect
 
 import importlib_metadata
 
@@ -27,21 +28,18 @@ html_context = {
 }  # dummy value that sphinx-github-style won't crash when run in temp folder.
 
 html_theme_options = {
-    "navbar_end": ["theme-switcher", "version-switcher", "navbar-icon-links"],
-    "github_url": linkcode_url,
-    "icon_links": [
-        {
-            "name": "PyPI",
-            "url": "https://pypi.org/project/flair",
-            "icon": "fas fa-box",
-        },
-    ],
+    "navbar_end": ["darkmode-toggle", "version-switcher", "navbar-icon-links"],
+    "show_prev_next": False,
+    "footer_end": ["footer-links/legal-notice.html", "footer-links/x.html", "footer-links/linkedin.html"],
+    "secondary_sidebar_items": []
 }
 
 
 def linkcode_resolve(*args):
+    app = inspect.currentframe().f_back.f_locals.get("app")
+    current_version = app.config.smv_current_version
     # use smv_current_version as the git url
-    real_linkcode_url = linkcode_url + f"/blob/{smv_current_version}/" + "{filepath}#L{linestart}-L{linestop}"
+    real_linkcode_url = linkcode_url + f"/blob/{current_version}/" + "{filepath}#L{linestart}-L{linestop}"
     return get_linkcode_resolve(real_linkcode_url)(*args)
 
 
@@ -56,13 +54,15 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.napoleon",  # to render Google format docstrings
     "sphinx.ext.githubpages",
+    "sphinx_autosummary_autocollect",
     "myst_parser",
     "sphinx_github_style",
     "sphinx_autodoc_typehints",
     "sphinx_multiversion",
     "sphinx_design",
 ]
-
+autosummary_generate = True
+autosummary_ignore_module_all = False
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -82,6 +82,22 @@ html_theme = "pydata_sphinx_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_title = 'Flair Documentation'
+
+html_css_files = [
+    'css/main.css',
+    'css/header.css',
+    'css/footer.css',
+    'css/version-switcher.css',
+    'css/sidebar.css',
+    'css/tutorial.css',
+    'css/api.css',
+    'css/legal-notice.css',
+    'css/search.css',
+]
+
+html_logo = "_static/flair_logo_white.svg"
+html_show_sphinx = False
 
 # Napoleon settings
 napoleon_include_init_with_doc = True
@@ -103,9 +119,7 @@ source_suffix = {
 
 html_sidebars = {
     "**": [
-        "globaltoc.html",
-        "searchbox.html",
-        "versioning.html",
+        "globaltoc.html"
     ],
     "index": [],
 }
