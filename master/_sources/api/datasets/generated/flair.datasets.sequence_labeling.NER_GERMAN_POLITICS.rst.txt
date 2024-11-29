@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_GERMAN\_POLITICS
+=======================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_GERMAN_POLITICS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_GERMAN_POLITICS.__init__
+      ~NER_GERMAN_POLITICS.add_label_noise
+      ~NER_GERMAN_POLITICS.downsample
+      ~NER_GERMAN_POLITICS.filter_empty_sentences
+      ~NER_GERMAN_POLITICS.filter_long_sentences
+      ~NER_GERMAN_POLITICS.get_all_sentences
+      ~NER_GERMAN_POLITICS.get_label_distribution
+      ~NER_GERMAN_POLITICS.make_label_dictionary
+      ~NER_GERMAN_POLITICS.make_tag_dictionary
+      ~NER_GERMAN_POLITICS.make_vocab_dictionary
+      ~NER_GERMAN_POLITICS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_GERMAN_POLITICS.dev
+      ~NER_GERMAN_POLITICS.test
+      ~NER_GERMAN_POLITICS.train
+   
+   

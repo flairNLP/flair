@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.\_legacy\_reconstruct\_word\_ids
+=============================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: _legacy_reconstruct_word_ids

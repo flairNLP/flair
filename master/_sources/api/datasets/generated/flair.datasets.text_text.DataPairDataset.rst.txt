@@ -1,0 +1,23 @@
+﻿flair.datasets.text\_text.DataPairDataset
+=========================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: DataPairDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DataPairDataset.__init__
+      ~DataPairDataset.is_in_memory
+   
+   
+
+   
+   
+   

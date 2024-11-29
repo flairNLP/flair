@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_GERMAN\_HDT
+========================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_GERMAN_HDT
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_GERMAN_HDT.__init__
+      ~UD_GERMAN_HDT.add_label_noise
+      ~UD_GERMAN_HDT.downsample
+      ~UD_GERMAN_HDT.filter_empty_sentences
+      ~UD_GERMAN_HDT.filter_long_sentences
+      ~UD_GERMAN_HDT.get_all_sentences
+      ~UD_GERMAN_HDT.get_label_distribution
+      ~UD_GERMAN_HDT.make_label_dictionary
+      ~UD_GERMAN_HDT.make_tag_dictionary
+      ~UD_GERMAN_HDT.make_vocab_dictionary
+      ~UD_GERMAN_HDT.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_GERMAN_HDT.dev
+      ~UD_GERMAN_HDT.test
+      ~UD_GERMAN_HDT.train
+   
+   

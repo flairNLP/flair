@@ -1,0 +1,91 @@
+﻿flair.embeddings.legacy.CharLMEmbeddings
+========================================
+
+.. currentmodule:: flair.embeddings.legacy
+
+.. autoclass:: CharLMEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CharLMEmbeddings.__init__
+      ~CharLMEmbeddings.add_module
+      ~CharLMEmbeddings.apply
+      ~CharLMEmbeddings.bfloat16
+      ~CharLMEmbeddings.buffers
+      ~CharLMEmbeddings.children
+      ~CharLMEmbeddings.compile
+      ~CharLMEmbeddings.cpu
+      ~CharLMEmbeddings.cuda
+      ~CharLMEmbeddings.double
+      ~CharLMEmbeddings.embed
+      ~CharLMEmbeddings.eval
+      ~CharLMEmbeddings.extra_repr
+      ~CharLMEmbeddings.float
+      ~CharLMEmbeddings.forward
+      ~CharLMEmbeddings.from_params
+      ~CharLMEmbeddings.get_buffer
+      ~CharLMEmbeddings.get_extra_state
+      ~CharLMEmbeddings.get_instance_parameters
+      ~CharLMEmbeddings.get_names
+      ~CharLMEmbeddings.get_parameter
+      ~CharLMEmbeddings.get_submodule
+      ~CharLMEmbeddings.half
+      ~CharLMEmbeddings.ipu
+      ~CharLMEmbeddings.load_embedding
+      ~CharLMEmbeddings.load_state_dict
+      ~CharLMEmbeddings.modules
+      ~CharLMEmbeddings.mtia
+      ~CharLMEmbeddings.named_buffers
+      ~CharLMEmbeddings.named_children
+      ~CharLMEmbeddings.named_modules
+      ~CharLMEmbeddings.named_parameters
+      ~CharLMEmbeddings.parameters
+      ~CharLMEmbeddings.register_backward_hook
+      ~CharLMEmbeddings.register_buffer
+      ~CharLMEmbeddings.register_forward_hook
+      ~CharLMEmbeddings.register_forward_pre_hook
+      ~CharLMEmbeddings.register_full_backward_hook
+      ~CharLMEmbeddings.register_full_backward_pre_hook
+      ~CharLMEmbeddings.register_load_state_dict_post_hook
+      ~CharLMEmbeddings.register_load_state_dict_pre_hook
+      ~CharLMEmbeddings.register_module
+      ~CharLMEmbeddings.register_parameter
+      ~CharLMEmbeddings.register_state_dict_post_hook
+      ~CharLMEmbeddings.register_state_dict_pre_hook
+      ~CharLMEmbeddings.requires_grad_
+      ~CharLMEmbeddings.save_embeddings
+      ~CharLMEmbeddings.set_extra_state
+      ~CharLMEmbeddings.set_submodule
+      ~CharLMEmbeddings.share_memory
+      ~CharLMEmbeddings.state_dict
+      ~CharLMEmbeddings.to
+      ~CharLMEmbeddings.to_empty
+      ~CharLMEmbeddings.to_params
+      ~CharLMEmbeddings.train
+      ~CharLMEmbeddings.type
+      ~CharLMEmbeddings.xpu
+      ~CharLMEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CharLMEmbeddings.T_destination
+      ~CharLMEmbeddings.call_super_init
+      ~CharLMEmbeddings.dump_patches
+      ~CharLMEmbeddings.embedding_length
+      ~CharLMEmbeddings.embedding_type
+      ~CharLMEmbeddings.embeddings_name
+      ~CharLMEmbeddings.training
+   
+   

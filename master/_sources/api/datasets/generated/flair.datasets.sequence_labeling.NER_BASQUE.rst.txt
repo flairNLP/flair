@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_BASQUE
+=============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_BASQUE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_BASQUE.__init__
+      ~NER_BASQUE.add_label_noise
+      ~NER_BASQUE.downsample
+      ~NER_BASQUE.filter_empty_sentences
+      ~NER_BASQUE.filter_long_sentences
+      ~NER_BASQUE.get_all_sentences
+      ~NER_BASQUE.get_label_distribution
+      ~NER_BASQUE.make_label_dictionary
+      ~NER_BASQUE.make_tag_dictionary
+      ~NER_BASQUE.make_vocab_dictionary
+      ~NER_BASQUE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_BASQUE.dev
+      ~NER_BASQUE.test
+      ~NER_BASQUE.train
+   
+   

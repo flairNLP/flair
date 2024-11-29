@@ -1,0 +1,6 @@
+﻿flair.datasets.biomedical.filter\_nested\_entities
+==================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autofunction:: filter_nested_entities

@@ -1,0 +1,23 @@
+﻿flair.datasets.text\_text.ParallelTextDataset
+=============================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: ParallelTextDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ParallelTextDataset.__init__
+      ~ParallelTextDataset.is_in_memory
+   
+   
+
+   
+   
+   

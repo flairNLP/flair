@@ -1,0 +1,14 @@
+﻿flair.trainers
+==============
+
+.. automodule:: flair.trainers
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ModelTrainer
+      LanguageModelTrainer
+      TextCorpus
+   

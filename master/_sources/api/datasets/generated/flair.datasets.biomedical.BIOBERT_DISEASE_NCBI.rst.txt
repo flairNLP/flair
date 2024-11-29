@@ -1,0 +1,40 @@
+﻿flair.datasets.biomedical.BIOBERT\_DISEASE\_NCBI
+================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: BIOBERT_DISEASE_NCBI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BIOBERT_DISEASE_NCBI.__init__
+      ~BIOBERT_DISEASE_NCBI.add_label_noise
+      ~BIOBERT_DISEASE_NCBI.downsample
+      ~BIOBERT_DISEASE_NCBI.filter_empty_sentences
+      ~BIOBERT_DISEASE_NCBI.filter_long_sentences
+      ~BIOBERT_DISEASE_NCBI.get_all_sentences
+      ~BIOBERT_DISEASE_NCBI.get_label_distribution
+      ~BIOBERT_DISEASE_NCBI.make_label_dictionary
+      ~BIOBERT_DISEASE_NCBI.make_tag_dictionary
+      ~BIOBERT_DISEASE_NCBI.make_vocab_dictionary
+      ~BIOBERT_DISEASE_NCBI.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BIOBERT_DISEASE_NCBI.dev
+      ~BIOBERT_DISEASE_NCBI.test
+      ~BIOBERT_DISEASE_NCBI.train
+   
+   

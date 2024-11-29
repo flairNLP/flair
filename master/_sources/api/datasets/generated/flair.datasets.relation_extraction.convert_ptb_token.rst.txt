@@ -1,0 +1,6 @@
+﻿flair.datasets.relation\_extraction.convert\_ptb\_token
+=======================================================
+
+.. currentmodule:: flair.datasets.relation_extraction
+
+.. autofunction:: convert_ptb_token

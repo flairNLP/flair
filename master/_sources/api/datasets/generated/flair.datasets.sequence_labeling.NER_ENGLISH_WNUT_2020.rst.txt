@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_ENGLISH\_WNUT\_2020
+==========================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_ENGLISH_WNUT_2020
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_WNUT_2020.__init__
+      ~NER_ENGLISH_WNUT_2020.add_label_noise
+      ~NER_ENGLISH_WNUT_2020.downsample
+      ~NER_ENGLISH_WNUT_2020.filter_empty_sentences
+      ~NER_ENGLISH_WNUT_2020.filter_long_sentences
+      ~NER_ENGLISH_WNUT_2020.get_all_sentences
+      ~NER_ENGLISH_WNUT_2020.get_label_distribution
+      ~NER_ENGLISH_WNUT_2020.make_label_dictionary
+      ~NER_ENGLISH_WNUT_2020.make_tag_dictionary
+      ~NER_ENGLISH_WNUT_2020.make_vocab_dictionary
+      ~NER_ENGLISH_WNUT_2020.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_WNUT_2020.dev
+      ~NER_ENGLISH_WNUT_2020.test
+      ~NER_ENGLISH_WNUT_2020.train
+   
+   

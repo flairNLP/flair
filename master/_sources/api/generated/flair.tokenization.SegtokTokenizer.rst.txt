@@ -1,0 +1,30 @@
+﻿flair.tokenization.SegtokTokenizer
+==================================
+
+.. currentmodule:: flair.tokenization
+
+.. autoclass:: SegtokTokenizer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SegtokTokenizer.__init__
+      ~SegtokTokenizer.run_tokenize
+      ~SegtokTokenizer.tokenize
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SegtokTokenizer.name
+   
+   

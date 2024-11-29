@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.UP\_SPANISH
+=============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: UP_SPANISH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UP_SPANISH.__init__
+      ~UP_SPANISH.add_label_noise
+      ~UP_SPANISH.downsample
+      ~UP_SPANISH.filter_empty_sentences
+      ~UP_SPANISH.filter_long_sentences
+      ~UP_SPANISH.get_all_sentences
+      ~UP_SPANISH.get_label_distribution
+      ~UP_SPANISH.make_label_dictionary
+      ~UP_SPANISH.make_tag_dictionary
+      ~UP_SPANISH.make_vocab_dictionary
+      ~UP_SPANISH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UP_SPANISH.dev
+      ~UP_SPANISH.test
+      ~UP_SPANISH.train
+   
+   

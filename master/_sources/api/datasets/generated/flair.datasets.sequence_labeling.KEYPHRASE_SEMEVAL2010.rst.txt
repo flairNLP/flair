@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.KEYPHRASE\_SEMEVAL2010
+========================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: KEYPHRASE_SEMEVAL2010
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~KEYPHRASE_SEMEVAL2010.__init__
+      ~KEYPHRASE_SEMEVAL2010.add_label_noise
+      ~KEYPHRASE_SEMEVAL2010.downsample
+      ~KEYPHRASE_SEMEVAL2010.filter_empty_sentences
+      ~KEYPHRASE_SEMEVAL2010.filter_long_sentences
+      ~KEYPHRASE_SEMEVAL2010.get_all_sentences
+      ~KEYPHRASE_SEMEVAL2010.get_label_distribution
+      ~KEYPHRASE_SEMEVAL2010.make_label_dictionary
+      ~KEYPHRASE_SEMEVAL2010.make_tag_dictionary
+      ~KEYPHRASE_SEMEVAL2010.make_vocab_dictionary
+      ~KEYPHRASE_SEMEVAL2010.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~KEYPHRASE_SEMEVAL2010.dev
+      ~KEYPHRASE_SEMEVAL2010.test
+      ~KEYPHRASE_SEMEVAL2010.train
+   
+   

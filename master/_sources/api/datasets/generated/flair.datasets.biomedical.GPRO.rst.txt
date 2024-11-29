@@ -1,0 +1,43 @@
+﻿flair.datasets.biomedical.GPRO
+==============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: GPRO
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GPRO.__init__
+      ~GPRO.add_label_noise
+      ~GPRO.download_dev_corpus
+      ~GPRO.download_train_corpus
+      ~GPRO.downsample
+      ~GPRO.filter_empty_sentences
+      ~GPRO.filter_long_sentences
+      ~GPRO.get_all_sentences
+      ~GPRO.get_label_distribution
+      ~GPRO.make_label_dictionary
+      ~GPRO.make_tag_dictionary
+      ~GPRO.make_vocab_dictionary
+      ~GPRO.obtain_statistics
+      ~GPRO.parse_input_file
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GPRO.dev
+      ~GPRO.test
+      ~GPRO.train
+   
+   

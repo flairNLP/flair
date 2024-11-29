@@ -1,0 +1,40 @@
+﻿flair.datasets.document\_classification.WASSA\_SADNESS
+======================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: WASSA_SADNESS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WASSA_SADNESS.__init__
+      ~WASSA_SADNESS.add_label_noise
+      ~WASSA_SADNESS.downsample
+      ~WASSA_SADNESS.filter_empty_sentences
+      ~WASSA_SADNESS.filter_long_sentences
+      ~WASSA_SADNESS.get_all_sentences
+      ~WASSA_SADNESS.get_label_distribution
+      ~WASSA_SADNESS.make_label_dictionary
+      ~WASSA_SADNESS.make_tag_dictionary
+      ~WASSA_SADNESS.make_vocab_dictionary
+      ~WASSA_SADNESS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WASSA_SADNESS.dev
+      ~WASSA_SADNESS.test
+      ~WASSA_SADNESS.train
+   
+   

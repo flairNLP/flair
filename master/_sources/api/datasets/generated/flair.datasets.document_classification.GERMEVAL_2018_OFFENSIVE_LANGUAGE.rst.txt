@@ -1,0 +1,40 @@
+﻿flair.datasets.document\_classification.GERMEVAL\_2018\_OFFENSIVE\_LANGUAGE
+===========================================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: GERMEVAL_2018_OFFENSIVE_LANGUAGE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.__init__
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.add_label_noise
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.downsample
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.filter_empty_sentences
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.filter_long_sentences
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.get_all_sentences
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.get_label_distribution
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.make_label_dictionary
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.make_tag_dictionary
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.make_vocab_dictionary
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.dev
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.test
+      ~GERMEVAL_2018_OFFENSIVE_LANGUAGE.train
+   
+   

@@ -1,0 +1,91 @@
+﻿flair.embeddings.token.BytePairEmbeddings
+=========================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: BytePairEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BytePairEmbeddings.__init__
+      ~BytePairEmbeddings.add_module
+      ~BytePairEmbeddings.apply
+      ~BytePairEmbeddings.bfloat16
+      ~BytePairEmbeddings.buffers
+      ~BytePairEmbeddings.children
+      ~BytePairEmbeddings.compile
+      ~BytePairEmbeddings.cpu
+      ~BytePairEmbeddings.cuda
+      ~BytePairEmbeddings.double
+      ~BytePairEmbeddings.embed
+      ~BytePairEmbeddings.eval
+      ~BytePairEmbeddings.extra_repr
+      ~BytePairEmbeddings.float
+      ~BytePairEmbeddings.forward
+      ~BytePairEmbeddings.from_params
+      ~BytePairEmbeddings.get_buffer
+      ~BytePairEmbeddings.get_extra_state
+      ~BytePairEmbeddings.get_instance_parameters
+      ~BytePairEmbeddings.get_names
+      ~BytePairEmbeddings.get_parameter
+      ~BytePairEmbeddings.get_submodule
+      ~BytePairEmbeddings.half
+      ~BytePairEmbeddings.ipu
+      ~BytePairEmbeddings.load_embedding
+      ~BytePairEmbeddings.load_state_dict
+      ~BytePairEmbeddings.modules
+      ~BytePairEmbeddings.mtia
+      ~BytePairEmbeddings.named_buffers
+      ~BytePairEmbeddings.named_children
+      ~BytePairEmbeddings.named_modules
+      ~BytePairEmbeddings.named_parameters
+      ~BytePairEmbeddings.parameters
+      ~BytePairEmbeddings.register_backward_hook
+      ~BytePairEmbeddings.register_buffer
+      ~BytePairEmbeddings.register_forward_hook
+      ~BytePairEmbeddings.register_forward_pre_hook
+      ~BytePairEmbeddings.register_full_backward_hook
+      ~BytePairEmbeddings.register_full_backward_pre_hook
+      ~BytePairEmbeddings.register_load_state_dict_post_hook
+      ~BytePairEmbeddings.register_load_state_dict_pre_hook
+      ~BytePairEmbeddings.register_module
+      ~BytePairEmbeddings.register_parameter
+      ~BytePairEmbeddings.register_state_dict_post_hook
+      ~BytePairEmbeddings.register_state_dict_pre_hook
+      ~BytePairEmbeddings.requires_grad_
+      ~BytePairEmbeddings.save_embeddings
+      ~BytePairEmbeddings.set_extra_state
+      ~BytePairEmbeddings.set_submodule
+      ~BytePairEmbeddings.share_memory
+      ~BytePairEmbeddings.state_dict
+      ~BytePairEmbeddings.to
+      ~BytePairEmbeddings.to_empty
+      ~BytePairEmbeddings.to_params
+      ~BytePairEmbeddings.train
+      ~BytePairEmbeddings.type
+      ~BytePairEmbeddings.xpu
+      ~BytePairEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BytePairEmbeddings.T_destination
+      ~BytePairEmbeddings.call_super_init
+      ~BytePairEmbeddings.dump_patches
+      ~BytePairEmbeddings.embedding_length
+      ~BytePairEmbeddings.embedding_type
+      ~BytePairEmbeddings.embeddings_name
+      ~BytePairEmbeddings.training
+   
+   

@@ -1,0 +1,23 @@
+﻿flair.datasets.base.SentenceDataset
+===================================
+
+.. currentmodule:: flair.datasets.base
+
+.. autoclass:: SentenceDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SentenceDataset.__init__
+      ~SentenceDataset.is_in_memory
+   
+   
+
+   
+   
+   

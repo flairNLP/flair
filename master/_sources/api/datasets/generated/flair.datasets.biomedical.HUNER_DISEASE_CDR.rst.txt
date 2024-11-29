@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_DISEASE\_CDR
+=============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_DISEASE_CDR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_DISEASE_CDR.__init__
+      ~HUNER_DISEASE_CDR.add_label_noise
+      ~HUNER_DISEASE_CDR.downsample
+      ~HUNER_DISEASE_CDR.filter_empty_sentences
+      ~HUNER_DISEASE_CDR.filter_long_sentences
+      ~HUNER_DISEASE_CDR.get_all_sentences
+      ~HUNER_DISEASE_CDR.get_corpus_sentence_splitter
+      ~HUNER_DISEASE_CDR.get_entity_type_mapping
+      ~HUNER_DISEASE_CDR.get_label_distribution
+      ~HUNER_DISEASE_CDR.get_subset
+      ~HUNER_DISEASE_CDR.make_label_dictionary
+      ~HUNER_DISEASE_CDR.make_tag_dictionary
+      ~HUNER_DISEASE_CDR.make_vocab_dictionary
+      ~HUNER_DISEASE_CDR.obtain_statistics
+      ~HUNER_DISEASE_CDR.split_url
+      ~HUNER_DISEASE_CDR.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_DISEASE_CDR.dev
+      ~HUNER_DISEASE_CDR.test
+      ~HUNER_DISEASE_CDR.train
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_MULTI\_XTREME
+====================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_MULTI_XTREME
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_MULTI_XTREME.__init__
+      ~NER_MULTI_XTREME.add_label_noise
+      ~NER_MULTI_XTREME.downsample
+      ~NER_MULTI_XTREME.filter_empty_sentences
+      ~NER_MULTI_XTREME.filter_long_sentences
+      ~NER_MULTI_XTREME.get_all_sentences
+      ~NER_MULTI_XTREME.get_label_distribution
+      ~NER_MULTI_XTREME.make_label_dictionary
+      ~NER_MULTI_XTREME.make_tag_dictionary
+      ~NER_MULTI_XTREME.make_vocab_dictionary
+      ~NER_MULTI_XTREME.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_MULTI_XTREME.dev
+      ~NER_MULTI_XTREME.test
+      ~NER_MULTI_XTREME.train
+   
+   

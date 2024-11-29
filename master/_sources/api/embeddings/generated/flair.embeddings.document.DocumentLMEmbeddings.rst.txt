@@ -1,0 +1,91 @@
+﻿flair.embeddings.document.DocumentLMEmbeddings
+==============================================
+
+.. currentmodule:: flair.embeddings.document
+
+.. autoclass:: DocumentLMEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DocumentLMEmbeddings.__init__
+      ~DocumentLMEmbeddings.add_module
+      ~DocumentLMEmbeddings.apply
+      ~DocumentLMEmbeddings.bfloat16
+      ~DocumentLMEmbeddings.buffers
+      ~DocumentLMEmbeddings.children
+      ~DocumentLMEmbeddings.compile
+      ~DocumentLMEmbeddings.cpu
+      ~DocumentLMEmbeddings.cuda
+      ~DocumentLMEmbeddings.double
+      ~DocumentLMEmbeddings.embed
+      ~DocumentLMEmbeddings.eval
+      ~DocumentLMEmbeddings.extra_repr
+      ~DocumentLMEmbeddings.float
+      ~DocumentLMEmbeddings.forward
+      ~DocumentLMEmbeddings.from_params
+      ~DocumentLMEmbeddings.get_buffer
+      ~DocumentLMEmbeddings.get_extra_state
+      ~DocumentLMEmbeddings.get_instance_parameters
+      ~DocumentLMEmbeddings.get_names
+      ~DocumentLMEmbeddings.get_parameter
+      ~DocumentLMEmbeddings.get_submodule
+      ~DocumentLMEmbeddings.half
+      ~DocumentLMEmbeddings.ipu
+      ~DocumentLMEmbeddings.load_embedding
+      ~DocumentLMEmbeddings.load_state_dict
+      ~DocumentLMEmbeddings.modules
+      ~DocumentLMEmbeddings.mtia
+      ~DocumentLMEmbeddings.named_buffers
+      ~DocumentLMEmbeddings.named_children
+      ~DocumentLMEmbeddings.named_modules
+      ~DocumentLMEmbeddings.named_parameters
+      ~DocumentLMEmbeddings.parameters
+      ~DocumentLMEmbeddings.register_backward_hook
+      ~DocumentLMEmbeddings.register_buffer
+      ~DocumentLMEmbeddings.register_forward_hook
+      ~DocumentLMEmbeddings.register_forward_pre_hook
+      ~DocumentLMEmbeddings.register_full_backward_hook
+      ~DocumentLMEmbeddings.register_full_backward_pre_hook
+      ~DocumentLMEmbeddings.register_load_state_dict_post_hook
+      ~DocumentLMEmbeddings.register_load_state_dict_pre_hook
+      ~DocumentLMEmbeddings.register_module
+      ~DocumentLMEmbeddings.register_parameter
+      ~DocumentLMEmbeddings.register_state_dict_post_hook
+      ~DocumentLMEmbeddings.register_state_dict_pre_hook
+      ~DocumentLMEmbeddings.requires_grad_
+      ~DocumentLMEmbeddings.save_embeddings
+      ~DocumentLMEmbeddings.set_extra_state
+      ~DocumentLMEmbeddings.set_submodule
+      ~DocumentLMEmbeddings.share_memory
+      ~DocumentLMEmbeddings.state_dict
+      ~DocumentLMEmbeddings.to
+      ~DocumentLMEmbeddings.to_empty
+      ~DocumentLMEmbeddings.to_params
+      ~DocumentLMEmbeddings.train
+      ~DocumentLMEmbeddings.type
+      ~DocumentLMEmbeddings.xpu
+      ~DocumentLMEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DocumentLMEmbeddings.T_destination
+      ~DocumentLMEmbeddings.call_super_init
+      ~DocumentLMEmbeddings.dump_patches
+      ~DocumentLMEmbeddings.embedding_length
+      ~DocumentLMEmbeddings.embedding_type
+      ~DocumentLMEmbeddings.embeddings_name
+      ~DocumentLMEmbeddings.training
+   
+   

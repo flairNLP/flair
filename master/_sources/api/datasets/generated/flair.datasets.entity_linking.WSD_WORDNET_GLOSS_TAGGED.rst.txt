@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.WSD\_WORDNET\_GLOSS\_TAGGED
+==========================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: WSD_WORDNET_GLOSS_TAGGED
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WSD_WORDNET_GLOSS_TAGGED.__init__
+      ~WSD_WORDNET_GLOSS_TAGGED.add_label_noise
+      ~WSD_WORDNET_GLOSS_TAGGED.downsample
+      ~WSD_WORDNET_GLOSS_TAGGED.filter_empty_sentences
+      ~WSD_WORDNET_GLOSS_TAGGED.filter_long_sentences
+      ~WSD_WORDNET_GLOSS_TAGGED.get_all_sentences
+      ~WSD_WORDNET_GLOSS_TAGGED.get_label_distribution
+      ~WSD_WORDNET_GLOSS_TAGGED.make_label_dictionary
+      ~WSD_WORDNET_GLOSS_TAGGED.make_tag_dictionary
+      ~WSD_WORDNET_GLOSS_TAGGED.make_vocab_dictionary
+      ~WSD_WORDNET_GLOSS_TAGGED.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WSD_WORDNET_GLOSS_TAGGED.dev
+      ~WSD_WORDNET_GLOSS_TAGGED.test
+      ~WSD_WORDNET_GLOSS_TAGGED.train
+   
+   

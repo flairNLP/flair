@@ -1,0 +1,41 @@
+﻿flair.datasets.biomedical.CHEMDNER
+==================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: CHEMDNER
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CHEMDNER.__init__
+      ~CHEMDNER.add_label_noise
+      ~CHEMDNER.download_dataset
+      ~CHEMDNER.downsample
+      ~CHEMDNER.filter_empty_sentences
+      ~CHEMDNER.filter_long_sentences
+      ~CHEMDNER.get_all_sentences
+      ~CHEMDNER.get_label_distribution
+      ~CHEMDNER.make_label_dictionary
+      ~CHEMDNER.make_tag_dictionary
+      ~CHEMDNER.make_vocab_dictionary
+      ~CHEMDNER.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CHEMDNER.dev
+      ~CHEMDNER.test
+      ~CHEMDNER.train
+   
+   

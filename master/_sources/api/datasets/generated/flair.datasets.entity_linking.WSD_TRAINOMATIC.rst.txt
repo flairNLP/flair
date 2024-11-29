@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.WSD\_TRAINOMATIC
+===============================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: WSD_TRAINOMATIC
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WSD_TRAINOMATIC.__init__
+      ~WSD_TRAINOMATIC.add_label_noise
+      ~WSD_TRAINOMATIC.downsample
+      ~WSD_TRAINOMATIC.filter_empty_sentences
+      ~WSD_TRAINOMATIC.filter_long_sentences
+      ~WSD_TRAINOMATIC.get_all_sentences
+      ~WSD_TRAINOMATIC.get_label_distribution
+      ~WSD_TRAINOMATIC.make_label_dictionary
+      ~WSD_TRAINOMATIC.make_tag_dictionary
+      ~WSD_TRAINOMATIC.make_vocab_dictionary
+      ~WSD_TRAINOMATIC.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WSD_TRAINOMATIC.dev
+      ~WSD_TRAINOMATIC.test
+      ~WSD_TRAINOMATIC.train
+   
+   

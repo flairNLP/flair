@@ -1,0 +1,33 @@
+﻿flair.data.BoundingBox
+======================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: BoundingBox
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BoundingBox.__init__
+      ~BoundingBox.count
+      ~BoundingBox.index
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BoundingBox.bottom
+      ~BoundingBox.left
+      ~BoundingBox.right
+      ~BoundingBox.top
+   
+   

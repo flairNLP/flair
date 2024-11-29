@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_ENGLISH\_RESTAURANT
+==========================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_ENGLISH_RESTAURANT
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_RESTAURANT.__init__
+      ~NER_ENGLISH_RESTAURANT.add_label_noise
+      ~NER_ENGLISH_RESTAURANT.downsample
+      ~NER_ENGLISH_RESTAURANT.filter_empty_sentences
+      ~NER_ENGLISH_RESTAURANT.filter_long_sentences
+      ~NER_ENGLISH_RESTAURANT.get_all_sentences
+      ~NER_ENGLISH_RESTAURANT.get_label_distribution
+      ~NER_ENGLISH_RESTAURANT.make_label_dictionary
+      ~NER_ENGLISH_RESTAURANT.make_tag_dictionary
+      ~NER_ENGLISH_RESTAURANT.make_vocab_dictionary
+      ~NER_ENGLISH_RESTAURANT.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_RESTAURANT.dev
+      ~NER_ENGLISH_RESTAURANT.test
+      ~NER_ENGLISH_RESTAURANT.train
+   
+   

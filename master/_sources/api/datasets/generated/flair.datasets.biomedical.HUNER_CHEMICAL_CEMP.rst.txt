@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_CHEMICAL\_CEMP
+===============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_CHEMICAL_CEMP
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_CHEMICAL_CEMP.__init__
+      ~HUNER_CHEMICAL_CEMP.add_label_noise
+      ~HUNER_CHEMICAL_CEMP.downsample
+      ~HUNER_CHEMICAL_CEMP.filter_empty_sentences
+      ~HUNER_CHEMICAL_CEMP.filter_long_sentences
+      ~HUNER_CHEMICAL_CEMP.get_all_sentences
+      ~HUNER_CHEMICAL_CEMP.get_corpus_sentence_splitter
+      ~HUNER_CHEMICAL_CEMP.get_entity_type_mapping
+      ~HUNER_CHEMICAL_CEMP.get_label_distribution
+      ~HUNER_CHEMICAL_CEMP.get_subset
+      ~HUNER_CHEMICAL_CEMP.make_label_dictionary
+      ~HUNER_CHEMICAL_CEMP.make_tag_dictionary
+      ~HUNER_CHEMICAL_CEMP.make_vocab_dictionary
+      ~HUNER_CHEMICAL_CEMP.obtain_statistics
+      ~HUNER_CHEMICAL_CEMP.split_url
+      ~HUNER_CHEMICAL_CEMP.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_CHEMICAL_CEMP.dev
+      ~HUNER_CHEMICAL_CEMP.test
+      ~HUNER_CHEMICAL_CEMP.train
+   
+   

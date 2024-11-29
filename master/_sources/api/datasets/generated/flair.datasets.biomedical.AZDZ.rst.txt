@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.AZDZ
+==============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: AZDZ
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AZDZ.__init__
+      ~AZDZ.add_label_noise
+      ~AZDZ.download_corpus
+      ~AZDZ.downsample
+      ~AZDZ.filter_empty_sentences
+      ~AZDZ.filter_long_sentences
+      ~AZDZ.get_all_sentences
+      ~AZDZ.get_label_distribution
+      ~AZDZ.make_label_dictionary
+      ~AZDZ.make_tag_dictionary
+      ~AZDZ.make_vocab_dictionary
+      ~AZDZ.obtain_statistics
+      ~AZDZ.parse_corpus
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AZDZ.dev
+      ~AZDZ.test
+      ~AZDZ.train
+   
+   

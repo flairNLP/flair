@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.ColumnCorpus
+==============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: ColumnCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ColumnCorpus.__init__
+      ~ColumnCorpus.add_label_noise
+      ~ColumnCorpus.downsample
+      ~ColumnCorpus.filter_empty_sentences
+      ~ColumnCorpus.filter_long_sentences
+      ~ColumnCorpus.get_all_sentences
+      ~ColumnCorpus.get_label_distribution
+      ~ColumnCorpus.make_label_dictionary
+      ~ColumnCorpus.make_tag_dictionary
+      ~ColumnCorpus.make_vocab_dictionary
+      ~ColumnCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ColumnCorpus.dev
+      ~ColumnCorpus.test
+      ~ColumnCorpus.train
+   
+   

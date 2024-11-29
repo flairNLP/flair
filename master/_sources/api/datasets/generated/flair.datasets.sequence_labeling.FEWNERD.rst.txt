@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.FEWNERD
+=========================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: FEWNERD
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FEWNERD.__init__
+      ~FEWNERD.add_label_noise
+      ~FEWNERD.downsample
+      ~FEWNERD.filter_empty_sentences
+      ~FEWNERD.filter_long_sentences
+      ~FEWNERD.get_all_sentences
+      ~FEWNERD.get_label_distribution
+      ~FEWNERD.make_label_dictionary
+      ~FEWNERD.make_tag_dictionary
+      ~FEWNERD.make_vocab_dictionary
+      ~FEWNERD.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FEWNERD.dev
+      ~FEWNERD.test
+      ~FEWNERD.train
+   
+   

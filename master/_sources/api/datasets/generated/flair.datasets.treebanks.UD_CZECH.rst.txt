@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_CZECH
+==================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_CZECH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_CZECH.__init__
+      ~UD_CZECH.add_label_noise
+      ~UD_CZECH.downsample
+      ~UD_CZECH.filter_empty_sentences
+      ~UD_CZECH.filter_long_sentences
+      ~UD_CZECH.get_all_sentences
+      ~UD_CZECH.get_label_distribution
+      ~UD_CZECH.make_label_dictionary
+      ~UD_CZECH.make_tag_dictionary
+      ~UD_CZECH.make_vocab_dictionary
+      ~UD_CZECH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_CZECH.dev
+      ~UD_CZECH.test
+      ~UD_CZECH.train
+   
+   

@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_JNLPBA
+=======================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_JNLPBA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_JNLPBA.__init__
+      ~HUNER_JNLPBA.add_label_noise
+      ~HUNER_JNLPBA.downsample
+      ~HUNER_JNLPBA.filter_empty_sentences
+      ~HUNER_JNLPBA.filter_long_sentences
+      ~HUNER_JNLPBA.get_all_sentences
+      ~HUNER_JNLPBA.get_corpus_sentence_splitter
+      ~HUNER_JNLPBA.get_entity_type_mapping
+      ~HUNER_JNLPBA.get_label_distribution
+      ~HUNER_JNLPBA.get_subset
+      ~HUNER_JNLPBA.make_label_dictionary
+      ~HUNER_JNLPBA.make_tag_dictionary
+      ~HUNER_JNLPBA.make_vocab_dictionary
+      ~HUNER_JNLPBA.obtain_statistics
+      ~HUNER_JNLPBA.split_url
+      ~HUNER_JNLPBA.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_JNLPBA.dev
+      ~HUNER_JNLPBA.test
+      ~HUNER_JNLPBA.train
+   
+   

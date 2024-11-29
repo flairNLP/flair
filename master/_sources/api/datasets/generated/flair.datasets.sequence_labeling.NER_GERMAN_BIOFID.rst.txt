@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_GERMAN\_BIOFID
+=====================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_GERMAN_BIOFID
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_GERMAN_BIOFID.__init__
+      ~NER_GERMAN_BIOFID.add_label_noise
+      ~NER_GERMAN_BIOFID.downsample
+      ~NER_GERMAN_BIOFID.filter_empty_sentences
+      ~NER_GERMAN_BIOFID.filter_long_sentences
+      ~NER_GERMAN_BIOFID.get_all_sentences
+      ~NER_GERMAN_BIOFID.get_label_distribution
+      ~NER_GERMAN_BIOFID.make_label_dictionary
+      ~NER_GERMAN_BIOFID.make_tag_dictionary
+      ~NER_GERMAN_BIOFID.make_vocab_dictionary
+      ~NER_GERMAN_BIOFID.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_GERMAN_BIOFID.dev
+      ~NER_GERMAN_BIOFID.test
+      ~NER_GERMAN_BIOFID.train
+   
+   

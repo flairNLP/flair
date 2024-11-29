@@ -1,0 +1,41 @@
+﻿flair.datasets.biomedical.LINNEAUS
+==================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: LINNEAUS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LINNEAUS.__init__
+      ~LINNEAUS.add_label_noise
+      ~LINNEAUS.download_and_parse_dataset
+      ~LINNEAUS.downsample
+      ~LINNEAUS.filter_empty_sentences
+      ~LINNEAUS.filter_long_sentences
+      ~LINNEAUS.get_all_sentences
+      ~LINNEAUS.get_label_distribution
+      ~LINNEAUS.make_label_dictionary
+      ~LINNEAUS.make_tag_dictionary
+      ~LINNEAUS.make_vocab_dictionary
+      ~LINNEAUS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LINNEAUS.dev
+      ~LINNEAUS.test
+      ~LINNEAUS.train
+   
+   

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>How to load a prepared dataset &#8212; flair 0.14.0 documentation</title>
+    <title>How to load a prepared dataset &#8212; Flair Documentation</title>
   
   
   
@@ -31,6 +31,15 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/header.css?v=b4ed79de" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/footer.css?v=6c87b456" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/version-switcher.css?v=0d4c8916" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/sidebar.css?v=c65ae207" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tutorial.css?v=a09ac9ee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/api.css?v=67816a88" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/legal-notice.css?v=d7312f38" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/search.css?v=4a9c00e7" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -106,8 +115,14 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="../../_static/flair_logo_white.svg" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../../_static/flair_logo_white.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
   
-    <p class="title logo__title">flair 0.14.0 documentation</p>
   
 </a></div>
     
@@ -136,7 +151,7 @@
 
                     <li class="nav-item">
                       <a class="nav-link nav-internal" href="../../api/index.html">
-                        API reference
+                        API
                       </a>
                     </li>
                 
@@ -144,13 +159,6 @@
                     <li class="nav-item">
                       <a class="nav-link nav-internal" href="../../contributing/index.html">
                         Contributing
-                      </a>
-                    </li>
-                
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../../glossary/index.html">
-                        Glossary
                       </a>
                     </li>
                 
@@ -174,88 +182,214 @@ document.write(`
         </div>
       
       
-        <div class="navbar-item">
-<script>
-document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
-  </button>
-`);
+        <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
 </script></div>
       
         <div class="navbar-item">
 <script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
 document.write(`
   <div class="version-switcher__container dropdown">
-    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
        latest (dev) 
-      <span class="caret"></span>
     </button>
     <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
     <!-- dropdown will be populated by javascript on page load -->
-      <a class="list-group-item list-group-item-action py-1" href="how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    latest (dev)
-    
-    
-    [x]
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.14.0
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.1
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.0
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.14.0
+          
+        
+        </span>
+          </a>
       
-    
-    </span>
-      </a>
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
     </div>
   </div>
 `);
-</script></div>
-      
-        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
-    aria-label="Icon Links">
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
-        </li>
-</ul></div>
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
       
     </div>
     
@@ -273,10 +407,6 @@ document.write(`
     </div>
   
 
-  
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
-      <span class="fa-solid fa-outdent"></span>
-    </label>
   
 </div>
 
@@ -312,7 +442,7 @@ document.write(`
 
                     <li class="nav-item">
                       <a class="nav-link nav-internal" href="../../api/index.html">
-                        API reference
+                        API
                       </a>
                     </li>
                 
@@ -320,13 +450,6 @@ document.write(`
                     <li class="nav-item">
                       <a class="nav-link nav-internal" href="../../contributing/index.html">
                         Contributing
-                      </a>
-                    </li>
-                
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../../glossary/index.html">
-                        Glossary
                       </a>
                     </li>
                 
@@ -339,88 +462,214 @@ document.write(`
     
       <div class="sidebar-header-items__end">
         
-          <div class="navbar-item">
-<script>
-document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
-  </button>
-`);
+          <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
 </script></div>
         
           <div class="navbar-item">
 <script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
 document.write(`
   <div class="version-switcher__container dropdown">
-    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
        latest (dev) 
-      <span class="caret"></span>
     </button>
     <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
     <!-- dropdown will be populated by javascript on page load -->
-      <a class="list-group-item list-group-item-action py-1" href="how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    latest (dev)
-    
-    
-    [x]
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.14.0
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.1
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.0
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.14.0
+          
+        
+        </span>
+          </a>
       
-    
-    </span>
-      </a>
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-training/how-to-load-prepared-dataset.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
     </div>
   </div>
 `);
-</script></div>
-        
-          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
-    aria-label="Icon Links">
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
-        </li>
-</ul></div>
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
         
       </div>
     
@@ -447,39 +696,8 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../tutorial-hunflair2/index.html">Tutorial: HunFlair2</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../glossary/index.html">Glossary</a></li>
-</ul>
-</div>
-        <div class="sidebar-primary-item">
-<div id="searchbox"></div></div>
-        <div class="sidebar-primary-item">
-<h3>Versions</h3>
-<ul>
-  <li><a href="how-to-load-prepared-dataset.html">
-    
-    latest (master)
-    
-  </a></li>
-  <li><a href="../../../v0.14.0/tutorial/tutorial-training/how-to-load-prepared-dataset.html">
-    
-    v0.14.0
-      
-    
-  </a></li>
-  <li><a href="../../../v0.13.1/tutorial/tutorial-training/how-to-load-prepared-dataset.html">
-    
-    v0.13.1
-      
-    
-  </a></li>
-  <li><a href="../../../v0.13.0/tutorial/tutorial-training/how-to-load-prepared-dataset.html">
-    
-    v0.13.0
-      
-    
-  </a></li>
 </ul>
 </div>
     </div>
@@ -546,7 +764,7 @@ document.write(`
 <p>This part of the tutorial shows how you can load a corpus for training a model.</p>
 <section id="the-corpus-object">
 <h2>The Corpus Object<a class="headerlink" href="#the-corpus-object" title="Link to this heading">#</a></h2>
-<p>The <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> represents a dataset that you use to train a model. It consists of a list of <code class="docutils literal notranslate"><span class="pre">train</span></code> sentences,
+<p>The <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> represents a dataset that you use to train a model. It consists of a list of <code class="docutils literal notranslate"><span class="pre">train</span></code> sentences,
 a list of <code class="docutils literal notranslate"><span class="pre">dev</span></code> sentences, and a list of <code class="docutils literal notranslate"><span class="pre">test</span></code> sentences, which correspond to the training, validation and testing
 split during model training.</p>
 <p>The following example snippet instantiates the Universal Dependency Treebank for English as a corpus object:</p>
@@ -555,7 +773,7 @@ split during model training.</p>
 </pre></div>
 </div>
 <p>The first time you call this snippet, it triggers a download of the Universal Dependency Treebank for English onto your
-hard drive. It then reads the train, test and dev splits into the <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> which it returns. Check the length of
+hard drive. It then reads the train, test and dev splits into the <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> which it returns. Check the length of
 the three splits to see how many Sentences are there:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># print the number of Sentences in the train split</span>
 <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">corpus</span><span class="o">.</span><span class="kp">train</span><span class="p">))</span>
@@ -567,7 +785,7 @@ the three splits to see how many Sentences are there:</p>
 <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">corpus</span><span class="o">.</span><span class="n">dev</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>You can also access the <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> objects in each split directly. For instance, let us look at the first Sentence in
+<p>You can also access the <a class="reference internal" href="../../api/generated/flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> objects in each split directly. For instance, let us look at the first Sentence in
 the training split of the English UD:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the first Sentence in the training split</span>
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="n">test</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -587,8 +805,8 @@ you print out only the POS tags:</p>
 <p>So the corpus is tagged and ready for training.</p>
 <section id="helper-functions">
 <h3>Helper functions<a class="headerlink" href="#helper-functions" title="Link to this heading">#</a></h3>
-<p>A <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> contains a bunch of useful helper functions.
-For instance, you can downsample the data by calling <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.downsample" title="flair.data.Corpus.downsample"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.downsample()</span></code></span></a> and passing a ratio. So, if you normally get a
+<p>A <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> contains a bunch of useful helper functions.
+For instance, you can downsample the data by calling <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus.downsample" title="flair.data.Corpus.downsample"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.downsample()</span></code></span></a> and passing a ratio. So, if you normally get a
 corpus like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span>
@@ -619,7 +837,7 @@ corpus like this:</p>
 <section id="creating-label-dictionaries">
 <h3>Creating label dictionaries<a class="headerlink" href="#creating-label-dictionaries" title="Link to this heading">#</a></h3>
 <p>For many learning tasks you need to create a “dictionary” that contains all the labels you want to predict.
-You can generate this dictionary directly out of the <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> by calling the method <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a>
+You can generate this dictionary directly out of the <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> by calling the method <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a>
 and passing the desired <code class="docutils literal notranslate"><span class="pre">label_type</span></code>.</p>
 <p>For instance, the UD_ENGLISH corpus instantiated above has multiple layers of annotation like regular
 POS tags (‘pos’), universal POS tags (‘upos’), morphological tags (‘tense’, ‘number’..) and so on.
@@ -637,13 +855,13 @@ Create label dictionaries for universal POS tags by passing <code class="docutil
 </div>
 <section id="dictionaries-for-other-label-types">
 <h4>Dictionaries for other label types<a class="headerlink" href="#dictionaries-for-other-label-types" title="Link to this heading">#</a></h4>
-<p>If you don’t know the label types in a corpus, just call <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a> with
+<p>If you don’t know the label types in a corpus, just call <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a> with
 any random label name (e.g. <code class="docutils literal notranslate"><span class="pre">corpus.make_label_dictionary(label_type='abcd')</span></code>). This will print
 out statistics on all label types in the corpus:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">The corpus contains the following label types: &#39;lemma&#39; (in 12543 sentences), &#39;upos&#39; (in 12543 sentences), &#39;pos&#39; (in 12543 sentences), &#39;dependency&#39; (in 12543 sentences), &#39;number&#39; (in 12036 sentences), &#39;verbform&#39; (in 10122 sentences), &#39;prontype&#39; (in 9744 sentences), &#39;person&#39; (in 9381 sentences), &#39;mood&#39; (in 8911 sentences), &#39;tense&#39; (in 8747 sentences), &#39;degree&#39; (in 7148 sentences), &#39;definite&#39; (in 6851 sentences), &#39;case&#39; (in 6486 sentences), &#39;gender&#39; (in 2824 sentences), &#39;numtype&#39; (in 2771 sentences), &#39;poss&#39; (in 2516 sentences), &#39;voice&#39; (in 1085 sentences), &#39;typo&#39; (in 399 sentences), &#39;extpos&#39; (in 185 sentences), &#39;abbr&#39; (in 168 sentences), &#39;reflex&#39; (in 98 sentences), &#39;style&#39; (in 31 sentences), &#39;foreign&#39; (in 5 sentences)</span>
 </pre></div>
 </div>
-<p>This means that you can create dictionaries for any of these label types for the <a class="reference internal" href="../../api/datasets/treebanks.html#flair.datasets.treebanks.UD_ENGLISH" title="flair.datasets.treebanks.UD_ENGLISH"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">UD_ENGLISH</span></code></span></a> corpus. Let’s create dictionaries for regular part of speech tags
+<p>This means that you can create dictionaries for any of these label types for the <a class="reference internal" href="../../api/datasets/generated/flair.datasets.treebanks.UD_ENGLISH.html#flair.datasets.treebanks.UD_ENGLISH" title="flair.datasets.treebanks.UD_ENGLISH"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">UD_ENGLISH</span></code></span></a> corpus. Let’s create dictionaries for regular part of speech tags
 and a morphological number tagging task:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create label dictionary for a regular POS tagging task</span>
 <span class="n">pos_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="s1">&#39;pos&#39;</span><span class="p">)</span>
@@ -656,7 +874,7 @@ and a morphological number tagging task:</p>
 </section>
 <section id="dictionaries-for-other-corpora-types">
 <h4>Dictionaries for other corpora types<a class="headerlink" href="#dictionaries-for-other-corpora-types" title="Link to this heading">#</a></h4>
-<p>The method <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a> can be used for any corpus, including text classification corpora:</p>
+<p>The method <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a> can be used for any corpus, including text classification corpora:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create label dictionary for a text classification task</span>
 <span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">TREC_6</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">TREC_6</span><span class="p">()</span>
@@ -667,9 +885,9 @@ and a morphological number tagging task:</p>
 </section>
 <section id="the-multicorpus-object">
 <h3>The MultiCorpus Object<a class="headerlink" href="#the-multicorpus-object" title="Link to this heading">#</a></h3>
-<p>If you want to train multiple tasks at once, you can use the <a class="reference internal" href="../../api/flair.data.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> object.
-To initiate the <a class="reference internal" href="../../api/flair.data.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> you first need to create any number of <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> objects. Afterwards, you can pass
-a list of <a class="reference internal" href="../../api/flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> to the <a class="reference internal" href="../../api/flair.data.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> object. For instance, the following snippet loads a combination corpus
+<p>If you want to train multiple tasks at once, you can use the <a class="reference internal" href="../../api/generated/flair.data.MultiCorpus.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> object.
+To initiate the <a class="reference internal" href="../../api/generated/flair.data.MultiCorpus.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> you first need to create any number of <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> objects. Afterwards, you can pass
+a list of <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a> to the <a class="reference internal" href="../../api/generated/flair.data.MultiCorpus.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> object. For instance, the following snippet loads a combination corpus
 consisting of the English, German and Dutch Universal Dependency Treebanks.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span><span class="p">,</span> <span class="n">UD_GERMAN</span><span class="p">,</span> <span class="n">UD_DUTCH</span>
 <span class="n">english_corpus</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span>
@@ -681,7 +899,7 @@ consisting of the English, German and Dutch Universal Dependency Treebanks.</p>
 <span class="n">multi_corpus</span> <span class="o">=</span> <span class="n">MultiCorpus</span><span class="p">([</span><span class="n">english_corpus</span><span class="p">,</span> <span class="n">german_corpus</span><span class="p">,</span> <span class="n">dutch_corpus</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>The <a class="reference internal" href="../../api/flair.data.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> inherits from <code class="docutils literal notranslate"><span class="pre">[</span></code>Corpus`](#flair.data.Corpus), so you can use it like any other corpus to train your models.</p>
+<p>The <a class="reference internal" href="../../api/generated/flair.data.MultiCorpus.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> inherits from <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Corpus</span></code></span></a>, so you can use it like any other corpus to train your models.</p>
 </section>
 </section>
 <section id="datasets-included-in-flair">
@@ -699,37 +917,37 @@ You can look up the respective modules to find the possible datasets.</p>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>Named Entity Recognition</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/sequence_labeling.html#module-flair.datasets.sequence_labeling" title="flair.datasets.sequence_labeling"><span class="xref myst py py-mod">flair.datasets.sequence_labeling</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.sequence_labeling"><span class="xref myst">flair.datasets.sequence_labeling</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Text Classification</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/document_classification.html#module-flair.datasets.document_classification" title="flair.datasets.document_classification"><span class="xref myst py py-mod">flair.datasets.document_classification</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.document_classification"><span class="xref myst">flair.datasets.document_classification</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p>Text Regression</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/document_classification.html#module-flair.datasets.document_classification" title="flair.datasets.document_classification"><span class="xref myst py py-mod">flair.datasets.document_classification</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.document_classification"><span class="xref myst">flair.datasets.document_classification</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Biomedical Named Entity Recognition</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/biomedical.html#module-flair.datasets.biomedical" title="flair.datasets.biomedical"><span class="xref myst py py-mod">flair.datasets.biomedical</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.biomedical"><span class="xref myst">flair.datasets.biomedical</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p>Entity Linking</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/entity_linking.html#module-flair.datasets.entity_linking" title="flair.datasets.entity_linking"><span class="xref myst py py-mod">flair.datasets.entity_linking</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.entity_linking"><span class="xref myst">flair.datasets.entity_linking</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Relation Extraction</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/relation_extraction.html#module-flair.datasets.relation_extraction" title="flair.datasets.relation_extraction"><span class="xref myst py py-mod">flair.datasets.relation_extraction</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.relation_extraction"><span class="xref myst">flair.datasets.relation_extraction</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p>Sequence Labeling</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/sequence_labeling.html#module-flair.datasets.sequence_labeling" title="flair.datasets.sequence_labeling"><span class="xref myst py py-mod">flair.datasets.sequence_labeling</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.sequence_labeling"><span class="xref myst">flair.datasets.sequence_labeling</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Glue Benchmark</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/text_text.html#module-flair.datasets.text_text" title="flair.datasets.text_text"><span class="xref myst py py-mod">flair.datasets.text_text</span></a> and <a class="reference internal" href="../../api/datasets/document_classification.html#module-flair.datasets.document_classification" title="flair.datasets.document_classification"><span class="xref myst py py-mod">flair.datasets.document_classification</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.text_text"><span class="xref myst">flair.datasets.text_text</span></a> and <a class="reference internal" href="#flair.datasets.document_classification"><span class="xref myst">flair.datasets.document_classification</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p>Universal Proposition Banks</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/treebanks.html#module-flair.datasets.treebanks" title="flair.datasets.treebanks"><span class="xref myst py py-mod">flair.datasets.treebanks</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.treebanks"><span class="xref myst">flair.datasets.treebanks</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p>Universal Dependency Treebanks</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/treebanks.html#module-flair.datasets.treebanks" title="flair.datasets.treebanks"><span class="xref myst py py-mod">flair.datasets.treebanks</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.treebanks"><span class="xref myst">flair.datasets.treebanks</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p>OCR-Layout-NER</p></td>
-<td><p><a class="reference internal" href="../../api/datasets/ocr.html#module-flair.datasets.ocr" title="flair.datasets.ocr"><span class="xref myst py py-mod">flair.datasets.ocr</span></a></p></td>
+<td><p><a class="reference internal" href="#flair.datasets.ocr"><span class="xref myst">flair.datasets.ocr</span></a></p></td>
 </tr>
 </tbody>
 </table>
@@ -742,71 +960,9 @@ You can look up the respective modules to find the possible datasets.</p>
               
               
               
-                <footer class="bd-footer-article">
-                  
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
-<div class="prev-next-area">
-    <a class="left-prev"
-       href="train-vs-fine-tune.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Training vs fine-tuning</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="how-to-load-custom-dataset.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">How to load a custom dataset</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
-</div></div>
-  
-</div>
-
-                </footer>
-              
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-corpus-object">The Corpus Object</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#helper-functions">Helper functions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-label-dictionaries">Creating label dictionaries</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#dictionaries-for-other-label-types">Dictionaries for other label types</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#dictionaries-for-other-corpora-types">Dictionaries for other corpora types</a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-multicorpus-object">The MultiCorpus Object</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#datasets-included-in-flair">Datasets included in Flair</a></li>
-</ul>
-  </nav></div>
-
-  <div class="sidebar-secondary-item">
-  <div class="tocsection sourcelink">
-    <a href="../../_sources/tutorial/tutorial-training/how-to-load-prepared-dataset.md.txt">
-      <i class="fa-solid fa-file-lines"></i> Show Source
-    </a>
-  </div>
-</div>
-
-</div></div>
               
             
           </div>
@@ -836,21 +992,16 @@ You can look up the respective modules to find the possible datasets.</p>
   </p>
 </div>
       
-        <div class="footer-item">
-  <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
-    <br/>
-  </p>
-</div>
-      
     </div>
   
   
     <div class="footer-items__end">
       
-        <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
-</p></div>
+        <div class="footer-item"><a href="../../legal-notice/index.html">Legal notice</a></div>
+      
+        <div class="footer-item"><a href="https://twitter.com/alan_akbik" target="_blank">Twitter/X</a></div>
+      
+        <div class="footer-item"><a href="https://www.linkedin.com/in/alan-akbik-9859b1122/" target="_blank">LinkedIn</a></div>
       
     </div>
   

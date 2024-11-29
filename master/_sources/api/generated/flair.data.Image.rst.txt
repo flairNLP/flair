@@ -1,0 +1,49 @@
+﻿flair.data.Image
+================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: Image
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Image.__init__
+      ~Image.add_label
+      ~Image.add_metadata
+      ~Image.clear_embeddings
+      ~Image.get_each_embedding
+      ~Image.get_embedding
+      ~Image.get_label
+      ~Image.get_labels
+      ~Image.get_metadata
+      ~Image.has_label
+      ~Image.has_metadata
+      ~Image.remove_labels
+      ~Image.set_embedding
+      ~Image.set_label
+      ~Image.to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Image.embedding
+      ~Image.end_position
+      ~Image.labels
+      ~Image.score
+      ~Image.start_position
+      ~Image.tag
+      ~Image.text
+      ~Image.unlabeled_identifier
+   
+   

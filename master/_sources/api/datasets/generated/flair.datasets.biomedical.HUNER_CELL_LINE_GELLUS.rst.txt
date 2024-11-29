@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_CELL\_LINE\_GELLUS
+===================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_CELL_LINE_GELLUS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_CELL_LINE_GELLUS.__init__
+      ~HUNER_CELL_LINE_GELLUS.add_label_noise
+      ~HUNER_CELL_LINE_GELLUS.downsample
+      ~HUNER_CELL_LINE_GELLUS.filter_empty_sentences
+      ~HUNER_CELL_LINE_GELLUS.filter_long_sentences
+      ~HUNER_CELL_LINE_GELLUS.get_all_sentences
+      ~HUNER_CELL_LINE_GELLUS.get_corpus_sentence_splitter
+      ~HUNER_CELL_LINE_GELLUS.get_label_distribution
+      ~HUNER_CELL_LINE_GELLUS.get_subset
+      ~HUNER_CELL_LINE_GELLUS.make_label_dictionary
+      ~HUNER_CELL_LINE_GELLUS.make_tag_dictionary
+      ~HUNER_CELL_LINE_GELLUS.make_vocab_dictionary
+      ~HUNER_CELL_LINE_GELLUS.obtain_statistics
+      ~HUNER_CELL_LINE_GELLUS.split_url
+      ~HUNER_CELL_LINE_GELLUS.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_CELL_LINE_GELLUS.dev
+      ~HUNER_CELL_LINE_GELLUS.test
+      ~HUNER_CELL_LINE_GELLUS.train
+   
+   

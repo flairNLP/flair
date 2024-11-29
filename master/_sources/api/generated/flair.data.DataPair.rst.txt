@@ -1,0 +1,49 @@
+﻿flair.data.DataPair
+===================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: DataPair
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DataPair.__init__
+      ~DataPair.add_label
+      ~DataPair.add_metadata
+      ~DataPair.clear_embeddings
+      ~DataPair.get_each_embedding
+      ~DataPair.get_embedding
+      ~DataPair.get_label
+      ~DataPair.get_labels
+      ~DataPair.get_metadata
+      ~DataPair.has_label
+      ~DataPair.has_metadata
+      ~DataPair.remove_labels
+      ~DataPair.set_embedding
+      ~DataPair.set_label
+      ~DataPair.to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DataPair.embedding
+      ~DataPair.end_position
+      ~DataPair.labels
+      ~DataPair.score
+      ~DataPair.start_position
+      ~DataPair.tag
+      ~DataPair.text
+      ~DataPair.unlabeled_identifier
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_INDONESIAN
+=======================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_INDONESIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_INDONESIAN.__init__
+      ~UD_INDONESIAN.add_label_noise
+      ~UD_INDONESIAN.downsample
+      ~UD_INDONESIAN.filter_empty_sentences
+      ~UD_INDONESIAN.filter_long_sentences
+      ~UD_INDONESIAN.get_all_sentences
+      ~UD_INDONESIAN.get_label_distribution
+      ~UD_INDONESIAN.make_label_dictionary
+      ~UD_INDONESIAN.make_tag_dictionary
+      ~UD_INDONESIAN.make_vocab_dictionary
+      ~UD_INDONESIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_INDONESIAN.dev
+      ~UD_INDONESIAN.test
+      ~UD_INDONESIAN.train
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.WSD\_RAGANATO\_ALL
+=================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: WSD_RAGANATO_ALL
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WSD_RAGANATO_ALL.__init__
+      ~WSD_RAGANATO_ALL.add_label_noise
+      ~WSD_RAGANATO_ALL.downsample
+      ~WSD_RAGANATO_ALL.filter_empty_sentences
+      ~WSD_RAGANATO_ALL.filter_long_sentences
+      ~WSD_RAGANATO_ALL.get_all_sentences
+      ~WSD_RAGANATO_ALL.get_label_distribution
+      ~WSD_RAGANATO_ALL.make_label_dictionary
+      ~WSD_RAGANATO_ALL.make_tag_dictionary
+      ~WSD_RAGANATO_ALL.make_vocab_dictionary
+      ~WSD_RAGANATO_ALL.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WSD_RAGANATO_ALL.dev
+      ~WSD_RAGANATO_ALL.test
+      ~WSD_RAGANATO_ALL.train
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_GREEK
+==================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_GREEK
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_GREEK.__init__
+      ~UD_GREEK.add_label_noise
+      ~UD_GREEK.downsample
+      ~UD_GREEK.filter_empty_sentences
+      ~UD_GREEK.filter_long_sentences
+      ~UD_GREEK.get_all_sentences
+      ~UD_GREEK.get_label_distribution
+      ~UD_GREEK.make_label_dictionary
+      ~UD_GREEK.make_tag_dictionary
+      ~UD_GREEK.make_vocab_dictionary
+      ~UD_GREEK.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_GREEK.dev
+      ~UD_GREEK.test
+      ~UD_GREEK.train
+   
+   

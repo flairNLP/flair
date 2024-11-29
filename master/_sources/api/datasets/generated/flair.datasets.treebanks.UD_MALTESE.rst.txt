@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_MALTESE
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_MALTESE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_MALTESE.__init__
+      ~UD_MALTESE.add_label_noise
+      ~UD_MALTESE.downsample
+      ~UD_MALTESE.filter_empty_sentences
+      ~UD_MALTESE.filter_long_sentences
+      ~UD_MALTESE.get_all_sentences
+      ~UD_MALTESE.get_label_distribution
+      ~UD_MALTESE.make_label_dictionary
+      ~UD_MALTESE.make_tag_dictionary
+      ~UD_MALTESE.make_vocab_dictionary
+      ~UD_MALTESE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_MALTESE.dev
+      ~UD_MALTESE.test
+      ~UD_MALTESE.train
+   
+   

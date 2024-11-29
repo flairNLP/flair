@@ -1,0 +1,6 @@
+﻿flair.data.get\_spans\_from\_bio
+================================
+
+.. currentmodule:: flair.data
+
+.. autofunction:: get_spans_from_bio

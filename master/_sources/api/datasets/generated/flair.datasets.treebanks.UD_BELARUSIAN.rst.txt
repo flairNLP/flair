@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_BELARUSIAN
+=======================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_BELARUSIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_BELARUSIAN.__init__
+      ~UD_BELARUSIAN.add_label_noise
+      ~UD_BELARUSIAN.downsample
+      ~UD_BELARUSIAN.filter_empty_sentences
+      ~UD_BELARUSIAN.filter_long_sentences
+      ~UD_BELARUSIAN.get_all_sentences
+      ~UD_BELARUSIAN.get_label_distribution
+      ~UD_BELARUSIAN.make_label_dictionary
+      ~UD_BELARUSIAN.make_tag_dictionary
+      ~UD_BELARUSIAN.make_vocab_dictionary
+      ~UD_BELARUSIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_BELARUSIAN.dev
+      ~UD_BELARUSIAN.test
+      ~UD_BELARUSIAN.train
+   
+   

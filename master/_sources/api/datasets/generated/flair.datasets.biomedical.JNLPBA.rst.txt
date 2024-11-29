@@ -1,0 +1,40 @@
+﻿flair.datasets.biomedical.JNLPBA
+================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: JNLPBA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~JNLPBA.__init__
+      ~JNLPBA.add_label_noise
+      ~JNLPBA.downsample
+      ~JNLPBA.filter_empty_sentences
+      ~JNLPBA.filter_long_sentences
+      ~JNLPBA.get_all_sentences
+      ~JNLPBA.get_label_distribution
+      ~JNLPBA.make_label_dictionary
+      ~JNLPBA.make_tag_dictionary
+      ~JNLPBA.make_vocab_dictionary
+      ~JNLPBA.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~JNLPBA.dev
+      ~JNLPBA.test
+      ~JNLPBA.train
+   
+   

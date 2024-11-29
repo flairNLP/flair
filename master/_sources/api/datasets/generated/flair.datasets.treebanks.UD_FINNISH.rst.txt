@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_FINNISH
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_FINNISH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_FINNISH.__init__
+      ~UD_FINNISH.add_label_noise
+      ~UD_FINNISH.downsample
+      ~UD_FINNISH.filter_empty_sentences
+      ~UD_FINNISH.filter_long_sentences
+      ~UD_FINNISH.get_all_sentences
+      ~UD_FINNISH.get_label_distribution
+      ~UD_FINNISH.make_label_dictionary
+      ~UD_FINNISH.make_tag_dictionary
+      ~UD_FINNISH.make_vocab_dictionary
+      ~UD_FINNISH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_FINNISH.dev
+      ~UD_FINNISH.test
+      ~UD_FINNISH.train
+   
+   

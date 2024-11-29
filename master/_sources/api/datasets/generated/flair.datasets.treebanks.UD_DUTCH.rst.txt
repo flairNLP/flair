@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_DUTCH
+==================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_DUTCH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_DUTCH.__init__
+      ~UD_DUTCH.add_label_noise
+      ~UD_DUTCH.downsample
+      ~UD_DUTCH.filter_empty_sentences
+      ~UD_DUTCH.filter_long_sentences
+      ~UD_DUTCH.get_all_sentences
+      ~UD_DUTCH.get_label_distribution
+      ~UD_DUTCH.make_label_dictionary
+      ~UD_DUTCH.make_tag_dictionary
+      ~UD_DUTCH.make_vocab_dictionary
+      ~UD_DUTCH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_DUTCH.dev
+      ~UD_DUTCH.test
+      ~UD_DUTCH.train
+   
+   

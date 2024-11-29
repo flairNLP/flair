@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>flair.datasets.base &#8212; flair 0.14.0 documentation</title>
+    <title>flair.datasets.base &#8212; Flair Documentation</title>
   
   
   
@@ -31,6 +31,15 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/header.css?v=b4ed79de" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/footer.css?v=6c87b456" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/version-switcher.css?v=0d4c8916" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/sidebar.css?v=c65ae207" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tutorial.css?v=a09ac9ee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/api.css?v=67816a88" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/legal-notice.css?v=d7312f38" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/search.css?v=4a9c00e7" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -106,8 +115,14 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="../../_static/flair_logo_white.svg" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../../_static/flair_logo_white.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
   
-    <p class="title logo__title">flair 0.14.0 documentation</p>
   
 </a></div>
     
@@ -174,88 +189,213 @@ document.write(`
         </div>
       
       
-        <div class="navbar-item">
-<script>
-document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
-  </button>
-`);
+        <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
 </script></div>
       
         <div class="navbar-item">
 <script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
 document.write(`
   <div class="version-switcher__container dropdown">
-    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
        v0.14.0  
-      <span class="caret"></span>
     </button>
     <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
     <!-- dropdown will be populated by javascript on page load -->
-      <a class="list-group-item list-group-item-action py-1" href="../../../master/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    latest (dev)
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="base.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.14.0
       
-    
-    
-    [x]
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.1
+          <a class="list-group-item list-group-item-action py-1" href="../../../master/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        latest (dev)
+        
+        </span>
+          </a>
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.0
       
-    
-    </span>
-      </a>
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
     </div>
   </div>
 `);
-</script></div>
-      
-        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
-    aria-label="Icon Links">
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
-        </li>
-</ul></div>
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
       
     </div>
     
@@ -273,10 +413,6 @@ document.write(`
     </div>
   
 
-  
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
-      <span class="fa-solid fa-outdent"></span>
-    </label>
   
 </div>
 
@@ -339,88 +475,213 @@ document.write(`
     
       <div class="sidebar-header-items__end">
         
-          <div class="navbar-item">
-<script>
-document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
-  </button>
-`);
+          <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
 </script></div>
         
           <div class="navbar-item">
 <script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
 document.write(`
   <div class="version-switcher__container dropdown">
-    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
        v0.14.0  
-      <span class="caret"></span>
     </button>
     <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
     <!-- dropdown will be populated by javascript on page load -->
-      <a class="list-group-item list-group-item-action py-1" href="../../../master/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    latest (dev)
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="base.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.14.0
       
-    
-    
-    [x]
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.1
+          <a class="list-group-item list-group-item-action py-1" href="../../../master/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        latest (dev)
+        
+        </span>
+          </a>
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.0
       
-    
-    </span>
-      </a>
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/api/datasets/base.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
     </div>
   </div>
 `);
-</script></div>
-        
-          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
-    aria-label="Icon Links">
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
-        </li>
-</ul></div>
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
         
       </div>
     
@@ -458,36 +719,6 @@ document.write(`
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../glossary/index.html">Glossary</a></li>
-</ul>
-</div>
-        <div class="sidebar-primary-item">
-<div id="searchbox"></div></div>
-        <div class="sidebar-primary-item">
-<h3>Versions</h3>
-<ul>
-  <li><a href="../../../master/api/datasets/base.html">
-    
-    latest (master)
-    
-  </a></li>
-  <li><a href="base.html">
-    
-    v0.14.0
-      
-    
-  </a></li>
-  <li><a href="../../../v0.13.1/api/datasets/base.html">
-    
-    v0.13.1
-      
-    
-  </a></li>
-  <li><a href="../../../v0.13.0/api/datasets/base.html">
-    
-    v0.13.0
-      
-    
-  </a></li>
 </ul>
 </div>
     </div>
@@ -553,18 +784,18 @@ document.write(`
 <span id="flair-datasets-base"></span><h1>flair.datasets.base<a class="headerlink" href="#module-flair.datasets.base" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.datasets.base.DataLoader">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">DataLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_sampler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_init_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L15-L38"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.DataLoader" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">DataLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_sampler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">worker_init_fn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L15-L38"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.DataLoader" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code></p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.datasets.base.FlairDatapointDataset">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">FlairDatapointDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datapoints</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L41-L62"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.FlairDatapointDataset" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">FlairDatapointDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datapoints</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L41-L62"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.FlairDatapointDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.FlairDataset" title="flair.data.FlairDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlairDataset</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">DT</span></code>]</p>
 <p>A simple Dataset object to wrap a List of Datapoints, for example Sentences.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.base.FlairDatapointDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datapoints</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L44-L53"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.FlairDatapointDataset.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datapoints</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L44-L53"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.FlairDatapointDataset.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Instantiate FlairDatapointDataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -575,7 +806,7 @@ document.write(`
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.base.FlairDatapointDataset.is_in_memory">
-<span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L55-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.FlairDatapointDataset.is_in_memory" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L55-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.FlairDatapointDataset.is_in_memory" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
@@ -587,11 +818,11 @@ document.write(`
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.datasets.base.SentenceDataset">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">SentenceDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L65-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.SentenceDataset" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">SentenceDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L65-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.SentenceDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.base.FlairDatapointDataset" title="flair.datasets.base.FlairDatapointDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlairDatapointDataset</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.base.SentenceDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L66-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.SentenceDataset.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L66-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.SentenceDataset.__init__" title="Link to this definition">#</a></dt>
 <dd><div class="deprecated">
 <p><span class="versionmodified deprecated">Deprecated since version 0.11: </span>The ‘SentenceDataset’ class was renamed to
 ‘FlairDatapointDataset’</p>
@@ -602,12 +833,12 @@ document.write(`
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.datasets.base.StringDataset">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">StringDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L71-L102"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.StringDataset" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">StringDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L71-L102"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.StringDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.FlairDataset" title="flair.data.FlairDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlairDataset</span></code></a></p>
 <p>A Dataset taking string as input and returning Sentence during iteration.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.base.StringDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L74-L91"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.StringDataset.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L74-L91"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.StringDataset.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Instantiate StringDataset.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -622,7 +853,7 @@ document.write(`
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.base.StringDataset.is_in_memory">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L93-L95"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.StringDataset.is_in_memory" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L93-L95"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.StringDataset.is_in_memory" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
@@ -634,11 +865,11 @@ document.write(`
 
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.datasets.base.MongoDataset">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">MongoDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories_field=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_type='class'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L105-L231"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.MongoDataset" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">MongoDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories_field=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_type='class'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L105-L231"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.MongoDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.FlairDataset" title="flair.data.FlairDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlairDataset</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.base.MongoDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories_field=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_type='class'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L106-L193"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.MongoDataset.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories_field=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_type='class'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L106-L193"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.MongoDataset.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Reads Mongo collections.</p>
 <p>Each collection should contain one document/text per item.</p>
 <p>Each item should have the following format:
@@ -673,7 +904,7 @@ document.write(`
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.base.MongoDataset.is_in_memory">
-<span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L215-L216"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.MongoDataset.is_in_memory" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L215-L216"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.MongoDataset.is_in_memory" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
@@ -685,7 +916,7 @@ document.write(`
 
 <dl class="py function">
 <dt class="sig sig-object py" id="flair.datasets.base.find_train_dev_test_files">
-<span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">find_train_dev_test_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autofind_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/datasets/base.py#L234-L276"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.find_train_dev_test_files" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">find_train_dev_test_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autofind_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.14.0/flair/datasets/base.py#L234-L276"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.find_train_dev_test_files" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -696,81 +927,9 @@ document.write(`
               
               
               
-                <footer class="bd-footer-article">
-                  
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
-<div class="prev-next-area">
-    <a class="left-prev"
-       href="../flair.datasets.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">flair.datasets</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="biomedical.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">flair.datasets.biomedical</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
-</div></div>
-  
-</div>
-
-                </footer>
-              
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.DataLoader"><code class="docutils literal notranslate"><span class="pre">DataLoader</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.FlairDatapointDataset"><code class="docutils literal notranslate"><span class="pre">FlairDatapointDataset</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.FlairDatapointDataset.__init__"><code class="docutils literal notranslate"><span class="pre">FlairDatapointDataset.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.FlairDatapointDataset.is_in_memory"><code class="docutils literal notranslate"><span class="pre">FlairDatapointDataset.is_in_memory()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.SentenceDataset"><code class="docutils literal notranslate"><span class="pre">SentenceDataset</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.SentenceDataset.__init__"><code class="docutils literal notranslate"><span class="pre">SentenceDataset.__init__()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.StringDataset"><code class="docutils literal notranslate"><span class="pre">StringDataset</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.StringDataset.__init__"><code class="docutils literal notranslate"><span class="pre">StringDataset.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.StringDataset.is_in_memory"><code class="docutils literal notranslate"><span class="pre">StringDataset.is_in_memory()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.MongoDataset"><code class="docutils literal notranslate"><span class="pre">MongoDataset</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.MongoDataset.__init__"><code class="docutils literal notranslate"><span class="pre">MongoDataset.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.MongoDataset.is_in_memory"><code class="docutils literal notranslate"><span class="pre">MongoDataset.is_in_memory()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.datasets.base.find_train_dev_test_files"><code class="docutils literal notranslate"><span class="pre">find_train_dev_test_files()</span></code></a></li>
-</ul>
-  </nav></div>
-
-  <div class="sidebar-secondary-item">
-  <div class="tocsection sourcelink">
-    <a href="../../_sources/api/datasets/base.rst.txt">
-      <i class="fa-solid fa-file-lines"></i> Show Source
-    </a>
-  </div>
-</div>
-
-</div></div>
               
             
           </div>
@@ -800,21 +959,16 @@ document.write(`
   </p>
 </div>
       
-        <div class="footer-item">
-  <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
-    <br/>
-  </p>
-</div>
-      
     </div>
   
   
     <div class="footer-items__end">
       
-        <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
-</p></div>
+        <div class="footer-item"><a href="../../legal-notice/index.html">Legal notice</a></div>
+      
+        <div class="footer-item"><a href="https://twitter.com/alan_akbik" target="_blank">Twitter/X</a></div>
+      
+        <div class="footer-item"><a href="https://www.linkedin.com/in/alan-akbik-9859b1122/" target="_blank">LinkedIn</a></div>
       
     </div>
   

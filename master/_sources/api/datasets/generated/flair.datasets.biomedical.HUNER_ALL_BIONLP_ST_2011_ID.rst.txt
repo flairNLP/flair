@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_ALL\_BIONLP\_ST\_2011\_ID
+==========================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_ALL_BIONLP_ST_2011_ID
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_ALL_BIONLP_ST_2011_ID.__init__
+      ~HUNER_ALL_BIONLP_ST_2011_ID.add_label_noise
+      ~HUNER_ALL_BIONLP_ST_2011_ID.bin_search_passage
+      ~HUNER_ALL_BIONLP_ST_2011_ID.build_corpus_directory_name
+      ~HUNER_ALL_BIONLP_ST_2011_ID.downsample
+      ~HUNER_ALL_BIONLP_ST_2011_ID.filter_empty_sentences
+      ~HUNER_ALL_BIONLP_ST_2011_ID.filter_long_sentences
+      ~HUNER_ALL_BIONLP_ST_2011_ID.get_all_sentences
+      ~HUNER_ALL_BIONLP_ST_2011_ID.get_entity_type_mapping
+      ~HUNER_ALL_BIONLP_ST_2011_ID.get_label_distribution
+      ~HUNER_ALL_BIONLP_ST_2011_ID.make_label_dictionary
+      ~HUNER_ALL_BIONLP_ST_2011_ID.make_tag_dictionary
+      ~HUNER_ALL_BIONLP_ST_2011_ID.make_vocab_dictionary
+      ~HUNER_ALL_BIONLP_ST_2011_ID.obtain_statistics
+      ~HUNER_ALL_BIONLP_ST_2011_ID.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_ALL_BIONLP_ST_2011_ID.dev
+      ~HUNER_ALL_BIONLP_ST_2011_ID.test
+      ~HUNER_ALL_BIONLP_ST_2011_ID.train
+   
+   

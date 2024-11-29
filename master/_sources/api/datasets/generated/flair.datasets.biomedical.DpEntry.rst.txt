@@ -1,0 +1,33 @@
+﻿flair.datasets.biomedical.DpEntry
+=================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: DpEntry
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DpEntry.__init__
+      ~DpEntry.count
+      ~DpEntry.index
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DpEntry.entity_count
+      ~DpEntry.entity_lengths_sum
+      ~DpEntry.last_entity
+      ~DpEntry.position_end
+   
+   

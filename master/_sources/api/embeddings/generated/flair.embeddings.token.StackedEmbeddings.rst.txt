@@ -1,0 +1,91 @@
+﻿flair.embeddings.token.StackedEmbeddings
+========================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: StackedEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~StackedEmbeddings.__init__
+      ~StackedEmbeddings.add_module
+      ~StackedEmbeddings.apply
+      ~StackedEmbeddings.bfloat16
+      ~StackedEmbeddings.buffers
+      ~StackedEmbeddings.children
+      ~StackedEmbeddings.compile
+      ~StackedEmbeddings.cpu
+      ~StackedEmbeddings.cuda
+      ~StackedEmbeddings.double
+      ~StackedEmbeddings.embed
+      ~StackedEmbeddings.eval
+      ~StackedEmbeddings.extra_repr
+      ~StackedEmbeddings.float
+      ~StackedEmbeddings.forward
+      ~StackedEmbeddings.from_params
+      ~StackedEmbeddings.get_buffer
+      ~StackedEmbeddings.get_extra_state
+      ~StackedEmbeddings.get_instance_parameters
+      ~StackedEmbeddings.get_names
+      ~StackedEmbeddings.get_parameter
+      ~StackedEmbeddings.get_submodule
+      ~StackedEmbeddings.half
+      ~StackedEmbeddings.ipu
+      ~StackedEmbeddings.load_embedding
+      ~StackedEmbeddings.load_state_dict
+      ~StackedEmbeddings.modules
+      ~StackedEmbeddings.mtia
+      ~StackedEmbeddings.named_buffers
+      ~StackedEmbeddings.named_children
+      ~StackedEmbeddings.named_modules
+      ~StackedEmbeddings.named_parameters
+      ~StackedEmbeddings.parameters
+      ~StackedEmbeddings.register_backward_hook
+      ~StackedEmbeddings.register_buffer
+      ~StackedEmbeddings.register_forward_hook
+      ~StackedEmbeddings.register_forward_pre_hook
+      ~StackedEmbeddings.register_full_backward_hook
+      ~StackedEmbeddings.register_full_backward_pre_hook
+      ~StackedEmbeddings.register_load_state_dict_post_hook
+      ~StackedEmbeddings.register_load_state_dict_pre_hook
+      ~StackedEmbeddings.register_module
+      ~StackedEmbeddings.register_parameter
+      ~StackedEmbeddings.register_state_dict_post_hook
+      ~StackedEmbeddings.register_state_dict_pre_hook
+      ~StackedEmbeddings.requires_grad_
+      ~StackedEmbeddings.save_embeddings
+      ~StackedEmbeddings.set_extra_state
+      ~StackedEmbeddings.set_submodule
+      ~StackedEmbeddings.share_memory
+      ~StackedEmbeddings.state_dict
+      ~StackedEmbeddings.to
+      ~StackedEmbeddings.to_empty
+      ~StackedEmbeddings.to_params
+      ~StackedEmbeddings.train
+      ~StackedEmbeddings.type
+      ~StackedEmbeddings.xpu
+      ~StackedEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~StackedEmbeddings.T_destination
+      ~StackedEmbeddings.call_super_init
+      ~StackedEmbeddings.dump_patches
+      ~StackedEmbeddings.embedding_length
+      ~StackedEmbeddings.embedding_type
+      ~StackedEmbeddings.embeddings_name
+      ~StackedEmbeddings.training
+   
+   

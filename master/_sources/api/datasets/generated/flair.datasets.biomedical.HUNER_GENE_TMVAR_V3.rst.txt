@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_TMVAR\_V3
+================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_TMVAR_V3
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_TMVAR_V3.__init__
+      ~HUNER_GENE_TMVAR_V3.add_label_noise
+      ~HUNER_GENE_TMVAR_V3.bin_search_passage
+      ~HUNER_GENE_TMVAR_V3.build_corpus_directory_name
+      ~HUNER_GENE_TMVAR_V3.downsample
+      ~HUNER_GENE_TMVAR_V3.filter_empty_sentences
+      ~HUNER_GENE_TMVAR_V3.filter_long_sentences
+      ~HUNER_GENE_TMVAR_V3.get_all_sentences
+      ~HUNER_GENE_TMVAR_V3.get_entity_type_mapping
+      ~HUNER_GENE_TMVAR_V3.get_label_distribution
+      ~HUNER_GENE_TMVAR_V3.make_label_dictionary
+      ~HUNER_GENE_TMVAR_V3.make_tag_dictionary
+      ~HUNER_GENE_TMVAR_V3.make_vocab_dictionary
+      ~HUNER_GENE_TMVAR_V3.obtain_statistics
+      ~HUNER_GENE_TMVAR_V3.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_TMVAR_V3.dev
+      ~HUNER_GENE_TMVAR_V3.test
+      ~HUNER_GENE_TMVAR_V3.train
+   
+   

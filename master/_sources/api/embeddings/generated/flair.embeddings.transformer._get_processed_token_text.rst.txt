@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.\_get\_processed\_token\_text
+==========================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: _get_processed_token_text

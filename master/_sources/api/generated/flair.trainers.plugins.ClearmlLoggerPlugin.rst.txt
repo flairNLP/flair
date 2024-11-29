@@ -1,0 +1,39 @@
+﻿flair.trainers.plugins.ClearmlLoggerPlugin
+==========================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: ClearmlLoggerPlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ClearmlLoggerPlugin.__init__
+      ~ClearmlLoggerPlugin.attach_to
+      ~ClearmlLoggerPlugin.detach
+      ~ClearmlLoggerPlugin.get_state
+      ~ClearmlLoggerPlugin.hook
+      ~ClearmlLoggerPlugin.mark_func_as_hook
+      ~ClearmlLoggerPlugin.metric_recorded
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ClearmlLoggerPlugin.attach_to_all_processes
+      ~ClearmlLoggerPlugin.corpus
+      ~ClearmlLoggerPlugin.logger
+      ~ClearmlLoggerPlugin.model
+      ~ClearmlLoggerPlugin.pluggable
+      ~ClearmlLoggerPlugin.trainer
+   
+   

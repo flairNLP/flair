@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.JsonlCorpus
+=============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: JsonlCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~JsonlCorpus.__init__
+      ~JsonlCorpus.add_label_noise
+      ~JsonlCorpus.downsample
+      ~JsonlCorpus.filter_empty_sentences
+      ~JsonlCorpus.filter_long_sentences
+      ~JsonlCorpus.get_all_sentences
+      ~JsonlCorpus.get_label_distribution
+      ~JsonlCorpus.make_label_dictionary
+      ~JsonlCorpus.make_tag_dictionary
+      ~JsonlCorpus.make_vocab_dictionary
+      ~JsonlCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~JsonlCorpus.dev
+      ~JsonlCorpus.test
+      ~JsonlCorpus.train
+   
+   

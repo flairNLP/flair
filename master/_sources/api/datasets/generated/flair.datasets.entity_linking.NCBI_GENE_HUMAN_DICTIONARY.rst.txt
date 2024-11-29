@@ -1,0 +1,33 @@
+﻿flair.datasets.entity\_linking.NCBI\_GENE\_HUMAN\_DICTIONARY
+============================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: NCBI_GENE_HUMAN_DICTIONARY
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NCBI_GENE_HUMAN_DICTIONARY.__init__
+      ~NCBI_GENE_HUMAN_DICTIONARY.download_dictionary
+      ~NCBI_GENE_HUMAN_DICTIONARY.parse_dictionary
+      ~NCBI_GENE_HUMAN_DICTIONARY.to_in_memory_dictionary
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NCBI_GENE_HUMAN_DICTIONARY.candidates
+      ~NCBI_GENE_HUMAN_DICTIONARY.database_name
+      ~NCBI_GENE_HUMAN_DICTIONARY.text_to_index
+   
+   

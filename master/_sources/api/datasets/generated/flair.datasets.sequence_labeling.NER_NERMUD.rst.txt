@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_NERMUD
+=============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_NERMUD
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_NERMUD.__init__
+      ~NER_NERMUD.add_label_noise
+      ~NER_NERMUD.downsample
+      ~NER_NERMUD.filter_empty_sentences
+      ~NER_NERMUD.filter_long_sentences
+      ~NER_NERMUD.get_all_sentences
+      ~NER_NERMUD.get_label_distribution
+      ~NER_NERMUD.make_label_dictionary
+      ~NER_NERMUD.make_tag_dictionary
+      ~NER_NERMUD.make_vocab_dictionary
+      ~NER_NERMUD.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_NERMUD.dev
+      ~NER_NERMUD.test
+      ~NER_NERMUD.train
+   
+   

@@ -1,0 +1,39 @@
+﻿flair.trainers.plugins.MetricHistoryPlugin
+==========================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: MetricHistoryPlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MetricHistoryPlugin.__init__
+      ~MetricHistoryPlugin.after_training
+      ~MetricHistoryPlugin.attach_to
+      ~MetricHistoryPlugin.detach
+      ~MetricHistoryPlugin.get_state
+      ~MetricHistoryPlugin.hook
+      ~MetricHistoryPlugin.mark_func_as_hook
+      ~MetricHistoryPlugin.metric_recorded
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MetricHistoryPlugin.attach_to_all_processes
+      ~MetricHistoryPlugin.corpus
+      ~MetricHistoryPlugin.model
+      ~MetricHistoryPlugin.pluggable
+      ~MetricHistoryPlugin.trainer
+   
+   

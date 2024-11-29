@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.FSU
+=============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: FSU
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FSU.__init__
+      ~FSU.add_label_noise
+      ~FSU.download_corpus
+      ~FSU.downsample
+      ~FSU.filter_empty_sentences
+      ~FSU.filter_long_sentences
+      ~FSU.get_all_sentences
+      ~FSU.get_label_distribution
+      ~FSU.make_label_dictionary
+      ~FSU.make_tag_dictionary
+      ~FSU.make_vocab_dictionary
+      ~FSU.obtain_statistics
+      ~FSU.parse_corpus
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FSU.dev
+      ~FSU.test
+      ~FSU.train
+   
+   

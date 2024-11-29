@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_PERSIAN
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_PERSIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_PERSIAN.__init__
+      ~UD_PERSIAN.add_label_noise
+      ~UD_PERSIAN.downsample
+      ~UD_PERSIAN.filter_empty_sentences
+      ~UD_PERSIAN.filter_long_sentences
+      ~UD_PERSIAN.get_all_sentences
+      ~UD_PERSIAN.get_label_distribution
+      ~UD_PERSIAN.make_label_dictionary
+      ~UD_PERSIAN.make_tag_dictionary
+      ~UD_PERSIAN.make_vocab_dictionary
+      ~UD_PERSIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_PERSIAN.dev
+      ~UD_PERSIAN.test
+      ~UD_PERSIAN.train
+   
+   

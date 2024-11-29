@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.BigBioEntityLinkingCorpus
+========================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: BigBioEntityLinkingCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BigBioEntityLinkingCorpus.__init__
+      ~BigBioEntityLinkingCorpus.add_label_noise
+      ~BigBioEntityLinkingCorpus.downsample
+      ~BigBioEntityLinkingCorpus.filter_empty_sentences
+      ~BigBioEntityLinkingCorpus.filter_long_sentences
+      ~BigBioEntityLinkingCorpus.get_all_sentences
+      ~BigBioEntityLinkingCorpus.get_label_distribution
+      ~BigBioEntityLinkingCorpus.make_label_dictionary
+      ~BigBioEntityLinkingCorpus.make_tag_dictionary
+      ~BigBioEntityLinkingCorpus.make_vocab_dictionary
+      ~BigBioEntityLinkingCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BigBioEntityLinkingCorpus.dev
+      ~BigBioEntityLinkingCorpus.test
+      ~BigBioEntityLinkingCorpus.train
+   
+   

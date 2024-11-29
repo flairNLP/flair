@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_ARMENIAN
+=====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_ARMENIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_ARMENIAN.__init__
+      ~UD_ARMENIAN.add_label_noise
+      ~UD_ARMENIAN.downsample
+      ~UD_ARMENIAN.filter_empty_sentences
+      ~UD_ARMENIAN.filter_long_sentences
+      ~UD_ARMENIAN.get_all_sentences
+      ~UD_ARMENIAN.get_label_distribution
+      ~UD_ARMENIAN.make_label_dictionary
+      ~UD_ARMENIAN.make_tag_dictionary
+      ~UD_ARMENIAN.make_vocab_dictionary
+      ~UD_ARMENIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_ARMENIAN.dev
+      ~UD_ARMENIAN.test
+      ~UD_ARMENIAN.train
+   
+   

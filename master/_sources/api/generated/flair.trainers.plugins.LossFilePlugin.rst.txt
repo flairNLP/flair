@@ -1,0 +1,40 @@
+﻿flair.trainers.plugins.LossFilePlugin
+=====================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: LossFilePlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LossFilePlugin.__init__
+      ~LossFilePlugin.after_evaluation
+      ~LossFilePlugin.attach_to
+      ~LossFilePlugin.before_training_epoch
+      ~LossFilePlugin.detach
+      ~LossFilePlugin.get_state
+      ~LossFilePlugin.hook
+      ~LossFilePlugin.mark_func_as_hook
+      ~LossFilePlugin.metric_recorded
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LossFilePlugin.attach_to_all_processes
+      ~LossFilePlugin.corpus
+      ~LossFilePlugin.model
+      ~LossFilePlugin.pluggable
+      ~LossFilePlugin.trainer
+   
+   

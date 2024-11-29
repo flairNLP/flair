@@ -1,0 +1,31 @@
+﻿flair.datasets.sequence\_labeling.ColumnDataset
+===============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: ColumnDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ColumnDataset.__init__
+      ~ColumnDataset.is_in_memory
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ColumnDataset.FEATS
+      ~ColumnDataset.HEAD
+      ~ColumnDataset.SPACE_AFTER_KEY
+   
+   

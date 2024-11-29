@@ -1,0 +1,6 @@
+﻿flair.data.\_iter\_dataset
+==========================
+
+.. currentmodule:: flair.data
+
+.. autofunction:: _iter_dataset

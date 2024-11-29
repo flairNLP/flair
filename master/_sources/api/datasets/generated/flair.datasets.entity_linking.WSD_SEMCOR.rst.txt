@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.WSD\_SEMCOR
+==========================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: WSD_SEMCOR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WSD_SEMCOR.__init__
+      ~WSD_SEMCOR.add_label_noise
+      ~WSD_SEMCOR.downsample
+      ~WSD_SEMCOR.filter_empty_sentences
+      ~WSD_SEMCOR.filter_long_sentences
+      ~WSD_SEMCOR.get_all_sentences
+      ~WSD_SEMCOR.get_label_distribution
+      ~WSD_SEMCOR.make_label_dictionary
+      ~WSD_SEMCOR.make_tag_dictionary
+      ~WSD_SEMCOR.make_vocab_dictionary
+      ~WSD_SEMCOR.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WSD_SEMCOR.dev
+      ~WSD_SEMCOR.test
+      ~WSD_SEMCOR.train
+   
+   

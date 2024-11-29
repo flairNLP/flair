@@ -1,0 +1,42 @@
+﻿flair.datasets.document\_classification.GLUE\_SST2
+==================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: GLUE_SST2
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GLUE_SST2.__init__
+      ~GLUE_SST2.add_label_noise
+      ~GLUE_SST2.downsample
+      ~GLUE_SST2.filter_empty_sentences
+      ~GLUE_SST2.filter_long_sentences
+      ~GLUE_SST2.get_all_sentences
+      ~GLUE_SST2.get_label_distribution
+      ~GLUE_SST2.make_label_dictionary
+      ~GLUE_SST2.make_tag_dictionary
+      ~GLUE_SST2.make_vocab_dictionary
+      ~GLUE_SST2.obtain_statistics
+      ~GLUE_SST2.tsv_from_eval_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GLUE_SST2.dev
+      ~GLUE_SST2.label_map
+      ~GLUE_SST2.test
+      ~GLUE_SST2.train
+   
+   

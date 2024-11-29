@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_BURYAT
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_BURYAT
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_BURYAT.__init__
+      ~UD_BURYAT.add_label_noise
+      ~UD_BURYAT.downsample
+      ~UD_BURYAT.filter_empty_sentences
+      ~UD_BURYAT.filter_long_sentences
+      ~UD_BURYAT.get_all_sentences
+      ~UD_BURYAT.get_label_distribution
+      ~UD_BURYAT.make_label_dictionary
+      ~UD_BURYAT.make_tag_dictionary
+      ~UD_BURYAT.make_vocab_dictionary
+      ~UD_BURYAT.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_BURYAT.dev
+      ~UD_BURYAT.test
+      ~UD_BURYAT.train
+   
+   

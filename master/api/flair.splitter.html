@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>flair.splitter &#8212; flair 0.14.0 documentation</title>
+    <title>flair.splitter &#8212; Flair Documentation</title>
   
   
   
@@ -31,6 +31,15 @@
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/main.css?v=aa1137ec" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/header.css?v=b4ed79de" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/footer.css?v=6c87b456" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/version-switcher.css?v=0d4c8916" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/sidebar.css?v=c65ae207" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tutorial.css?v=a09ac9ee" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/api.css?v=67816a88" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/legal-notice.css?v=d7312f38" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/search.css?v=4a9c00e7" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -44,8 +53,8 @@
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="flair.tokenization" href="flair.tokenization.html" />
-    <link rel="prev" title="flair.nn" href="flair.nn.html" />
+    <link rel="next" title="flair.splitter.NewlineSentenceSplitter" href="generated/flair.splitter.NewlineSentenceSplitter.html" />
+    <link rel="prev" title="flair.nn.LabelVerbalizerDecoder" href="generated/flair.nn.LabelVerbalizerDecoder.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -106,8 +115,14 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="../_static/flair_logo_white.svg" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../_static/flair_logo_white.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
   
-    <p class="title logo__title">flair 0.14.0 documentation</p>
   
 </a></div>
     
@@ -136,7 +151,7 @@
 
                     <li class="nav-item current active">
                       <a class="nav-link nav-internal" href="index.html">
-                        API reference
+                        API
                       </a>
                     </li>
                 
@@ -144,13 +159,6 @@
                     <li class="nav-item">
                       <a class="nav-link nav-internal" href="../contributing/index.html">
                         Contributing
-                      </a>
-                    </li>
-                
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../glossary/index.html">
-                        Glossary
                       </a>
                     </li>
                 
@@ -174,88 +182,214 @@ document.write(`
         </div>
       
       
-        <div class="navbar-item">
-<script>
-document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
-  </button>
-`);
+        <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
 </script></div>
       
         <div class="navbar-item">
 <script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
 document.write(`
   <div class="version-switcher__container dropdown">
-    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
        latest (dev) 
-      <span class="caret"></span>
     </button>
     <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
     <!-- dropdown will be populated by javascript on page load -->
-      <a class="list-group-item list-group-item-action py-1" href="flair.splitter.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    latest (dev)
-    
-    
-    [x]
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../v0.14.0/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.14.0
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../v0.13.1/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.1
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../v0.13.0/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.0
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.14.0/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.14.0
+          
+        
+        </span>
+          </a>
       
-    
-    </span>
-      </a>
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.13.1/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.13.0/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
     </div>
   </div>
 `);
-</script></div>
-      
-        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
-    aria-label="Icon Links">
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
-        </li>
-</ul></div>
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
       
     </div>
     
@@ -273,10 +407,6 @@ document.write(`
     </div>
   
 
-  
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
-      <span class="fa-solid fa-outdent"></span>
-    </label>
   
 </div>
 
@@ -312,7 +442,7 @@ document.write(`
 
                     <li class="nav-item current active">
                       <a class="nav-link nav-internal" href="index.html">
-                        API reference
+                        API
                       </a>
                     </li>
                 
@@ -320,13 +450,6 @@ document.write(`
                     <li class="nav-item">
                       <a class="nav-link nav-internal" href="../contributing/index.html">
                         Contributing
-                      </a>
-                    </li>
-                
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../glossary/index.html">
-                        Glossary
                       </a>
                     </li>
                 
@@ -339,88 +462,214 @@ document.write(`
     
       <div class="sidebar-header-items__end">
         
-          <div class="navbar-item">
-<script>
-document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
-  </button>
-`);
+          <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
 </script></div>
         
           <div class="navbar-item">
 <script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
 document.write(`
   <div class="version-switcher__container dropdown">
-    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
        latest (dev) 
-      <span class="caret"></span>
     </button>
     <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
     <!-- dropdown will be populated by javascript on page load -->
-      <a class="list-group-item list-group-item-action py-1" href="flair.splitter.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    latest (dev)
-    
-    
-    [x]
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../v0.14.0/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.14.0
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../v0.13.1/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.1
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../v0.13.0/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.0
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.14.0/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.14.0
+          
+        
+        </span>
+          </a>
       
-    
-    </span>
-      </a>
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.13.1/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.13.0/api/flair.splitter.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
     </div>
   </div>
 `);
-</script></div>
-        
-          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
-    aria-label="Icon Links">
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
-        </li>
-</ul></div>
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
         
       </div>
     
@@ -431,7 +680,7 @@ document.write(`
 <h3><a href="../index.html">Table of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorials</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="index.html">API reference</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="flair.html">flair</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flair.data.html">flair.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flair.datasets.html">flair.datasets</a></li>
@@ -439,13 +688,13 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="flair.models.html">flair.models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flair.nn.html">flair.nn</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">flair.splitter</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#flair.splitter.SentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flair.splitter.SegtokSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SegtokSentenceSplitter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flair.splitter.SpacySentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SpacySentenceSplitter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flair.splitter.SciSpacySentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flair.splitter.TagSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">TagSentenceSplitter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flair.splitter.NewlineSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">NewlineSentenceSplitter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#flair.splitter.NoSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">NoSentenceSplitter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.splitter.NewlineSentenceSplitter.html">flair.splitter.NewlineSentenceSplitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.splitter.NoSentenceSplitter.html">flair.splitter.NoSentenceSplitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.splitter.SciSpacySentenceSplitter.html">flair.splitter.SciSpacySentenceSplitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.splitter.SegtokSentenceSplitter.html">flair.splitter.SegtokSentenceSplitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.splitter.SentenceSplitter.html">flair.splitter.SentenceSplitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.splitter.SpacySentenceSplitter.html">flair.splitter.SpacySentenceSplitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.splitter.TagSentenceSplitter.html">flair.splitter.TagSentenceSplitter</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="flair.tokenization.html">flair.tokenization</a></li>
@@ -454,37 +703,6 @@ document.write(`
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../glossary/index.html">Glossary</a></li>
-</ul>
-</div>
-        <div class="sidebar-primary-item">
-<div id="searchbox"></div></div>
-        <div class="sidebar-primary-item">
-<h3>Versions</h3>
-<ul>
-  <li><a href="flair.splitter.html">
-    
-    latest (master)
-    
-  </a></li>
-  <li><a href="../../v0.14.0/api/flair.splitter.html">
-    
-    v0.14.0
-      
-    
-  </a></li>
-  <li><a href="../../v0.13.1/api/flair.splitter.html">
-    
-    v0.13.1
-      
-    
-  </a></li>
-  <li><a href="../../v0.13.0/api/flair.splitter.html">
-    
-    v0.13.0
-      
-    
-  </a></li>
 </ul>
 </div>
     </div>
@@ -543,147 +761,33 @@ document.write(`
                   
 
 
-  <section id="module-flair.splitter">
-<span id="flair-splitter"></span><h1>flair.splitter<a class="headerlink" href="#module-flair.splitter" title="Link to this heading">#</a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.splitter.SentenceSplitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">SentenceSplitter</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/splitter.py#L15-L50"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SentenceSplitter" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>An abstract class representing a <a class="reference internal" href="#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>.</p>
-<p>Sentence splitters are used to represent algorithms and models to split plain text into
-sentences and individual tokens / words. All subclasses should overwrite <code class="xref py py-meth docutils literal notranslate"><span class="pre">splits()</span></code>,
-which splits the given plain text into a sequence of sentences (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code>). The
-individual sentences are in turn subdivided into tokens / words. In most cases, this can
-be controlled by passing custom implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code>.</p>
-<p>Moreover, subclasses may overwrite <a class="reference internal" href="#flair.splitter.SentenceSplitter.name" title="flair.splitter.SentenceSplitter.name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">name()</span></code></a>, returning a unique identifier representing
-the sentence splitter’s configuration.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.splitter.SentenceSplitter.split">
-<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/splitter.py#L28-L34"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SentenceSplitter.split" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.SentenceSplitter.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.splitter.SentenceSplitter.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.SentenceSplitter.tokenizer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><span class="pre">Tokenizer</span></a></em><a class="headerlink" href="#flair.splitter.SentenceSplitter.tokenizer" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.splitter.SegtokSentenceSplitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">SegtokSentenceSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/splitter.py#L53-L100"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SegtokSentenceSplitter" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a></p>
-<p>Sentence Splitter using SegTok.</p>
-<p>Implementation of <a class="reference internal" href="#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a> using the SegTok library.</p>
-<p>For further details see: <a class="github reference external" href="https://github.com/fnl/segtok">fnl/segtok</a></p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.SegtokSentenceSplitter.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.splitter.SegtokSentenceSplitter.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.SegtokSentenceSplitter.tokenizer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><span class="pre">Tokenizer</span></a></em><a class="headerlink" href="#flair.splitter.SegtokSentenceSplitter.tokenizer" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.splitter.SpacySentenceSplitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">SpacySentenceSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/splitter.py#L103-L169"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SpacySentenceSplitter" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a></p>
-<p>Sentence Splitter using Spacy.</p>
-<p>Implementation of <a class="reference internal" href="#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>, using models from Spacy.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Spacy V2 model or the name of the model to load.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.SpacySentenceSplitter.tokenizer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><span class="pre">Tokenizer</span></a></em><a class="headerlink" href="#flair.splitter.SpacySentenceSplitter.tokenizer" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.SpacySentenceSplitter.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.splitter.SpacySentenceSplitter.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.splitter.SciSpacySentenceSplitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">SciSpacySentenceSplitter</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/splitter.py#L172-L180"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SciSpacySentenceSplitter" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.splitter.SpacySentenceSplitter" title="flair.splitter.SpacySentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpacySentenceSplitter</span></code></a></p>
-<p>Sentence splitter using the spacy model <cite>en_core_sci_sm</cite>.</p>
-<p>Convenience class to instantiate <a class="reference internal" href="#flair.splitter.SpacySentenceSplitter" title="flair.splitter.SpacySentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpacySentenceSplitter</span></code></a> with Spacy model <cite>en_core_sci_sm</cite>
-for sentence splitting and <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code> as tokenizer.</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.splitter.TagSentenceSplitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">TagSentenceSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/splitter.py#L183-L227"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.TagSentenceSplitter" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a></p>
-<p>SentenceSplitter which assumes that there is a tag within the text that is used to mark sentence boundaries.</p>
-<p>Implementation of <a class="reference internal" href="#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a> which assumes that there is a special tag within
-the text that is used to mark sentence boundaries.</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.TagSentenceSplitter.tokenizer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><span class="pre">Tokenizer</span></a></em><a class="headerlink" href="#flair.splitter.TagSentenceSplitter.tokenizer" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.TagSentenceSplitter.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.splitter.TagSentenceSplitter.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.splitter.NewlineSentenceSplitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">NewlineSentenceSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/splitter.py#L230-L242"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.NewlineSentenceSplitter" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.splitter.TagSentenceSplitter" title="flair.splitter.TagSentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">TagSentenceSplitter</span></code></a></p>
-<p>Sentence Splitter using newline as boundary marker.</p>
-<p>Convenience class to instantiate <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceTagSplitter</span></code> with newline (”n”) as
-sentence boundary marker.</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.NewlineSentenceSplitter.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.splitter.NewlineSentenceSplitter.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.splitter.NoSentenceSplitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">NoSentenceSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob//flair/splitter.py#L245-L268"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.NoSentenceSplitter" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a></p>
-<p>Sentence Splitter which treats the full text as a single Sentence.</p>
-<p>Implementation of <a class="reference internal" href="#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a> which treats the complete text as one sentence.</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.NoSentenceSplitter.tokenizer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><span class="pre">Tokenizer</span></a></em><a class="headerlink" href="#flair.splitter.NoSentenceSplitter.tokenizer" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.splitter.NoSentenceSplitter.name">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.splitter.NoSentenceSplitter.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+  <section id="flair-splitter">
+<h1>flair.splitter<a class="headerlink" href="#flair-splitter" title="Link to this heading">#</a></h1>
+<table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.splitter.NewlineSentenceSplitter.html#flair.splitter.NewlineSentenceSplitter" title="flair.splitter.NewlineSentenceSplitter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NewlineSentenceSplitter</span></code></a></p></td>
+<td><p>Sentence Splitter using newline as boundary marker.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.splitter.NoSentenceSplitter.html#flair.splitter.NoSentenceSplitter" title="flair.splitter.NoSentenceSplitter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NoSentenceSplitter</span></code></a></p></td>
+<td><p>Sentence Splitter which treats the full text as a single Sentence.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.splitter.SciSpacySentenceSplitter.html#flair.splitter.SciSpacySentenceSplitter" title="flair.splitter.SciSpacySentenceSplitter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code></a></p></td>
+<td><p>Sentence splitter using the spacy model <cite>en_core_sci_sm</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.splitter.SegtokSentenceSplitter.html#flair.splitter.SegtokSentenceSplitter" title="flair.splitter.SegtokSentenceSplitter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SegtokSentenceSplitter</span></code></a></p></td>
+<td><p>Sentence Splitter using SegTok.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.splitter.SentenceSplitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a></p></td>
+<td><p>An abstract class representing a <a class="reference internal" href="generated/flair.splitter.SentenceSplitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.splitter.SpacySentenceSplitter.html#flair.splitter.SpacySentenceSplitter" title="flair.splitter.SpacySentenceSplitter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpacySentenceSplitter</span></code></a></p></td>
+<td><p>Sentence Splitter using Spacy.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.splitter.TagSentenceSplitter.html#flair.splitter.TagSentenceSplitter" title="flair.splitter.TagSentenceSplitter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TagSentenceSplitter</span></code></a></p></td>
+<td><p>SentenceSplitter which assumes that there is a tag within the text that is used to mark sentence boundaries.</p></td>
+</tr>
+</tbody>
+</table>
 </section>
 
 
@@ -692,91 +796,9 @@ sentence boundary marker.</p>
               
               
               
-                <footer class="bd-footer-article">
-                  
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
-<div class="prev-next-area">
-    <a class="left-prev"
-       href="flair.nn.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">flair.nn</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="flair.tokenization.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">flair.tokenization</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
-</div></div>
-  
-</div>
-
-                </footer>
-              
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SentenceSplitter.split"><code class="docutils literal notranslate"><span class="pre">SentenceSplitter.split()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SentenceSplitter.name"><code class="docutils literal notranslate"><span class="pre">SentenceSplitter.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SentenceSplitter.tokenizer"><code class="docutils literal notranslate"><span class="pre">SentenceSplitter.tokenizer</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SegtokSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SegtokSentenceSplitter</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SegtokSentenceSplitter.name"><code class="docutils literal notranslate"><span class="pre">SegtokSentenceSplitter.name</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SegtokSentenceSplitter.tokenizer"><code class="docutils literal notranslate"><span class="pre">SegtokSentenceSplitter.tokenizer</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SpacySentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SpacySentenceSplitter</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SpacySentenceSplitter.tokenizer"><code class="docutils literal notranslate"><span class="pre">SpacySentenceSplitter.tokenizer</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SpacySentenceSplitter.name"><code class="docutils literal notranslate"><span class="pre">SpacySentenceSplitter.name</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.SciSpacySentenceSplitter"><code class="docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.TagSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">TagSentenceSplitter</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.TagSentenceSplitter.tokenizer"><code class="docutils literal notranslate"><span class="pre">TagSentenceSplitter.tokenizer</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.TagSentenceSplitter.name"><code class="docutils literal notranslate"><span class="pre">TagSentenceSplitter.name</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.NewlineSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">NewlineSentenceSplitter</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.NewlineSentenceSplitter.name"><code class="docutils literal notranslate"><span class="pre">NewlineSentenceSplitter.name</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.NoSentenceSplitter"><code class="docutils literal notranslate"><span class="pre">NoSentenceSplitter</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.NoSentenceSplitter.tokenizer"><code class="docutils literal notranslate"><span class="pre">NoSentenceSplitter.tokenizer</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#flair.splitter.NoSentenceSplitter.name"><code class="docutils literal notranslate"><span class="pre">NoSentenceSplitter.name</span></code></a></li>
-</ul>
-</li>
-</ul>
-  </nav></div>
-
-  <div class="sidebar-secondary-item">
-  <div class="tocsection sourcelink">
-    <a href="../_sources/api/flair.splitter.rst.txt">
-      <i class="fa-solid fa-file-lines"></i> Show Source
-    </a>
-  </div>
-</div>
-
-</div></div>
               
             
           </div>
@@ -806,21 +828,16 @@ sentence boundary marker.</p>
   </p>
 </div>
       
-        <div class="footer-item">
-  <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
-    <br/>
-  </p>
-</div>
-      
     </div>
   
   
     <div class="footer-items__end">
       
-        <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
-</p></div>
+        <div class="footer-item"><a href="../legal-notice/index.html">Legal notice</a></div>
+      
+        <div class="footer-item"><a href="https://twitter.com/alan_akbik" target="_blank">Twitter/X</a></div>
+      
+        <div class="footer-item"><a href="https://www.linkedin.com/in/alan-akbik-9859b1122/" target="_blank">LinkedIn</a></div>
       
     </div>
   

@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.LARGE\_INTEGER
+===========================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autodata:: LARGE_INTEGER

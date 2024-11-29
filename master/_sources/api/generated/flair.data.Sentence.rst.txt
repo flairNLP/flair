@@ -1,0 +1,67 @@
+﻿flair.data.Sentence
+===================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: Sentence
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Sentence.__init__
+      ~Sentence.add_label
+      ~Sentence.add_metadata
+      ~Sentence.clear_embeddings
+      ~Sentence.copy_context_from_sentence
+      ~Sentence.get_each_embedding
+      ~Sentence.get_embedding
+      ~Sentence.get_label
+      ~Sentence.get_labels
+      ~Sentence.get_language_code
+      ~Sentence.get_metadata
+      ~Sentence.get_relations
+      ~Sentence.get_span
+      ~Sentence.get_spans
+      ~Sentence.get_token
+      ~Sentence.has_label
+      ~Sentence.has_metadata
+      ~Sentence.infer_space_after
+      ~Sentence.is_context_set
+      ~Sentence.left_context
+      ~Sentence.next_sentence
+      ~Sentence.previous_sentence
+      ~Sentence.remove_labels
+      ~Sentence.right_context
+      ~Sentence.set_context_for_sentences
+      ~Sentence.set_embedding
+      ~Sentence.set_label
+      ~Sentence.to
+      ~Sentence.to_dict
+      ~Sentence.to_original_text
+      ~Sentence.to_plain_string
+      ~Sentence.to_tagged_string
+      ~Sentence.to_tokenized_string
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Sentence.embedding
+      ~Sentence.end_position
+      ~Sentence.labels
+      ~Sentence.score
+      ~Sentence.start_position
+      ~Sentence.tag
+      ~Sentence.text
+      ~Sentence.unlabeled_identifier
+   
+   

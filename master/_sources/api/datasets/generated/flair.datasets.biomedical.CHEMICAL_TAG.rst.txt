@@ -1,0 +1,6 @@
+﻿flair.datasets.biomedical.CHEMICAL\_TAG
+=======================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autodata:: CHEMICAL_TAG

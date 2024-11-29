@@ -1,0 +1,23 @@
+﻿flair.datasets.base.StringDataset
+=================================
+
+.. currentmodule:: flair.datasets.base
+
+.. autoclass:: StringDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~StringDataset.__init__
+      ~StringDataset.is_in_memory
+   
+   
+
+   
+   
+   

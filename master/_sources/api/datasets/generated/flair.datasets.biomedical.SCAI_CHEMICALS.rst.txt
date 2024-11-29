@@ -1,0 +1,43 @@
+﻿flair.datasets.biomedical.SCAI\_CHEMICALS
+=========================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: SCAI_CHEMICALS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SCAI_CHEMICALS.__init__
+      ~SCAI_CHEMICALS.add_label_noise
+      ~SCAI_CHEMICALS.download_corpus
+      ~SCAI_CHEMICALS.downsample
+      ~SCAI_CHEMICALS.filter_empty_sentences
+      ~SCAI_CHEMICALS.filter_long_sentences
+      ~SCAI_CHEMICALS.get_all_sentences
+      ~SCAI_CHEMICALS.get_label_distribution
+      ~SCAI_CHEMICALS.make_label_dictionary
+      ~SCAI_CHEMICALS.make_tag_dictionary
+      ~SCAI_CHEMICALS.make_vocab_dictionary
+      ~SCAI_CHEMICALS.obtain_statistics
+      ~SCAI_CHEMICALS.parse_input_file
+      ~SCAI_CHEMICALS.perform_corpus_download
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SCAI_CHEMICALS.dev
+      ~SCAI_CHEMICALS.test
+      ~SCAI_CHEMICALS.train
+   
+   

@@ -1,0 +1,31 @@
+﻿flair.datasets.entity\_linking.EntityLinkingDictionary
+======================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: EntityLinkingDictionary
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~EntityLinkingDictionary.__init__
+      ~EntityLinkingDictionary.to_in_memory_dictionary
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~EntityLinkingDictionary.candidates
+      ~EntityLinkingDictionary.database_name
+      ~EntityLinkingDictionary.text_to_index
+   
+   

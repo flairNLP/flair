@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_SPECIES\_BIOID
+===============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_SPECIES_BIOID
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES_BIOID.__init__
+      ~HUNER_SPECIES_BIOID.add_label_noise
+      ~HUNER_SPECIES_BIOID.bin_search_passage
+      ~HUNER_SPECIES_BIOID.build_corpus_directory_name
+      ~HUNER_SPECIES_BIOID.downsample
+      ~HUNER_SPECIES_BIOID.filter_empty_sentences
+      ~HUNER_SPECIES_BIOID.filter_long_sentences
+      ~HUNER_SPECIES_BIOID.get_all_sentences
+      ~HUNER_SPECIES_BIOID.get_entity_type_mapping
+      ~HUNER_SPECIES_BIOID.get_label_distribution
+      ~HUNER_SPECIES_BIOID.make_label_dictionary
+      ~HUNER_SPECIES_BIOID.make_tag_dictionary
+      ~HUNER_SPECIES_BIOID.make_vocab_dictionary
+      ~HUNER_SPECIES_BIOID.obtain_statistics
+      ~HUNER_SPECIES_BIOID.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES_BIOID.dev
+      ~HUNER_SPECIES_BIOID.test
+      ~HUNER_SPECIES_BIOID.train
+   
+   

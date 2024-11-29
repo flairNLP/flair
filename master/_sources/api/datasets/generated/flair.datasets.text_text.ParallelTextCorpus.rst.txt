@@ -1,0 +1,41 @@
+﻿flair.datasets.text\_text.ParallelTextCorpus
+============================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: ParallelTextCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ParallelTextCorpus.__init__
+      ~ParallelTextCorpus.add_label_noise
+      ~ParallelTextCorpus.downsample
+      ~ParallelTextCorpus.filter_empty_sentences
+      ~ParallelTextCorpus.filter_long_sentences
+      ~ParallelTextCorpus.get_all_sentences
+      ~ParallelTextCorpus.get_label_distribution
+      ~ParallelTextCorpus.is_in_memory
+      ~ParallelTextCorpus.make_label_dictionary
+      ~ParallelTextCorpus.make_tag_dictionary
+      ~ParallelTextCorpus.make_vocab_dictionary
+      ~ParallelTextCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ParallelTextCorpus.dev
+      ~ParallelTextCorpus.test
+      ~ParallelTextCorpus.train
+   
+   

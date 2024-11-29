@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_COPTIC
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_COPTIC
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_COPTIC.__init__
+      ~UD_COPTIC.add_label_noise
+      ~UD_COPTIC.downsample
+      ~UD_COPTIC.filter_empty_sentences
+      ~UD_COPTIC.filter_long_sentences
+      ~UD_COPTIC.get_all_sentences
+      ~UD_COPTIC.get_label_distribution
+      ~UD_COPTIC.make_label_dictionary
+      ~UD_COPTIC.make_tag_dictionary
+      ~UD_COPTIC.make_vocab_dictionary
+      ~UD_COPTIC.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_COPTIC.dev
+      ~UD_COPTIC.test
+      ~UD_COPTIC.train
+   
+   

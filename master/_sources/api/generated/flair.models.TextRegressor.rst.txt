@@ -1,0 +1,91 @@
+﻿flair.models.TextRegressor
+==========================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: TextRegressor
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TextRegressor.__init__
+      ~TextRegressor.add_module
+      ~TextRegressor.apply
+      ~TextRegressor.bfloat16
+      ~TextRegressor.buffers
+      ~TextRegressor.children
+      ~TextRegressor.compile
+      ~TextRegressor.cpu
+      ~TextRegressor.cuda
+      ~TextRegressor.double
+      ~TextRegressor.eval
+      ~TextRegressor.evaluate
+      ~TextRegressor.extra_repr
+      ~TextRegressor.float
+      ~TextRegressor.forward
+      ~TextRegressor.forward_labels_and_loss
+      ~TextRegressor.forward_loss
+      ~TextRegressor.get_buffer
+      ~TextRegressor.get_extra_state
+      ~TextRegressor.get_parameter
+      ~TextRegressor.get_submodule
+      ~TextRegressor.get_used_tokens
+      ~TextRegressor.half
+      ~TextRegressor.ipu
+      ~TextRegressor.load
+      ~TextRegressor.load_state_dict
+      ~TextRegressor.modules
+      ~TextRegressor.mtia
+      ~TextRegressor.named_buffers
+      ~TextRegressor.named_children
+      ~TextRegressor.named_modules
+      ~TextRegressor.named_parameters
+      ~TextRegressor.parameters
+      ~TextRegressor.predict
+      ~TextRegressor.print_model_card
+      ~TextRegressor.register_backward_hook
+      ~TextRegressor.register_buffer
+      ~TextRegressor.register_forward_hook
+      ~TextRegressor.register_forward_pre_hook
+      ~TextRegressor.register_full_backward_hook
+      ~TextRegressor.register_full_backward_pre_hook
+      ~TextRegressor.register_load_state_dict_post_hook
+      ~TextRegressor.register_load_state_dict_pre_hook
+      ~TextRegressor.register_module
+      ~TextRegressor.register_parameter
+      ~TextRegressor.register_state_dict_post_hook
+      ~TextRegressor.register_state_dict_pre_hook
+      ~TextRegressor.requires_grad_
+      ~TextRegressor.save
+      ~TextRegressor.set_extra_state
+      ~TextRegressor.set_submodule
+      ~TextRegressor.share_memory
+      ~TextRegressor.state_dict
+      ~TextRegressor.to
+      ~TextRegressor.to_empty
+      ~TextRegressor.train
+      ~TextRegressor.type
+      ~TextRegressor.xpu
+      ~TextRegressor.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TextRegressor.T_destination
+      ~TextRegressor.call_super_init
+      ~TextRegressor.dump_patches
+      ~TextRegressor.label_type
+      ~TextRegressor.model_card
+      ~TextRegressor.training
+   
+   

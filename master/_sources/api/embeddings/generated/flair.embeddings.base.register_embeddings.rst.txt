@@ -1,0 +1,6 @@
+﻿flair.embeddings.base.register\_embeddings
+==========================================
+
+.. currentmodule:: flair.embeddings.base
+
+.. autofunction:: register_embeddings

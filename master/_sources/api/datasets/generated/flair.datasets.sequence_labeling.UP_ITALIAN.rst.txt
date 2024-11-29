@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.UP\_ITALIAN
+=============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: UP_ITALIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UP_ITALIAN.__init__
+      ~UP_ITALIAN.add_label_noise
+      ~UP_ITALIAN.downsample
+      ~UP_ITALIAN.filter_empty_sentences
+      ~UP_ITALIAN.filter_long_sentences
+      ~UP_ITALIAN.get_all_sentences
+      ~UP_ITALIAN.get_label_distribution
+      ~UP_ITALIAN.make_label_dictionary
+      ~UP_ITALIAN.make_tag_dictionary
+      ~UP_ITALIAN.make_vocab_dictionary
+      ~UP_ITALIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UP_ITALIAN.dev
+      ~UP_ITALIAN.test
+      ~UP_ITALIAN.train
+   
+   

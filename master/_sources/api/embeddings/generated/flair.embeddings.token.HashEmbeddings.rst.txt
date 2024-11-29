@@ -1,0 +1,92 @@
+﻿flair.embeddings.token.HashEmbeddings
+=====================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: HashEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HashEmbeddings.__init__
+      ~HashEmbeddings.add_module
+      ~HashEmbeddings.apply
+      ~HashEmbeddings.bfloat16
+      ~HashEmbeddings.buffers
+      ~HashEmbeddings.children
+      ~HashEmbeddings.compile
+      ~HashEmbeddings.cpu
+      ~HashEmbeddings.cuda
+      ~HashEmbeddings.double
+      ~HashEmbeddings.embed
+      ~HashEmbeddings.eval
+      ~HashEmbeddings.extra_repr
+      ~HashEmbeddings.float
+      ~HashEmbeddings.forward
+      ~HashEmbeddings.from_params
+      ~HashEmbeddings.get_buffer
+      ~HashEmbeddings.get_extra_state
+      ~HashEmbeddings.get_instance_parameters
+      ~HashEmbeddings.get_names
+      ~HashEmbeddings.get_parameter
+      ~HashEmbeddings.get_submodule
+      ~HashEmbeddings.half
+      ~HashEmbeddings.ipu
+      ~HashEmbeddings.load_embedding
+      ~HashEmbeddings.load_state_dict
+      ~HashEmbeddings.modules
+      ~HashEmbeddings.mtia
+      ~HashEmbeddings.named_buffers
+      ~HashEmbeddings.named_children
+      ~HashEmbeddings.named_modules
+      ~HashEmbeddings.named_parameters
+      ~HashEmbeddings.parameters
+      ~HashEmbeddings.register_backward_hook
+      ~HashEmbeddings.register_buffer
+      ~HashEmbeddings.register_forward_hook
+      ~HashEmbeddings.register_forward_pre_hook
+      ~HashEmbeddings.register_full_backward_hook
+      ~HashEmbeddings.register_full_backward_pre_hook
+      ~HashEmbeddings.register_load_state_dict_post_hook
+      ~HashEmbeddings.register_load_state_dict_pre_hook
+      ~HashEmbeddings.register_module
+      ~HashEmbeddings.register_parameter
+      ~HashEmbeddings.register_state_dict_post_hook
+      ~HashEmbeddings.register_state_dict_pre_hook
+      ~HashEmbeddings.requires_grad_
+      ~HashEmbeddings.save_embeddings
+      ~HashEmbeddings.set_extra_state
+      ~HashEmbeddings.set_submodule
+      ~HashEmbeddings.share_memory
+      ~HashEmbeddings.state_dict
+      ~HashEmbeddings.to
+      ~HashEmbeddings.to_empty
+      ~HashEmbeddings.to_params
+      ~HashEmbeddings.train
+      ~HashEmbeddings.type
+      ~HashEmbeddings.xpu
+      ~HashEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HashEmbeddings.T_destination
+      ~HashEmbeddings.call_super_init
+      ~HashEmbeddings.dump_patches
+      ~HashEmbeddings.embedding_length
+      ~HashEmbeddings.embedding_type
+      ~HashEmbeddings.embeddings_name
+      ~HashEmbeddings.num_embeddings
+      ~HashEmbeddings.training
+   
+   

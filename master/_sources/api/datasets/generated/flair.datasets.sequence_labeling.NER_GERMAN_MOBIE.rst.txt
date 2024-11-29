@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_GERMAN\_MOBIE
+====================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_GERMAN_MOBIE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_GERMAN_MOBIE.__init__
+      ~NER_GERMAN_MOBIE.add_label_noise
+      ~NER_GERMAN_MOBIE.downsample
+      ~NER_GERMAN_MOBIE.filter_empty_sentences
+      ~NER_GERMAN_MOBIE.filter_long_sentences
+      ~NER_GERMAN_MOBIE.get_all_sentences
+      ~NER_GERMAN_MOBIE.get_label_distribution
+      ~NER_GERMAN_MOBIE.make_label_dictionary
+      ~NER_GERMAN_MOBIE.make_tag_dictionary
+      ~NER_GERMAN_MOBIE.make_vocab_dictionary
+      ~NER_GERMAN_MOBIE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_GERMAN_MOBIE.dev
+      ~NER_GERMAN_MOBIE.test
+      ~NER_GERMAN_MOBIE.train
+   
+   

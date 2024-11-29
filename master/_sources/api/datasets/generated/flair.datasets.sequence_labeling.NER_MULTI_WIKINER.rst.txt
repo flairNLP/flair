@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_MULTI\_WIKINER
+=====================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_MULTI_WIKINER
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_MULTI_WIKINER.__init__
+      ~NER_MULTI_WIKINER.add_label_noise
+      ~NER_MULTI_WIKINER.downsample
+      ~NER_MULTI_WIKINER.filter_empty_sentences
+      ~NER_MULTI_WIKINER.filter_long_sentences
+      ~NER_MULTI_WIKINER.get_all_sentences
+      ~NER_MULTI_WIKINER.get_label_distribution
+      ~NER_MULTI_WIKINER.make_label_dictionary
+      ~NER_MULTI_WIKINER.make_tag_dictionary
+      ~NER_MULTI_WIKINER.make_vocab_dictionary
+      ~NER_MULTI_WIKINER.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_MULTI_WIKINER.dev
+      ~NER_MULTI_WIKINER.test
+      ~NER_MULTI_WIKINER.train
+   
+   

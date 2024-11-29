@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Other embeddings in Flair &#8212; flair 0.14.0 documentation</title>
+    <title>Other embeddings in Flair &#8212; Flair Documentation</title>
   
   
   
@@ -31,6 +31,15 @@
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/header.css?v=b4ed79de" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/footer.css?v=6c87b456" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/version-switcher.css?v=0d4c8916" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/sidebar.css?v=c65ae207" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tutorial.css?v=a09ac9ee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/api.css?v=67816a88" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/legal-notice.css?v=d7312f38" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/search.css?v=4a9c00e7" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
@@ -106,8 +115,14 @@
   
   
   
+    
+    
+      
+    
+    
+    <img src="../../_static/flair_logo_white.svg" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../../_static/flair_logo_white.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
   
-    <p class="title logo__title">flair 0.14.0 documentation</p>
   
 </a></div>
     
@@ -136,7 +151,7 @@
 
                     <li class="nav-item">
                       <a class="nav-link nav-internal" href="../../api/index.html">
-                        API reference
+                        API
                       </a>
                     </li>
                 
@@ -144,13 +159,6 @@
                     <li class="nav-item">
                       <a class="nav-link nav-internal" href="../../contributing/index.html">
                         Contributing
-                      </a>
-                    </li>
-                
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../../glossary/index.html">
-                        Glossary
                       </a>
                     </li>
                 
@@ -174,88 +182,214 @@ document.write(`
         </div>
       
       
-        <div class="navbar-item">
-<script>
-document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
-  </button>
-`);
+        <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
 </script></div>
       
         <div class="navbar-item">
 <script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
 document.write(`
   <div class="version-switcher__container dropdown">
-    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
        latest (dev) 
-      <span class="caret"></span>
     </button>
     <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
     <!-- dropdown will be populated by javascript on page load -->
-      <a class="list-group-item list-group-item-action py-1" href="other-embeddings.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    latest (dev)
-    
-    
-    [x]
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.14.0
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.1
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.0
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.14.0
+          
+        
+        </span>
+          </a>
       
-    
-    </span>
-      </a>
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
     </div>
   </div>
 `);
-</script></div>
-      
-        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
-    aria-label="Icon Links">
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
-        </li>
-</ul></div>
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
       
     </div>
     
@@ -273,10 +407,6 @@ document.write(`
     </div>
   
 
-  
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
-      <span class="fa-solid fa-outdent"></span>
-    </label>
   
 </div>
 
@@ -312,7 +442,7 @@ document.write(`
 
                     <li class="nav-item">
                       <a class="nav-link nav-internal" href="../../api/index.html">
-                        API reference
+                        API
                       </a>
                     </li>
                 
@@ -320,13 +450,6 @@ document.write(`
                     <li class="nav-item">
                       <a class="nav-link nav-internal" href="../../contributing/index.html">
                         Contributing
-                      </a>
-                    </li>
-                
-
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../../glossary/index.html">
-                        Glossary
                       </a>
                     </li>
                 
@@ -339,88 +462,214 @@ document.write(`
     
       <div class="sidebar-header-items__end">
         
-          <div class="navbar-item">
-<script>
-document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
-  </button>
-`);
+          <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
 </script></div>
         
           <div class="navbar-item">
 <script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
 document.write(`
   <div class="version-switcher__container dropdown">
-    <button id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
        latest (dev) 
-      <span class="caret"></span>
     </button>
     <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
     <!-- dropdown will be populated by javascript on page load -->
-      <a class="list-group-item list-group-item-action py-1" href="other-embeddings.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    latest (dev)
-    
-    
-    [x]
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.14.0
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.1
       
-    
-    </span>
-      </a>
-      <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
-      <span>
-    v0.13.0
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.14.0
+          
+        
+        </span>
+          </a>
       
-    
-    </span>
-      </a>
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/tutorial/tutorial-embeddings/other-embeddings.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
     </div>
   </div>
 `);
-</script></div>
-        
-          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
-    aria-label="Icon Links">
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://github.com/flairNLP/flair" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github"></i></span>
-            <label class="sr-only">GitHub</label></a>
-        </li>
-        <li class="nav-item">
-          
-          
-          
-          
-          
-          
-          
-          
-          <a href="https://pypi.org/project/flair" title="PyPI" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fas fa-box"></i></span>
-            <label class="sr-only">PyPI</label></a>
-        </li>
-</ul></div>
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
         
       </div>
     
@@ -445,39 +694,8 @@ document.write(`
 <li class="toctree-l2"><a class="reference internal" href="../tutorial-hunflair2/index.html">Tutorial: HunFlair2</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../glossary/index.html">Glossary</a></li>
-</ul>
-</div>
-        <div class="sidebar-primary-item">
-<div id="searchbox"></div></div>
-        <div class="sidebar-primary-item">
-<h3>Versions</h3>
-<ul>
-  <li><a href="other-embeddings.html">
-    
-    latest (master)
-    
-  </a></li>
-  <li><a href="../../../v0.14.0/tutorial/tutorial-embeddings/other-embeddings.html">
-    
-    v0.14.0
-      
-    
-  </a></li>
-  <li><a href="../../../v0.13.1/tutorial/tutorial-embeddings/other-embeddings.html">
-    
-    v0.13.1
-      
-    
-  </a></li>
-  <li><a href="../../../v0.13.0/tutorial/tutorial-embeddings/other-embeddings.html">
-    
-    v0.13.0
-      
-    
-  </a></li>
 </ul>
 </div>
     </div>
@@ -544,16 +762,16 @@ document.write(`
 <p>Flair supports many other embedding types. This section introduces these embeddings.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>We mostly train our models with either <a class="reference internal" href="../../api/embeddings/transformer.html#flair.embeddings.transformer.TransformerEmbeddings" title="flair.embeddings.transformer.TransformerEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings</span></code></span></a> or <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>. The embeddings presented here might be useful
+<p>We mostly train our models with either <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.transformer.TransformerEmbeddings.html#flair.embeddings.transformer.TransformerEmbeddings" title="flair.embeddings.transformer.TransformerEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerEmbeddings</span></code></span></a> or <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.token.FlairEmbeddings.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>. The embeddings presented here might be useful
 for specific use cases or for comparison purposes.</p>
 </div>
 <section id="one-hot-embeddings">
 <h2>One-Hot Embeddings<a class="headerlink" href="#one-hot-embeddings" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.OneHotEmbeddings" title="flair.embeddings.token.OneHotEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings</span></code></span></a> are embeddings that encode each word in a vocabulary as a one-hot vector, followed by an embedding
+<p><a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.token.OneHotEmbeddings.html#flair.embeddings.token.OneHotEmbeddings" title="flair.embeddings.token.OneHotEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings</span></code></span></a> are embeddings that encode each word in a vocabulary as a one-hot vector, followed by an embedding
 layer. These embeddings
 thus do not encode any prior knowledge as do most other embeddings. They also differ in that they
 require to see a vocabulary (<code class="docutils literal notranslate"><span class="pre">vocab_dictionary</span></code>) during instantiation. Such dictionary can be passed as an argument
-during class initialization or constructed directly from a corpus with a <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.OneHotEmbeddings.from_corpus" title="flair.embeddings.token.OneHotEmbeddings.from_corpus"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.from_corpus</span></code></span></a> method. The dictionary consists
+during class initialization or constructed directly from a corpus with a <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.token.OneHotEmbeddings.html#flair.embeddings.token.OneHotEmbeddings.from_corpus" title="flair.embeddings.token.OneHotEmbeddings.from_corpus"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.from_corpus</span></code></span></a> method. The dictionary consists
 of all unique tokens contained in the corpus plus an UNK token for all rare words.</p>
 <p>You initialize these embeddings like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">OneHotEmbeddings</span>
@@ -613,7 +831,7 @@ token (‘upos’). Embed it like so:</p>
 </section>
 <section id="byte-pair-embeddings">
 <h2>Byte Pair Embeddings<a class="headerlink" href="#byte-pair-embeddings" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.BytePairEmbeddings" title="flair.embeddings.token.BytePairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></span></a> are word embeddings that are precomputed on the subword-level. This means that they are able to
+<p><a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.token.BytePairEmbeddings.html#flair.embeddings.token.BytePairEmbeddings" title="flair.embeddings.token.BytePairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></span></a> are word embeddings that are precomputed on the subword-level. This means that they are able to
 embed any word by splitting words into subwords and looking up their embeddings. <code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code> were proposed
 and computed by <a class="reference external" href="https://www.aclweb.org/anthology/L18-1473">Heinzerling and Strube (2018)</a> who found that they offer nearly the same accuracy as word embeddings, but at a fraction
 of the model size. So they are a great choice if you want to train small models.</p>
@@ -634,13 +852,13 @@ for English:</p>
 </div>
 <p>More information can be found
 on the <a class="reference external" href="https://nlp.h-its.org/bpemb/">byte pair embeddings</a> web page.</p>
-<p><a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.BytePairEmbeddings" title="flair.embeddings.token.BytePairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></span></a> also have a multilingual model capable of embedding any word in any language.
+<p><a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.token.BytePairEmbeddings.html#flair.embeddings.token.BytePairEmbeddings" title="flair.embeddings.token.BytePairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></span></a> also have a multilingual model capable of embedding any word in any language.
 You can instantiate it with:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># init embedding</span>
 <span class="n">embedding</span> <span class="o">=</span> <span class="n">BytePairEmbeddings</span><span class="p">(</span><span class="s1">&#39;multi&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>You can also load custom <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.BytePairEmbeddings" title="flair.embeddings.token.BytePairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></span></a> by specifying a path to model_file_path and embedding_file_path arguments. They correspond respectively to a SentencePiece model file and to an embedding file (Word2Vec plain text or GenSim binary). For example:</p>
+<p>You can also load custom <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.token.BytePairEmbeddings.html#flair.embeddings.token.BytePairEmbeddings" title="flair.embeddings.token.BytePairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></span></a> by specifying a path to model_file_path and embedding_file_path arguments. They correspond respectively to a SentencePiece model file and to an embedding file (Word2Vec plain text or GenSim binary). For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># init custom embedding</span>
 <span class="n">embedding</span> <span class="o">=</span> <span class="n">BytePairEmbeddings</span><span class="p">(</span><span class="n">model_file_path</span><span class="o">=</span><span class="s1">&#39;your/path/m.model&#39;</span><span class="p">,</span> <span class="n">embedding_file_path</span><span class="o">=</span><span class="s1">&#39;your/path/w2v.txt&#39;</span><span class="p">)</span>
 </pre></div>
@@ -648,12 +866,12 @@ You can instantiate it with:</p>
 </section>
 <section id="document-pool-embeddings">
 <h2>Document Pool Embeddings<a class="headerlink" href="#document-pool-embeddings" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></span></a> calculate a pooling operation over all word embeddings in a document.
+<p><a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.DocumentPoolEmbeddings.html#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></span></a> calculate a pooling operation over all word embeddings in a document.
 The default operation is <code class="docutils literal notranslate"><span class="pre">mean</span></code> which gives us the mean of all words in the sentence.
 The resulting embedding is taken as document embedding.</p>
-<p>To create a mean document embedding simply create any number of <a class="reference internal" href="../../api/embeddings/base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></span></a> first and put them in a list.
-Afterwards, initiate the <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></span></a> with this list of <a class="reference internal" href="../../api/embeddings/base.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></span></a>.
-So, if you want to create a document embedding using GloVe embeddings together with <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>,
+<p>To create a mean document embedding simply create any number of <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.base.TokenEmbeddings.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></span></a> first and put them in a list.
+Afterwards, initiate the <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.DocumentPoolEmbeddings.html#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></span></a> with this list of <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.base.TokenEmbeddings.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></span></a>.
+So, if you want to create a document embedding using GloVe embeddings together with <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.token.FlairEmbeddings.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>,
 use the following code:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">DocumentPoolEmbeddings</span>
 
@@ -664,7 +882,7 @@ use the following code:</p>
 <span class="n">document_embeddings</span> <span class="o">=</span> <span class="n">DocumentPoolEmbeddings</span><span class="p">([</span><span class="n">glove_embedding</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Now, create an example sentence and call the embedding’s <a class="reference internal" href="../../api/embeddings/base.html#flair.embeddings.base.Embeddings.embed" title="flair.embeddings.base.Embeddings.embed"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">embed()</span></code></span></a> method.</p>
+<p>Now, create an example sentence and call the embedding’s <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.base.Embeddings.html#flair.embeddings.base.Embeddings.embed" title="flair.embeddings.base.Embeddings.embed"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">embed()</span></code></span></a> method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create an example sentence</span>
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green . And the sky is blue .&#39;</span><span class="p">)</span>
 
@@ -728,10 +946,10 @@ are often better off doing no transformation at all. Do this by passing ‘none�
 </section>
 <section id="document-rnn-embeddings">
 <h2>Document RNN Embeddings<a class="headerlink" href="#document-rnn-embeddings" title="Link to this heading">#</a></h2>
-<p>Besides simple pooling we also support a method based on an RNN to obtain a <a class="reference internal" href="../../api/embeddings/base.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></span></a>.
+<p>Besides simple pooling we also support a method based on an RNN to obtain a <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.base.DocumentEmbeddings.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></span></a>.
 The RNN takes the word embeddings of every token in the document as input and provides its last output state as document
 embedding. You can choose which type of RNN you wish to use.</p>
-<p>In order to use the <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> you need to initialize them by passing a list of token embeddings to it:</p>
+<p>In order to use the <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.DocumentRNNEmbeddings.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> you need to initialize them by passing a list of token embeddings to it:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">DocumentRNNEmbeddings</span>
 
 <span class="n">glove_embedding</span> <span class="o">=</span> <span class="n">WordEmbeddings</span><span class="p">(</span><span class="s1">&#39;glove&#39;</span><span class="p">)</span>
@@ -739,7 +957,7 @@ embedding. You can choose which type of RNN you wish to use.</p>
 <span class="n">document_embeddings</span> <span class="o">=</span> <span class="n">DocumentRNNEmbeddings</span><span class="p">([</span><span class="n">glove_embedding</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>By default, a GRU-type RNN is instantiated. Now, create an example sentence and call the embedding’s <a class="reference internal" href="../../api/embeddings/base.html#flair.embeddings.base.Embeddings.embed" title="flair.embeddings.base.Embeddings.embed"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">embed()</span></code></span></a> method.</p>
+<p>By default, a GRU-type RNN is instantiated. Now, create an example sentence and call the embedding’s <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.base.Embeddings.html#flair.embeddings.base.Embeddings.embed" title="flair.embeddings.base.Embeddings.embed"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">embed()</span></code></span></a> method.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create an example sentence</span>
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green . And the sky is blue .&#39;</span><span class="p">)</span>
 
@@ -766,9 +984,9 @@ to initialize a document RNN embedding with an LSTM, do:</p>
 </section>
 <section id="need-to-be-trained-on-a-task">
 <h3>Need to be trained on a task<a class="headerlink" href="#need-to-be-trained-on-a-task" title="Link to this heading">#</a></h3>
-<p>Note that while <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></span></a> are immediately meaningful, <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> need to be tuned on the
+<p>Note that while <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.DocumentPoolEmbeddings.html#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></span></a> are immediately meaningful, <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.DocumentRNNEmbeddings.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> need to be tuned on the
 downstream task. This happens automatically in Flair if you train a new model with these embeddings.</p>
-<p>Once the model is trained, you can access the tuned <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> object directly from the classifier object and use it to embed sentences.</p>
+<p>Once the model is trained, you can access the tuned <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.DocumentRNNEmbeddings.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> object directly from the classifier object and use it to embed sentences.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">document_embeddings</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">document_embeddings</span>
 
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green . And the sky is blue .&#39;</span><span class="p">)</span>
@@ -778,7 +996,7 @@ downstream task. This happens automatically in Flair if you train a new model wi
 <span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="o">.</span><span class="kp">get_embedding</span><span class="p">())</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> have a number of hyperparameters that can be tuned, please take a look at their <a class="reference internal" href="../../api/embeddings/document.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class">API docs</span></a> to find out more.</p>
+<p><a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.DocumentRNNEmbeddings.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> have a number of hyperparameters that can be tuned, please take a look at their <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.DocumentRNNEmbeddings.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class">API docs</span></a> to find out more.</p>
 </section>
 </section>
 </section>
@@ -789,77 +1007,9 @@ downstream task. This happens automatically in Flair if you train a new model wi
               
               
               
-                <footer class="bd-footer-article">
-                  
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
-<div class="prev-next-area">
-    <a class="left-prev"
-       href="classic-word-embeddings.html"
-       title="previous page">
-      <i class="fa-solid fa-angle-left"></i>
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Classic Word Embeddings</p>
-      </div>
-    </a>
-    <a class="right-next"
-       href="../tutorial-hunflair2/index.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Tutorial: HunFlair2</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
-    </a>
-</div></div>
-  
-</div>
-
-                </footer>
-              
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-hot-embeddings">One-Hot Embeddings</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#vocabulary-size">Vocabulary size</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#embedding-dimensionality">Embedding dimensionality</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#embedding-other-tags">Embedding other tags</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#byte-pair-embeddings">Byte Pair Embeddings</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#document-pool-embeddings">Document Pool Embeddings</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pooling-operation">Pooling operation</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fine-tune-mode">Fine-tune mode</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#document-rnn-embeddings">Document RNN Embeddings</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rnn-type">RNN type</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#need-to-be-trained-on-a-task">Need to be trained on a task</a></li>
-</ul>
-</li>
-</ul>
-  </nav></div>
-
-  <div class="sidebar-secondary-item">
-  <div class="tocsection sourcelink">
-    <a href="../../_sources/tutorial/tutorial-embeddings/other-embeddings.md.txt">
-      <i class="fa-solid fa-file-lines"></i> Show Source
-    </a>
-  </div>
-</div>
-
-</div></div>
               
             
           </div>
@@ -889,21 +1039,16 @@ downstream task. This happens automatically in Flair if you train a new model wi
   </p>
 </div>
       
-        <div class="footer-item">
-  <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
-    <br/>
-  </p>
-</div>
-      
     </div>
   
   
     <div class="footer-items__end">
       
-        <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
-</p></div>
+        <div class="footer-item"><a href="../../legal-notice/index.html">Legal notice</a></div>
+      
+        <div class="footer-item"><a href="https://twitter.com/alan_akbik" target="_blank">Twitter/X</a></div>
+      
+        <div class="footer-item"><a href="https://www.linkedin.com/in/alan-akbik-9859b1122/" target="_blank">LinkedIn</a></div>
       
     </div>
   

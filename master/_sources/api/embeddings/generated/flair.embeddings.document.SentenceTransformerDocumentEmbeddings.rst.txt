@@ -1,0 +1,91 @@
+﻿flair.embeddings.document.SentenceTransformerDocumentEmbeddings
+===============================================================
+
+.. currentmodule:: flair.embeddings.document
+
+.. autoclass:: SentenceTransformerDocumentEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SentenceTransformerDocumentEmbeddings.__init__
+      ~SentenceTransformerDocumentEmbeddings.add_module
+      ~SentenceTransformerDocumentEmbeddings.apply
+      ~SentenceTransformerDocumentEmbeddings.bfloat16
+      ~SentenceTransformerDocumentEmbeddings.buffers
+      ~SentenceTransformerDocumentEmbeddings.children
+      ~SentenceTransformerDocumentEmbeddings.compile
+      ~SentenceTransformerDocumentEmbeddings.cpu
+      ~SentenceTransformerDocumentEmbeddings.cuda
+      ~SentenceTransformerDocumentEmbeddings.double
+      ~SentenceTransformerDocumentEmbeddings.embed
+      ~SentenceTransformerDocumentEmbeddings.eval
+      ~SentenceTransformerDocumentEmbeddings.extra_repr
+      ~SentenceTransformerDocumentEmbeddings.float
+      ~SentenceTransformerDocumentEmbeddings.forward
+      ~SentenceTransformerDocumentEmbeddings.from_params
+      ~SentenceTransformerDocumentEmbeddings.get_buffer
+      ~SentenceTransformerDocumentEmbeddings.get_extra_state
+      ~SentenceTransformerDocumentEmbeddings.get_instance_parameters
+      ~SentenceTransformerDocumentEmbeddings.get_names
+      ~SentenceTransformerDocumentEmbeddings.get_parameter
+      ~SentenceTransformerDocumentEmbeddings.get_submodule
+      ~SentenceTransformerDocumentEmbeddings.half
+      ~SentenceTransformerDocumentEmbeddings.ipu
+      ~SentenceTransformerDocumentEmbeddings.load_embedding
+      ~SentenceTransformerDocumentEmbeddings.load_state_dict
+      ~SentenceTransformerDocumentEmbeddings.modules
+      ~SentenceTransformerDocumentEmbeddings.mtia
+      ~SentenceTransformerDocumentEmbeddings.named_buffers
+      ~SentenceTransformerDocumentEmbeddings.named_children
+      ~SentenceTransformerDocumentEmbeddings.named_modules
+      ~SentenceTransformerDocumentEmbeddings.named_parameters
+      ~SentenceTransformerDocumentEmbeddings.parameters
+      ~SentenceTransformerDocumentEmbeddings.register_backward_hook
+      ~SentenceTransformerDocumentEmbeddings.register_buffer
+      ~SentenceTransformerDocumentEmbeddings.register_forward_hook
+      ~SentenceTransformerDocumentEmbeddings.register_forward_pre_hook
+      ~SentenceTransformerDocumentEmbeddings.register_full_backward_hook
+      ~SentenceTransformerDocumentEmbeddings.register_full_backward_pre_hook
+      ~SentenceTransformerDocumentEmbeddings.register_load_state_dict_post_hook
+      ~SentenceTransformerDocumentEmbeddings.register_load_state_dict_pre_hook
+      ~SentenceTransformerDocumentEmbeddings.register_module
+      ~SentenceTransformerDocumentEmbeddings.register_parameter
+      ~SentenceTransformerDocumentEmbeddings.register_state_dict_post_hook
+      ~SentenceTransformerDocumentEmbeddings.register_state_dict_pre_hook
+      ~SentenceTransformerDocumentEmbeddings.requires_grad_
+      ~SentenceTransformerDocumentEmbeddings.save_embeddings
+      ~SentenceTransformerDocumentEmbeddings.set_extra_state
+      ~SentenceTransformerDocumentEmbeddings.set_submodule
+      ~SentenceTransformerDocumentEmbeddings.share_memory
+      ~SentenceTransformerDocumentEmbeddings.state_dict
+      ~SentenceTransformerDocumentEmbeddings.to
+      ~SentenceTransformerDocumentEmbeddings.to_empty
+      ~SentenceTransformerDocumentEmbeddings.to_params
+      ~SentenceTransformerDocumentEmbeddings.train
+      ~SentenceTransformerDocumentEmbeddings.type
+      ~SentenceTransformerDocumentEmbeddings.xpu
+      ~SentenceTransformerDocumentEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SentenceTransformerDocumentEmbeddings.T_destination
+      ~SentenceTransformerDocumentEmbeddings.call_super_init
+      ~SentenceTransformerDocumentEmbeddings.dump_patches
+      ~SentenceTransformerDocumentEmbeddings.embedding_length
+      ~SentenceTransformerDocumentEmbeddings.embedding_type
+      ~SentenceTransformerDocumentEmbeddings.embeddings_name
+      ~SentenceTransformerDocumentEmbeddings.training
+   
+   

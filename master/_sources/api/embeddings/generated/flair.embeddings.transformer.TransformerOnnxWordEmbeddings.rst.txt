@@ -1,0 +1,100 @@
+﻿flair.embeddings.transformer.TransformerOnnxWordEmbeddings
+==========================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autoclass:: TransformerOnnxWordEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TransformerOnnxWordEmbeddings.__init__
+      ~TransformerOnnxWordEmbeddings.add_module
+      ~TransformerOnnxWordEmbeddings.apply
+      ~TransformerOnnxWordEmbeddings.bfloat16
+      ~TransformerOnnxWordEmbeddings.buffers
+      ~TransformerOnnxWordEmbeddings.children
+      ~TransformerOnnxWordEmbeddings.collect_dynamic_axes
+      ~TransformerOnnxWordEmbeddings.compile
+      ~TransformerOnnxWordEmbeddings.cpu
+      ~TransformerOnnxWordEmbeddings.create_from_state
+      ~TransformerOnnxWordEmbeddings.create_session
+      ~TransformerOnnxWordEmbeddings.cuda
+      ~TransformerOnnxWordEmbeddings.double
+      ~TransformerOnnxWordEmbeddings.embed
+      ~TransformerOnnxWordEmbeddings.eval
+      ~TransformerOnnxWordEmbeddings.export_from_embedding
+      ~TransformerOnnxWordEmbeddings.extra_repr
+      ~TransformerOnnxWordEmbeddings.float
+      ~TransformerOnnxWordEmbeddings.forward
+      ~TransformerOnnxWordEmbeddings.from_params
+      ~TransformerOnnxWordEmbeddings.get_buffer
+      ~TransformerOnnxWordEmbeddings.get_extra_state
+      ~TransformerOnnxWordEmbeddings.get_instance_parameters
+      ~TransformerOnnxWordEmbeddings.get_names
+      ~TransformerOnnxWordEmbeddings.get_parameter
+      ~TransformerOnnxWordEmbeddings.get_submodule
+      ~TransformerOnnxWordEmbeddings.half
+      ~TransformerOnnxWordEmbeddings.ipu
+      ~TransformerOnnxWordEmbeddings.load_embedding
+      ~TransformerOnnxWordEmbeddings.load_state_dict
+      ~TransformerOnnxWordEmbeddings.modules
+      ~TransformerOnnxWordEmbeddings.mtia
+      ~TransformerOnnxWordEmbeddings.named_buffers
+      ~TransformerOnnxWordEmbeddings.named_children
+      ~TransformerOnnxWordEmbeddings.named_modules
+      ~TransformerOnnxWordEmbeddings.named_parameters
+      ~TransformerOnnxWordEmbeddings.optimize_model
+      ~TransformerOnnxWordEmbeddings.parameters
+      ~TransformerOnnxWordEmbeddings.prepare_tensors
+      ~TransformerOnnxWordEmbeddings.quantize_model
+      ~TransformerOnnxWordEmbeddings.register_backward_hook
+      ~TransformerOnnxWordEmbeddings.register_buffer
+      ~TransformerOnnxWordEmbeddings.register_forward_hook
+      ~TransformerOnnxWordEmbeddings.register_forward_pre_hook
+      ~TransformerOnnxWordEmbeddings.register_full_backward_hook
+      ~TransformerOnnxWordEmbeddings.register_full_backward_pre_hook
+      ~TransformerOnnxWordEmbeddings.register_load_state_dict_post_hook
+      ~TransformerOnnxWordEmbeddings.register_load_state_dict_pre_hook
+      ~TransformerOnnxWordEmbeddings.register_module
+      ~TransformerOnnxWordEmbeddings.register_parameter
+      ~TransformerOnnxWordEmbeddings.register_state_dict_post_hook
+      ~TransformerOnnxWordEmbeddings.register_state_dict_pre_hook
+      ~TransformerOnnxWordEmbeddings.remove_session
+      ~TransformerOnnxWordEmbeddings.requires_grad_
+      ~TransformerOnnxWordEmbeddings.save_embeddings
+      ~TransformerOnnxWordEmbeddings.set_extra_state
+      ~TransformerOnnxWordEmbeddings.set_submodule
+      ~TransformerOnnxWordEmbeddings.share_memory
+      ~TransformerOnnxWordEmbeddings.state_dict
+      ~TransformerOnnxWordEmbeddings.to
+      ~TransformerOnnxWordEmbeddings.to_args
+      ~TransformerOnnxWordEmbeddings.to_empty
+      ~TransformerOnnxWordEmbeddings.to_params
+      ~TransformerOnnxWordEmbeddings.train
+      ~TransformerOnnxWordEmbeddings.type
+      ~TransformerOnnxWordEmbeddings.xpu
+      ~TransformerOnnxWordEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TransformerOnnxWordEmbeddings.T_destination
+      ~TransformerOnnxWordEmbeddings.call_super_init
+      ~TransformerOnnxWordEmbeddings.dump_patches
+      ~TransformerOnnxWordEmbeddings.embedding_length
+      ~TransformerOnnxWordEmbeddings.embedding_type
+      ~TransformerOnnxWordEmbeddings.embeddings_name
+      ~TransformerOnnxWordEmbeddings.training
+   
+   

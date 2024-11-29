@@ -1,0 +1,40 @@
+﻿flair.datasets.text\_text.DataTripleCorpus
+==========================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: DataTripleCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DataTripleCorpus.__init__
+      ~DataTripleCorpus.add_label_noise
+      ~DataTripleCorpus.downsample
+      ~DataTripleCorpus.filter_empty_sentences
+      ~DataTripleCorpus.filter_long_sentences
+      ~DataTripleCorpus.get_all_sentences
+      ~DataTripleCorpus.get_label_distribution
+      ~DataTripleCorpus.make_label_dictionary
+      ~DataTripleCorpus.make_tag_dictionary
+      ~DataTripleCorpus.make_vocab_dictionary
+      ~DataTripleCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DataTripleCorpus.dev
+      ~DataTripleCorpus.test
+      ~DataTripleCorpus.train
+   
+   

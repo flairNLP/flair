@@ -1,0 +1,91 @@
+﻿flair.embeddings.legacy.DocumentMeanEmbeddings
+==============================================
+
+.. currentmodule:: flair.embeddings.legacy
+
+.. autoclass:: DocumentMeanEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DocumentMeanEmbeddings.__init__
+      ~DocumentMeanEmbeddings.add_module
+      ~DocumentMeanEmbeddings.apply
+      ~DocumentMeanEmbeddings.bfloat16
+      ~DocumentMeanEmbeddings.buffers
+      ~DocumentMeanEmbeddings.children
+      ~DocumentMeanEmbeddings.compile
+      ~DocumentMeanEmbeddings.cpu
+      ~DocumentMeanEmbeddings.cuda
+      ~DocumentMeanEmbeddings.double
+      ~DocumentMeanEmbeddings.embed
+      ~DocumentMeanEmbeddings.eval
+      ~DocumentMeanEmbeddings.extra_repr
+      ~DocumentMeanEmbeddings.float
+      ~DocumentMeanEmbeddings.forward
+      ~DocumentMeanEmbeddings.from_params
+      ~DocumentMeanEmbeddings.get_buffer
+      ~DocumentMeanEmbeddings.get_extra_state
+      ~DocumentMeanEmbeddings.get_instance_parameters
+      ~DocumentMeanEmbeddings.get_names
+      ~DocumentMeanEmbeddings.get_parameter
+      ~DocumentMeanEmbeddings.get_submodule
+      ~DocumentMeanEmbeddings.half
+      ~DocumentMeanEmbeddings.ipu
+      ~DocumentMeanEmbeddings.load_embedding
+      ~DocumentMeanEmbeddings.load_state_dict
+      ~DocumentMeanEmbeddings.modules
+      ~DocumentMeanEmbeddings.mtia
+      ~DocumentMeanEmbeddings.named_buffers
+      ~DocumentMeanEmbeddings.named_children
+      ~DocumentMeanEmbeddings.named_modules
+      ~DocumentMeanEmbeddings.named_parameters
+      ~DocumentMeanEmbeddings.parameters
+      ~DocumentMeanEmbeddings.register_backward_hook
+      ~DocumentMeanEmbeddings.register_buffer
+      ~DocumentMeanEmbeddings.register_forward_hook
+      ~DocumentMeanEmbeddings.register_forward_pre_hook
+      ~DocumentMeanEmbeddings.register_full_backward_hook
+      ~DocumentMeanEmbeddings.register_full_backward_pre_hook
+      ~DocumentMeanEmbeddings.register_load_state_dict_post_hook
+      ~DocumentMeanEmbeddings.register_load_state_dict_pre_hook
+      ~DocumentMeanEmbeddings.register_module
+      ~DocumentMeanEmbeddings.register_parameter
+      ~DocumentMeanEmbeddings.register_state_dict_post_hook
+      ~DocumentMeanEmbeddings.register_state_dict_pre_hook
+      ~DocumentMeanEmbeddings.requires_grad_
+      ~DocumentMeanEmbeddings.save_embeddings
+      ~DocumentMeanEmbeddings.set_extra_state
+      ~DocumentMeanEmbeddings.set_submodule
+      ~DocumentMeanEmbeddings.share_memory
+      ~DocumentMeanEmbeddings.state_dict
+      ~DocumentMeanEmbeddings.to
+      ~DocumentMeanEmbeddings.to_empty
+      ~DocumentMeanEmbeddings.to_params
+      ~DocumentMeanEmbeddings.train
+      ~DocumentMeanEmbeddings.type
+      ~DocumentMeanEmbeddings.xpu
+      ~DocumentMeanEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DocumentMeanEmbeddings.T_destination
+      ~DocumentMeanEmbeddings.call_super_init
+      ~DocumentMeanEmbeddings.dump_patches
+      ~DocumentMeanEmbeddings.embedding_length
+      ~DocumentMeanEmbeddings.embedding_type
+      ~DocumentMeanEmbeddings.embeddings_name
+      ~DocumentMeanEmbeddings.training
+   
+   

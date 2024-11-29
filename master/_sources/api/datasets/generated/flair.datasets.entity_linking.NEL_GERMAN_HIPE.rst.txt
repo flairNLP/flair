@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.NEL\_GERMAN\_HIPE
+================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: NEL_GERMAN_HIPE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NEL_GERMAN_HIPE.__init__
+      ~NEL_GERMAN_HIPE.add_label_noise
+      ~NEL_GERMAN_HIPE.downsample
+      ~NEL_GERMAN_HIPE.filter_empty_sentences
+      ~NEL_GERMAN_HIPE.filter_long_sentences
+      ~NEL_GERMAN_HIPE.get_all_sentences
+      ~NEL_GERMAN_HIPE.get_label_distribution
+      ~NEL_GERMAN_HIPE.make_label_dictionary
+      ~NEL_GERMAN_HIPE.make_tag_dictionary
+      ~NEL_GERMAN_HIPE.make_vocab_dictionary
+      ~NEL_GERMAN_HIPE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NEL_GERMAN_HIPE.dev
+      ~NEL_GERMAN_HIPE.test
+      ~NEL_GERMAN_HIPE.train
+   
+   

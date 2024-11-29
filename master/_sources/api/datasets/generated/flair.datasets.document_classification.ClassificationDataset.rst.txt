@@ -1,0 +1,23 @@
+﻿flair.datasets.document\_classification.ClassificationDataset
+=============================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: ClassificationDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ClassificationDataset.__init__
+      ~ClassificationDataset.is_in_memory
+   
+   
+
+   
+   
+   

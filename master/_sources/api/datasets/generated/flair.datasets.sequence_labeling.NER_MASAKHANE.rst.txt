@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_MASAKHANE
+================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_MASAKHANE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_MASAKHANE.__init__
+      ~NER_MASAKHANE.add_label_noise
+      ~NER_MASAKHANE.downsample
+      ~NER_MASAKHANE.filter_empty_sentences
+      ~NER_MASAKHANE.filter_long_sentences
+      ~NER_MASAKHANE.get_all_sentences
+      ~NER_MASAKHANE.get_label_distribution
+      ~NER_MASAKHANE.make_label_dictionary
+      ~NER_MASAKHANE.make_tag_dictionary
+      ~NER_MASAKHANE.make_vocab_dictionary
+      ~NER_MASAKHANE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_MASAKHANE.dev
+      ~NER_MASAKHANE.test
+      ~NER_MASAKHANE.train
+   
+   

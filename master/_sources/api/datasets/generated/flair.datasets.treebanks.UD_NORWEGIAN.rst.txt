@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_NORWEGIAN
+======================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_NORWEGIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_NORWEGIAN.__init__
+      ~UD_NORWEGIAN.add_label_noise
+      ~UD_NORWEGIAN.downsample
+      ~UD_NORWEGIAN.filter_empty_sentences
+      ~UD_NORWEGIAN.filter_long_sentences
+      ~UD_NORWEGIAN.get_all_sentences
+      ~UD_NORWEGIAN.get_label_distribution
+      ~UD_NORWEGIAN.make_label_dictionary
+      ~UD_NORWEGIAN.make_tag_dictionary
+      ~UD_NORWEGIAN.make_vocab_dictionary
+      ~UD_NORWEGIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_NORWEGIAN.dev
+      ~UD_NORWEGIAN.test
+      ~UD_NORWEGIAN.train
+   
+   

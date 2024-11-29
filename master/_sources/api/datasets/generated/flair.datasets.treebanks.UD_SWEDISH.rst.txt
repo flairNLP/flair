@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_SWEDISH
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_SWEDISH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_SWEDISH.__init__
+      ~UD_SWEDISH.add_label_noise
+      ~UD_SWEDISH.downsample
+      ~UD_SWEDISH.filter_empty_sentences
+      ~UD_SWEDISH.filter_long_sentences
+      ~UD_SWEDISH.get_all_sentences
+      ~UD_SWEDISH.get_label_distribution
+      ~UD_SWEDISH.make_label_dictionary
+      ~UD_SWEDISH.make_tag_dictionary
+      ~UD_SWEDISH.make_vocab_dictionary
+      ~UD_SWEDISH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_SWEDISH.dev
+      ~UD_SWEDISH.test
+      ~UD_SWEDISH.train
+   
+   

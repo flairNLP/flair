@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_CHINESE\_KYOTO
+===========================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_CHINESE_KYOTO
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_CHINESE_KYOTO.__init__
+      ~UD_CHINESE_KYOTO.add_label_noise
+      ~UD_CHINESE_KYOTO.downsample
+      ~UD_CHINESE_KYOTO.filter_empty_sentences
+      ~UD_CHINESE_KYOTO.filter_long_sentences
+      ~UD_CHINESE_KYOTO.get_all_sentences
+      ~UD_CHINESE_KYOTO.get_label_distribution
+      ~UD_CHINESE_KYOTO.make_label_dictionary
+      ~UD_CHINESE_KYOTO.make_tag_dictionary
+      ~UD_CHINESE_KYOTO.make_vocab_dictionary
+      ~UD_CHINESE_KYOTO.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_CHINESE_KYOTO.dev
+      ~UD_CHINESE_KYOTO.test
+      ~UD_CHINESE_KYOTO.train
+   
+   

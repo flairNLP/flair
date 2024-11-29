@@ -1,0 +1,91 @@
+﻿flair.embeddings.token.FlairEmbeddings
+======================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: FlairEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FlairEmbeddings.__init__
+      ~FlairEmbeddings.add_module
+      ~FlairEmbeddings.apply
+      ~FlairEmbeddings.bfloat16
+      ~FlairEmbeddings.buffers
+      ~FlairEmbeddings.children
+      ~FlairEmbeddings.compile
+      ~FlairEmbeddings.cpu
+      ~FlairEmbeddings.cuda
+      ~FlairEmbeddings.double
+      ~FlairEmbeddings.embed
+      ~FlairEmbeddings.eval
+      ~FlairEmbeddings.extra_repr
+      ~FlairEmbeddings.float
+      ~FlairEmbeddings.forward
+      ~FlairEmbeddings.from_params
+      ~FlairEmbeddings.get_buffer
+      ~FlairEmbeddings.get_extra_state
+      ~FlairEmbeddings.get_instance_parameters
+      ~FlairEmbeddings.get_names
+      ~FlairEmbeddings.get_parameter
+      ~FlairEmbeddings.get_submodule
+      ~FlairEmbeddings.half
+      ~FlairEmbeddings.ipu
+      ~FlairEmbeddings.load_embedding
+      ~FlairEmbeddings.load_state_dict
+      ~FlairEmbeddings.modules
+      ~FlairEmbeddings.mtia
+      ~FlairEmbeddings.named_buffers
+      ~FlairEmbeddings.named_children
+      ~FlairEmbeddings.named_modules
+      ~FlairEmbeddings.named_parameters
+      ~FlairEmbeddings.parameters
+      ~FlairEmbeddings.register_backward_hook
+      ~FlairEmbeddings.register_buffer
+      ~FlairEmbeddings.register_forward_hook
+      ~FlairEmbeddings.register_forward_pre_hook
+      ~FlairEmbeddings.register_full_backward_hook
+      ~FlairEmbeddings.register_full_backward_pre_hook
+      ~FlairEmbeddings.register_load_state_dict_post_hook
+      ~FlairEmbeddings.register_load_state_dict_pre_hook
+      ~FlairEmbeddings.register_module
+      ~FlairEmbeddings.register_parameter
+      ~FlairEmbeddings.register_state_dict_post_hook
+      ~FlairEmbeddings.register_state_dict_pre_hook
+      ~FlairEmbeddings.requires_grad_
+      ~FlairEmbeddings.save_embeddings
+      ~FlairEmbeddings.set_extra_state
+      ~FlairEmbeddings.set_submodule
+      ~FlairEmbeddings.share_memory
+      ~FlairEmbeddings.state_dict
+      ~FlairEmbeddings.to
+      ~FlairEmbeddings.to_empty
+      ~FlairEmbeddings.to_params
+      ~FlairEmbeddings.train
+      ~FlairEmbeddings.type
+      ~FlairEmbeddings.xpu
+      ~FlairEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FlairEmbeddings.T_destination
+      ~FlairEmbeddings.call_super_init
+      ~FlairEmbeddings.dump_patches
+      ~FlairEmbeddings.embedding_length
+      ~FlairEmbeddings.embedding_type
+      ~FlairEmbeddings.embeddings_name
+      ~FlairEmbeddings.training
+   
+   

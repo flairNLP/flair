@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_IRISH
+==================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_IRISH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_IRISH.__init__
+      ~UD_IRISH.add_label_noise
+      ~UD_IRISH.downsample
+      ~UD_IRISH.filter_empty_sentences
+      ~UD_IRISH.filter_long_sentences
+      ~UD_IRISH.get_all_sentences
+      ~UD_IRISH.get_label_distribution
+      ~UD_IRISH.make_label_dictionary
+      ~UD_IRISH.make_tag_dictionary
+      ~UD_IRISH.make_vocab_dictionary
+      ~UD_IRISH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_IRISH.dev
+      ~UD_IRISH.test
+      ~UD_IRISH.train
+   
+   

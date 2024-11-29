@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.CONLL\_2000
+=============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: CONLL_2000
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CONLL_2000.__init__
+      ~CONLL_2000.add_label_noise
+      ~CONLL_2000.downsample
+      ~CONLL_2000.filter_empty_sentences
+      ~CONLL_2000.filter_long_sentences
+      ~CONLL_2000.get_all_sentences
+      ~CONLL_2000.get_label_distribution
+      ~CONLL_2000.make_label_dictionary
+      ~CONLL_2000.make_tag_dictionary
+      ~CONLL_2000.make_vocab_dictionary
+      ~CONLL_2000.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CONLL_2000.dev
+      ~CONLL_2000.test
+      ~CONLL_2000.train
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.NEL\_ENGLISH\_IITB
+=================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: NEL_ENGLISH_IITB
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NEL_ENGLISH_IITB.__init__
+      ~NEL_ENGLISH_IITB.add_label_noise
+      ~NEL_ENGLISH_IITB.downsample
+      ~NEL_ENGLISH_IITB.filter_empty_sentences
+      ~NEL_ENGLISH_IITB.filter_long_sentences
+      ~NEL_ENGLISH_IITB.get_all_sentences
+      ~NEL_ENGLISH_IITB.get_label_distribution
+      ~NEL_ENGLISH_IITB.make_label_dictionary
+      ~NEL_ENGLISH_IITB.make_tag_dictionary
+      ~NEL_ENGLISH_IITB.make_vocab_dictionary
+      ~NEL_ENGLISH_IITB.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NEL_ENGLISH_IITB.dev
+      ~NEL_ENGLISH_IITB.test
+      ~NEL_ENGLISH_IITB.train
+   
+   

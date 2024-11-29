@@ -1,0 +1,50 @@
+﻿flair.data.Relation
+===================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: Relation
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Relation.__init__
+      ~Relation.add_label
+      ~Relation.add_metadata
+      ~Relation.clear_embeddings
+      ~Relation.get_each_embedding
+      ~Relation.get_embedding
+      ~Relation.get_label
+      ~Relation.get_labels
+      ~Relation.get_metadata
+      ~Relation.has_label
+      ~Relation.has_metadata
+      ~Relation.remove_labels
+      ~Relation.set_embedding
+      ~Relation.set_label
+      ~Relation.to
+      ~Relation.to_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Relation.embedding
+      ~Relation.end_position
+      ~Relation.labels
+      ~Relation.score
+      ~Relation.start_position
+      ~Relation.tag
+      ~Relation.text
+      ~Relation.unlabeled_identifier
+   
+   

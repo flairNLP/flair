@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_DRUGPROT
+===============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_DRUGPROT
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_DRUGPROT.__init__
+      ~HUNER_GENE_DRUGPROT.add_label_noise
+      ~HUNER_GENE_DRUGPROT.bin_search_passage
+      ~HUNER_GENE_DRUGPROT.build_corpus_directory_name
+      ~HUNER_GENE_DRUGPROT.downsample
+      ~HUNER_GENE_DRUGPROT.filter_empty_sentences
+      ~HUNER_GENE_DRUGPROT.filter_long_sentences
+      ~HUNER_GENE_DRUGPROT.get_all_sentences
+      ~HUNER_GENE_DRUGPROT.get_entity_type_mapping
+      ~HUNER_GENE_DRUGPROT.get_label_distribution
+      ~HUNER_GENE_DRUGPROT.make_label_dictionary
+      ~HUNER_GENE_DRUGPROT.make_tag_dictionary
+      ~HUNER_GENE_DRUGPROT.make_vocab_dictionary
+      ~HUNER_GENE_DRUGPROT.obtain_statistics
+      ~HUNER_GENE_DRUGPROT.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_DRUGPROT.dev
+      ~HUNER_GENE_DRUGPROT.test
+      ~HUNER_GENE_DRUGPROT.train
+   
+   

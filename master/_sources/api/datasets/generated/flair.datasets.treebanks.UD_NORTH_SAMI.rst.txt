@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_NORTH\_SAMI
+========================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_NORTH_SAMI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_NORTH_SAMI.__init__
+      ~UD_NORTH_SAMI.add_label_noise
+      ~UD_NORTH_SAMI.downsample
+      ~UD_NORTH_SAMI.filter_empty_sentences
+      ~UD_NORTH_SAMI.filter_long_sentences
+      ~UD_NORTH_SAMI.get_all_sentences
+      ~UD_NORTH_SAMI.get_label_distribution
+      ~UD_NORTH_SAMI.make_label_dictionary
+      ~UD_NORTH_SAMI.make_tag_dictionary
+      ~UD_NORTH_SAMI.make_vocab_dictionary
+      ~UD_NORTH_SAMI.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_NORTH_SAMI.dev
+      ~UD_NORTH_SAMI.test
+      ~UD_NORTH_SAMI.train
+   
+   

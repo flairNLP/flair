@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_SERBIAN
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_SERBIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_SERBIAN.__init__
+      ~UD_SERBIAN.add_label_noise
+      ~UD_SERBIAN.downsample
+      ~UD_SERBIAN.filter_empty_sentences
+      ~UD_SERBIAN.filter_long_sentences
+      ~UD_SERBIAN.get_all_sentences
+      ~UD_SERBIAN.get_label_distribution
+      ~UD_SERBIAN.make_label_dictionary
+      ~UD_SERBIAN.make_tag_dictionary
+      ~UD_SERBIAN.make_vocab_dictionary
+      ~UD_SERBIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_SERBIAN.dev
+      ~UD_SERBIAN.test
+      ~UD_SERBIAN.train
+   
+   

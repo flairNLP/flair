@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_BC2GM
+============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_BC2GM
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_BC2GM.__init__
+      ~HUNER_GENE_BC2GM.add_label_noise
+      ~HUNER_GENE_BC2GM.downsample
+      ~HUNER_GENE_BC2GM.filter_empty_sentences
+      ~HUNER_GENE_BC2GM.filter_long_sentences
+      ~HUNER_GENE_BC2GM.get_all_sentences
+      ~HUNER_GENE_BC2GM.get_corpus_sentence_splitter
+      ~HUNER_GENE_BC2GM.get_label_distribution
+      ~HUNER_GENE_BC2GM.get_subset
+      ~HUNER_GENE_BC2GM.make_label_dictionary
+      ~HUNER_GENE_BC2GM.make_tag_dictionary
+      ~HUNER_GENE_BC2GM.make_vocab_dictionary
+      ~HUNER_GENE_BC2GM.obtain_statistics
+      ~HUNER_GENE_BC2GM.split_url
+      ~HUNER_GENE_BC2GM.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_BC2GM.dev
+      ~HUNER_GENE_BC2GM.test
+      ~HUNER_GENE_BC2GM.train
+   
+   

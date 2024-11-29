@@ -1,0 +1,40 @@
+﻿flair.data.Corpus
+=================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: Corpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Corpus.__init__
+      ~Corpus.add_label_noise
+      ~Corpus.downsample
+      ~Corpus.filter_empty_sentences
+      ~Corpus.filter_long_sentences
+      ~Corpus.get_all_sentences
+      ~Corpus.get_label_distribution
+      ~Corpus.make_label_dictionary
+      ~Corpus.make_tag_dictionary
+      ~Corpus.make_vocab_dictionary
+      ~Corpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Corpus.dev
+      ~Corpus.test
+      ~Corpus.train
+   
+   

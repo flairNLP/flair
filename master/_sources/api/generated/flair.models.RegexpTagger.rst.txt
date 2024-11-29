@@ -1,0 +1,31 @@
+﻿flair.models.RegexpTagger
+=========================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: RegexpTagger
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RegexpTagger.__init__
+      ~RegexpTagger.predict
+      ~RegexpTagger.register_labels
+      ~RegexpTagger.remove_labels
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RegexpTagger.registered_labels
+   
+   

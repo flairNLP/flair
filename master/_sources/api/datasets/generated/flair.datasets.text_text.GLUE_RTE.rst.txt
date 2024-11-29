@@ -1,0 +1,41 @@
+﻿flair.datasets.text\_text.GLUE\_RTE
+===================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: GLUE_RTE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GLUE_RTE.__init__
+      ~GLUE_RTE.add_label_noise
+      ~GLUE_RTE.downsample
+      ~GLUE_RTE.filter_empty_sentences
+      ~GLUE_RTE.filter_long_sentences
+      ~GLUE_RTE.get_all_sentences
+      ~GLUE_RTE.get_label_distribution
+      ~GLUE_RTE.make_label_dictionary
+      ~GLUE_RTE.make_tag_dictionary
+      ~GLUE_RTE.make_vocab_dictionary
+      ~GLUE_RTE.obtain_statistics
+      ~GLUE_RTE.tsv_from_eval_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GLUE_RTE.dev
+      ~GLUE_RTE.test
+      ~GLUE_RTE.train
+   
+   

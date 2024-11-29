@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_GOTHIC
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_GOTHIC
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_GOTHIC.__init__
+      ~UD_GOTHIC.add_label_noise
+      ~UD_GOTHIC.downsample
+      ~UD_GOTHIC.filter_empty_sentences
+      ~UD_GOTHIC.filter_long_sentences
+      ~UD_GOTHIC.get_all_sentences
+      ~UD_GOTHIC.get_label_distribution
+      ~UD_GOTHIC.make_label_dictionary
+      ~UD_GOTHIC.make_tag_dictionary
+      ~UD_GOTHIC.make_vocab_dictionary
+      ~UD_GOTHIC.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_GOTHIC.dev
+      ~UD_GOTHIC.test
+      ~UD_GOTHIC.train
+   
+   

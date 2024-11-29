@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_ALL\_LOCTEXT
+=============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_ALL_LOCTEXT
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_ALL_LOCTEXT.__init__
+      ~HUNER_ALL_LOCTEXT.add_label_noise
+      ~HUNER_ALL_LOCTEXT.downsample
+      ~HUNER_ALL_LOCTEXT.filter_empty_sentences
+      ~HUNER_ALL_LOCTEXT.filter_long_sentences
+      ~HUNER_ALL_LOCTEXT.get_all_sentences
+      ~HUNER_ALL_LOCTEXT.get_corpus_sentence_splitter
+      ~HUNER_ALL_LOCTEXT.get_entity_type_mapping
+      ~HUNER_ALL_LOCTEXT.get_label_distribution
+      ~HUNER_ALL_LOCTEXT.get_subset
+      ~HUNER_ALL_LOCTEXT.make_label_dictionary
+      ~HUNER_ALL_LOCTEXT.make_tag_dictionary
+      ~HUNER_ALL_LOCTEXT.make_vocab_dictionary
+      ~HUNER_ALL_LOCTEXT.obtain_statistics
+      ~HUNER_ALL_LOCTEXT.split_url
+      ~HUNER_ALL_LOCTEXT.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_ALL_LOCTEXT.dev
+      ~HUNER_ALL_LOCTEXT.test
+      ~HUNER_ALL_LOCTEXT.train
+   
+   

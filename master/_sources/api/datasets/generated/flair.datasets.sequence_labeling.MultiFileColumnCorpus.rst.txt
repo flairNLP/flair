@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.MultiFileColumnCorpus
+=======================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: MultiFileColumnCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MultiFileColumnCorpus.__init__
+      ~MultiFileColumnCorpus.add_label_noise
+      ~MultiFileColumnCorpus.downsample
+      ~MultiFileColumnCorpus.filter_empty_sentences
+      ~MultiFileColumnCorpus.filter_long_sentences
+      ~MultiFileColumnCorpus.get_all_sentences
+      ~MultiFileColumnCorpus.get_label_distribution
+      ~MultiFileColumnCorpus.make_label_dictionary
+      ~MultiFileColumnCorpus.make_tag_dictionary
+      ~MultiFileColumnCorpus.make_vocab_dictionary
+      ~MultiFileColumnCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MultiFileColumnCorpus.dev
+      ~MultiFileColumnCorpus.test
+      ~MultiFileColumnCorpus.train
+   
+   

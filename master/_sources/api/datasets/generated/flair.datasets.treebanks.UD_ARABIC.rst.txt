@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_ARABIC
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_ARABIC
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_ARABIC.__init__
+      ~UD_ARABIC.add_label_noise
+      ~UD_ARABIC.downsample
+      ~UD_ARABIC.filter_empty_sentences
+      ~UD_ARABIC.filter_long_sentences
+      ~UD_ARABIC.get_all_sentences
+      ~UD_ARABIC.get_label_distribution
+      ~UD_ARABIC.make_label_dictionary
+      ~UD_ARABIC.make_tag_dictionary
+      ~UD_ARABIC.make_vocab_dictionary
+      ~UD_ARABIC.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_ARABIC.dev
+      ~UD_ARABIC.test
+      ~UD_ARABIC.train
+   
+   

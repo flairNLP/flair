@@ -1,0 +1,41 @@
+﻿flair.datasets.document\_classification.GLUE\_COLA
+==================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: GLUE_COLA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GLUE_COLA.__init__
+      ~GLUE_COLA.add_label_noise
+      ~GLUE_COLA.downsample
+      ~GLUE_COLA.filter_empty_sentences
+      ~GLUE_COLA.filter_long_sentences
+      ~GLUE_COLA.get_all_sentences
+      ~GLUE_COLA.get_label_distribution
+      ~GLUE_COLA.make_label_dictionary
+      ~GLUE_COLA.make_tag_dictionary
+      ~GLUE_COLA.make_vocab_dictionary
+      ~GLUE_COLA.obtain_statistics
+      ~GLUE_COLA.tsv_from_eval_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GLUE_COLA.dev
+      ~GLUE_COLA.test
+      ~GLUE_COLA.train
+   
+   

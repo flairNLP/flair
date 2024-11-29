@@ -1,0 +1,38 @@
+﻿flair.datasets.base.DataLoader
+==============================
+
+.. currentmodule:: flair.datasets.base
+
+.. autoclass:: DataLoader
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DataLoader.__init__
+      ~DataLoader.check_worker_number_rationality
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DataLoader.multiprocessing_context
+      ~DataLoader.dataset
+      ~DataLoader.batch_size
+      ~DataLoader.num_workers
+      ~DataLoader.pin_memory
+      ~DataLoader.drop_last
+      ~DataLoader.timeout
+      ~DataLoader.sampler
+      ~DataLoader.pin_memory_device
+      ~DataLoader.prefetch_factor
+   
+   

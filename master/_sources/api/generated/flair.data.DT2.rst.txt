@@ -1,0 +1,6 @@
+﻿flair.data.DT2
+==============
+
+.. currentmodule:: flair.data
+
+.. autodata:: DT2

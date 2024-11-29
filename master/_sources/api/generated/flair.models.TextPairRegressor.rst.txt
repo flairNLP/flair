@@ -1,0 +1,90 @@
+﻿flair.models.TextPairRegressor
+==============================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: TextPairRegressor
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TextPairRegressor.__init__
+      ~TextPairRegressor.add_module
+      ~TextPairRegressor.apply
+      ~TextPairRegressor.bfloat16
+      ~TextPairRegressor.buffers
+      ~TextPairRegressor.children
+      ~TextPairRegressor.compile
+      ~TextPairRegressor.cpu
+      ~TextPairRegressor.cuda
+      ~TextPairRegressor.double
+      ~TextPairRegressor.eval
+      ~TextPairRegressor.evaluate
+      ~TextPairRegressor.extra_repr
+      ~TextPairRegressor.float
+      ~TextPairRegressor.forward
+      ~TextPairRegressor.forward_loss
+      ~TextPairRegressor.get_buffer
+      ~TextPairRegressor.get_extra_state
+      ~TextPairRegressor.get_parameter
+      ~TextPairRegressor.get_submodule
+      ~TextPairRegressor.get_used_tokens
+      ~TextPairRegressor.half
+      ~TextPairRegressor.ipu
+      ~TextPairRegressor.load
+      ~TextPairRegressor.load_state_dict
+      ~TextPairRegressor.modules
+      ~TextPairRegressor.mtia
+      ~TextPairRegressor.named_buffers
+      ~TextPairRegressor.named_children
+      ~TextPairRegressor.named_modules
+      ~TextPairRegressor.named_parameters
+      ~TextPairRegressor.parameters
+      ~TextPairRegressor.predict
+      ~TextPairRegressor.print_model_card
+      ~TextPairRegressor.register_backward_hook
+      ~TextPairRegressor.register_buffer
+      ~TextPairRegressor.register_forward_hook
+      ~TextPairRegressor.register_forward_pre_hook
+      ~TextPairRegressor.register_full_backward_hook
+      ~TextPairRegressor.register_full_backward_pre_hook
+      ~TextPairRegressor.register_load_state_dict_post_hook
+      ~TextPairRegressor.register_load_state_dict_pre_hook
+      ~TextPairRegressor.register_module
+      ~TextPairRegressor.register_parameter
+      ~TextPairRegressor.register_state_dict_post_hook
+      ~TextPairRegressor.register_state_dict_pre_hook
+      ~TextPairRegressor.requires_grad_
+      ~TextPairRegressor.save
+      ~TextPairRegressor.set_extra_state
+      ~TextPairRegressor.set_submodule
+      ~TextPairRegressor.share_memory
+      ~TextPairRegressor.state_dict
+      ~TextPairRegressor.to
+      ~TextPairRegressor.to_empty
+      ~TextPairRegressor.train
+      ~TextPairRegressor.type
+      ~TextPairRegressor.xpu
+      ~TextPairRegressor.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TextPairRegressor.T_destination
+      ~TextPairRegressor.call_super_init
+      ~TextPairRegressor.dump_patches
+      ~TextPairRegressor.label_type
+      ~TextPairRegressor.model_card
+      ~TextPairRegressor.training
+   
+   
