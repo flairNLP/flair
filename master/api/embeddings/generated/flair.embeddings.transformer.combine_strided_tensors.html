@@ -53,7 +53,7 @@
     <link rel="icon" href="../../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
-    <link rel="next" title="flair.embeddings.transformer.document_max_pooling" href="flair.embeddings.transformer.document_max_pooling.html" />
+    <link rel="next" title="flair.embeddings.transformer.document_cls_pooling" href="flair.embeddings.transformer.document_cls_pooling.html" />
     <link rel="prev" title="flair.embeddings.transformer._reconstruct_word_ids_from_subtokens" href="flair.embeddings.transformer._reconstruct_word_ids_from_subtokens.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -772,7 +772,7 @@ button.search-button {
 <h1>flair.embeddings.transformer.combine_strided_tensors<a class="headerlink" href="#flair-embeddings-transformer-combine-strided-tensors" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="flair.embeddings.transformer.combine_strided_tensors">
-<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">combine_strided_tensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overflow_to_sample_mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/y#L72-L106"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.combine_strided_tensors" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">flair.embeddings.transformer.</span></span><span class="sig-name descname"><span class="pre">combine_strided_tensors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overflow_to_sample_mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/y#L67-L101"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.transformer.combine_strided_tensors" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
