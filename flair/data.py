@@ -347,7 +347,7 @@ class DataPoint:
         return key in self._metadata
 
     def add_label(self, typename: str, value: str, score: float = 1.0, **metadata) -> "DataPoint":
-        """Adds a label to the DataPoint by internally creating a Label object.
+        """Adds a label to the DataPoint by internally creating a :class:`Label` object.
 
         Args:
             typename: A string that identifies the layer of annotation, such as "ner" for named entity labels or "sentiment" for sentiment labels
@@ -356,10 +356,11 @@ class DataPoint:
             **metadata: Additional metadata information.
 
         Examples:
-            Examples should be written in doctest format, and should illustrate how
-            to use the function.
-            >>> print([i for i in example_generator(4)])
-            [0, 1, 2, 3]
+            >>> add(2, 3)
+            5
+
+            >>> add(-1, 1)
+            0
 
         Returns:
             A pointer to itself (DataPoint object, now with an added label).
