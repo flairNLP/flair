@@ -347,6 +347,17 @@ class DataPoint:
         return key in self._metadata
 
     def add_label(self, typename: str, value: str, score: float = 1.0, **metadata) -> "DataPoint":
+        """Adds a label to the DataPoint by internally creating a Label object.
+
+        Args:
+            typename: A string that identifies the layer of annotation, such as "ner" for named entity labels or "sentiment" for sentiment labels
+            value: A string that sets the value of the label.
+            score: Optional value setting the confidence level of the label (between 0 and 1). If not set, a default confidence of 1 is used.
+            **metadata: Additional metadata information.
+
+        Returns:
+            A pointer to itself (DataPoint object, now with an added label).
+        """
         label = Label(self, value, score, **metadata)
 
         if typename not in self.annotation_layers:
