@@ -336,19 +336,20 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 for metric in self.metrics_list:
                     outfile.write(f"{metric}\t")
                 outfile.write("\n")
-                
-        if self.model_card["training_parameters"]["epoch"]==1:
-            # initialize metrics history
-            for sent in sentences:
-                for dp in sent.tokens:
-                    # enable choice of metrics to store?
-                    dp.set_metric('last_prediction', -1)
-                    dp.set_metric('last_confidence_sum', 0 )
-                    dp.set_metric('last_sq_difference_sum', 0 )
-                    dp.set_metric('last_correctness_sum', 0 )
-                    dp.set_metric('last_iteration', 0 )
-                    dp.set_metric("hist_prediction", torch.zeros(17, device=flair.device))
-                    dp.set_metric("hist_MILD", torch.zeros(1, device=flair.device))
+
+        if self.model_card["training_parameters"]["epoch"] == 1:
+            if "hist_prediction" not in sentences[0].tokens[0].metric_history:
+                # initialize metrics history
+                for sent in sentences:
+                    for dp in sent.tokens:
+                        # enable choice of metrics to store?
+                        dp.set_metric('last_prediction', -1)
+                        dp.set_metric('last_confidence_sum', 0 )
+                        dp.set_metric('last_sq_difference_sum', 0 )
+                        dp.set_metric('last_correctness_sum', 0 )
+                        dp.set_metric('last_iteration', 0 )
+                        dp.set_metric("hist_prediction", torch.zeros(17, device=flair.device))
+                        dp.set_metric("hist_MILD", torch.zeros(1, device=flair.device))
 
     
     def _log_metrics(self, epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, gold_labels, clean_labels):
