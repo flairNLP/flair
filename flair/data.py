@@ -355,6 +355,12 @@ class DataPoint:
             score: Optional value setting the confidence level of the label (between 0 and 1). If not set, a default confidence of 1 is used.
             **metadata: Additional metadata information.
 
+        Examples:
+            Examples should be written in doctest format, and should illustrate how
+            to use the function.
+            >>> print([i for i in example_generator(4)])
+            [0, 1, 2, 3]
+
         Returns:
             A pointer to itself (DataPoint object, now with an added label).
         """
