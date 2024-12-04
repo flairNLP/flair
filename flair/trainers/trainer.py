@@ -55,7 +55,11 @@ class ModelTrainer(Pluggable):
     ModelTrainer inherits from :class:`flair.trainers.plugins.base.Pluggable` and thus uses a plugin system to inject
     specific functionality into the training process. You can add any number of plugins to the above-mentioned training
     modes. For instance, if you want to use an annealing scheduler during training, you can add the
-     :class:`flair.trainers.plugins.functional.AnnealingPlugin` plugin to the train command.
+    :class:`flair.trainers.plugins.functional.AnnealingPlugin` plugin to the train command.
+
+     from flair import Sentence
+     sentence = Sentence("I love Berlin")
+
     """
 
     valid_events = {
@@ -76,12 +80,12 @@ class ModelTrainer(Pluggable):
 
     def __init__(self, model: flair.nn.Model, corpus: Corpus) -> None:
         """Initialize a model trainer by passing a :class:`flair.nn.Model` (the architecture you want to train) and a
-            :class:`flair.data.Corpus` (the labeled data you use to train and evaluate the model).
+        :class:`flair.data.Corpus` (the labeled data you use to train and evaluate the model).
 
         Args:
             model: The model that you want to train. The model should inherit from :class:`flair.nn.Model`. So for
                 instance you should pass a :class:`flair.models.TextClassifier` if you want to train a text classifier,
-                or :class:`flair.models.SequenceLabeler` if you want to train an RNN-based sequence labeler.
+                or :class:`flair.models.SequenceTagger` if you want to train an RNN-based sequence labeler.
             corpus: The dataset (of type :class:`flair.data.Corpus`) used to train the model.
         """
         super().__init__()
