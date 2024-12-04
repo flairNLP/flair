@@ -224,6 +224,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             self.metrics_list = ['confidence','variability','correctness','msp','BvSB','cross_entropy','entropy','iter_norm','pehist','mild_m','mild_f','mild']
             self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness_sum','last_iteration','hist_prediction', 'hist_MILD']
             self.max_certainty = -np.log(1.0 / float(self.tagset_size))
+            self.mode = 'epoch_end'
 
         self.print_out_path = None
 
@@ -532,7 +533,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # BIOES
         gold_labels = self._prepare_label_tensor(sentences)
 
-        if self.calculate_sample_metrics:
+        if self.calculate_sample_metrics and self.mode == 'batch_forward':
             # BIOES
             clean_labels = self._prepare_label_tensor(sentences, label_type = self.label_type+'_clean')
 
@@ -764,6 +765,12 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     loss = self._calculate_loss(features, gold_labels)
                     overall_loss += loss[0]
                     label_count += loss[1]
+
+                if self.calculate_sample_metrics and self.mode == 'epoch_end':
+                    # BIOES
+                    clean_labels = self._prepare_label_tensor(sentences, label_type=self.label_type + "_clean")
+
+                    self.calculate_and_log_metrics(sentences, features, gold_labels, clean_labels)
 
                 # make predictions
                 if self.use_crf:
@@ -1826,18 +1833,13 @@ class EarlyExitSequenceTagger(SequenceTagger):
                     overall_loss += loss[0]
                     label_count += loss[1]
 
-                softmax_batch = F.softmax(features, dim=2).cpu()
-                new_sentence_start = 0
 
-                for sentence in batch:
-                    for k, token in enumerate(sentence):
-                        pd = self._calculate_pd(softmax_batch[:, new_sentence_start + k, :])
-                        if not token.has_label('PD'):
-                            token.add_label(typename="PD", value="PD", score=pd)
-                        else:
-                            token.set_label(typename="PD", value="PD", score=pd)
+                if self.calculate_sample_metrics and self.mode == 'epoch_end':
+                    # BIOES
+                    clean_labels = self._prepare_label_tensor(sentences, label_type=self.label_type + "_clean")
 
-                    new_sentence_start += len(sentence)
+                    self.calculate_and_log_metrics(sentences, features, gold_labels, clean_labels)
+
                 # make predictions
                 predictions, all_tags = self._standard_inference(
                     features, batch, return_probabilities_for_all_classes
