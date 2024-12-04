@@ -56,10 +56,6 @@ class ModelTrainer(Pluggable):
     specific functionality into the training process. You can add any number of plugins to the above-mentioned training
     modes. For instance, if you want to use an annealing scheduler during training, you can add the
     :class:`flair.trainers.plugins.functional.AnnealingPlugin` plugin to the train command.
-
-     from flair import Sentence
-     sentence = Sentence("I love Berlin")
-
     """
 
     valid_events = {
