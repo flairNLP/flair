@@ -208,6 +208,14 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         return model
 
     def print_model_card(self):
+        """
+        This method produces a log message that includes all recorded parameters the model was trained with.
+
+        The model card includes information such as the Flair, PyTorch and Transformers versions used during training,
+        and the training parameters.
+
+        Only available for models trained with with Flair >= 0.9.1.
+        """
         if hasattr(self, "model_card"):
             param_out = "\n------------------------------------\n"
             param_out += "--------- Flair Model Card ---------\n"
