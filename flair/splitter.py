@@ -25,10 +25,6 @@ class SentenceSplitter(ABC):
     the sentence splitter's configuration.
 
     The most common class in Flair that implements this base class is :class:`SegtokSentenceSplitter`.
-
-    Attributes:
-        name (str): A string identifier of the sentence splitter.
-        tokenizer: The :class:`flair.tokenization.Tokenizer` class used to tokenize sentences after they are split.
     """
 
     def split(self, text: str, link_sentences: bool = True) -> list[Sentence]:
@@ -61,10 +57,12 @@ class SentenceSplitter(ABC):
 
     @property
     def name(self) -> str:
+        """A string identifier of the sentence splitter."""
         return self.__class__.__name__
 
     @property
     def tokenizer(self) -> Tokenizer:
+        """The :class:`flair.tokenization.Tokenizer` class used to tokenize sentences after they are split."""
         raise NotImplementedError
 
     @tokenizer.setter
