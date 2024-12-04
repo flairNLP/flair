@@ -1,6 +1,6 @@
 # Using and creating entity mention linker
 
-As of Flair 0.14 we ship the [entity mention linker](#flair.models.EntityMentionLinker) - the core framework behind the [Hunflair BioNEN approach](https://huggingface.co/hunflair)]. 
+As of Flair 0.14 we ship the [entity mention linker](#flair.models.EntityMentionLinker) - the core framework behind the [Hunflair BioNEN approach](https://huggingface.co/hunflair). 
 You can read more at the [Hunflair2 tutorials](project:../tutorial-hunflair2/overview.md)
 
 ## Example 1: Printing Entity linking outputs to console
@@ -124,5 +124,11 @@ print(result_mentions)
 
 ```{note}
   If you need more than the extracted ids, you can use `nen_tagger.dictionary[span_data["nen_id"]]`
-  to look up the [`flair.data.EntityCandidate`](#flair.data.EntityCandidate) which contains further information.
+  to look up the [`EntityCandidate`](#flair.data.EntityCandidate) which contains further information.
 ```
+
+### Next
+
+Congrats, you learned how to link biomedical entities with Flair! 
+
+Next, let's discuss how to [predict part-of-speech tags with Flair](part-of-speech-tagging.md).
