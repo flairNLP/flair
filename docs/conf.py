@@ -101,7 +101,7 @@ html_show_sphinx = False
 
 # Napoleon settings
 napoleon_include_init_with_doc = True
-napoleon_include_private_with_doc = True
+napoleon_include_private_with_doc = False
 
 autodoc_default_options = {
     "member-order": "bysource",
