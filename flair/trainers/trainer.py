@@ -42,6 +42,22 @@ log = logging.getLogger("flair")
 
 
 class ModelTrainer(Pluggable):
+    """Use this class to train a Flair model.
+
+    The ModelTrainer is initialized using a :class:`flair.nn.Model` (the architecture you want to train) and a
+    :class:`flair.data.Corpus` (the labeled data you use to train and evaluate the model). It offers two main training
+    functions for the two main modes of training a model: (1) :func:`train`, which is used to train a model from scratch or
+    to fit a classification head on a frozen transformer language model. (2) :func:`fine_tune`, which is used if you
+    do not freeze the transformer language model and rather fine-tune it for a specific task.
+
+    Additionally, there is also a `train_custom` method that allows you to fully customize the training run.
+
+    ModelTrainer inherits from :class:`flair.trainers.plugins.base.Pluggable` and thus uses a plugin system to inject
+    specific functionality into the training process. You can add any number of plugins to the above-mentioned training
+    modes. For instance, if you want to use an annealing scheduler during training, you can add the
+     :class:`flair.trainers.plugins.functional.AnnealingPlugin` plugin to the train command.
+    """
+
     valid_events = {
         "after_setup",
         "before_training_epoch",
@@ -59,11 +75,14 @@ class ModelTrainer(Pluggable):
     }
 
     def __init__(self, model: flair.nn.Model, corpus: Corpus) -> None:
-        """Initialize a model trainer.
+        """Initialize a model trainer by passing a :class:`flair.nn.Model` (the architecture you want to train) and a
+            :class:`flair.data.Corpus` (the labeled data you use to train and evaluate the model).
 
         Args:
-            model: The model that you want to train. The model should inherit from flair.nn.Model  # noqa: E501
-            corpus: The dataset used to train the model, should be of type Corpus
+            model: The model that you want to train. The model should inherit from :class:`flair.nn.Model`. So for
+                instance you should pass a :class:`flair.models.TextClassifier` if you want to train a text classifier,
+                or :class:`flair.models.SequenceLabeler` if you want to train an RNN-based sequence labeler.
+            corpus: The dataset (of type :class:`flair.data.Corpus`) used to train the model.
         """
         super().__init__()
         self.model: flair.nn.Model = model
@@ -346,7 +365,7 @@ class ModelTrainer(Pluggable):
         plugins: Optional[list[TrainerPlugin]] = None,
         **kwargs,
     ) -> dict:
-        """Trains any class that implements the flair.nn.Model interface.
+        """Trains any class that implements the :class:`flair.nn.Model` interface.
 
         Args:
             base_path: Main path to which all output during training is logged and models are saved
