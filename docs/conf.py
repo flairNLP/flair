@@ -112,6 +112,8 @@ autodoc_default_options = {
     "inherited": True,
 }
 
+autodoc_add_module_names = False
+
 source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
@@ -146,4 +148,4 @@ html_favicon = "_static/favicon.ico"
 
 # Define a mapping for shorter module names in the documentation
 # (for example, `car` instead of `longpath.to.module.car`)
-modindex_common_prefix = ["flair.", "flair.data"]
+modindex_common_prefix = ["flair.", "flair.data."]

@@ -17,9 +17,16 @@ class SentenceSplitter(ABC):
 
     Sentence splitters are used to represent algorithms and models to split plain text into
     sentences and individual tokens / words. All subclasses should overwrite :func:`split`,
-    which splits the given plain text into a list of :class:`Sentence` objects. The
+    which splits the given plain text into a list of :class:`~Sentence` objects. The
     individual sentences are in turn subdivided into tokens. In most cases, this can
     be controlled by passing custom implementation of :class:`flair.tokenization.Tokenizer`.
+
+    Test:
+    - :class:`flair.data.Sentence`
+    - :class:`data.Sentence`
+    - :class:`Sentence`
+    - :class:`~Sentence`
+    - :class:`~data.Sentence`
 
     Moreover, subclasses may overwrite :meth:`name`, returning a unique identifier representing
     the sentence splitter's configuration.
