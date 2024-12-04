@@ -130,13 +130,13 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
     @classmethod
     def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "Model":
-        """Loads the model from the given file.
+        """Loads a Flair model from the given file or state dictionary.
 
         Args:
-            model_path: The model file or the already loaded state dict.
+            model_path: Either the path to the model (as string or `Path` variable) or the already loaded state dict.
 
         Returns:
-            The loaded model.
+            The loaded Flair model.
         """
         # if this class is abstract, go through all inheriting classes and try to fetch and load the model
         if inspect.isabstract(cls):
@@ -524,14 +524,18 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         return_loss: bool = False,
         embedding_storage_mode: EmbeddingStorageMode = "none",
     ):
-        """Predicts the class labels for the given sentences.
+        """Uses the model to predict labels for a given set of data points.
 
-        The labels are directly added to the sentences.
+        The method does not directly return the predicted labels. Rather, labels are added as :class:`flair.data.Label` objects to
+        the respective data points. You can then access these predictions by calling :func:`flair.data.DataPoint.get_labels`
+        on each data point that you passed through this method.
 
         Args:
-            sentences: The sentences for which the model should predict labels.
-            mini_batch_size: The mini batch size to use.
-            return_probabilities_for_all_classes: If set to True, the model will store probabilities for all classes instead of only the predicted class.
+            sentences: The data points for which the model should predict labels, most commonly Sentence objects.
+            mini_batch_size: The mini batch size to use. Setting this value higher typically makes predictions faster,
+                but also costs more memory.
+            return_probabilities_for_all_classes: If set to True, the model will store probabilities for all classes
+                instead of only the predicted class.
             verbose: If set to True, will display a progress bar while predicting. By default, this parameter is set to False.
             return_loss: Set this to True to return loss (only possible if gold labels are set for the sentences).
             label_name: Optional parameter that if set, changes the identifier of the label type that is predicted.  # noqa: E501

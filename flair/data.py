@@ -349,20 +349,6 @@ class DataPoint:
     def add_label(self, typename: str, value: str, score: float = 1.0, **metadata) -> "DataPoint":
         """Adds a label to the :class:`DataPoint` by internally creating a :class:`Label` object.
 
-        Examples:
-            >>> sentence = Sentence("this is good")
-            >>> sentence.add_label("sentiment", "positive")
-            >>> print(sentence)
-            Sentence[3]: "this is good" → positive (1.0000)
-
-            >>> # make a sentence and get the last token
-            >>> sentence = Sentence("this is good")
-            >>> token = sentence[2]
-            >>> # add a label to token
-            >>> token.add_label("part-of-speech", "adjective")
-            >>> print(token)
-            Token[2]: "good" → adjective (1.0000)
-
         Args:
             typename: A string that identifies the layer of annotation, such as "ner" for named entity labels or "sentiment" for sentiment labels
             value: A string that sets the value of the label.
@@ -395,6 +381,17 @@ class DataPoint:
         return self.get_labels(label_type)[0]
 
     def get_labels(self, typename: Optional[str] = None) -> list[Label]:
+        """Returns all labels of this datapoint belonging to a specific annotation layer.
+
+        For instance, if a data point has been labeled with `"sentiment"`-labels, you can call this function as
+        `get_labels("sentiment")` to return a list of all sentiment labels.
+
+        Args:
+            typename: The string identifier of the annotation layer, like "sentiment" or "ner".
+
+        Returns:
+            A list of :class:`Label` objects belonging to this annotation layer for this data point.
+        """
         if typename is None:
             return self.labels
 
@@ -791,7 +788,11 @@ class Relation(_PartOfSentence):
 
 
 class Sentence(DataPoint):
-    """A Sentence is a list of tokens and is used to represent a sentence or text fragment."""
+    """A Sentence is a central object in Flair that represents either a single sentence or a whole text.
+
+    Internally, it consists of a list of Token objects that represent each word in the text. Additionally,
+    this object stores all metadata related to a text such as labels, language code, etc.
+    """
 
     def __init__(
         self,
@@ -800,14 +801,12 @@ class Sentence(DataPoint):
         language_code: Optional[str] = None,
         start_position: int = 0,
     ) -> None:
-        """Class to hold all metadata related to a text.
-
-        Metadata can be tokens, labels, predictions, language code, etc.
+        """Create a sentence object by passing either a text or a list of tokens.
 
         Args:
-            text: original string (sentence), or a pre tokenized list of tokens.
-            use_tokenizer: Specify a custom tokenizer to split the text into tokens. The Default is
-                :class:`flair.tokenization.SegTokTokenizer`. If `use_tokenizer` is set to False,
+            text: Either pass the text as a string, or provide an already tokenized text as either a list of strings or a list of :class:`Token` objects.
+            use_tokenizer: You can optionally specify a custom tokenizer to split the text into tokens. By default we use
+                :class:`flair.tokenization.SegtokTokenizer`. If `use_tokenizer` is set to False,
                 :class:`flair.tokenization.SpaceTokenizer` will be used instead. The tokenizer will be ignored,
                 if `text` refers to pretokenized tokens.
             language_code: Language of the sentence. If not provided, `langdetect <https://pypi.org/project/langdetect/>`_
