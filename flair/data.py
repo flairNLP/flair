@@ -1434,7 +1434,23 @@ class Corpus(typing.Generic[T_co]):
         downsample_test: bool = True,
         random_seed: Optional[int] = None,
     ) -> "Corpus":
-        """Reduce all datasets in corpus proportionally to the given percentage."""
+        """Randomly downsample the corpus to the given percentage (by removing data points).
+
+        This method is an in-place operation, meaning that the Corpus object itself is modified by removing
+        data points. It additionally returns a pointer to itself for use in method chaining.
+
+        Args:
+            percentage (float): A float value between 0. and 1. that indicates to which percentage the corpus
+                should be downsampled. Default value is 0.1, meaning it gets downsampled to 10%.
+            downsample_train (bool): Whether or not to include the training split in downsampling. Default is True.
+            downsample_dev (bool): Whether or not to include the dev split in downsampling. Default is True.
+            downsample_test (bool): Whether or not to include the test split in downsampling. Default is True.
+            random_seed (int): An optional random seed to make downsampling reproducible.
+
+        Returns:
+            A pointer to itself for optional use in method chaining.
+        """
+
         if downsample_train and self._train is not None:
             self._train = self._downsample_to_proportion(self._train, percentage, random_seed)
 
