@@ -1738,19 +1738,6 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 prediction_batch = prediction_batch[len(sentence) :]
             predictions.append(layer_predictions)
         
-        new_sentence_start = 0
-
-        for sentence in batch:
-            for k, token in enumerate(sentence):
-                pd = self._calculate_pd(softmax_batch[:, new_sentence_start + k, :])
-                if not token.has_label('PD'):
-                    token.add_label(typename="PD", value="PD", score=pd)
-                else:
-                    token.set_label(typename="PD", value="PD", score=pd)
-
-            new_sentence_start += len(sentence)
-
-            #TODO: also log overall PD for sentence
 
 
         if probabilities_for_all_classes:
@@ -1839,6 +1826,18 @@ class EarlyExitSequenceTagger(SequenceTagger):
                     overall_loss += loss[0]
                     label_count += loss[1]
 
+                softmax_batch = F.softmax(features, dim=2).cpu()
+                new_sentence_start = 0
+
+                for sentence in batch:
+                    for k, token in enumerate(sentence):
+                        pd = self._calculate_pd(softmax_batch[:, new_sentence_start + k, :])
+                        if not token.has_label('PD'):
+                            token.add_label(typename="PD", value="PD", score=pd)
+                        else:
+                            token.set_label(typename="PD", value="PD", score=pd)
+
+                    new_sentence_start += len(sentence)
                 # make predictions
                 predictions, all_tags = self._standard_inference(
                     features, batch, return_probabilities_for_all_classes
