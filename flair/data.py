@@ -74,7 +74,8 @@ class Dictionary:
         Args:
             item: a string for which to assign an id.
 
-        Returns: ID of string
+        Returns:
+            ID of string
         """
         bytes_item = item.encode("utf-8")
         if bytes_item not in self.item2idx:
@@ -88,7 +89,8 @@ class Dictionary:
         Args:
             item: string for which ID is requested
 
-        Returns: ID of string, otherwise 0
+        Returns:
+            ID of string, otherwise 0
         """
         item_encoded = item.encode("utf-8")
         if item_encoded in self.item2idx:
@@ -108,7 +110,8 @@ class Dictionary:
         Args:
             items: List of string for which IDs are requested
 
-        Returns: List of ID of strings
+        Returns:
+            List of ID of strings
         """
         if not hasattr(self, "item2idx_not_encoded"):
             d = {key.decode("UTF-8"): value for key, value in self.item2idx.items()}
@@ -1463,6 +1466,10 @@ class Corpus(typing.Generic[T_co]):
         return self
 
     def filter_empty_sentences(self):
+        """A method that filters all sentences consisting of 0 tokens.
+
+        This is an in-place operation that directly modifies the Corpus object itself by removing these sentences.
+        """
         log.info("Filtering empty sentences")
         if self._train is not None:
             self._train = Corpus._filter_empty_sentences(self._train)
@@ -1473,6 +1480,15 @@ class Corpus(typing.Generic[T_co]):
         log.info(self)
 
     def filter_long_sentences(self, max_charlength: int):
+        """
+        A method that filters all sentences for which the plain text is longer than a specified number of characters.
+
+        This is an in-place operation that directly modifies the Corpus object itself by removing these sentences.
+
+        Args:
+            max_charlength: The maximum permissible character length of a sentence.
+
+        """
         log.info("Filtering long sentences")
         if self._train is not None:
             self._train = Corpus._filter_long_sentences(self._train, max_charlength)
@@ -1517,7 +1533,7 @@ class Corpus(typing.Generic[T_co]):
         return subset
 
     def make_vocab_dictionary(self, max_tokens: int = -1, min_freq: int = 1) -> Dictionary:
-        """Creates a dictionary of all tokens contained in the corpus.
+        """Creates a :class:`Dictionary` of all tokens contained in the corpus.
 
         By defining `max_tokens` you can set the maximum number of tokens that should be contained in the dictionary.
         If there are more than `max_tokens` tokens in the corpus, the most frequent tokens are added first.
@@ -1525,10 +1541,13 @@ class Corpus(typing.Generic[T_co]):
         to be added to the dictionary.
 
         Args:
-            max_tokens: the maximum number of tokens that should be added to the dictionary (-1 = take all tokens)
-            min_freq: a token needs to occur at least `min_freq` times to be added to the dictionary (-1 = there is no limitation)
+            max_tokens: The maximum number of tokens that should be added to the dictionary (providing a value of "-1"
+                means that there is no maximum in this regard).
+            min_freq: A token needs to occur at least `min_freq` times to be added to the dictionary (providing a value
+                of "-1" means that there is no limitation in this regard).
 
-        Returns: dictionary of tokens
+        Returns:
+            A :class:`Dictionary` of all unique tokens in the corpus.
         """
         tokens = self._get_most_common_tokens(max_tokens, min_freq)
 
@@ -1837,7 +1856,8 @@ class Corpus(typing.Generic[T_co]):
         Args:
             tag_type: the label type to gather the tag labels
 
-        Returns: A Dictionary containing the labeled tags, including "O" and "<START>" and "<STOP>"
+        Returns:
+            A Dictionary containing the labeled tags, including "O" and "<START>" and "<STOP>"
 
         """
         tag_dictionary: Dictionary = Dictionary(add_unk=False)
