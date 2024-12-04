@@ -526,8 +526,8 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
     ):
         """Uses the model to predict labels for a given set of data points.
 
-        The method does not directly return the predicted labels. Rather, labels are added as :class:`Label` objects to
-        the respective data points. You can then access these predictions by calling :func:`DataPoint.get_labels`
+        The method does not directly return the predicted labels. Rather, labels are added as :class:`flair.data.Label` objects to
+        the respective data points. You can then access these predictions by calling :func:`flair.data.DataPoint.get_labels`
         on each data point that you passed through this method.
 
         Args:

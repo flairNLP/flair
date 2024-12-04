@@ -143,3 +143,7 @@ smv_outputdir_format = "{ref.name}"
 smv_prefer_remote_refs = False
 
 html_favicon = "_static/favicon.ico"
+
+# Define a mapping for shorter module names in the documentation
+# (for example, `car` instead of `longpath.to.module.car`)
+modindex_common_prefix = ["flair.", "flair.data"]
