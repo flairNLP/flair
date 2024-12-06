@@ -383,7 +383,7 @@ class TARSTagger(FewshotClassifier):
 
         # transformer separator
         self.separator = str(self.tars_embeddings.tokenizer.sep_token)
-        if self.tars_embeddings.tokenizer._bos_token:
+        if self.tars_embeddings.tokenizer.bos_token is not None:
             self.separator += str(self.tars_embeddings.tokenizer.bos_token)
 
         self.prefix = prefix
@@ -718,9 +718,11 @@ class TARSClassifier(FewshotClassifier):
         )
 
         # transformer separator
-        self.separator = str(self.tars_embeddings.tokenizer.sep_token)
-        if self.tars_embeddings.tokenizer._bos_token:
-            self.separator += str(self.tars_embeddings.tokenizer.bos_token)
+        self.separator = (
+            self.tars_embeddings.tokenizer.sep_token if self.tars_embeddings.tokenizer.sep_token is not None else ""
+        )
+        if self.tars_embeddings.tokenizer.bos_token is not None:
+            self.separator += self.tars_embeddings.tokenizer.bos_token
 
         self.prefix = prefix
         self.num_negative_labels_to_sample = num_negative_labels_to_sample
