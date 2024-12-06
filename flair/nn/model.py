@@ -69,12 +69,12 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         Args:
             data_points: The labeled data_points to evaluate.
             gold_label_type: The label type indicating the gold labels
-            out_path: Optional output path to store predictions
+            out_path: Optional output path to store predictions.
             embedding_storage_mode: One of 'none', 'cpu' or 'gpu'. 'none' means all embeddings are deleted and freshly
               recomputed, 'cpu' means all embeddings are stored on CPU, or 'gpu' means all embeddings are stored on GPU
-            mini_batch_size: The batch_size to use for predictions
-            main_evaluation_metric: Specify which metric to highlight as main_score
-            exclude_labels: Specify classes that won't be considered in evaluation
+            mini_batch_size: The batch_size to use for predictions.
+            main_evaluation_metric: Specify which metric to highlight as main_score.
+            exclude_labels: Specify classes that won't be considered in evaluation.
             gold_label_dictionary: Specify which classes should be considered, all other classes will be taken as <unk>.
             return_loss: Weather to additionally compute the loss on the data-points.
             **kwargs: Arguments that will be ignored.
@@ -116,8 +116,8 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         """Saves the current model to the provided file.
 
         Args:
-            model_file: the model file
-            checkpoint: currently unused.
+            model_file: The model file.
+            checkpoint: This parameter is currently unused.
         """
         model_state = self._get_state_dict()
 
@@ -130,12 +130,13 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
     @classmethod
     def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "Model":
-        """Loads the model from the given file.
+        """Loads a Flair model from the given file or state dictionary.
 
         Args:
-            model_path: the model file or the already loaded state dict
+            model_path: Either the path to the model (as string or `Path` variable) or the already loaded state dict.
 
-        Returns: the loaded text classifier model
+        Returns:
+            The loaded Flair model.
         """
         # if this class is abstract, go through all inheriting classes and try to fetch and load the model
         if inspect.isabstract(cls):
@@ -207,6 +208,14 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         return model
 
     def print_model_card(self):
+        """
+        This method produces a log message that includes all recorded parameters the model was trained with.
+
+        The model card includes information such as the Flair, PyTorch and Transformers versions used during training,
+        and the training parameters.
+
+        Only available for models trained with with Flair >= 0.9.1.
+        """
         if hasattr(self, "model_card"):
             param_out = "\n------------------------------------\n"
             param_out += "--------- Flair Model Card ---------\n"
@@ -523,18 +532,22 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         return_loss: bool = False,
         embedding_storage_mode: EmbeddingStorageMode = "none",
     ):
-        """Predicts the class labels for the given sentences.
+        """Uses the model to predict labels for a given set of data points.
 
-        The labels are directly added to the sentences.
+        The method does not directly return the predicted labels. Rather, labels are added as :class:`flair.data.Label` objects to
+        the respective data points. You can then access these predictions by calling :func:`flair.data.DataPoint.get_labels`
+        on each data point that you passed through this method.
 
         Args:
-            sentences: list of sentences
-            mini_batch_size: mini batch size to use
-            return_probabilities_for_all_classes: return probabilities for all classes instead of only best predicted
-            verbose: set to True to display a progress bar
-            return_loss: set to True to return loss
-            label_name: set this to change the name of the label type that is predicted  # noqa: E501
-            embedding_storage_mode: default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively. 'gpu' to store embeddings in GPU memory.  # noqa: E501
+            sentences: The data points for which the model should predict labels, most commonly Sentence objects.
+            mini_batch_size: The mini batch size to use. Setting this value higher typically makes predictions faster,
+                but also costs more memory.
+            return_probabilities_for_all_classes: If set to True, the model will store probabilities for all classes
+                instead of only the predicted class.
+            verbose: If set to True, will display a progress bar while predicting. By default, this parameter is set to False.
+            return_loss: Set this to True to return loss (only possible if gold labels are set for the sentences).
+            label_name: Optional parameter that if set, changes the identifier of the label type that is predicted.  # noqa: E501
+            embedding_storage_mode: Default is 'none' which is always best. Only set to 'cpu' or 'gpu' if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively. 'gpu' to store embeddings in GPU memory.  # noqa: E501
         """
         raise NotImplementedError
 

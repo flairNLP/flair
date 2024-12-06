@@ -74,7 +74,8 @@ class Dictionary:
         Args:
             item: a string for which to assign an id.
 
-        Returns: ID of string
+        Returns:
+            ID of string
         """
         bytes_item = item.encode("utf-8")
         if bytes_item not in self.item2idx:
@@ -88,7 +89,8 @@ class Dictionary:
         Args:
             item: string for which ID is requested
 
-        Returns: ID of string, otherwise 0
+        Returns:
+            ID of string, otherwise 0
         """
         item_encoded = item.encode("utf-8")
         if item_encoded in self.item2idx:
@@ -108,7 +110,8 @@ class Dictionary:
         Args:
             items: List of string for which IDs are requested
 
-        Returns: List of ID of strings
+        Returns:
+            List of ID of strings
         """
         if not hasattr(self, "item2idx_not_encoded"):
             d = {key.decode("UTF-8"): value for key, value in self.item2idx.items()}
@@ -347,6 +350,17 @@ class DataPoint:
         return key in self._metadata
 
     def add_label(self, typename: str, value: str, score: float = 1.0, **metadata) -> "DataPoint":
+        """Adds a label to the :class:`DataPoint` by internally creating a :class:`Label` object.
+
+        Args:
+            typename: A string that identifies the layer of annotation, such as "ner" for named entity labels or "sentiment" for sentiment labels
+            value: A string that sets the value of the label.
+            score: Optional value setting the confidence level of the label (between 0 and 1). If not set, a default confidence of 1 is used.
+            **metadata: Additional metadata information.
+
+        Returns:
+            A pointer to itself (DataPoint object, now with an added label).
+        """
         label = Label(self, value, score, **metadata)
 
         if typename not in self.annotation_layers:
@@ -370,6 +384,17 @@ class DataPoint:
         return self.get_labels(label_type)[0]
 
     def get_labels(self, typename: Optional[str] = None) -> list[Label]:
+        """Returns all labels of this datapoint belonging to a specific annotation layer.
+
+        For instance, if a data point has been labeled with `"sentiment"`-labels, you can call this function as
+        `get_labels("sentiment")` to return a list of all sentiment labels.
+
+        Args:
+            typename: The string identifier of the annotation layer, like "sentiment" or "ner".
+
+        Returns:
+            A list of :class:`Label` objects belonging to this annotation layer for this data point.
+        """
         if typename is None:
             return self.labels
 
@@ -766,7 +791,11 @@ class Relation(_PartOfSentence):
 
 
 class Sentence(DataPoint):
-    """A Sentence is a list of tokens and is used to represent a sentence or text fragment."""
+    """A Sentence is a central object in Flair that represents either a single sentence or a whole text.
+
+    Internally, it consists of a list of Token objects that represent each word in the text. Additionally,
+    this object stores all metadata related to a text such as labels, language code, etc.
+    """
 
     def __init__(
         self,
@@ -775,14 +804,12 @@ class Sentence(DataPoint):
         language_code: Optional[str] = None,
         start_position: int = 0,
     ) -> None:
-        """Class to hold all metadata related to a text.
-
-        Metadata can be tokens, labels, predictions, language code, etc.
+        """Create a sentence object by passing either a text or a list of tokens.
 
         Args:
-            text: original string (sentence), or a pre tokenized list of tokens.
-            use_tokenizer: Specify a custom tokenizer to split the text into tokens. The Default is
-                :class:`flair.tokenization.SegTokTokenizer`. If `use_tokenizer` is set to False,
+            text: Either pass the text as a string, or provide an already tokenized text as either a list of strings or a list of :class:`Token` objects.
+            use_tokenizer: You can optionally specify a custom tokenizer to split the text into tokens. By default we use
+                :class:`flair.tokenization.SegtokTokenizer`. If `use_tokenizer` is set to False,
                 :class:`flair.tokenization.SpaceTokenizer` will be used instead. The tokenizer will be ignored,
                 if `text` refers to pretokenized tokens.
             language_code: Language of the sentence. If not provided, `langdetect <https://pypi.org/project/langdetect/>`_
@@ -1410,7 +1437,23 @@ class Corpus(typing.Generic[T_co]):
         downsample_test: bool = True,
         random_seed: Optional[int] = None,
     ) -> "Corpus":
-        """Reduce all datasets in corpus proportionally to the given percentage."""
+        """Randomly downsample the corpus to the given percentage (by removing data points).
+
+        This method is an in-place operation, meaning that the Corpus object itself is modified by removing
+        data points. It additionally returns a pointer to itself for use in method chaining.
+
+        Args:
+            percentage (float): A float value between 0. and 1. that indicates to which percentage the corpus
+                should be downsampled. Default value is 0.1, meaning it gets downsampled to 10%.
+            downsample_train (bool): Whether or not to include the training split in downsampling. Default is True.
+            downsample_dev (bool): Whether or not to include the dev split in downsampling. Default is True.
+            downsample_test (bool): Whether or not to include the test split in downsampling. Default is True.
+            random_seed (int): An optional random seed to make downsampling reproducible.
+
+        Returns:
+            A pointer to itself for optional use in method chaining.
+        """
+
         if downsample_train and self._train is not None:
             self._train = self._downsample_to_proportion(self._train, percentage, random_seed)
 
@@ -1423,6 +1466,10 @@ class Corpus(typing.Generic[T_co]):
         return self
 
     def filter_empty_sentences(self):
+        """A method that filters all sentences consisting of 0 tokens.
+
+        This is an in-place operation that directly modifies the Corpus object itself by removing these sentences.
+        """
         log.info("Filtering empty sentences")
         if self._train is not None:
             self._train = Corpus._filter_empty_sentences(self._train)
@@ -1433,6 +1480,15 @@ class Corpus(typing.Generic[T_co]):
         log.info(self)
 
     def filter_long_sentences(self, max_charlength: int):
+        """
+        A method that filters all sentences for which the plain text is longer than a specified number of characters.
+
+        This is an in-place operation that directly modifies the Corpus object itself by removing these sentences.
+
+        Args:
+            max_charlength: The maximum permissible character length of a sentence.
+
+        """
         log.info("Filtering long sentences")
         if self._train is not None:
             self._train = Corpus._filter_long_sentences(self._train, max_charlength)
@@ -1477,7 +1533,7 @@ class Corpus(typing.Generic[T_co]):
         return subset
 
     def make_vocab_dictionary(self, max_tokens: int = -1, min_freq: int = 1) -> Dictionary:
-        """Creates a dictionary of all tokens contained in the corpus.
+        """Creates a :class:`Dictionary` of all tokens contained in the corpus.
 
         By defining `max_tokens` you can set the maximum number of tokens that should be contained in the dictionary.
         If there are more than `max_tokens` tokens in the corpus, the most frequent tokens are added first.
@@ -1485,10 +1541,13 @@ class Corpus(typing.Generic[T_co]):
         to be added to the dictionary.
 
         Args:
-            max_tokens: the maximum number of tokens that should be added to the dictionary (-1 = take all tokens)
-            min_freq: a token needs to occur at least `min_freq` times to be added to the dictionary (-1 = there is no limitation)
+            max_tokens: The maximum number of tokens that should be added to the dictionary (providing a value of "-1"
+                means that there is no maximum in this regard).
+            min_freq: A token needs to occur at least `min_freq` times to be added to the dictionary (providing a value
+                of "-1" means that there is no limitation in this regard).
 
-        Returns: dictionary of tokens
+        Returns:
+            A :class:`Dictionary` of all unique tokens in the corpus.
         """
         tokens = self._get_most_common_tokens(max_tokens, min_freq)
 
@@ -1797,7 +1856,8 @@ class Corpus(typing.Generic[T_co]):
         Args:
             tag_type: the label type to gather the tag labels
 
-        Returns: A Dictionary containing the labeled tags, including "O" and "<START>" and "<STOP>"
+        Returns:
+            A Dictionary containing the labeled tags, including "O" and "<START>" and "<STOP>"
 
         """
         tag_dictionary: Dictionary = Dictionary(add_unk=False)

@@ -31,7 +31,7 @@ html_theme_options = {
     "navbar_end": ["darkmode-toggle", "version-switcher", "navbar-icon-links"],
     "show_prev_next": False,
     "footer_end": ["footer-links/legal-notice.html", "footer-links/x.html", "footer-links/linkedin.html"],
-    "secondary_sidebar_items": []
+    "secondary_sidebar_items": [],
 }
 
 
@@ -82,18 +82,18 @@ html_theme = "pydata_sphinx_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
-html_title = 'Flair Documentation'
+html_title = "Flair Documentation"
 
 html_css_files = [
-    'css/main.css',
-    'css/header.css',
-    'css/footer.css',
-    'css/version-switcher.css',
-    'css/sidebar.css',
-    'css/tutorial.css',
-    'css/api.css',
-    'css/legal-notice.css',
-    'css/search.css',
+    "css/main.css",
+    "css/header.css",
+    "css/footer.css",
+    "css/version-switcher.css",
+    "css/sidebar.css",
+    "css/tutorial.css",
+    "css/api.css",
+    "css/legal-notice.css",
+    "css/search.css",
 ]
 
 html_logo = "_static/flair_logo_white.svg"
@@ -101,7 +101,7 @@ html_show_sphinx = False
 
 # Napoleon settings
 napoleon_include_init_with_doc = True
-napoleon_include_private_with_doc = True
+napoleon_include_private_with_doc = False
 
 autodoc_default_options = {
     "member-order": "bysource",
@@ -118,9 +118,7 @@ source_suffix = {
 }
 
 html_sidebars = {
-    "**": [
-        "globaltoc.html"
-    ],
+    "**": ["globaltoc.html"],
     "index": [],
 }
 
