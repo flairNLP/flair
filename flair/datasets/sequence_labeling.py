@@ -6,6 +6,8 @@ import re
 import gzip
 import shutil
 import tarfile
+import tempfile
+import zipfile
 from collections import defaultdict
 from collections.abc import Iterable, Iterator
 from pathlib import Path
@@ -1566,9 +1568,11 @@ class CLEANCONLL(ColumnCorpus):
                         f_out.write("\n")
 
         def merge_annotations(tokens_file, annotations_file, output_file):
-            with open(tokens_file, encoding="utf-8") as tokens_file, open(
-                annotations_file, encoding="utf-8"
-            ) as annotations_file, open(output_file, "w", encoding="utf-8") as output_file:
+            with (
+                open(tokens_file, encoding="utf-8") as tokens_file,
+                open(annotations_file, encoding="utf-8") as annotations_file,
+                open(output_file, "w", encoding="utf-8") as output_file,
+            ):
                 tokens = tokens_file.readlines()
                 annotations = annotations_file.readlines()
 
