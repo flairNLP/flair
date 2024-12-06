@@ -906,7 +906,7 @@ maximum length for the decoding will be used for all sentences.</p></li>
 <td><p>Move all model parameters and buffers to the IPU.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code>(model_path)</p></td>
-<td><p>Loads the model from the given file.</p></td>
+<td><p>Loads a Flair model from the given file or state dictionary.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_state_dict</span></code>(state_dict[, strict, assign])</p></td>
 <td><p>Copy parameters and buffers from <code class="xref py py-attr docutils literal notranslate"><span class="pre">state_dict</span></code> into this module and its descendants.</p></td>
@@ -936,7 +936,7 @@ maximum length for the decoding will be used for all sentences.</p></li>
 <td><p>Predict lemmas of words for a given (list of) sentence(s).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_model_card</span></code>()</p></td>
-<td><p></p></td>
+<td><p>This method produces a log message that includes all recorded parameters the model was trained with.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_backward_hook</span></code>(hook)</p></td>
 <td><p>Register a backward hook on the module.</p></td>
@@ -1179,12 +1179,12 @@ registered hooks while the latter silently ignores them.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_points</strong> – The labeled data_points to evaluate.</p></li>
 <li><p><strong>gold_label_type</strong> – The label type indicating the gold labels</p></li>
-<li><p><strong>out_path</strong> – Optional output path to store predictions</p></li>
+<li><p><strong>out_path</strong> – Optional output path to store predictions.</p></li>
 <li><p><strong>embedding_storage_mode</strong> – One of ‘none’, ‘cpu’ or ‘gpu’. ‘none’ means all embeddings are deleted and freshly
 recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means all embeddings are stored on GPU</p></li>
-<li><p><strong>mini_batch_size</strong> – The batch_size to use for predictions</p></li>
-<li><p><strong>main_evaluation_metric</strong> – Specify which metric to highlight as main_score</p></li>
-<li><p><strong>exclude_labels</strong> – Specify classes that won’t be considered in evaluation</p></li>
+<li><p><strong>mini_batch_size</strong> – The batch_size to use for predictions.</p></li>
+<li><p><strong>main_evaluation_metric</strong> – Specify which metric to highlight as main_score.</p></li>
+<li><p><strong>exclude_labels</strong> – Specify classes that won’t be considered in evaluation.</p></li>
 <li><p><strong>gold_label_dictionary</strong> – Specify which classes should be considered, all other classes will be taken as &lt;unk&gt;.</p></li>
 <li><p><strong>return_loss</strong> – Weather to additionally compute the loss on the data-points.</p></li>
 <li><p><strong>**kwargs</strong> – Arguments that will be ignored.</p></li>

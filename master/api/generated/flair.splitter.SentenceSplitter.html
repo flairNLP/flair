@@ -768,16 +768,17 @@ button.search-button {
 <h1>flair.splitter.SentenceSplitter<a class="headerlink" href="#flair-splitter-sentencesplitter" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.splitter.SentenceSplitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">SentenceSplitter</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/splitter.py#L15-L50"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SentenceSplitter" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">SentenceSplitter</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/splitter.py#L15-L70"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SentenceSplitter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>An abstract class representing a <a class="reference internal" href="#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>.</p>
 <p>Sentence splitters are used to represent algorithms and models to split plain text into
-sentences and individual tokens / words. All subclasses should overwrite <code class="xref py py-meth docutils literal notranslate"><span class="pre">splits()</span></code>,
-which splits the given plain text into a sequence of sentences (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code>). The
-individual sentences are in turn subdivided into tokens / words. In most cases, this can
-be controlled by passing custom implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code>.</p>
+sentences and individual tokens / words. All subclasses should overwrite <a class="reference internal" href="#flair.splitter.SentenceSplitter.split" title="flair.splitter.SentenceSplitter.split"><code class="xref py py-func docutils literal notranslate"><span class="pre">split()</span></code></a>,
+which splits the given plain text into a list of <a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Sentence</span></code></a> objects. The
+individual sentences are in turn subdivided into tokens. In most cases, this can
+be controlled by passing custom implementation of <a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.tokenization.Tokenizer</span></code></a>.</p>
 <p>Moreover, subclasses may overwrite <a class="reference internal" href="#flair.splitter.SentenceSplitter.name" title="flair.splitter.SentenceSplitter.name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">name()</span></code></a>, returning a unique identifier representing
 the sentence splitter’s configuration.</p>
+<p>The most common class in Flair that implements this base class is <a class="reference internal" href="flair.splitter.SegtokSentenceSplitter.html#flair.splitter.SegtokSentenceSplitter" title="flair.splitter.SegtokSentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SegtokSentenceSplitter</span></code></a>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.splitter.SentenceSplitter.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#flair.splitter.SentenceSplitter.__init__" title="Link to this definition">#</a></dt>
@@ -790,7 +791,7 @@ the sentence splitter’s configuration.</p>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.splitter.SentenceSplitter.split" title="flair.splitter.SentenceSplitter.split"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split</span></code></a>(text[, link_sentences])</p></td>
-<td><p></p></td>
+<td><p>Takes as input a text as a plain string and outputs a list of <a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Sentence</span></code></a> objects.</p></td>
 </tr>
 </tbody>
 </table>
@@ -798,19 +799,33 @@ the sentence splitter’s configuration.</p>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.splitter.SentenceSplitter.name" title="flair.splitter.SentenceSplitter.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
-<td><p></p></td>
+<td><p>A string identifier of the sentence splitter.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.splitter.SentenceSplitter.tokenizer" title="flair.splitter.SentenceSplitter.tokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tokenizer</span></code></a></p></td>
-<td><p></p></td>
+<td><p>The <a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.tokenization.Tokenizer</span></code></a> class used to tokenize sentences after they are split.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.splitter.SentenceSplitter.split">
-<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/splitter.py#L28-L34"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SentenceSplitter.split" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span></p>
+<span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/splitter.py#L30-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SentenceSplitter.split" title="Link to this definition">#</a></dt>
+<dd><p>Takes as input a text as a plain string and outputs a list of <a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Sentence</span></code></a> objects.</p>
+<p>If link_sentences is set (by default, it is). The <a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Sentence</span></code></a> objects will include pointers
+to the preceding and following sentences in the original text. This way, the original sequence information will
+always be preserved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<em>str</em>) – The plain text to split.</p></li>
+<li><p><strong>link_sentences</strong> (<em>bool</em>) – If set to True, <a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Sentence</span></code></a> objects will include pointers
+to the preceding and following sentences in the original text.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of <a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Sentence</span></code></a> objects that each represent one sentence in the given text.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -818,12 +833,14 @@ the sentence splitter’s configuration.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.splitter.SentenceSplitter.name">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.splitter.SentenceSplitter.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>A string identifier of the sentence splitter.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.splitter.SentenceSplitter.tokenizer">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><span class="pre">Tokenizer</span></a></em><a class="headerlink" href="#flair.splitter.SentenceSplitter.tokenizer" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>The <a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.tokenization.Tokenizer</span></code></a> class used to tokenize sentences after they are split.</p>
+</dd></dl>
 
 </dd></dl>
 

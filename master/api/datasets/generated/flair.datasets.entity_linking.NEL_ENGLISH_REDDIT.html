@@ -805,13 +805,13 @@ button.search-button {
 <td><p>Generates uniform label noise distribution in the chosen dataset split.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">downsample</span></code>([percentage, downsample_train, ...])</p></td>
-<td><p>Reduce all datasets in corpus proportionally to the given percentage.</p></td>
+<td><p>Randomly downsample the corpus to the given percentage (by removing data points).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_empty_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>A method that filters all sentences consisting of 0 tokens.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_long_sentences</span></code>(max_charlength)</p></td>
-<td><p></p></td>
+<td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
 <td><p></p></td>
@@ -826,7 +826,7 @@ button.search-button {
 <td><p>Create a tag dictionary of a given label type.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_vocab_dictionary</span></code>([max_tokens, min_freq])</p></td>
-<td><p>Creates a dictionary of all tokens contained in the corpus.</p></td>
+<td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
 <td><p>Print statistics about the class distribution and sentence sizes.</p></td>
@@ -860,50 +860,6 @@ button.search-button {
 <li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
 <li><p><strong>document_as_sequence</strong> – If True, all sentences of a document are read into a single Sentence object</p></li>
 </ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._text_to_cols">
-<span class="sig-name descname"><span class="pre">_text_to_cols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">links</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outfile</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/entity_linking.py#L1399-L1459"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._text_to_cols" title="Link to this definition">#</a></dt>
-<dd><p>Convert a tokenized sentence into column format.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sentence</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../../generated/flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a></span>) – Flair Sentence object containing a tokenized post title or comment thread</p></li>
-<li><p><strong>links</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span>) – array containing information about the starting and ending position of an entity mention, as well as its corresponding wiki tag</p></li>
-<li><p><strong>outfile</strong> – file, to which the output is written</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_annot_array">
-<span class="sig-name descname"><span class="pre">_fill_annot_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">annot_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_flag</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/entity_linking.py#L1461-L1481"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_annot_array" title="Link to this definition">#</a></dt>
-<dd><p>Fills the array containing information about the entity mention annotations.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>annot_array</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span>) – array to be filled</p></li>
-<li><p><strong>key</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – reddit id, on which the post title/comment thread is matched with its corresponding annotation</p></li>
-<li><p><strong>post_flag</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – flag indicating whether the annotations are collected for the post titles or comment threads</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_curr_comment">
-<span class="sig-name descname"><span class="pre">_fill_curr_comment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fix_flag</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/entity_linking.py#L1483-L1503"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.NEL_ENGLISH_REDDIT._fill_curr_comment" title="Link to this definition">#</a></dt>
-<dd><p>Extends the string containing the current comment thread, which is passed to _text_to_cols method, when the comments are parsed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>fix_flag</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – flag indicating whether the method is called when the incorrectly imported rows are parsed or regular rows</p>
 </dd>
 </dl>
 </dd></dl>

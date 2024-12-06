@@ -869,26 +869,6 @@ Otherwise, the initialization will fail.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.sequence_labeling.JsonlDataset._add_label_to_sentence">
-<span class="sig-name descname"><span class="pre">_add_label_to_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/sequence_labeling.py#L227-L270"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.sequence_labeling.JsonlDataset._add_label_to_sentence" title="Link to this definition">#</a></dt>
-<dd><p>Adds a NE label to a given sentence.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – raw sentence (with all whitespaces etc.). Is used to determine the token indices.</p></li>
-<li><p><strong>sentence</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a></span>) – Tokenized flair Sentence.</p></li>
-<li><p><strong>start</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Start character index of the label.</p></li>
-<li><p><strong>end</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – End character index of the label.</p></li>
-<li><p><strong>label</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Label to assign to the given range.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Nothing. Changes sentence as INOUT-param</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.sequence_labeling.JsonlDataset.is_in_memory">
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/sequence_labeling.py#L281-L283"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.sequence_labeling.JsonlDataset.is_in_memory" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -1027,26 +1007,6 @@ Otherwise, the initialization will fail.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.sequence_labeling.ONTONOTES._process_coref_span_annotations_for_word">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_process_coref_span_annotations_for_word</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clusters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coref_stacks</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/sequence_labeling.py#L987-L1026"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.sequence_labeling.ONTONOTES._process_coref_span_annotations_for_word" title="Link to this definition">#</a></dt>
-<dd><p>For a given coref label, add it to a currently open span(s), complete a span(s) or ignore it, if it is outside of all spans.</p>
-<p>This method mutates the clusters and coref_stacks dictionaries.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>label</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The coref label for this word.</p></li>
-<li><p><strong>word_index</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The word index into the sentence.</p></li>
-<li><p><strong>clusters</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultDict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]]</span>) – A dictionary mapping cluster ids to lists of inclusive spans into the sentence.</p></li>
-<li><p><strong>coref_stacks</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultDict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]]</span>) – Stacks for each cluster id to hold the start indices of open spans. Spans with the same id can be nested, which is why we collect these opening spans on a stack, e.g: [Greg, the baker who referred to [himself]_ID1 as ‘the bread man’]_ID1</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1538,24 +1498,6 @@ The first time you call this constructor it will automatically download the data
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.sequence_labeling.NER_GERMAN_EUROPARL._add_IOB_tags">
-<span class="sig-name descname"><span class="pre">_add_IOB_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ner_column</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/sequence_labeling.py#L2504-L2561"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.sequence_labeling.NER_GERMAN_EUROPARL._add_IOB_tags" title="Link to this definition">#</a></dt>
-<dd><p>Function that adds IOB tags if only chunk names are provided.</p>
-<p>e.g. words are tagged PER instead of B-PER or I-PER. Replaces ‘0’ with ‘O’ as the no-chunk tag since ColumnCorpus expects
-the letter ‘O’. Additionally it removes lines with no tags in the data file and can also
-be used if the data is only partially IOB tagged.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data_file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – Path to the data file.</p></li>
-<li><p><strong>encoding</strong> (<em>str</em><em>, </em><em>optional</em>) – Encoding used in open function. The default is “utf8”.</p></li>
-<li><p><strong>ner_column</strong> (<em>int</em><em>, </em><em>optional</em>) – Specifies the ner-tagged column. The default is 1 (the second column).</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1820,23 +1762,6 @@ to point to a different folder but typically this should not be necessary.
 :type in_memory: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>
 :param in_memory: If True, keeps dataset in memory giving speedups in training.
 :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.sequence_labeling.NER_SWEDISH._add_IOB2_tags">
-<span class="sig-name descname"><span class="pre">_add_IOB2_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf8'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/sequence_labeling.py#L3906-L3947"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.sequence_labeling.NER_SWEDISH._add_IOB2_tags" title="Link to this definition">#</a></dt>
-<dd><p>Function that adds IOB2 tags if only chunk names are provided.</p>
-<p>e.g. words are tagged PER instead of B-PER or I-PER. Replaces ‘0’ with ‘O’ as the no-chunk tag since ColumnCorpus expects
-the letter ‘O’. Additionally it removes lines with no tags in the data file and can also
-be used if the data is only partially IOB tagged.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data_file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – Path to the data file.</p></li>
-<li><p><strong>encoding</strong> (<em>str</em><em>, </em><em>optional</em>) – Encoding used in open function. The default is “utf8”.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>

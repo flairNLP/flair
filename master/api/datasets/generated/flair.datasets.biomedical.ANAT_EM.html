@@ -816,13 +816,13 @@ sentences into tokens (default <code class="xref py py-class docutils literal no
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">downsample</span></code>([percentage, downsample_train, ...])</p></td>
-<td><p>Reduce all datasets in corpus proportionally to the given percentage.</p></td>
+<td><p>Randomly downsample the corpus to the given percentage (by removing data points).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_empty_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>A method that filters all sentences consisting of 0 tokens.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_long_sentences</span></code>(max_charlength)</p></td>
-<td><p></p></td>
+<td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
 <td><p></p></td>
@@ -837,7 +837,7 @@ sentences into tokens (default <code class="xref py py-class docutils literal no
 <td><p>Create a tag dictionary of a given label type.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_vocab_dictionary</span></code>([max_tokens, min_freq])</p></td>
-<td><p>Creates a dictionary of all tokens contained in the corpus.</p></td>
+<td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
 <td><p>Print statistics about the class distribution and sentence sizes.</p></td>

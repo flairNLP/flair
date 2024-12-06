@@ -957,7 +957,7 @@ Token[3]: &quot;green&quot; → color (1.0)
 </section>
 <section id="information-for-each-label">
 <h3>Information for each label<a class="headerlink" href="#information-for-each-label" title="Link to this heading">#</a></h3>
-<p>Each label is of class <code class="docutils literal notranslate"><span class="pre">Label</span></code> which next to the value has a score indicating confidence. It also has a pointer back to the data point to which it attaches.</p>
+<p>Each label is of class <a class="reference internal" href="../../api/generated/flair.data.Label.html#flair.data.Label" title="flair.data.Label"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Label</span></code></span></a> which next to the value has a score indicating confidence. It also has a pointer back to the data point to which it attaches.</p>
 <p>This means that you can print the value, the confidence and the labeled text of each label:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
 
@@ -976,6 +976,11 @@ Token[3]: &quot;green&quot; → color (1.0)
 </pre></div>
 </div>
 <p>Our color tag has a score of 1.0 since we manually added it. If a tag is predicted by our sequence labeler, the score value will indicate classifier confidence.</p>
+</section>
+<section id="next">
+<h3>Next<a class="headerlink" href="#next" title="Link to this heading">#</a></h3>
+<p>Congrats, you now understand Flair’s basic types.</p>
+<p>Next, learn how to use <a class="reference internal" href="how-predictions-work.html"><span class="std std-doc">Flair models to make predictions</span></a>.</p>
 </section>
 </section>
 </section>

@@ -768,14 +768,14 @@ button.search-button {
 <h1>flair.splitter.SegtokSentenceSplitter<a class="headerlink" href="#flair-splitter-segtoksentencesplitter" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.splitter.SegtokSentenceSplitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">SegtokSentenceSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/splitter.py#L53-L100"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SegtokSentenceSplitter" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.splitter.</span></span><span class="sig-name descname"><span class="pre">SegtokSentenceSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/splitter.py#L73-L120"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SegtokSentenceSplitter" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.splitter.SentenceSplitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a></p>
 <p>Sentence Splitter using SegTok.</p>
 <p>Implementation of <a class="reference internal" href="flair.splitter.SentenceSplitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a> using the SegTok library.</p>
 <p>For further details see: <a class="github reference external" href="https://github.com/fnl/segtok">fnl/segtok</a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.splitter.SegtokSentenceSplitter.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/splitter.py#L61-L63"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SegtokSentenceSplitter.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/splitter.py#L81-L83"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.splitter.SegtokSentenceSplitter.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods</p>
@@ -785,7 +785,7 @@ button.search-button {
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">split</span></code>(text[, link_sentences])</p></td>
-<td><p></p></td>
+<td><p>Takes as input a text as a plain string and outputs a list of <a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Sentence</span></code></a> objects.</p></td>
 </tr>
 </tbody>
 </table>
@@ -793,22 +793,24 @@ button.search-button {
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.splitter.SegtokSentenceSplitter.name" title="flair.splitter.SegtokSentenceSplitter.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
-<td><p></p></td>
+<td><p>A string identifier of the sentence splitter.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.splitter.SegtokSentenceSplitter.tokenizer" title="flair.splitter.SegtokSentenceSplitter.tokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tokenizer</span></code></a></p></td>
-<td><p></p></td>
+<td><p>The <a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.tokenization.Tokenizer</span></code></a> class used to tokenize sentences after they are split.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.splitter.SegtokSentenceSplitter.name">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.splitter.SegtokSentenceSplitter.name" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>A string identifier of the sentence splitter.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.splitter.SegtokSentenceSplitter.tokenizer">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><span class="pre">Tokenizer</span></a></em><a class="headerlink" href="#flair.splitter.SegtokSentenceSplitter.tokenizer" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>The <a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.tokenization.Tokenizer</span></code></a> class used to tokenize sentences after they are split.</p>
+</dd></dl>
 
 </dd></dl>
 

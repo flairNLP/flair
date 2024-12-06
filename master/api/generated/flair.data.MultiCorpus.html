@@ -788,11 +788,11 @@ button.search-button {
 <h1>flair.data.MultiCorpus<a class="headerlink" href="#flair-data-multicorpus" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.data.MultiCorpus">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">MultiCorpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corpora</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'multicorpus'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1813-L1852"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.MultiCorpus" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">MultiCorpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corpora</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'multicorpus'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1873-L1912"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.MultiCorpus" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.MultiCorpus.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corpora</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'multicorpus'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1814-L1842"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.MultiCorpus.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corpora</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'multicorpus'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1874-L1902"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.MultiCorpus.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods</p>
@@ -805,13 +805,13 @@ button.search-button {
 <td><p>Generates uniform label noise distribution in the chosen dataset split.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">downsample</span></code>([percentage, downsample_train, ...])</p></td>
-<td><p>Reduce all datasets in corpus proportionally to the given percentage.</p></td>
+<td><p>Randomly downsample the corpus to the given percentage (by removing data points).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_empty_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>A method that filters all sentences consisting of 0 tokens.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_long_sentences</span></code>(max_charlength)</p></td>
-<td><p></p></td>
+<td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
 <td><p></p></td>
@@ -826,7 +826,7 @@ button.search-button {
 <td><p>Create a tag dictionary of a given label type.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_vocab_dictionary</span></code>([max_tokens, min_freq])</p></td>
-<td><p>Creates a dictionary of all tokens contained in the corpus.</p></td>
+<td><p>Creates a <a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
 <td><p>Print statistics about the class distribution and sentence sizes.</p></td>

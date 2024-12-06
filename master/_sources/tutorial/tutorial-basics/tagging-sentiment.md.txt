@@ -75,5 +75,9 @@ We end this section with a list of all models we currently ship with Flair:
 | 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
 
 
+### Next
 
+Congrats, you learned how to predict sentiment with Flair! 
+
+Next, let's discuss how to [link entities to Wikipedia with Flair](entity-linking.md). 
 

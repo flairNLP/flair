@@ -925,12 +925,6 @@ To use all labels from ‘ner’, pass ‘ner’</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.EntityMentionLinker._get_state_dict">
-<span class="sig-name descname"><span class="pre">_get_state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/entity_mention_linking.py#L872-L882"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityMentionLinker._get_state_dict" title="Link to this definition">#</a></dt>
-<dd><p>Returns the state dictionary for this model.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.models.EntityMentionLinker.build">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name_or_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'link'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dictionary_name_or_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hybrid_search</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">SimilarityMetric.INNER_PRODUCT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparse_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/entity_mention_linking.py#L884-L958"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityMentionLinker.build" title="Link to this definition">#</a></dt>
 <dd><p>Builds a model for biomedical named entity normalization.</p>
@@ -971,16 +965,18 @@ To use all labels from ‘ner’, pass ‘ner’</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.EntityMentionLinker.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/entity_mention_linking.py#L1046-L1050"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityMentionLinker.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.EntityMentionLinker.html#flair.models.EntityMentionLinker" title="flair.models.entity_mention_linking.EntityMentionLinker"><code class="xref py py-class docutils literal notranslate"><span class="pre">EntityMentionLinker</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 <dl class="py method">
@@ -993,12 +989,12 @@ To use all labels from ‘ner’, pass ‘ner’</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_points</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>]</span>) – The labeled data_points to evaluate.</p></li>
 <li><p><strong>gold_label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The label type indicating the gold labels</p></li>
-<li><p><strong>out_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Optional output path to store predictions</p></li>
+<li><p><strong>out_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Optional output path to store predictions.</p></li>
 <li><p><strong>embedding_storage_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – One of ‘none’, ‘cpu’ or ‘gpu’. ‘none’ means all embeddings are deleted and freshly
 recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means all embeddings are stored on GPU</p></li>
-<li><p><strong>mini_batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The batch_size to use for predictions</p></li>
-<li><p><strong>main_evaluation_metric</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Specify which metric to highlight as main_score</p></li>
-<li><p><strong>exclude_labels</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Specify classes that won’t be considered in evaluation</p></li>
+<li><p><strong>mini_batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The batch_size to use for predictions.</p></li>
+<li><p><strong>main_evaluation_metric</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Specify which metric to highlight as main_score.</p></li>
+<li><p><strong>exclude_labels</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Specify classes that won’t be considered in evaluation.</p></li>
 <li><p><strong>gold_label_dictionary</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a>]</span>) – Specify which classes should be considered, all other classes will be taken as &lt;unk&gt;.</p></li>
 <li><p><strong>return_loss</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Weather to additionally compute the loss on the data-points.</p></li>
 <li><p><strong>**kwargs</strong> – Arguments that will be ignored.</p></li>
@@ -1074,16 +1070,18 @@ text representation we take the average of the embeddings of the token in the me
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.SpanClassifier.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/entity_linker_model.py#L243-L245"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SpanClassifier.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.SpanClassifier.html#flair.models.SpanClassifier" title="flair.models.entity_linker_model.SpanClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanClassifier</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </dd></dl>
@@ -1330,12 +1328,12 @@ registered hooks while the latter silently ignores them.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_points</strong> – The labeled data_points to evaluate.</p></li>
 <li><p><strong>gold_label_type</strong> – The label type indicating the gold labels</p></li>
-<li><p><strong>out_path</strong> – Optional output path to store predictions</p></li>
+<li><p><strong>out_path</strong> – Optional output path to store predictions.</p></li>
 <li><p><strong>embedding_storage_mode</strong> – One of ‘none’, ‘cpu’ or ‘gpu’. ‘none’ means all embeddings are deleted and freshly
 recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means all embeddings are stored on GPU</p></li>
-<li><p><strong>mini_batch_size</strong> – The batch_size to use for predictions</p></li>
-<li><p><strong>main_evaluation_metric</strong> – Specify which metric to highlight as main_score</p></li>
-<li><p><strong>exclude_labels</strong> – Specify classes that won’t be considered in evaluation</p></li>
+<li><p><strong>mini_batch_size</strong> – The batch_size to use for predictions.</p></li>
+<li><p><strong>main_evaluation_metric</strong> – Specify which metric to highlight as main_score.</p></li>
+<li><p><strong>exclude_labels</strong> – Specify classes that won’t be considered in evaluation.</p></li>
 <li><p><strong>gold_label_dictionary</strong> – Specify which classes should be considered, all other classes will be taken as &lt;unk&gt;.</p></li>
 <li><p><strong>return_loss</strong> – Weather to additionally compute the loss on the data-points.</p></li>
 <li><p><strong>**kwargs</strong> – Arguments that will be ignored.</p></li>
@@ -1511,13 +1509,6 @@ otherwise a linear layer with random parameters will be created.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.TextPairRegressor._init_model_with_state_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_init_model_with_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/pairwise_regression_model.py#L206-L227"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TextPairRegressor._init_model_with_state_dict" title="Link to this definition">#</a></dt>
-<dd><p>Initializes a TextPairRegressor model from a state dictionary (exported by _get_state_dict).</p>
-<p>Requires keys ‘state_dict’, ‘document_embeddings’, and ‘label_type’ in the state dictionary.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.models.TextPairRegressor.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pairs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_storage_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/pairwise_regression_model.py#L229-L278"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TextPairRegressor.predict" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -1537,12 +1528,12 @@ otherwise a linear layer with random parameters will be created.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_points</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.DataPair.html#flair.data.DataPair" title="flair.data.DataPair"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPair</span></code></a>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>, <a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>]</span>) – The labeled data_points to evaluate.</p></li>
 <li><p><strong>gold_label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The label type indicating the gold labels</p></li>
-<li><p><strong>out_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Optional output path to store predictions</p></li>
+<li><p><strong>out_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Optional output path to store predictions.</p></li>
 <li><p><strong>embedding_storage_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'none'</span></code>, <code class="docutils literal notranslate"><span class="pre">'cpu'</span></code>, <code class="docutils literal notranslate"><span class="pre">'gpu'</span></code>]</span>) – One of ‘none’, ‘cpu’ or ‘gpu’. ‘none’ means all embeddings are deleted and freshly
 recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means all embeddings are stored on GPU</p></li>
-<li><p><strong>mini_batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The batch_size to use for predictions</p></li>
-<li><p><strong>main_evaluation_metric</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Specify which metric to highlight as main_score</p></li>
-<li><p><strong>exclude_labels</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Specify classes that won’t be considered in evaluation</p></li>
+<li><p><strong>mini_batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The batch_size to use for predictions.</p></li>
+<li><p><strong>main_evaluation_metric</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Specify which metric to highlight as main_score.</p></li>
+<li><p><strong>exclude_labels</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Specify classes that won’t be considered in evaluation.</p></li>
 <li><p><strong>gold_label_dictionary</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a>]</span>) – Specify which classes should be considered, all other classes will be taken as &lt;unk&gt;.</p></li>
 <li><p><strong>return_loss</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Weather to additionally compute the loss on the data-points.</p></li>
 <li><p><strong>**kwargs</strong> – Arguments that will be ignored.</p></li>
@@ -1614,105 +1605,6 @@ text representation(s) through a linear layer to get the class relation label.</
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._valid_entities">
-<span class="sig-name descname"><span class="pre">_valid_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L327-L348"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._valid_entities" title="Link to this definition">#</a></dt>
-<dd><p>Yields all valid entities, filtered under the specification of <code class="xref py py-attr docutils literal notranslate"><span class="pre">entity_label_types</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sentence</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a></span>) – A Sentence object with entity annotations</p>
-</dd>
-<dt class="field-even">Yields<span class="colon">:</span></dt>
-<dd class="field-even"><p>Valid entities as <cite>_Entity</cite></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">_Entity</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._entity_pair_permutations">
-<span class="sig-name descname"><span class="pre">_entity_pair_permutations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L350-L394"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._entity_pair_permutations" title="Link to this definition">#</a></dt>
-<dd><p>Yields all valid entity pair permutations (relation candidates).</p>
-<p>If the passed sentence contains relation annotations,
-the relation gold label will be yielded along with the participating entities.
-The permutations are constructed by a filtered cross-product
-under the specification of :py:meth:~`flair.models.RelationClassifier.entity_label_types`
-and :py:meth:~`flair.models.RelationClassifier.entity_pair_labels`.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sentence</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a></span>) – A Sentence with entity annotations</p>
-</dd>
-<dt class="field-even">Yields<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Tuples of (HEAD, TAIL, gold_label)</em> – The head and tail <cite>_Entity`s</cite> have span references to the passed sentence.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">_Entity</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">_Entity</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._encode_sentence">
-<span class="sig-name descname"><span class="pre">_encode_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">head</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L396-L449"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._encode_sentence" title="Link to this definition">#</a></dt>
-<dd><p>Returns a new Sentence object with masked/marked head and tail spans according to the encoding strategy.</p>
-<p>If provided, the encoded sentence also has the corresponding gold label annotation from <a class="reference internal" href="flair.models.RelationClassifier.html#flair.models.RelationClassifier.label_type" title="flair.models.RelationClassifier.label_type"><code class="xref py py-attr docutils literal notranslate"><span class="pre">label_type</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>head</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">_Entity</span></code></span>) – The head Entity</p></li>
-<li><p><strong>tail</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">_Entity</span></code></span>) – The tail Entity</p></li>
-<li><p><strong>gold_label</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – An optional gold label of the induced relation by the head and tail entity</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">EncodedSentence</span></code></span></p>
-</dd>
-</dl>
-<p>Returns: The EncodedSentence with Gold Annotations</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._encode_sentence_for_inference">
-<span class="sig-name descname"><span class="pre">_encode_sentence_for_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L451-L478"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._encode_sentence_for_inference" title="Link to this definition">#</a></dt>
-<dd><p>Create Encoded Sentences and Relation pairs for Inference.</p>
-<p>Yields encoded sentences annotated with their gold relation and
-the corresponding relation object in the original sentence for all valid entity pair permutations.
-The created encoded sentences are newly created sentences with no reference to the passed sentence.</p>
-<dl class="simple">
-<dt>Important properties:</dt><dd><ul class="simple">
-<li><p>Every sentence has exactly one encoded head and tail entity token. Therefore, every encoded sentence has
-<strong>exactly</strong> one induced relation annotation, the gold annotation or <cite>self.zero_tag_value</cite>.</p></li>
-<li><p>The created relations have head and tail spans from the original passed sentence.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sentence</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a></span>) – A flair <cite>Sentence</cite> object with entity annotations</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">EncodedSentence</span></code>, <a class="reference internal" href="flair.data.Relation.html#flair.data.Relation" title="flair.data.Relation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Relation</span></code></a>]]</span></p>
-</dd>
-</dl>
-<p>Returns: Encoded sentences annotated with their gold relation and the corresponding relation in the original sentence</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._encode_sentence_for_training">
-<span class="sig-name descname"><span class="pre">_encode_sentence_for_training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L480-L501"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._encode_sentence_for_training" title="Link to this definition">#</a></dt>
-<dd><p>Create Encoded Sentences and Relation pairs for Training.</p>
-<p>Same as <cite>self._encode_sentence_for_inference</cite>.</p>
-<p>with the option of disabling cross augmentation via <cite>self.cross_augmentation</cite>
-(and that the relation with reference to the original sentence is not returned).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">EncodedSentence</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.models.RelationClassifier.transform_sentence">
 <span class="sig-name descname"><span class="pre">transform_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L503-L523"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier.transform_sentence" title="Link to this definition">#</a></dt>
 <dd><p>Transforms sentences into encoded sentences specific to the <cite>RelationClassifier</cite>.</p>
@@ -1771,18 +1663,6 @@ the different <code class="xref py py-class docutils literal notranslate"><span 
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._get_data_points_from_sentence">
-<span class="sig-name descname"><span class="pre">_get_data_points_from_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L569-L591"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._get_data_points_from_sentence" title="Link to this definition">#</a></dt>
-<dd><p>Returns the encoded sentences to which labels are added.</p>
-<p>To encode sentences, use the <cite>transform</cite> function of the <cite>RelationClassifier</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">EncodedSentence</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.models.RelationClassifier.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_probabilities_for_all_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_storage_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L593-L668"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier.predict" title="Link to this definition">#</a></dt>
 <dd><p>Predicts the class labels for the given sentence(s).</p>
@@ -1836,16 +1716,18 @@ The (relation) labels are directly added to the sentences.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.RelationClassifier.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L724-L728"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.RelationClassifier.html#flair.models.RelationClassifier" title="flair.models.relation_classifier_model.RelationClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">RelationClassifier</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </section>
@@ -1884,16 +1766,18 @@ should be used to create relation embeddings</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.RelationExtractor.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_extractor_model.py#L174-L178"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationExtractor.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.RelationExtractor.html#flair.models.RelationExtractor" title="flair.models.relation_extractor_model.RelationExtractor"><code class="xref py py-class docutils literal notranslate"><span class="pre">RelationExtractor</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </dd></dl>
@@ -1956,13 +1840,6 @@ The regexp are compiled internally and an re.error will be raised if the compila
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RegexpTagger._label">
-<span class="sig-name descname"><span class="pre">_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/regexp_tagger.py#L116-L130"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RegexpTagger._label" title="Link to this definition">#</a></dt>
-<dd><p>This will add a complex_label to the given sentence for every match.span() for every registered_mapping.</p>
-<p>If a match span overlaps with a token span an exception is raised.</p>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -2005,31 +1882,6 @@ The regexp are compiled internally and an re.error will be raised if the compila
 <dt class="sig sig-object py" id="flair.models.SequenceTagger.label_type">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label_type</span></span><a class="headerlink" href="#flair.models.SequenceTagger.label_type" title="Link to this definition">#</a></dt>
 <dd><p>Each model predicts labels of a certain type.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._init_loss_weights">
-<span class="sig-name descname"><span class="pre">_init_loss_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_weights</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L207-L219"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._init_loss_weights" title="Link to this definition">#</a></dt>
-<dd><p>Initializes the loss weights based on given dictionary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>loss_weights</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – dictionary - contains loss weights</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._init_initial_hidden_state">
-<span class="sig-name descname"><span class="pre">_init_initial_hidden_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_directions</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L221-L237"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._init_initial_hidden_state" title="Link to this definition">#</a></dt>
-<dd><p>Initializes hidden states given the number of directions in RNN.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>num_directions</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of directions in RNN.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -2079,36 +1931,6 @@ The regexp are compiled internally and an re.error will be raised if the compila
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._get_scores_from_features">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_get_scores_from_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L367-L383"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._get_scores_from_features" title="Link to this definition">#</a></dt>
-<dd><p>Remove paddings to get a smaller tensor.</p>
-<p>Trims current batch tensor in shape (batch size, sequence length, tagset size)
-in such a way that all pads are going to be removed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – all features from forward propagation</p></li>
-<li><p><strong>lengths</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – length from each sentence in batch in order to trim padding tokens</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._get_gold_labels">
-<span class="sig-name descname"><span class="pre">_get_gold_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L385-L420"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._get_gold_labels" title="Link to this definition">#</a></dt>
-<dd><p>Extracts gold labels from each sentence.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sentences</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span>) – List of sentences in batch</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.models.SequenceTagger.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_probabilities_for_all_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_storage_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_token_predictions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L431-L543"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger.predict" title="Link to this definition">#</a></dt>
 <dd><p>Predicts labels for current batch with CRF or Softmax.</p>
@@ -2126,33 +1948,6 @@ in such a way that all pads are going to be removed.</p>
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._standard_inference">
-<span class="sig-name descname"><span class="pre">_standard_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probabilities_for_all_classes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L545-L574"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._standard_inference" title="Link to this definition">#</a></dt>
-<dd><p>Softmax over emission scores from forward propagation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – sentence tensor from forward propagation</p></li>
-<li><p><strong>batch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span>) – sentences</p></li>
-<li><p><strong>probabilities_for_all_classes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to return score for each tag in tag dictionary</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._all_scores_for_token">
-<span class="sig-name descname"><span class="pre">_all_scores_for_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L576-L593"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._all_scores_for_token" title="Link to this definition">#</a></dt>
-<dd><p>Returns all scores for each tag in tag dictionary.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._get_state_dict">
-<span class="sig-name descname"><span class="pre">_get_state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L595-L616"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._get_state_dict" title="Link to this definition">#</a></dt>
-<dd><p>Returns the state dictionary for this model.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2175,16 +1970,18 @@ in such a way that all pads are going to be removed.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.SequenceTagger.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L921-L925"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.SequenceTagger.html#flair.models.SequenceTagger" title="flair.models.sequence_tagger_model.SequenceTagger"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceTagger</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </dd></dl>
@@ -2196,16 +1993,18 @@ in such a way that all pads are going to be removed.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.PrefixedSequenceTagger.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/prefixed_tagger.py#L221-L225"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.PrefixedSequenceTagger.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.PrefixedSequenceTagger.html#flair.models.PrefixedSequenceTagger" title="flair.models.prefixed_tagger.PrefixedSequenceTagger"><code class="xref py py-class docutils literal notranslate"><span class="pre">PrefixedSequenceTagger</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2283,16 +2082,18 @@ in such a way that all pads are going to be removed.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.TokenClassifier.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/word_tagger_model.py#L224-L228"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TokenClassifier.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.TokenClassifier.html#flair.models.TokenClassifier" title="flair.models.word_tagger_model.TokenClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenClassifier</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </dd></dl>
@@ -2335,12 +2136,6 @@ in such a way that all pads are going to be removed.</p>
 <p>If the <cite>num_negative_labels_to_sample</cite> is set to an integer value then before starting
 each epoch the model would create a similarity measure between the label names based
 on cosine distances between their BERT encoded embeddings.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.FewshotClassifier._compute_label_similarity_for_current_epoch">
-<span class="sig-name descname"><span class="pre">_compute_label_similarity_for_current_epoch</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/tars_model.py#L132-L161"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.FewshotClassifier._compute_label_similarity_for_current_epoch" title="Link to this definition">#</a></dt>
-<dd><p>Compute the similarity between all labels for better sampling of negatives.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2429,16 +2224,18 @@ disk.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.FewshotClassifier.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/tars_model.py#L316-L320"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.FewshotClassifier.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.FewshotClassifier.html#flair.models.FewshotClassifier" title="flair.models.tars_model.FewshotClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">FewshotClassifier</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </dd></dl>
@@ -2527,16 +2324,18 @@ you wish to not only predict, but also keep the generated embeddings in CPU or G
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.TARSClassifier.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/tars_model.py#L974-L978"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TARSClassifier.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.TARSClassifier.html#flair.models.TARSClassifier" title="flair.models.tars_model.TARSClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">TARSClassifier</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </dd></dl>
@@ -2609,16 +2408,18 @@ including overlaps</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.TARSTagger.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/tars_model.py#L650-L654"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TARSTagger.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.TARSTagger.html#flair.models.TARSTagger" title="flair.models.tars_model.TARSTagger"><code class="xref py py-class docutils literal notranslate"><span class="pre">TARSTagger</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </dd></dl>
@@ -2663,16 +2464,18 @@ unspecified it will default to 1.0</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.TextClassifier.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/text_classification_model.py#L135-L139"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TextClassifier.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.TextClassifier.html#flair.models.TextClassifier" title="flair.models.text_classification_model.TextClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextClassifier</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </dd></dl>
@@ -2744,12 +2547,12 @@ registered hooks while the latter silently ignores them.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data_points</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>]</span>) – The labeled data_points to evaluate.</p></li>
 <li><p><strong>gold_label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The label type indicating the gold labels</p></li>
-<li><p><strong>out_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Optional output path to store predictions</p></li>
+<li><p><strong>out_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Optional output path to store predictions.</p></li>
 <li><p><strong>embedding_storage_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Literal</span></code>[<code class="docutils literal notranslate"><span class="pre">'none'</span></code>, <code class="docutils literal notranslate"><span class="pre">'cpu'</span></code>, <code class="docutils literal notranslate"><span class="pre">'gpu'</span></code>]</span>) – One of ‘none’, ‘cpu’ or ‘gpu’. ‘none’ means all embeddings are deleted and freshly
 recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means all embeddings are stored on GPU</p></li>
-<li><p><strong>mini_batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The batch_size to use for predictions</p></li>
-<li><p><strong>main_evaluation_metric</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Specify which metric to highlight as main_score</p></li>
-<li><p><strong>exclude_labels</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Specify classes that won’t be considered in evaluation</p></li>
+<li><p><strong>mini_batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The batch_size to use for predictions.</p></li>
+<li><p><strong>main_evaluation_metric</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Specify which metric to highlight as main_score.</p></li>
+<li><p><strong>exclude_labels</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Specify classes that won’t be considered in evaluation.</p></li>
 <li><p><strong>gold_label_dictionary</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a>]</span>) – Specify which classes should be considered, all other classes will be taken as &lt;unk&gt;.</p></li>
 <li><p><strong>return_loss</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Weather to additionally compute the loss on the data-points.</p></li>
 <li><p><strong>**kwargs</strong> – Arguments that will be ignored.</p></li>
@@ -2767,16 +2570,18 @@ recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.TextRegressor.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/text_regression_model.py#L236-L240"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TextRegressor.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.TextRegressor.html#flair.models.TextRegressor" title="flair.models.text_regression_model.TextRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextRegressor</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2850,18 +2655,22 @@ registered hooks while the latter silently ignores them.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.MultitaskModel.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">predictargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/multitask_model.py#L86-L92"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.MultitaskModel.predict" title="Link to this definition">#</a></dt>
-<dd><p>Predicts the class labels for the given sentences.</p>
-<p>The labels are directly added to the sentences.</p>
+<dd><p>Uses the model to predict labels for a given set of data points.</p>
+<p>The method does not directly return the predicted labels. Rather, labels are added as <a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Label</span></code></a> objects to
+the respective data points. You can then access these predictions by calling <a class="reference internal" href="flair.data.DataPoint.html#flair.data.DataPoint.get_labels" title="flair.data.DataPoint.get_labels"><code class="xref py py-func docutils literal notranslate"><span class="pre">flair.data.DataPoint.get_labels()</span></code></a>
+on each data point that you passed through this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>sentences</strong> – list of sentences</p></li>
-<li><p><strong>mini_batch_size</strong> – mini batch size to use</p></li>
-<li><p><strong>return_probabilities_for_all_classes</strong> – return probabilities for all classes instead of only best predicted</p></li>
-<li><p><strong>verbose</strong> – set to True to display a progress bar</p></li>
-<li><p><strong>return_loss</strong> – set to True to return loss</p></li>
-<li><p><strong>label_name</strong> – set this to change the name of the label type that is predicted  # noqa: E501</p></li>
-<li><p><strong>embedding_storage_mode</strong> – default is ‘none’ which is always best. Only set to ‘cpu’ or ‘gpu’ if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively. ‘gpu’ to store embeddings in GPU memory.  # noqa: E501</p></li>
+<li><p><strong>sentences</strong> – The data points for which the model should predict labels, most commonly Sentence objects.</p></li>
+<li><p><strong>mini_batch_size</strong> – The mini batch size to use. Setting this value higher typically makes predictions faster,
+but also costs more memory.</p></li>
+<li><p><strong>return_probabilities_for_all_classes</strong> – If set to True, the model will store probabilities for all classes
+instead of only the predicted class.</p></li>
+<li><p><strong>verbose</strong> – If set to True, will display a progress bar while predicting. By default, this parameter is set to False.</p></li>
+<li><p><strong>return_loss</strong> – Set this to True to return loss (only possible if gold labels are set for the sentences).</p></li>
+<li><p><strong>label_name</strong> – Optional parameter that if set, changes the identifier of the label type that is predicted.  # noqa: E501</p></li>
+<li><p><strong>embedding_storage_mode</strong> – Default is ‘none’ which is always best. Only set to ‘cpu’ or ‘gpu’ if you wish to not only predict, but also keep the generated embeddings in CPU or GPU memory respectively. ‘gpu’ to store embeddings in GPU memory.  # noqa: E501</p></li>
 </ul>
 </dd>
 </dl>
@@ -2919,18 +2728,6 @@ assignment for this batch is randomly chosen.</p>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.MultitaskModel._get_state_dict">
-<span class="sig-name descname"><span class="pre">_get_state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/multitask_model.py#L212-L223"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.MultitaskModel._get_state_dict" title="Link to this definition">#</a></dt>
-<dd><p>Returns the state dict of the multitask model which has multiple models underneath.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.MultitaskModel._init_model_with_state_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_init_model_with_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/multitask_model.py#L225-L243"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.MultitaskModel._init_model_with_state_dict" title="Link to this definition">#</a></dt>
-<dd><p>Initializes the model based on given state dict.</p>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.models.MultitaskModel.label_type">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label_type</span></span><a class="headerlink" href="#flair.models.MultitaskModel.label_type" title="Link to this definition">#</a></dt>
@@ -2940,16 +2737,18 @@ assignment for this batch is randomly chosen.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.MultitaskModel.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/multitask_model.py#L276-L280"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.MultitaskModel.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.models.MultitaskModel.html#flair.models.MultitaskModel" title="flair.models.multitask_model.MultitaskModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultitaskModel</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </dd></dl>

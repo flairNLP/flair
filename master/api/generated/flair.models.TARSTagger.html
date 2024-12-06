@@ -896,7 +896,7 @@ all the negative labels if None is passed. That slows down the training consider
 <td><p>Lists existing tasks in the loaded TARS model on the console.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.TARSTagger.load" title="flair.models.TARSTagger.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>(model_path)</p></td>
-<td><p>Loads the model from the given file.</p></td>
+<td><p>Loads a Flair model from the given file or state dictionary.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_state_dict</span></code>(state_dict[, strict, assign])</p></td>
 <td><p>Copy parameters and buffers from <code class="xref py py-attr docutils literal notranslate"><span class="pre">state_dict</span></code> into this module and its descendants.</p></td>
@@ -929,7 +929,7 @@ all the negative labels if None is passed. That slows down the training consider
 <td><p>Make zero shot predictions from the TARS model.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_model_card</span></code>()</p></td>
-<td><p></p></td>
+<td><p>This method produces a log message that includes all recorded parameters the model was trained with.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_backward_hook</span></code>(hook)</p></td>
 <td><p>Register a backward hook on the module.</p></td>
@@ -1107,16 +1107,18 @@ including overlaps</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.TARSTagger.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/tars_model.py#L650-L654"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.TARSTagger.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.models.TARSTagger" title="flair.models.tars_model.TARSTagger"><code class="xref py py-class docutils literal notranslate"><span class="pre">TARSTagger</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 <dl class="py attribute">

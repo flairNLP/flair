@@ -801,13 +801,13 @@ to point to a different folder but typically this should not be necessary.
 <td><p>Generates uniform label noise distribution in the chosen dataset split.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">downsample</span></code>([percentage, downsample_train, ...])</p></td>
-<td><p>Reduce all datasets in corpus proportionally to the given percentage.</p></td>
+<td><p>Randomly downsample the corpus to the given percentage (by removing data points).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_empty_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>A method that filters all sentences consisting of 0 tokens.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter_long_sentences</span></code>(max_charlength)</p></td>
-<td><p></p></td>
+<td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
 <td><p></p></td>
@@ -822,7 +822,7 @@ to point to a different folder but typically this should not be necessary.
 <td><p>Create a tag dictionary of a given label type.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_vocab_dictionary</span></code>([max_tokens, min_freq])</p></td>
-<td><p>Creates a dictionary of all tokens contained in the corpus.</p></td>
+<td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
 <td><p>Print statistics about the class distribution and sentence sizes.</p></td>
@@ -854,23 +854,6 @@ to point to a different folder but typically this should not be necessary.
 :type in_memory: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>
 :param in_memory: If True, keeps dataset in memory giving speedups in training.
 :param document_as_sequence: If True, all sentences of a document are read into a single Sentence object</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.sequence_labeling.NER_SWEDISH._add_IOB2_tags">
-<span class="sig-name descname"><span class="pre">_add_IOB2_tags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf8'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/sequence_labeling.py#L3921-L3962"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.sequence_labeling.NER_SWEDISH._add_IOB2_tags" title="Link to this definition">#</a></dt>
-<dd><p>Function that adds IOB2 tags if only chunk names are provided.</p>
-<p>e.g. words are tagged PER instead of B-PER or I-PER. Replaces ‘0’ with ‘O’ as the no-chunk tag since ColumnCorpus expects
-the letter ‘O’. Additionally it removes lines with no tags in the data file and can also
-be used if the data is only partially IOB tagged.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data_file</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – Path to the data file.</p></li>
-<li><p><strong>encoding</strong> (<em>str</em><em>, </em><em>optional</em>) – Encoding used in open function. The default is “utf8”.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>

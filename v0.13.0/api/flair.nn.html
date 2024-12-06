@@ -931,56 +931,6 @@ recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means
 implemented here, including the loss calculation, prediction heads for both single- and multi- label classification
 and the <cite>predict()</cite> method. Example implementations of this class are the TextClassifier, RelationExtractor,
 TextPairClassifier and TokenClassifier.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.DefaultClassifier._filter_data_point">
-<span class="sig-name descname"><span class="pre">_filter_data_point</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_point</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/nn/model.py#L637-L644"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DefaultClassifier._filter_data_point" title="Link to this definition">#</a></dt>
-<dd><p>Specify if a data point should be kept.</p>
-<p>That way you can remove for example empty texts. Per default all datapoints that have length zero
-will be removed.
-Return true if the data point should be kept and false if it should be removed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.DefaultClassifier._get_data_points_from_sentence">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_get_data_points_from_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/nn/model.py#L650-L656"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DefaultClassifier._get_data_points_from_sentence" title="Link to this definition">#</a></dt>
-<dd><p>Returns the data_points to which labels are added.</p>
-<p>The results should be of any type that inherits from DataPoint (Sentence, Span, Token, … objects).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">DT2</span></code>, bound= <a class="reference internal" href="flair.data.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a>)]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.DefaultClassifier._get_data_points_for_batch">
-<span class="sig-name descname"><span class="pre">_get_data_points_for_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/nn/model.py#L658-L663"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DefaultClassifier._get_data_points_for_batch" title="Link to this definition">#</a></dt>
-<dd><p>Returns the data_points to which labels are added.</p>
-<p>The results should be of any type that inherits from DataPoint (Sentence, Span, Token, … objects).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">DT2</span></code>, bound= <a class="reference internal" href="flair.data.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a>)]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.DefaultClassifier._get_label_of_datapoint">
-<span class="sig-name descname"><span class="pre">_get_label_of_datapoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_point</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/nn/model.py#L665-L673"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DefaultClassifier._get_label_of_datapoint" title="Link to this definition">#</a></dt>
-<dd><p>Extracts the labels from the data points.</p>
-<p>Each data point might return a list of strings, representing multiple labels.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.nn.DefaultClassifier.multi_label_threshold">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">multi_label_threshold</span></span><a class="headerlink" href="#flair.nn.DefaultClassifier.multi_label_threshold" title="Link to this definition">#</a></dt>
@@ -1092,18 +1042,6 @@ recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means
 <dd class="field-odd"><p>The evaluation results.</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.Model._get_state_dict">
-<span class="sig-name descname"><span class="pre">_get_state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/nn/model.py#L84-L91"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model._get_state_dict" title="Link to this definition">#</a></dt>
-<dd><p>Returns the state dictionary for this model.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.Model._init_model_with_state_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_init_model_with_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/nn/model.py#L93-L106"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model._init_model_with_state_dict" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the model from a state dictionary.</p>
 </dd></dl>
 
 <dl class="py method">

@@ -906,7 +906,7 @@ text representation(s) through a linear layer to get the class relation label.</
 <td><p>Move all model parameters and buffers to the IPU.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.models.RelationClassifier.load" title="flair.models.RelationClassifier.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>(model_path)</p></td>
-<td><p>Loads the model from the given file.</p></td>
+<td><p>Loads a Flair model from the given file or state dictionary.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_state_dict</span></code>(state_dict[, strict, assign])</p></td>
 <td><p>Copy parameters and buffers from <code class="xref py py-attr docutils literal notranslate"><span class="pre">state_dict</span></code> into this module and its descendants.</p></td>
@@ -936,7 +936,7 @@ text representation(s) through a linear layer to get the class relation label.</
 <td><p>Predicts the class labels for the given sentence(s).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_model_card</span></code>()</p></td>
-<td><p></p></td>
+<td><p>This method produces a log message that includes all recorded parameters the model was trained with.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_backward_hook</span></code>(hook)</p></td>
 <td><p>Register a backward hook on the module.</p></td>
@@ -1077,105 +1077,6 @@ text representation(s) through a linear layer to get the class relation label.</
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._valid_entities">
-<span class="sig-name descname"><span class="pre">_valid_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L327-L348"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._valid_entities" title="Link to this definition">#</a></dt>
-<dd><p>Yields all valid entities, filtered under the specification of <code class="xref py py-attr docutils literal notranslate"><span class="pre">entity_label_types</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sentence</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a></span>) – A Sentence object with entity annotations</p>
-</dd>
-<dt class="field-even">Yields<span class="colon">:</span></dt>
-<dd class="field-even"><p>Valid entities as <cite>_Entity</cite></p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">_Entity</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._entity_pair_permutations">
-<span class="sig-name descname"><span class="pre">_entity_pair_permutations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L350-L394"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._entity_pair_permutations" title="Link to this definition">#</a></dt>
-<dd><p>Yields all valid entity pair permutations (relation candidates).</p>
-<p>If the passed sentence contains relation annotations,
-the relation gold label will be yielded along with the participating entities.
-The permutations are constructed by a filtered cross-product
-under the specification of :py:meth:~`flair.models.RelationClassifier.entity_label_types`
-and :py:meth:~`flair.models.RelationClassifier.entity_pair_labels`.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sentence</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a></span>) – A Sentence with entity annotations</p>
-</dd>
-<dt class="field-even">Yields<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Tuples of (HEAD, TAIL, gold_label)</em> – The head and tail <cite>_Entity`s</cite> have span references to the passed sentence.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">_Entity</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">_Entity</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._encode_sentence">
-<span class="sig-name descname"><span class="pre">_encode_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">head</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L396-L449"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._encode_sentence" title="Link to this definition">#</a></dt>
-<dd><p>Returns a new Sentence object with masked/marked head and tail spans according to the encoding strategy.</p>
-<p>If provided, the encoded sentence also has the corresponding gold label annotation from <a class="reference internal" href="#flair.models.RelationClassifier.label_type" title="flair.models.RelationClassifier.label_type"><code class="xref py py-attr docutils literal notranslate"><span class="pre">label_type</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>head</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">_Entity</span></code></span>) – The head Entity</p></li>
-<li><p><strong>tail</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">_Entity</span></code></span>) – The tail Entity</p></li>
-<li><p><strong>gold_label</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – An optional gold label of the induced relation by the head and tail entity</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">EncodedSentence</span></code></span></p>
-</dd>
-</dl>
-<p>Returns: The EncodedSentence with Gold Annotations</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._encode_sentence_for_inference">
-<span class="sig-name descname"><span class="pre">_encode_sentence_for_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L451-L478"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._encode_sentence_for_inference" title="Link to this definition">#</a></dt>
-<dd><p>Create Encoded Sentences and Relation pairs for Inference.</p>
-<p>Yields encoded sentences annotated with their gold relation and
-the corresponding relation object in the original sentence for all valid entity pair permutations.
-The created encoded sentences are newly created sentences with no reference to the passed sentence.</p>
-<dl class="simple">
-<dt>Important properties:</dt><dd><ul class="simple">
-<li><p>Every sentence has exactly one encoded head and tail entity token. Therefore, every encoded sentence has
-<strong>exactly</strong> one induced relation annotation, the gold annotation or <cite>self.zero_tag_value</cite>.</p></li>
-<li><p>The created relations have head and tail spans from the original passed sentence.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sentence</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a></span>) – A flair <cite>Sentence</cite> object with entity annotations</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">EncodedSentence</span></code>, <a class="reference internal" href="flair.data.Relation.html#flair.data.Relation" title="flair.data.Relation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Relation</span></code></a>]]</span></p>
-</dd>
-</dl>
-<p>Returns: Encoded sentences annotated with their gold relation and the corresponding relation in the original sentence</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._encode_sentence_for_training">
-<span class="sig-name descname"><span class="pre">_encode_sentence_for_training</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L480-L501"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._encode_sentence_for_training" title="Link to this definition">#</a></dt>
-<dd><p>Create Encoded Sentences and Relation pairs for Training.</p>
-<p>Same as <cite>self._encode_sentence_for_inference</cite>.</p>
-<p>with the option of disabling cross augmentation via <cite>self.cross_augmentation</cite>
-(and that the relation with reference to the original sentence is not returned).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">EncodedSentence</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.models.RelationClassifier.transform_sentence">
 <span class="sig-name descname"><span class="pre">transform_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L503-L523"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier.transform_sentence" title="Link to this definition">#</a></dt>
 <dd><p>Transforms sentences into encoded sentences specific to the <cite>RelationClassifier</cite>.</p>
@@ -1234,18 +1135,6 @@ the different <code class="xref py py-class docutils literal notranslate"><span 
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.RelationClassifier._get_data_points_from_sentence">
-<span class="sig-name descname"><span class="pre">_get_data_points_from_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L569-L591"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier._get_data_points_from_sentence" title="Link to this definition">#</a></dt>
-<dd><p>Returns the encoded sentences to which labels are added.</p>
-<p>To encode sentences, use the <cite>transform</cite> function of the <cite>RelationClassifier</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">EncodedSentence</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.models.RelationClassifier.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_probabilities_for_all_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_storage_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L593-L668"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier.predict" title="Link to this definition">#</a></dt>
 <dd><p>Predicts the class labels for the given sentence(s).</p>
@@ -1299,16 +1188,18 @@ The (relation) labels are directly added to the sentences.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.RelationClassifier.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/relation_classifier_model.py#L724-L728"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.RelationClassifier.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.models.RelationClassifier" title="flair.models.relation_classifier_model.RelationClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">RelationClassifier</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </section>

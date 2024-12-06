@@ -884,7 +884,7 @@ If any label’s weight is unspecified it will default to 1.0</p></li>
 <td><p>Move all model parameters and buffers to the IPU.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code>(model_path)</p></td>
-<td><p>Loads the model from the given file.</p></td>
+<td><p>Loads a Flair model from the given file or state dictionary.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_state_dict</span></code>(state_dict[, strict, assign])</p></td>
 <td><p>Copy parameters and buffers from <code class="xref py py-attr docutils literal notranslate"><span class="pre">state_dict</span></code> into this module and its descendants.</p></td>
@@ -914,7 +914,7 @@ If any label’s weight is unspecified it will default to 1.0</p></li>
 <td><p>Predicts the class labels for the given sentences.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_model_card</span></code>()</p></td>
-<td><p></p></td>
+<td><p>This method produces a log message that includes all recorded parameters the model was trained with.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">register_backward_hook</span></code>(hook)</p></td>
 <td><p>Register a backward hook on the module.</p></td>

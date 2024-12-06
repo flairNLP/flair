@@ -763,7 +763,7 @@ button.search-button {
 
   <section id="using-and-creating-entity-mention-linker">
 <h1>Using and creating entity mention linker<a class="headerlink" href="#using-and-creating-entity-mention-linker" title="Link to this heading">#</a></h1>
-<p>As of Flair 0.14 we ship the <a class="reference internal" href="../../api/generated/flair.models.EntityMentionLinker.html#flair.models.EntityMentionLinker" title="flair.models.EntityMentionLinker"><span class="xref myst py py-class">entity mention linker</span></a> - the core framework behind the <a class="reference external" href="https://huggingface.co/hunflair">Hunflair BioNEN approach</a>].
+<p>As of Flair 0.14 we ship the <a class="reference internal" href="../../api/generated/flair.models.EntityMentionLinker.html#flair.models.EntityMentionLinker" title="flair.models.EntityMentionLinker"><span class="xref myst py py-class">entity mention linker</span></a> - the core framework behind the <a class="reference external" href="https://huggingface.co/hunflair">Hunflair BioNEN approach</a>.
 You can read more at the <a class="reference internal" href="../tutorial-hunflair2/overview.html"><span class="std std-doc">Hunflair2 tutorials</span></a></p>
 <section id="example-1-printing-entity-linking-outputs-to-console">
 <h2>Example 1: Printing Entity linking outputs to console<a class="headerlink" href="#example-1-printing-entity-linking-outputs-to-console" title="Link to this heading">#</a></h2>
@@ -882,8 +882,13 @@ all work with the <code class="docutils literal notranslate"><span class="pre">{
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If you need more than the extracted ids, you can use <code class="docutils literal notranslate"><span class="pre">nen_tagger.dictionary[span_data[&quot;nen_id&quot;]]</span></code>
-to look up the <a class="reference internal" href="../../api/generated/flair.data.EntityCandidate.html#flair.data.EntityCandidate" title="flair.data.EntityCandidate"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">flair.data.EntityCandidate</span></code></span></a> which contains further information.</p>
+to look up the <a class="reference internal" href="../../api/generated/flair.data.EntityCandidate.html#flair.data.EntityCandidate" title="flair.data.EntityCandidate"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">EntityCandidate</span></code></span></a> which contains further information.</p>
 </div>
+<section id="next">
+<h3>Next<a class="headerlink" href="#next" title="Link to this heading">#</a></h3>
+<p>Congrats, you learned how to link biomedical entities with Flair!</p>
+<p>Next, let’s discuss how to <a class="reference internal" href="part-of-speech-tagging.html"><span class="std std-doc">predict part-of-speech tags with Flair</span></a>.</p>
+</section>
 </section>
 </section>
 

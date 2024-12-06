@@ -891,7 +891,7 @@ button.search-button {
 <td><p>Move all model parameters and buffers to the IPU.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.SequenceTagger.load" title="flair.models.SequenceTagger.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>(model_path)</p></td>
-<td><p>Loads the model from the given file.</p></td>
+<td><p>Loads a Flair model from the given file or state dictionary.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_state_dict</span></code>(state_dict[, strict, assign])</p></td>
 <td><p>Copy parameters and buffers from <code class="xref py py-attr docutils literal notranslate"><span class="pre">state_dict</span></code> into this module and its descendants.</p></td>
@@ -921,7 +921,7 @@ button.search-button {
 <td><p>Predicts labels for current batch with CRF or Softmax.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_model_card</span></code>()</p></td>
-<td><p></p></td>
+<td><p>This method produces a log message that includes all recorded parameters the model was trained with.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.models.SequenceTagger.push_to_hub" title="flair.models.SequenceTagger.push_to_hub"><code class="xref py py-obj docutils literal notranslate"><span class="pre">push_to_hub</span></code></a>(repo_id[, token, private, ...])</p></td>
 <td><p>Uploads the Sequence Tagger model to a Hugging Face Hub repository.</p></td>
@@ -1062,31 +1062,6 @@ button.search-button {
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._init_loss_weights">
-<span class="sig-name descname"><span class="pre">_init_loss_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss_weights</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L207-L219"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._init_loss_weights" title="Link to this definition">#</a></dt>
-<dd><p>Initializes the loss weights based on given dictionary.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>loss_weights</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – dictionary - contains loss weights</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._init_initial_hidden_state">
-<span class="sig-name descname"><span class="pre">_init_initial_hidden_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_directions</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L221-L237"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._init_initial_hidden_state" title="Link to this definition">#</a></dt>
-<dd><p>Initializes hidden states given the number of directions in RNN.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>num_directions</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of directions in RNN.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.models.SequenceTagger.RNN">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rnn_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnn_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bidirectional</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnn_input_dim</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L239-L268"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger.RNN" title="Link to this definition">#</a></dt>
 <dd><p>Static wrapper function returning an RNN instance from PyTorch.</p>
@@ -1133,36 +1108,6 @@ button.search-button {
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._get_scores_from_features">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_get_scores_from_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L367-L383"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._get_scores_from_features" title="Link to this definition">#</a></dt>
-<dd><p>Remove paddings to get a smaller tensor.</p>
-<p>Trims current batch tensor in shape (batch size, sequence length, tagset size)
-in such a way that all pads are going to be removed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – all features from forward propagation</p></li>
-<li><p><strong>lengths</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – length from each sentence in batch in order to trim padding tokens</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._get_gold_labels">
-<span class="sig-name descname"><span class="pre">_get_gold_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L385-L420"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._get_gold_labels" title="Link to this definition">#</a></dt>
-<dd><p>Extracts gold labels from each sentence.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sentences</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span>) – List of sentences in batch</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.models.SequenceTagger.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_probabilities_for_all_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_storage_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_token_predictions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L431-L543"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger.predict" title="Link to this definition">#</a></dt>
 <dd><p>Predicts labels for current batch with CRF or Softmax.</p>
@@ -1180,33 +1125,6 @@ in such a way that all pads are going to be removed.</p>
 </ul>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._standard_inference">
-<span class="sig-name descname"><span class="pre">_standard_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probabilities_for_all_classes</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L545-L574"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._standard_inference" title="Link to this definition">#</a></dt>
-<dd><p>Softmax over emission scores from forward propagation.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>features</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – sentence tensor from forward propagation</p></li>
-<li><p><strong>batch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span>) – sentences</p></li>
-<li><p><strong>probabilities_for_all_classes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to return score for each tag in tag dictionary</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._all_scores_for_token">
-<span class="sig-name descname"><span class="pre">_all_scores_for_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score_tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L576-L593"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._all_scores_for_token" title="Link to this definition">#</a></dt>
-<dd><p>Returns all scores for each tag in tag dictionary.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.models.SequenceTagger._get_state_dict">
-<span class="sig-name descname"><span class="pre">_get_state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L595-L616"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger._get_state_dict" title="Link to this definition">#</a></dt>
-<dd><p>Returns the state dictionary for this model.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1229,16 +1147,18 @@ in such a way that all pads are going to be removed.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.SequenceTagger.load">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/sequence_tagger_model.py#L921-L925"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SequenceTagger.load" title="Link to this definition">#</a></dt>
-<dd><p>Loads the model from the given file.</p>
+<dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – the model file or the already loaded state dict</p>
+<dd class="field-odd"><p><strong>model_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]]</span>) – Either the path to the model (as string or <cite>Path</cite> variable) or the already loaded state dict.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.models.SequenceTagger" title="flair.models.sequence_tagger_model.SequenceTagger"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceTagger</span></code></a></span></p>
 </dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The loaded Flair model.</p>
+</dd>
 </dl>
-<p>Returns: the loaded text classifier model</p>
 </dd></dl>
 
 </dd></dl>
