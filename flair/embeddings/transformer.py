@@ -278,11 +278,11 @@ def _reconstruct_word_ids_from_subtokens(embedding, tokens: list[str], subtokens
 
     special_tokens = []
     # check if special tokens exist to circumvent error message
-    if embedding.tokenizer._bos_token:
+    if embedding.tokenizer.bos_token is not None:
         special_tokens.append(embedding.tokenizer.bos_token)
-    if embedding.tokenizer._cls_token:
+    if embedding.tokenizer.cls_token is not None:
         special_tokens.append(embedding.tokenizer.cls_token)
-    if embedding.tokenizer._sep_token:
+    if embedding.tokenizer.sep_token is not None:
         special_tokens.append(embedding.tokenizer.sep_token)
 
     # iterate over subtokens and reconstruct tokens
@@ -1354,9 +1354,10 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
     def to_params(self):
         config_dict = self.model.config.to_dict()
 
-        # do not switch the attention implementation upon reload.
-        config_dict["attn_implementation"] = self.model.config._attn_implementation
-        config_dict.pop("_attn_implementation_autoset", None)
+        if hasattr(self.model.config, "_attn_implementation"):
+            # do not switch the attention implementation upon reload.
+            config_dict["attn_implementation"] = self.model.config._attn_implementation
+            config_dict.pop("_attn_implementation_autoset", None)
 
         super_params = super().to_params()
 
