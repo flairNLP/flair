@@ -123,19 +123,16 @@ html_sidebars = {
 }
 
 
-def suppress_inherited_from_external(app, what, name, obj, options, signature):
-    # Filter out inherited members that come from external modules
-    # You can add conditions based on module names or other attributes
-    if hasattr(obj, "__module__"):
-        module_name = obj.__module__
-        if "external_module_name" in module_name:  # replace 'external_module_name' with the actual name
-            return None  # Suppress this member from being documented
-
-    return return_annotation
+def skip_external_inherited_member(app, what, name, obj, skip, options):
+    if isinstance(obj, (type,)):
+        # Check if the object is inherited from an external module
+        if "external_module_name" in obj.__module__:  # adjust this condition as needed
+            return True  # Skip this member
+    return skip
 
 
 def setup(app):
-    app.connect("autodoc-process-docstring", suppress_inherited_from_external)
+    app.connect("autodoc-skip-member", skip_external_inherited_member)
 
 
 smv_latest_version = importlib_metadata.version(project)
