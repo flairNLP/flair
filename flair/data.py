@@ -1372,6 +1372,14 @@ class Image(DataPoint):
 
 
 class Corpus(typing.Generic[T_co]):
+    """The main object in Flair for holding a dataset used for training and testing.
+
+    A corpus consists of three splits: A `train` split used for training, a `dev` split used for model selection
+    and/or early stopping and a `test` split used for testing. All three splits are optional, so it is possible
+    to create a corpus only using one or two splits. If the option `sample_missing_splits` is set to True,
+    missing splits will be randomly sampled from the training split.
+    """
+
     def __init__(
         self,
         train: Optional[Dataset[T_co]] = None,
@@ -1381,6 +1389,26 @@ class Corpus(typing.Generic[T_co]):
         sample_missing_splits: Union[bool, str] = True,
         random_seed: Optional[int] = None,
     ) -> None:
+        """
+        Constructor method to initialize a :class:`Corpus`. You can define the train, dev and test split
+        by passing the corresponding Dataset object to the constructor. At least one split should be defined.
+        If the option `sample_missing_splits` is set to True, missing splits will be randomly sampled from the
+        train split.
+
+        In most cases, you will not use the constructor yourself. Rather, you will create a corpus using one of our
+        helper methods that read common NLP filetypes. For instance, you can use
+         :class:`flair.datasets.sequence_labeling.ColumnCorpus` to read CoNLL-formatted files directly into
+         a :class:`Corpus`.
+
+        Args:
+            train (torch.utils.data.Dataset): The split you use for model training.
+            dev (torch.utils.data.Dataset): A holdout split typically used for model selection or early stopping.
+            test (torch.utils.data.Dataset): The final test data to compute the score of the model.
+            name (str): A name that identifies the corpus.
+            sample_missing_splits (bool): If set to True, missing splits are sampled from train. If set to False,
+                missing splits are not sampled and left empty. Default: True.
+            random_seed (int): Set a random seed to control the sampling of missing splits.
+        """
         # set name
         self.name: str = name
 
@@ -1419,14 +1447,17 @@ class Corpus(typing.Generic[T_co]):
 
     @property
     def train(self) -> Optional[Dataset[T_co]]:
+        """The training split as a :class:`torch.utils.data.Dataset` object."""
         return self._train
 
     @property
     def dev(self) -> Optional[Dataset[T_co]]:
+        """The dev split as a :class:`torch.utils.data.Dataset` object."""
         return self._dev
 
     @property
     def test(self) -> Optional[Dataset[T_co]]:
+        """The test split as a :class:`torch.utils.data.Dataset` object."""
         return self._test
 
     def downsample(
@@ -1833,6 +1864,13 @@ class Corpus(typing.Generic[T_co]):
         )
 
     def get_label_distribution(self):
+        """Counts occurrences of each label in the corpus and returns them as a dictionary object.
+
+        This allows you to get an idea of which label appears how often in the Corpus.
+
+        Returns:
+            Dictionary with labels as keys and their occurrences as values.
+        """
         class_to_count = defaultdict(lambda: 0)
         for sent in self.train:
             for label in sent.labels:
@@ -1840,6 +1878,11 @@ class Corpus(typing.Generic[T_co]):
         return class_to_count
 
     def get_all_sentences(self) -> ConcatDataset:
+        """Returns all sentences (spanning all three splits) in the :class:`Corpus`.
+
+        Returns:
+            A :class:`torch.utils.data.Dataset` object that includes all sentences of this corpus.
+        """
         parts = []
         if self.train:
             parts.append(self.train)
