@@ -109,7 +109,7 @@ autodoc_default_options = {
     "members": True,
     "show-inheritance": True,
     "private-members": False,
-    "inherited": True,
+    "inherited": False,
 }
 
 source_suffix = {
