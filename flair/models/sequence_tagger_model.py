@@ -22,6 +22,15 @@ log = logging.getLogger("flair")
 
 
 class SequenceTagger(flair.nn.Classifier[Sentence]):
+    """The SequenceTagger is one of two main architectures in Flair used for sequence tagging.
+
+    Sequence tagging means classifying words in a sentence, for instance for part-of-speech tagging or named entity
+    recognition. The SequenceTagger implements the "classic" model based on the LSTM-CRF architecture: words are first
+    embedded using one or multiple :class:`flair.embeddings.TokenEmbeddings`, these embeddings are then passed to the
+    LSTM. Its hidden states for each input word are used to make the final prediction with a softmax classifier.
+    For decoding, the SequenceTagger by default uses a CRF approach.
+    """
+
     def __init__(
         self,
         embeddings: TokenEmbeddings,
@@ -44,7 +53,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         init_from_state_dict: bool = False,
         allow_unk_predictions: bool = False,
     ) -> None:
-        """Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
+        """Sequence tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
 
         In case of multitask learning, pass shared embeddings or shared rnn into respective attributes.
 
