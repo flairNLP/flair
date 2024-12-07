@@ -1401,13 +1401,13 @@ class Corpus(typing.Generic[T_co]):
         a :class:`Corpus`.
 
         Args:
-            train (torch.utils.data.Dataset): The split you use for model training.
-            dev (torch.utils.data.Dataset): A holdout split typically used for model selection or early stopping.
-            test (torch.utils.data.Dataset): The final test data to compute the score of the model.
-            name (str): A name that identifies the corpus.
-            sample_missing_splits (bool): If set to True, missing splits are sampled from train. If set to False,
+            train: The split you use for model training.
+            dev: A holdout split typically used for model selection or early stopping.
+            test: The final test data to compute the score of the model.
+            name: A name that identifies the corpus.
+            sample_missing_splits: If set to True, missing splits are sampled from train. If set to False,
                 missing splits are not sampled and left empty. Default: True.
-            random_seed (int): Set a random seed to control the sampling of missing splits.
+            random_seed: Set a random seed to control the sampling of missing splits.
         """
         # set name
         self.name: str = name
@@ -1474,12 +1474,12 @@ class Corpus(typing.Generic[T_co]):
         data points. It additionally returns a pointer to itself for use in method chaining.
 
         Args:
-            percentage (float): A float value between 0. and 1. that indicates to which percentage the corpus
+            percentage: A float value between 0. and 1. that indicates to which percentage the corpus
                 should be downsampled. Default value is 0.1, meaning it gets downsampled to 10%.
-            downsample_train (bool): Whether or not to include the training split in downsampling. Default is True.
-            downsample_dev (bool): Whether or not to include the dev split in downsampling. Default is True.
-            downsample_test (bool): Whether or not to include the test split in downsampling. Default is True.
-            random_seed (int): An optional random seed to make downsampling reproducible.
+            downsample_train: Whether or not to include the training split in downsampling. Default is True.
+            downsample_dev: Whether or not to include the dev split in downsampling. Default is True.
+            downsample_test: Whether or not to include the test split in downsampling. Default is True.
+            random_seed: An optional random seed to make downsampling reproducible.
 
         Returns:
             A pointer to itself for optional use in method chaining.
@@ -1614,14 +1614,14 @@ class Corpus(typing.Generic[T_co]):
         """Print statistics about the corpus, including the length of the sentences and the labels in the corpus.
 
         Args:
-            label_type (str): Optionally set this value to obtain statistics only for one specific type of label (such
+            label_type: Optionally set this value to obtain statistics only for one specific type of label (such
                 as "ner" or "pos"). If not set, statistics for all labels will be returned.
-            pretty_print (bool): If set to True, returns pretty json (indented for readabilty). If not, the json is
+            pretty_print: If set to True, returns pretty json (indented for readabilty). If not, the json is
                 returned as a single line. Default: True.
 
         Returns:
-            A pretty print formatted string in json format if pretty_print is set to True.
-            A dictionary holding a json if pretty_print is set to False.
+            If pretty_print is True, returns a pretty print formatted string in json format. Otherwise, returns a
+                dictionary holding a json.
         """
         json_data = {
             "TRAIN": self._obtain_statistics_for(self.train, "TRAIN", label_type),
@@ -1694,15 +1694,15 @@ class Corpus(typing.Generic[T_co]):
         """Creates a dictionary of all labels assigned to the sentences in the corpus.
 
         Args:
-            label_type (str): The name of the label type for which the dictionary should be created. Some corpora have
+            label_type: The name of the label type for which the dictionary should be created. Some corpora have
                 multiple layers of annotation, such as "pos" and "ner". In this case, you should choose the label type
                 you are interested in.
-            min_count (int): Optionally set this to exclude rare labels from the dictionary (i.e., labels seen fewer
+            min_count: Optionally set this to exclude rare labels from the dictionary (i.e., labels seen fewer
                 than the provided integer value).
-            add_unk (bool): Optionally set this to True to include a "UNK" value in the dictionary. In most cases, this
+            add_unk: Optionally set this to True to include a "UNK" value in the dictionary. In most cases, this
                 is not needed since the label dictionary is well-defined, but some use cases might have open classes
                 and require this.
-            add_dev_test (bool): Optionally set this to True to construct the label dictionary not only from the train
+            add_dev_test: Optionally set this to True to construct the label dictionary not only from the train
                 split, but also from dev and test. This is only necessary if some labels never appear in train but do
                 appear in one of the other splits.
 
