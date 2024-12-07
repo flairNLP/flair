@@ -29,6 +29,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     embedded using one or multiple :class:`flair.embeddings.TokenEmbeddings`, these embeddings are then passed to the
     LSTM. Its hidden states for each input word are used to make the final prediction with a softmax classifier.
     For decoding, the SequenceTagger by default uses a CRF approach.
+
+    Alternatively, you can use the class :class:`flair.models.TokenClassifier` for sequence tagging without a LSTM-CRF.
     """
 
     def __init__(

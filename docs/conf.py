@@ -122,6 +122,24 @@ html_sidebars = {
     "index": [],
 }
 
+import sphinx.ext.autodoc
+
+
+def suppress_inherited_from_external(app, what, name, obj, options, signature, return_annotation):
+    # Filter out inherited members that come from external modules
+    # You can add conditions based on module names or other attributes
+    if hasattr(obj, "__module__"):
+        module_name = obj.__module__
+        if "external_module_name" in module_name:  # replace 'external_module_name' with the actual name
+            return None  # Suppress this member from being documented
+
+    return return_annotation
+
+
+def setup(app):
+    app.connect("autodoc-process-docstring", suppress_inherited_from_external)
+
+
 smv_latest_version = importlib_metadata.version(project)
 
 # Whitelist pattern for tags (set to None to ignore all tags)
