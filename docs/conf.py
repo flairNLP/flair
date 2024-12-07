@@ -123,7 +123,7 @@ html_sidebars = {
 }
 
 
-def suppress_inherited_from_external(app, what, name, obj, options, signature, return_annotation):
+def suppress_inherited_from_external(app, what, name, obj, options, signature):
     # Filter out inherited members that come from external modules
     # You can add conditions based on module names or other attributes
     if hasattr(obj, "__module__"):
