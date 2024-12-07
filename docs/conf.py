@@ -1,9 +1,7 @@
 # noqa: INP001
 import inspect
-import types
 
 import importlib_metadata
-import torch
 
 # -- Project information -----------------------------------------------------
 from sphinx_github_style import get_linkcode_resolve
@@ -145,38 +143,3 @@ smv_outputdir_format = "{ref.name}"
 smv_prefer_remote_refs = False
 
 html_favicon = "_static/favicon.ico"
-
-
-def skip_inherited_methods_from_base_class(app, what, name, obj, skip, options):
-    """
-    This function is triggered by Sphinx to determine whether to include or
-    skip a specific member in the documentation. We use this to conditionally
-    skip inherited methods from certain base classes.
-    """
-    # Check if the object is a method or function and if it's inherited
-    if what == "method" or what == "function":
-        # Check if the object is a method of a class
-        if isinstance(obj, (types.FunctionType, types.MethodType)):
-            # Get the class that owns the method
-            if hasattr(obj, "__self__"):
-                cls = obj.__self__.__class__  # The class of the method
-            else:
-                return skip  # Skip non-methods
-
-            # Check if the class is inheriting from BaseClassA (or other class to include)
-            # if issubclass(cls, BaseClassA):
-            #     return skip  # Keep the inherited methods for BaseClassA (do not skip)
-
-            # If the class inherits from BaseClassB or another class to exclude, skip the inherited method
-            if issubclass(cls, torch.nn.Module):
-                return True  # Skip methods inherited from BaseClassB
-
-    return skip  # No changes for other cases
-
-
-def setup(app):
-    """
-    Connect the skip function to the `autodoc-skip-member` event.
-    This will call the function each time Sphinx decides whether to include a member.
-    """
-    app.connect("autodoc-skip-member", skip_inherited_methods_from_base_class)
