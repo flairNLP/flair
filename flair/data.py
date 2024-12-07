@@ -1397,8 +1397,8 @@ class Corpus(typing.Generic[T_co]):
 
         In most cases, you will not use the constructor yourself. Rather, you will create a corpus using one of our
         helper methods that read common NLP filetypes. For instance, you can use
-         :class:`flair.datasets.sequence_labeling.ColumnCorpus` to read CoNLL-formatted files directly into
-         a :class:`Corpus`.
+        :class:`flair.datasets.sequence_labeling.ColumnCorpus` to read CoNLL-formatted files directly into
+        a :class:`Corpus`.
 
         Args:
             train (torch.utils.data.Dataset): The split you use for model training.
@@ -1611,9 +1611,17 @@ class Corpus(typing.Generic[T_co]):
         return splits[0]
 
     def obtain_statistics(self, label_type: Optional[str] = None, pretty_print: bool = True) -> Union[dict, str]:
-        """Print statistics about the class distribution and sentence sizes.
+        """Print statistics about the corpus, including the length of the sentences and the labels in the corpus.
 
-        only labels of sentences are taken into account
+        Args:
+            label_type (str): Optionally set this value to obtain statistics only for one specific type of label (such
+                as "ner" or "pos"). If not set, statistics for all labels will be returned.
+            pretty_print (bool): If set to True, returns pretty json (indented for readabilty). If not, the json is
+                returned as a single line. Default: True.
+
+        Returns:
+            A pretty print formatted string in json format if pretty_print is set to True.
+            A dictionary holding a json if pretty_print is set to False.
         """
         json_data = {
             "TRAIN": self._obtain_statistics_for(self.train, "TRAIN", label_type),
@@ -1685,7 +1693,21 @@ class Corpus(typing.Generic[T_co]):
     ) -> Dictionary:
         """Creates a dictionary of all labels assigned to the sentences in the corpus.
 
-        :return: dictionary of labels
+        Args:
+            label_type (str): The name of the label type for which the dictionary should be created. Some corpora have
+                multiple layers of annotation, such as "pos" and "ner". In this case, you should choose the label type
+                you are interested in.
+            min_count (int): Optionally set this to exclude rare labels from the dictionary (i.e., labels seen fewer
+                than the provided integer value).
+            add_unk (bool): Optionally set this to True to include a "UNK" value in the dictionary. In most cases, this
+                is not needed since the label dictionary is well-defined, but some use cases might have open classes
+                and require this.
+            add_dev_test (bool): Optionally set this to True to construct the label dictionary not only from the train
+                split, but also from dev and test. This is only necessary if some labels never appear in train but do
+                appear in one of the other splits.
+
+        Returns:
+            A Dictionary of all unique labels in the corpus.
         """
         if min_count > 0 and not add_unk:
             add_unk = True
