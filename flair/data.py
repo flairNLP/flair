@@ -1372,6 +1372,14 @@ class Image(DataPoint):
 
 
 class Corpus(typing.Generic[T_co]):
+    """The main object in Flair for holding a dataset used for training and testing.
+
+    A corpus consists of three splits: A `train` split used for training, a `dev` split used for model selection
+    and/or early stopping and a `test` split used for testing. All three splits are optional, so it is possible
+    to create a corpus only using one or two splits. If the option `sample_missing_splits` is set to True,
+    missing splits will be randomly sampled from the training split.
+    """
+
     def __init__(
         self,
         train: Optional[Dataset[T_co]] = None,
@@ -1381,6 +1389,26 @@ class Corpus(typing.Generic[T_co]):
         sample_missing_splits: Union[bool, str] = True,
         random_seed: Optional[int] = None,
     ) -> None:
+        """
+        Constructor method to initialize a :class:`Corpus`. You can define the train, dev and test split
+        by passing the corresponding Dataset object to the constructor. At least one split should be defined.
+        If the option `sample_missing_splits` is set to True, missing splits will be randomly sampled from the
+        train split.
+
+        In most cases, you will not use the constructor yourself. Rather, you will create a corpus using one of our
+        helper methods that read common NLP filetypes. For instance, you can use
+        :class:`flair.datasets.sequence_labeling.ColumnCorpus` to read CoNLL-formatted files directly into
+        a :class:`Corpus`.
+
+        Args:
+            train: The split you use for model training.
+            dev: A holdout split typically used for model selection or early stopping.
+            test: The final test data to compute the score of the model.
+            name: A name that identifies the corpus.
+            sample_missing_splits: If set to True, missing splits are sampled from train. If set to False,
+                missing splits are not sampled and left empty. Default: True.
+            random_seed: Set a random seed to control the sampling of missing splits.
+        """
         # set name
         self.name: str = name
 
@@ -1419,14 +1447,17 @@ class Corpus(typing.Generic[T_co]):
 
     @property
     def train(self) -> Optional[Dataset[T_co]]:
+        """The training split as a :class:`torch.utils.data.Dataset` object."""
         return self._train
 
     @property
     def dev(self) -> Optional[Dataset[T_co]]:
+        """The dev split as a :class:`torch.utils.data.Dataset` object."""
         return self._dev
 
     @property
     def test(self) -> Optional[Dataset[T_co]]:
+        """The test split as a :class:`torch.utils.data.Dataset` object."""
         return self._test
 
     def downsample(
@@ -1443,12 +1474,12 @@ class Corpus(typing.Generic[T_co]):
         data points. It additionally returns a pointer to itself for use in method chaining.
 
         Args:
-            percentage (float): A float value between 0. and 1. that indicates to which percentage the corpus
+            percentage: A float value between 0. and 1. that indicates to which percentage the corpus
                 should be downsampled. Default value is 0.1, meaning it gets downsampled to 10%.
-            downsample_train (bool): Whether or not to include the training split in downsampling. Default is True.
-            downsample_dev (bool): Whether or not to include the dev split in downsampling. Default is True.
-            downsample_test (bool): Whether or not to include the test split in downsampling. Default is True.
-            random_seed (int): An optional random seed to make downsampling reproducible.
+            downsample_train: Whether or not to include the training split in downsampling. Default is True.
+            downsample_dev: Whether or not to include the dev split in downsampling. Default is True.
+            downsample_test: Whether or not to include the test split in downsampling. Default is True.
+            random_seed: An optional random seed to make downsampling reproducible.
 
         Returns:
             A pointer to itself for optional use in method chaining.
@@ -1580,9 +1611,17 @@ class Corpus(typing.Generic[T_co]):
         return splits[0]
 
     def obtain_statistics(self, label_type: Optional[str] = None, pretty_print: bool = True) -> Union[dict, str]:
-        """Print statistics about the class distribution and sentence sizes.
+        """Print statistics about the corpus, including the length of the sentences and the labels in the corpus.
 
-        only labels of sentences are taken into account
+        Args:
+            label_type: Optionally set this value to obtain statistics only for one specific type of label (such
+                as "ner" or "pos"). If not set, statistics for all labels will be returned.
+            pretty_print: If set to True, returns pretty json (indented for readabilty). If not, the json is
+                returned as a single line. Default: True.
+
+        Returns:
+            If pretty_print is True, returns a pretty print formatted string in json format. Otherwise, returns a
+                dictionary holding a json.
         """
         json_data = {
             "TRAIN": self._obtain_statistics_for(self.train, "TRAIN", label_type),
@@ -1654,7 +1693,21 @@ class Corpus(typing.Generic[T_co]):
     ) -> Dictionary:
         """Creates a dictionary of all labels assigned to the sentences in the corpus.
 
-        :return: dictionary of labels
+        Args:
+            label_type: The name of the label type for which the dictionary should be created. Some corpora have
+                multiple layers of annotation, such as "pos" and "ner". In this case, you should choose the label type
+                you are interested in.
+            min_count: Optionally set this to exclude rare labels from the dictionary (i.e., labels seen fewer
+                than the provided integer value).
+            add_unk: Optionally set this to True to include a "UNK" value in the dictionary. In most cases, this
+                is not needed since the label dictionary is well-defined, but some use cases might have open classes
+                and require this.
+            add_dev_test: Optionally set this to True to construct the label dictionary not only from the train
+                split, but also from dev and test. This is only necessary if some labels never appear in train but do
+                appear in one of the other splits.
+
+        Returns:
+            A Dictionary of all unique labels in the corpus.
         """
         if min_count > 0 and not add_unk:
             add_unk = True
@@ -1833,6 +1886,13 @@ class Corpus(typing.Generic[T_co]):
         )
 
     def get_label_distribution(self):
+        """Counts occurrences of each label in the corpus and returns them as a dictionary object.
+
+        This allows you to get an idea of which label appears how often in the Corpus.
+
+        Returns:
+            Dictionary with labels as keys and their occurrences as values.
+        """
         class_to_count = defaultdict(lambda: 0)
         for sent in self.train:
             for label in sent.labels:
@@ -1840,6 +1900,11 @@ class Corpus(typing.Generic[T_co]):
         return class_to_count
 
     def get_all_sentences(self) -> ConcatDataset:
+        """Returns all sentences (spanning all three splits) in the :class:`Corpus`.
+
+        Returns:
+            A :class:`torch.utils.data.Dataset` object that includes all sentences of this corpus.
+        """
         parts = []
         if self.train:
             parts.append(self.train)

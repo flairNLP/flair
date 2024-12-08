@@ -193,3 +193,7 @@ The following datasets are supported:
 | Universal Dependency Treebanks      | [flair.datasets.treebanks](#flair.datasets.treebanks)                                                                                       |
 | OCR-Layout-NER                      | [flair.datasets.ocr](#flair.datasets.ocr)                                                                                                   |
 
+
+## Next 
+
+Next, learn how to load a [custom dataset](how-to-load-custom-dataset.md).
