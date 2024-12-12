@@ -507,7 +507,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     def calculate_and_log_metrics(self, sentences, scores, observed_labels, clean_labels):
 
-        epoch_log_path = "epoch_log_" + str(self.model_card["training_parameters"]["epoch"] - 1) + ".log"
+        epoch_log_path = "epoch_log_" + str(self.model_card["training_parameters"]["epoch"]) + ".log"
 
         self._init_metrics_logging(epoch_log_path, sentences)
         history_metrics_dict = self._get_history_metrics_for_batch(sentences)
