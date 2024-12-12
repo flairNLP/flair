@@ -223,7 +223,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         if self.calculate_and_log_metrics:
             self.metrics_list = ['confidence','variability','correctness','msp','BvSB','cross_entropy','entropy','iter_norm','pehist','mild_m','mild_f','mild']
-            self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness_sum','last_iteration','hist_prediction', 'hist_MILD']
+            self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness_sum','last_iteration','hist_prediction', 'hist_MILD','total_epochs']
             self.max_certainty = -np.log(1.0 / float(self.tagset_size))
             self.mode = metrics_mode
 
@@ -350,6 +350,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                         dp.set_metric('last_sq_difference_sum', 0 )
                         dp.set_metric('last_correctness_sum', 0 )
                         dp.set_metric('last_iteration', 0 )
+                        dp.set_metric('total_epochs', 0 )
                         dp.set_metric("hist_prediction", torch.zeros(17, device=flair.device))
                         dp.set_metric("hist_MILD", torch.zeros(1, device=flair.device))
 
@@ -396,6 +397,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     token.set_metric('last_sq_difference_sum', updated_history_metrics_dict['last_sq_difference_sum'][i].item() )
                     token.set_metric('last_correctness_sum', updated_history_metrics_dict['last_correctness_sum'][i].item() )
                     token.set_metric('last_iteration',updated_history_metrics_dict['last_iteration'][i].item() )
+                    token.set_metric("total_epochs", updated_history_metrics_dict["total_epochs"][i].item())
                     token.set_metric("hist_prediction", updated_history_metrics_dict["hist_prediction"][i])
                     token.set_metric("hist_MILD", updated_history_metrics_dict["hist_MILD"][i])
                     # new dp properties: last_iter; last_pred; last_conf, last_sq_sum   
@@ -414,31 +416,32 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         assert msp.cpu().detach().all()
         # Best vs second best (calculate_loss)
         BvSB = msp - values[:,1]
-        # label_tensor ~ gold_labels : shape = (total_num_tokens, 17)
+        total_epochs = history_metrics_dict["total_epochs"]
+        total_epochs = torch.add(total_epochs, 1)
 
         batch_label_indexer = gold_labels.reshape(gold_labels.size(dim=0),1)
         current_prob_true_labl = softmax.gather(index=batch_label_indexer, dim=1)[:,0]
 
         confidence_sum = torch.add(history_metrics_dict['last_confidence_sum'], current_prob_true_labl)
-        confidence = torch.div(confidence_sum,self.model_card["training_parameters"]["epoch"])
-        
+        confidence = torch.div(confidence_sum, total_epochs)
+
         sq_difference_sum = torch.add(history_metrics_dict['last_sq_difference_sum'], torch.square(torch.sub(current_prob_true_labl,confidence)))
-        variability = torch.sqrt(torch.div(sq_difference_sum, self.model_card["training_parameters"]["epoch"]))
+        variability = torch.sqrt(torch.div(sq_difference_sum, total_epochs))
 
         correctness_sum = torch.add(history_metrics_dict['last_correctness_sum'],(gold_labels == pred).bool())
-        correctness = torch.div(correctness_sum, self.model_card["training_parameters"]["epoch"])
+        correctness = torch.div(correctness_sum, total_epochs)
 
-        iteration = history_metrics_dict['last_iteration'].clone()
-        prediction_changed_list = (pred != history_metrics_dict['last_prediction']).bool()
-        iteration[prediction_changed_list] = self.model_card["training_parameters"]["epoch"]
-        iter_norm = torch.div(iteration,self.model_card["training_parameters"]["epoch"])
+        iteration[prediction_changed_list] = total_epochs[prediction_changed_list]
+        iter_norm = torch.div(iteration, total_epochs)
 
         pehist = history_metrics_dict["hist_prediction"]
         batch_label_indexer_pred = pred.reshape(pred.size(dim=0), 1)
         update_tensor = torch.zeros_like(pehist)
         update_tensor = update_tensor.scatter_(1, batch_label_indexer_pred, 1)
         pehist = torch.add(pehist, update_tensor) # update pehist
-        pehist = torch.div(pehist, self.model_card["training_parameters"]["epoch"])
+        total_epochs_extended = total_epochs.unsqueeze(1)
+        total_epochs_extended = total_epochs_extended.expand(total_epochs_extended.size()[0], pehist.size()[1])
+        pehist = torch.div(pehist, total_epochs_extended)
 
         temp = torch.log(pehist)
         temp[temp.isinf()] = 0
@@ -475,11 +478,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         
         #update history metrics
         updated_history_metrics_dict = {}
-        updated_history_metrics_dict['last_prediction'] = pred
-        updated_history_metrics_dict['last_iteration'] = iteration
-        updated_history_metrics_dict['last_confidence_sum'] = confidence_sum
-        updated_history_metrics_dict['last_sq_difference_sum'] = sq_difference_sum
-        updated_history_metrics_dict['last_correctness_sum'] = correctness_sum
+        updated_history_metrics_dict["total_epochs"] = total_epochs
         updated_history_metrics_dict["hist_prediction"] = pehist
         updated_history_metrics_dict["hist_MILD"] = mild_history_new
         
