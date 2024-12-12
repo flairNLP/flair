@@ -1371,6 +1371,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
          # if modified loss, then return per-sample losses
         #TODO: add check for different variants of loss
         self.metrics_list.append('pd')
+        self.metrics_list.append('fl')
 
         self.to(flair.device)
 
@@ -1506,10 +1507,16 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         # calculate and set pd metric here
         pd = []
-        
+        fl = []
+
         for i in range(softmax.size()[1]):
-            pd.append(self._calculate_pd(softmax[:, i, :]))
-        metrics_dict['pd'] = torch.tensor(pd, device=flair.device)
+            layer_metrics = self._calculate_layer_metrics(softmax[:, i, :].cpu(), gold_labels[i].item())
+            pd.append(layer_metrics['prediction_depth'])
+            fl.append(layer_metrics['first_layer']) # todo: pass pred as an argument, since it's already calculated
+
+        metrics_dict["pd"] = torch.tensor(pd, device=torch.device("cpu"))
+        metrics_dict["fl"] = torch.tensor(fl, device=torch.device("cpu"))
+
         return pred, metrics_dict, updated_history_metrics_dict
 
     def _prepare_soft_label_tensor(self, sentences: List[Sentence]):
@@ -1702,21 +1709,29 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 loss = loss / (self.n_layers - 1) #sample-sum layer average loss
         return loss, len(labels)
 
-    def _calculate_pd(self, scores: torch.Tensor, label_threshold=None) -> int:
+    def _calculate_layer_metrics(self, scores: torch.Tensor, gold_label: int) -> int:
         """
         Calculates the prediction depth for a given (single) data point.
         :param scores: tensor with softmax or sigmoid scores of all layers
-        :param label_threshold: relevant only for multi-label classification
         """
-        pd = self.n_layers - 1
+        pd = self.n_layers
+        final_pd = False
+
+        fl = self.n_layers
 
         pred_labels = torch.argmax(scores, dim=-1)
-        for i in range(self.n_layers - 2, -1, -1):  # iterate over the layers starting from the penultimate one
-            if pred_labels[i] == pred_labels[-1]:
+
+        for i in range(self.n_layers - 1, -1, -1):  # iterate over the layers starting from the penultimate one
+
+            if pred_labels[i] == gold_label:
+                fl = i  # pd will have the ID of the lowest layer predicting the training label
+            
+            if pred_labels[i] == pred_labels[-1] and not final_pd:
                 pd -= 1
             else:
-                break
-        return pd       
+                final_pd = True
+
+        return {'prediction_depth': pd,'first_layer':fl}       
 
     def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
         """
