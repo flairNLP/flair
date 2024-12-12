@@ -62,7 +62,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         loss_weights: Optional[Dict[str, float]] = None,
         init_from_state_dict: bool = False,
         allow_unk_predictions: bool = False,
-        calculate_sample_metrics: bool=False
+        calculate_sample_metrics: bool = False,
+        metrics_mode: str = "epoch_end",
     ) -> None:
         """Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
 
@@ -224,7 +225,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             self.metrics_list = ['confidence','variability','correctness','msp','BvSB','cross_entropy','entropy','iter_norm','pehist','mild_m','mild_f','mild']
             self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness_sum','last_iteration','hist_prediction', 'hist_MILD']
             self.max_certainty = -np.log(1.0 / float(self.tagset_size))
-            self.mode = 'epoch_end'
+            self.mode = metrics_mode
 
         self.print_out_path = None
 
@@ -766,11 +767,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     overall_loss += loss[0]
                     label_count += loss[1]
 
-                if self.calculate_sample_metrics and self.mode == 'epoch_end':
+                if self.calculate_sample_metrics and self.mode == 'epoch_end' and self.log_metrics_train_eval:
                     # BIOES
-                    clean_labels = self._prepare_label_tensor(sentences, label_type=self.label_type + "_clean")
+                    gold_labels = self._prepare_label_tensor(batch)
 
-                    self.calculate_and_log_metrics(sentences, features, gold_labels, clean_labels)
+                    clean_labels = self._prepare_label_tensor(batch, label_type=self.label_type + "_clean")
+
+                    self.calculate_and_log_metrics(batch, features, gold_labels, clean_labels)
 
                 # make predictions
                 if self.use_crf:
@@ -1627,8 +1630,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
         else:
             gold_labels = self._prepare_label_tensor(sentences)
 
-
-        if self.calculate_sample_metrics:
+        if self.calculate_sample_metrics and self.mode == "batch_forward":
             clean_labels = self._prepare_label_tensor(sentences, label_type = self.label_type+'_clean')
             self.calculate_and_log_metrics(sentences, scores, gold_labels, clean_labels)       
 
@@ -1833,12 +1835,12 @@ class EarlyExitSequenceTagger(SequenceTagger):
                     overall_loss += loss[0]
                     label_count += loss[1]
 
-
-                if self.calculate_sample_metrics and self.mode == 'epoch_end':
+                if self.calculate_sample_metrics and self.mode == 'epoch_end' and self.log_metrics_train_eval:  # log_metrics_train_eval is only set when running evaluate() from the trainer, with monitor_train_sample set
                     # BIOES
-                    clean_labels = self._prepare_label_tensor(sentences, label_type=self.label_type + "_clean")
+                    gold_labels = self._prepare_label_tensor(batch)
+                    clean_labels = self._prepare_label_tensor(batch, label_type=self.label_type + "_clean")
 
-                    self.calculate_and_log_metrics(sentences, features, gold_labels, clean_labels)
+                    self.calculate_and_log_metrics(batch, features, gold_labels, clean_labels)
 
                 # make predictions
                 predictions, all_tags = self._standard_inference(
@@ -1900,6 +1902,11 @@ class EarlyExitSequenceTagger(SequenceTagger):
         This parameters is passed onto the :predict: method to allow for the evaluation of each early-exit
         layer individually.
         """
+
+        if "final_train_eval" in kwargs:
+            self.log_metrics_train_eval = True
+        else:
+            self.log_metrics_train_eval = False
 
         # make sure <unk> is contained in gold_label_dictionary, if given
         if gold_label_dictionary and not gold_label_dictionary.add_unk:
@@ -1986,6 +1993,8 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 # make printout lines
                 if out_path and layer_idx==-1 and self.print_all_predictions:
                     lines.extend(self._print_predictions(batch, gold_label_type))
+
+            self.log_metrics_train_eval = False
 
             # convert true and predicted values to two span-aligned lists
             true_values_span_aligned = []
@@ -2209,7 +2218,6 @@ class EarlyExitSequenceTagger(SequenceTagger):
                         f"{token.text} "
                         f"{token.get_label(gold_label_type).value} "
                         f"{token.get_label('predicted').value} "
-                        f"{token.get_label('PD').score}\n"
                     )
                     lines.append(eval_line)
                 lines.append("\n")

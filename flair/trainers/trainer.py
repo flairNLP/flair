@@ -706,6 +706,11 @@ class ModelTrainer(Pluggable):
                     validation_scores: tuple
 
                     for evaluation_split, evaluation_split_data in evaluation_splits.items():
+                        kwargs={}
+                        
+                        if 'train' in evaluation_split:
+                            kwargs['final_train_eval'] = True
+
                         eval_result = self.model.evaluate(
                             evaluation_split_data,
                             out_path=base_path / f"{evaluation_split}.tsv",
@@ -716,6 +721,7 @@ class ModelTrainer(Pluggable):
                             embedding_storage_mode=embeddings_storage_mode,
                             gold_label_type=self.model.label_type,
                             gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
+                            **kwargs
                         )
 
                         # log results

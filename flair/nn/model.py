@@ -253,6 +253,11 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         import numpy as np
         import sklearn
 
+        if "final_train_eval" in kwargs:
+            self.log_metrics_train_eval = True
+        else:
+            self.log_metrics_train_eval = False
+
         # make sure <unk> is contained in gold_label_dictionary, if given
         if gold_label_dictionary and not gold_label_dictionary.add_unk:
             raise AssertionError("gold_label_dictionary must have add_unk set to true in initialization.")
@@ -335,6 +340,9 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 if out_path:
                     lines.extend(self._print_predictions(batch, gold_label_type))
 
+            
+            self.log_metrics_train_eval = False
+            
             # convert true and predicted values to two span-aligned lists
             true_values_span_aligned = []
             predicted_values_span_aligned = []
