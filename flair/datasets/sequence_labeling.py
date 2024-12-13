@@ -5263,46 +5263,19 @@ class NER_NOISEBENCH(ColumnCorpus):
             self.base_path / "clean.test",
         ]
         files_exist = [path.exists() for path in file_paths]
-        self.cleanconll_base_path = flair.cache_root / "datasets" / "cleanconll"
 
         if not all(files_exist):
             cached_path(f"{self.label_url}/{filename}.traindev", self.base_path / "annotations_only")
             cached_path(f"{self.label_url}/index.txt", self.base_path / "annotations_only")
+            
+            cleanconll_corpus = CLEANCONLL()
 
-            cleanconll_files_exist = [
-                Path(f"{self.cleanconll_base_path}/cleanconll.{split}").exists() for split in ["train", "dev", "test"]
-            ]
-            if not all(cleanconll_files_exist):
-                # download cleanconll
-
-                clone = f"git clone https://github.com/flairNLP/CleanCoNLL.git {self.cleanconll_base_path}/CleanCoNLL"
-                os.system(clone)  # Cloning
-                cwd = os.getcwd()
-
-                os.chdir(f"{self.cleanconll_base_path}/CleanCoNLL")
-                chmod = "chmod u+x create_cleanconll_from_conll03.sh"
-                os.system(chmod)
-                create = "bash create_cleanconll_from_conll03.sh"
-
-                os.system(create)
-                os.chdir(cwd)
-
-                shutil.move(
-                    f"{self.cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.train",
-                    self.cleanconll_base_path,
-                )
-                shutil.move(
-                    f"{self.cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.dev", self.cleanconll_base_path
-                )
-                shutil.move(
-                    f"{self.cleanconll_base_path}/CleanCoNLL/data/cleanconll/cleanconll.test", self.cleanconll_base_path
-                )
-
-                shutil.rmtree(self.cleanconll_base_path / "CleanCoNLL")
+            self.cleanconll_base_path = flair.cache_root / "datasets" / cleanconll_corpus.__class__.__name__.lower()
 
             # create dataset files from index and train/test splits
             self.generate_data_files(
                 filename,
+                cleanconll_corpus.__class__.__name__.lower()
             )
 
         super().__init__(
@@ -5403,12 +5376,12 @@ class NER_NOISEBENCH(ColumnCorpus):
             self.save_to_column_file(os.path.join(self.base_path, f"{corpus}.traindev"), noisy_labels)
         return noisy_labels
 
-    def generate_data_files(self, filename):
+    def generate_data_files(self, filename, origin_dataset_name):
 
         with open(os.path.join(self.base_path, "annotations_only", "index.txt")) as index_file:
             token_indices = index_file.readlines()
 
-            all_clean_sentences = self.read_column_file(os.path.join(self.cleanconll_base_path, "cleanconll.train"))
+            all_clean_sentences = self.read_column_file(os.path.join(self.cleanconll_base_path, f"{origin_dataset_name}.train"))
 
             # os.makedirs(os.path.join('data','noisebench'), exist_ok=True)
 
@@ -5418,7 +5391,7 @@ class NER_NOISEBENCH(ColumnCorpus):
             )
 
         # copy test set
-        all_clean_test_sentences = self.read_column_file(os.path.join(self.cleanconll_base_path, "cleanconll.test"))
+        all_clean_test_sentences = self.read_column_file(os.path.join(self.cleanconll_base_path, f"{origin_dataset_name}.test"))
 
         test_sentences = []
         for s in all_clean_test_sentences:
