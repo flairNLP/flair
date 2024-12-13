@@ -5276,7 +5276,7 @@ class NER_NOISEBENCH(ColumnCorpus):
             self.cleanconll_base_path = flair.cache_root / "datasets" / cleanconll_corpus.__class__.__name__.lower()
 
             # create dataset files from index and train/test splits
-            self.generate_data_files(
+            self._generate_data_files(
                 filename,
                 cleanconll_corpus.__class__.__name__.lower()
             )
@@ -5294,7 +5294,7 @@ class NER_NOISEBENCH(ColumnCorpus):
         )
 
     @staticmethod
-    def read_column_file(filename):
+    def _read_column_file(filename: Union[str, Path]) -> list[list[str]]:
         with open(filename, "r", errors="replace", encoding="utf-8") as file:
             lines = file.readlines()
             all_x = []
@@ -5316,7 +5316,7 @@ class NER_NOISEBENCH(ColumnCorpus):
         return all_x
 
     @staticmethod
-    def save_to_column_file(filename, list):
+    def _save_to_column_file(filename: Union[str, Path], list: list[list[str]]) -> None:
         with open(filename, "w", encoding="utf-8") as f:
             for sentence in list:
                 for token in sentence:
@@ -5324,9 +5324,9 @@ class NER_NOISEBENCH(ColumnCorpus):
                     f.write("\n")
                 f.write("\n")
 
-    def _create_train_dev_splits(self, filename, all_sentences=None, datestring="1996-08-24"):
+    def _create_train_dev_splits(self, filename: Path, all_sentences: list = None, datestring: str ="1996-08-24") -> None:
         if not all_sentences:
-            all_sentences = self.read_column_file(filename)
+            all_sentences = self._read_column_file(filename)
 
         train_sentences = []
         dev_sentences = []
@@ -5345,19 +5345,19 @@ class NER_NOISEBENCH(ColumnCorpus):
             else:
                 train_sentences.append(s)
 
-        self.save_to_column_file(
+        self._save_to_column_file(
             filename.parent / f"{filename.stem}.dev",
             dev_sentences,
         )
-        self.save_to_column_file(
+        self._save_to_column_file(
             filename.parent / f"{filename.stem}.train",
             train_sentences,
         )
 
-    def _merge_tokens_labels(self, corpus, all_clean_sentences, token_indices):
+    def _merge_tokens_labels(self, corpus: str, all_clean_sentences: list, token_indices: list) -> list[list[str]]:
         # generate NoiseBench dataset variants, given CleanCoNLL, noisy label files and index file
 
-        noisy_labels = self.read_column_file(self.base_path / "annotations_only" / f"{corpus}.traindev")
+        noisy_labels = self._read_column_file(self.base_path / "annotations_only" / f"{corpus}.traindev")
         for index, sentence in zip(token_indices, noisy_labels):
 
             if index.strip() == "docstart":
@@ -5371,14 +5371,14 @@ class NER_NOISEBENCH(ColumnCorpus):
             for token, label in zip(clean_sentence, sentence):
                 label[0] = token[0]  # token[0] -> text, token[1] -> BIO label
         if self.SAVE_TRAINDEV_FILE:
-            self.save_to_column_file(self.base_path / f"{corpus}.traindev", noisy_labels)
+            self._save_to_column_file(self.base_path / f"{corpus}.traindev", noisy_labels)
         return noisy_labels
 
-    def generate_data_files(self, filename, origin_dataset_name):
+    def _generate_data_files(self, filename: Union[str, Path], origin_dataset_name: str) -> None:
 
         with open(self.base_path / "annotations_only" / "index.txt", "r", encoding="utf-8") as index_file:
             token_indices = index_file.readlines()
-            all_clean_sentences = self.read_column_file(self.cleanconll_base_path / f"{origin_dataset_name}.train")
+            all_clean_sentences = self._read_column_file(self.cleanconll_base_path / f"{origin_dataset_name}.train")
 
             # os.makedirs(os.path.join('data','noisebench'), exist_ok=True)
 
@@ -5388,7 +5388,7 @@ class NER_NOISEBENCH(ColumnCorpus):
             )
 
         # copy test set
-        all_clean_test_sentences = self.read_column_file(self.cleanconll_base_path / f"{origin_dataset_name}.test")
+        all_clean_test_sentences = self._read_column_file(self.cleanconll_base_path / f"{origin_dataset_name}.test")
 
         test_sentences = []
         for s in all_clean_test_sentences:
@@ -5397,7 +5397,7 @@ class NER_NOISEBENCH(ColumnCorpus):
                 new_s.append([token[0], token[4]])
             test_sentences.append(new_s)
 
-        self.save_to_column_file(self.base_path / "clean.test", test_sentences)
+        self._save_to_column_file(self.base_path / "clean.test", test_sentences)
 
 
 class MASAKHA_POS(MultiCorpus):
