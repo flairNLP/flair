@@ -5257,7 +5257,7 @@ class NER_NOISEBENCH(ColumnCorpus):
         if noise not in VALUE_NOISE_VALUES:
             raise ValueError(f"Unsupported value for noise type argument. Got {noise}, expected one of {VALUE_NOISE_VALUES}!")
         
-        self._set_path(base_path)
+        self.base_path = flair.cache_root / "datasets" / "noisebench" if not base_path else Path(base_path)
 
         filename = "clean" if noise == "clean" else f"noise_{noise}"
         file_paths = [
@@ -5292,9 +5292,6 @@ class NER_NOISEBENCH(ColumnCorpus):
             document_separator_token="-DOCSTART-",
             **corpusargs,
         )
-
-    def _set_path(self, base_path):
-        self.base_path = flair.cache_root / "datasets" / "noisebench" if not base_path else Path(base_path)
 
     @staticmethod
     def read_column_file(filename):
@@ -5349,20 +5346,18 @@ class NER_NOISEBENCH(ColumnCorpus):
                 train_sentences.append(s)
 
         self.save_to_column_file(
-            os.sep.join(filename.split(os.sep)[:-1]) + os.sep + filename.split(os.sep)[-1].split(".")[0] + ".dev",
+            filename.parent / f"{filename.stem}.dev",
             dev_sentences,
         )
         self.save_to_column_file(
-            os.sep.join(filename.split(os.sep)[:-1]) + os.sep + filename.split(os.sep)[-1].split(".")[0] + ".train",
+            filename.parent / f"{filename.stem}.train",
             train_sentences,
         )
 
     def _merge_tokens_labels(self, corpus, all_clean_sentences, token_indices):
         # generate NoiseBench dataset variants, given CleanCoNLL, noisy label files and index file
 
-        noisy_labels = self.read_column_file(os.path.join(self.base_path, "annotations_only", f"{corpus}.traindev"))
-        # print(noisy_labels)
-        # print(token_indices)
+        noisy_labels = self.read_column_file(self.base_path / "annotations_only" / f"{corpus}.traindev")
         for index, sentence in zip(token_indices, noisy_labels):
 
             if index.strip() == "docstart":
@@ -5376,25 +5371,24 @@ class NER_NOISEBENCH(ColumnCorpus):
             for token, label in zip(clean_sentence, sentence):
                 label[0] = token[0]  # token[0] -> text, token[1] -> BIO label
         if self.SAVE_TRAINDEV_FILE:
-            self.save_to_column_file(os.path.join(self.base_path, f"{corpus}.traindev"), noisy_labels)
+            self.save_to_column_file(self.base_path / f"{corpus}.traindev", noisy_labels)
         return noisy_labels
 
     def generate_data_files(self, filename, origin_dataset_name):
 
-        with open(os.path.join(self.base_path, "annotations_only", "index.txt"), "r", encoding="utf-8") as index_file:
+        with open(self.base_path / "annotations_only" / "index.txt", "r", encoding="utf-8") as index_file:
             token_indices = index_file.readlines()
-
-            all_clean_sentences = self.read_column_file(os.path.join(self.cleanconll_base_path, f"{origin_dataset_name}.train"))
+            all_clean_sentences = self.read_column_file(self.cleanconll_base_path / f"{origin_dataset_name}.train")
 
             # os.makedirs(os.path.join('data','noisebench'), exist_ok=True)
 
             noisy_sentences = self._merge_tokens_labels(filename, all_clean_sentences, token_indices)
             self._create_train_dev_splits(
-                all_sentences=noisy_sentences, filename=os.path.join(self.base_path, f"{filename}.traindev")
+                all_sentences=noisy_sentences, filename=self.base_path / f"{filename}.traindev"
             )
 
         # copy test set
-        all_clean_test_sentences = self.read_column_file(os.path.join(self.cleanconll_base_path, f"{origin_dataset_name}.test"))
+        all_clean_test_sentences = self.read_column_file(self.cleanconll_base_path / f"{origin_dataset_name}.test")
 
         test_sentences = []
         for s in all_clean_test_sentences:
@@ -5403,7 +5397,7 @@ class NER_NOISEBENCH(ColumnCorpus):
                 new_s.append([token[0], token[4]])
             test_sentences.append(new_s)
 
-        self.save_to_column_file(os.path.join(self.base_path, "clean.test"), test_sentences)
+        self.save_to_column_file(self.base_path / "clean.test", test_sentences)
 
 
 class MASAKHA_POS(MultiCorpus):
