@@ -5251,9 +5251,12 @@ class NER_NOISEBENCH(ColumnCorpus):
             in_memory (bool): If True the dataset is kept in memory achieving speedups in training.
             **corpusargs: The arguments propagated to :meth:'flair.datasets.ColumnCorpus.__init__'.
         """
-        if noise not in ["clean", "crowd", "crowdbest", "expert", "distant", "weak", "llm"]:
-            raise Exception("Please choose a valid version")
 
+        VALUE_NOISE_VALUES = ["clean", "crowd", "crowdbest", "expert", "distant", "weak", "llm"]
+        
+        if noise not in VALUE_NOISE_VALUES:
+            raise ValueError(f"Unsupported value for noise type argument. Got {noise}, expected one of {VALUE_NOISE_VALUES}!")
+        
         self._set_path(base_path)
 
         filename = "clean" if noise == "clean" else f"noise_{noise}"
