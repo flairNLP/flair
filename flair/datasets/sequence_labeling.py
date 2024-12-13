@@ -5298,7 +5298,7 @@ class NER_NOISEBENCH(ColumnCorpus):
 
     @staticmethod
     def read_column_file(filename):
-        with open(filename, errors="replace") as file:
+        with open(filename, "r", errors="replace", encoding="utf-8") as file:
             lines = file.readlines()
             all_x = []
             point = []
@@ -5320,7 +5320,7 @@ class NER_NOISEBENCH(ColumnCorpus):
 
     @staticmethod
     def save_to_column_file(filename, list):
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             for sentence in list:
                 for token in sentence:
                     f.write("\t".join(token))
@@ -5381,7 +5381,7 @@ class NER_NOISEBENCH(ColumnCorpus):
 
     def generate_data_files(self, filename, origin_dataset_name):
 
-        with open(os.path.join(self.base_path, "annotations_only", "index.txt")) as index_file:
+        with open(os.path.join(self.base_path, "annotations_only", "index.txt"), "r", encoding="utf-8") as index_file:
             token_indices = index_file.readlines()
 
             all_clean_sentences = self.read_column_file(os.path.join(self.cleanconll_base_path, f"{origin_dataset_name}.train"))
