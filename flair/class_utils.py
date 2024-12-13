@@ -1,12 +1,13 @@
 import importlib
 import inspect
+from collections.abc import Iterable
 from types import ModuleType
-from typing import Any, Iterable, List, Optional, Type, TypeVar, Union, overload
+from typing import Any, Optional, TypeVar, Union, overload
 
 T = TypeVar("T")
 
 
-def get_non_abstract_subclasses(cls: Type[T]) -> Iterable[Type[T]]:
+def get_non_abstract_subclasses(cls: type[T]) -> Iterable[type[T]]:
     for subclass in cls.__subclasses__():
         yield from get_non_abstract_subclasses(subclass)
         if inspect.isabstract(subclass):
@@ -14,7 +15,7 @@ def get_non_abstract_subclasses(cls: Type[T]) -> Iterable[Type[T]]:
         yield subclass
 
 
-def get_state_subclass_by_name(cls: Type[T], cls_name: Optional[str]) -> Type[T]:
+def get_state_subclass_by_name(cls: type[T], cls_name: Optional[str]) -> type[T]:
     for sub_cls in get_non_abstract_subclasses(cls):
         if sub_cls.__name__ == cls_name:
             return sub_cls
@@ -26,12 +27,12 @@ def lazy_import(group: str, module: str, first_symbol: None) -> ModuleType: ...
 
 
 @overload
-def lazy_import(group: str, module: str, first_symbol: str, *symbols: str) -> List[Any]: ...
+def lazy_import(group: str, module: str, first_symbol: str, *symbols: str) -> list[Any]: ...
 
 
 def lazy_import(
     group: str, module: str, first_symbol: Optional[str] = None, *symbols: str
-) -> Union[List[Any], ModuleType]:
+) -> Union[list[Any], ModuleType]:
     try:
         imported_module = importlib.import_module(module)
     except ImportError:

@@ -1,7 +1,7 @@
 import logging
 import os
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import flair
 from flair.data import (
@@ -144,14 +144,15 @@ class ParallelTextDataset(FlairDataset):
         self.total_sentence_count: int = 0
 
         if self.in_memory:
-            self.bi_sentences: List[DataPair] = []
+            self.bi_sentences: list[DataPair] = []
         else:
-            self.source_lines: List[str] = []
-            self.target_lines: List[str] = []
+            self.source_lines: list[str] = []
+            self.target_lines: list[str] = []
 
-        with open(str(path_to_source), encoding="utf-8") as source_file, open(
-            str(path_to_target), encoding="utf-8"
-        ) as target_file:
+        with (
+            open(str(path_to_source), encoding="utf-8") as source_file,
+            open(str(path_to_target), encoding="utf-8") as target_file,
+        ):
             source_line = source_file.readline()
             target_line = target_file.readline()
 
@@ -204,7 +205,7 @@ class DataPairCorpus(Corpus):
     def __init__(
         self,
         data_folder: Union[str, Path],
-        columns: List[int] = [0, 1, 2],
+        columns: list[int] = [0, 1, 2],
         train_file=None,
         test_file=None,
         dev_file=None,
@@ -318,7 +319,7 @@ class DataPairDataset(FlairDataset):
     def __init__(
         self,
         path_to_data: Union[str, Path],
-        columns: List[int] = [0, 1, 2],
+        columns: list[int] = [0, 1, 2],
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
@@ -368,11 +369,11 @@ class DataPairDataset(FlairDataset):
         self.total_data_count: int = 0
 
         if self.in_memory:
-            self.data_pairs: List[DataPair] = []
+            self.data_pairs: list[DataPair] = []
         else:
-            self.first_elements: List[str] = []
-            self.second_elements: List[str] = []
-            self.labels: List[Optional[str]] = []
+            self.first_elements: list[str] = []
+            self.second_elements: list[str] = []
+            self.labels: list[Optional[str]] = []
 
         with open(str(path_to_data), encoding=encoding) as source_file:
             source_line = source_file.readline()
@@ -448,7 +449,7 @@ class DataTripleCorpus(Corpus):
     def __init__(
         self,
         data_folder: Union[str, Path],
-        columns: List[int] = [0, 1, 2, 3],
+        columns: list[int] = [0, 1, 2, 3],
         train_file=None,
         test_file=None,
         dev_file=None,
@@ -563,7 +564,7 @@ class DataTripleDataset(FlairDataset):
     def __init__(
         self,
         path_to_data: Union[str, Path],
-        columns: List[int] = [0, 1, 2, 3],
+        columns: list[int] = [0, 1, 2, 3],
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         use_tokenizer=True,
@@ -614,12 +615,12 @@ class DataTripleDataset(FlairDataset):
         self.total_data_count: int = 0
 
         if self.in_memory:
-            self.data_triples: List[DataTriple] = []
+            self.data_triples: list[DataTriple] = []
         else:
-            self.first_elements: List[str] = []
-            self.second_elements: List[str] = []
-            self.third_elements: List[str] = []
-            self.labels: List[Optional[str]] = []
+            self.first_elements: list[str] = []
+            self.second_elements: list[str] = []
+            self.third_elements: list[str] = []
+            self.labels: list[Optional[str]] = []
 
         with open(str(path_to_data), encoding=encoding) as source_file:
             source_line = source_file.readline()
@@ -828,9 +829,10 @@ class GLUE_MNLI(DataPairCorpus):
                     str(data_folder / "MNLI" / temp_file),
                 )
 
-                with open(data_folder / "MNLI" / dev_filename, "a", encoding="utf-8") as out_file, open(
-                    data_folder / "MNLI" / temp_file, encoding="utf-8"
-                ) as in_file:
+                with (
+                    open(data_folder / "MNLI" / dev_filename, "a", encoding="utf-8") as out_file,
+                    open(data_folder / "MNLI" / temp_file, encoding="utf-8") as in_file,
+                ):
                     for line in in_file:
                         fields = line.split("\t")
                         reordered_columns = "\t".join(fields[column_id] for column_id in range(11))

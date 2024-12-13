@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import Optional
 
 import torch
 
@@ -151,11 +151,11 @@ class LabelVerbalizerDecoder(torch.nn.Module):
     def __init__(self, label_embedding: Embeddings, label_dictionary: Dictionary):
         super().__init__()
         self.label_embedding = label_embedding
-        self.verbalized_labels: List[Sentence] = self.verbalize_labels(label_dictionary)
+        self.verbalized_labels: list[Sentence] = self.verbalize_labels(label_dictionary)
         self.to(flair.device)
 
     @staticmethod
-    def verbalize_labels(label_dictionary: Dictionary) -> List[Sentence]:
+    def verbalize_labels(label_dictionary: Dictionary) -> list[Sentence]:
         """Takes a label dictionary and returns a list of sentences with verbalized labels.
 
         Args:

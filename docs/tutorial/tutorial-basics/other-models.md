@@ -145,9 +145,15 @@ We end this section with a list of all other models we currently ship with Flair
 | '[frame](https://huggingface.co/flair/frame-english)'  |   Frame Detection |  English | Propbank 3.0     |  **97.54** (F1) |
 | '[frame-fast](https://huggingface.co/flair/frame-english-fast)'  |  Frame Detection |  English | Propbank 3.0     |  **97.31** (F1) | (fast model)
 | 'negation-speculation'  | Negation / speculation |English |  Bioscope | **80.2** (F1) |
-| 'communicative-functions' |  detecting function of sentence in research paper (BETA) |  English| scholarly papers |  |
 | 'de-historic-indirect' | historical indirect speech | German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 | 'de-historic-direct' | historical direct speech |  German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 | 'de-historic-reported' | historical reported speech | German |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 | 'de-historic-free-indirect' | historical free-indirect speech | German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 
+
+### Next
+
+Congrats, you learned about some other models we have in Flair! 
+
+So far, we only focused on predicting for single sentences. Next, let's discuss how
+to create [predictions for a whole corpus of documents](how-to-tag-corpus.md).

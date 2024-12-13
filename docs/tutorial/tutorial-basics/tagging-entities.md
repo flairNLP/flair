@@ -2,7 +2,7 @@
 
 This tutorials shows you how to do named entity recognition, showcases various NER models, and provides a full list of all NER models in Flair.
 
-## Tagging entities with our standard model​
+## Tagging entities with our standard model
 
 Our standard model uses Flair embeddings and was trained over the English CoNLL-03 task and can recognize 4 different entity types. It offers a good tradeoff between accuracy and speed.
 
@@ -32,7 +32,7 @@ Sentence: "George Washington went to Washington ." → ["George Washington"/PER,
 
 The printout tells us that two entities are labeled in this sentence: "George Washington" as PER (person) and "Washington" as LOC (location).
 
-## Tagging entities with our best model​
+## Tagging entities with our best model
 
 Our best 4-class model is trained using a very large transformer. Use it if accuracy is the most important to you, and speed/memory not so much. 
 
@@ -199,4 +199,11 @@ We end this section with a list of all models we currently ship with Flair.
 You choose which pre-trained model you load by passing the appropriate string to the [`Classifier.load()`](#flair.nn.Classifier.load) method.
 
 A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads).
+
+
+### Next
+
+Congrats, you learned how to predict entities with Flair and got an overview of different models!
+
+Next, let's discuss how to [predict sentiment with Flair](tagging-sentiment.md). 
 

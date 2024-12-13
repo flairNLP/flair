@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import torch
 import torch.nn.functional as F
@@ -29,12 +29,12 @@ class ImageEmbeddings(Embeddings[Image]):
     def embedding_type(self) -> str:
         return "image-level"
 
-    def to_params(self) -> Dict[str, Any]:
+    def to_params(self) -> dict[str, Any]:
         # legacy pickle-like saving for image embeddings, as implementation details are not obvious
         return self.__getstate__()
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "Embeddings":
+    def from_params(cls, params: dict[str, Any]) -> "Embeddings":
         # legacy pickle-like loading for image embeddings, as implementation details are not obvious
         embedding = cls.__new__(cls)
         embedding.__setstate__(params)
@@ -53,7 +53,7 @@ class IdentityImageEmbeddings(ImageEmbeddings):
         self.static_embeddings = True
         super().__init__()
 
-    def _add_embeddings_internal(self, images: List[Image]):
+    def _add_embeddings_internal(self, images: list[Image]):
         for image in images:
             image_data = self.PIL.Image.open(image.imageURL)
             image_data.load()
@@ -77,7 +77,7 @@ class PrecomputedImageEmbeddings(ImageEmbeddings):
         self.static_embeddings = True
         super().__init__()
 
-    def _add_embeddings_internal(self, images: List[Image]):
+    def _add_embeddings_internal(self, images: list[Image]):
         for image in images:
             if image.imageURL in self.url2tensor_dict:
                 image.set_embedding(self.name, self.url2tensor_dict[image.imageURL])
@@ -137,7 +137,7 @@ class NetworkImageEmbeddings(ImageEmbeddings):
         else:
             raise Exception(f"Image embeddings {name} not available.")
 
-    def _add_embeddings_internal(self, images: List[Image]):
+    def _add_embeddings_internal(self, images: list[Image]):
         image_tensor = torch.stack([self.transforms(image.data) for image in images])
         image_embeddings = self.features(image_tensor)
         image_embeddings = (
@@ -163,7 +163,7 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
 
         adaptive_pool_func_map = {"max": AdaptiveMaxPool2d, "avg": AdaptiveAvgPool2d}
 
-        convnet_arch: List[Any] = [] if convnet_parms["dropout"][0] <= 0 else [Dropout2d(convnet_parms["dropout"][0])]
+        convnet_arch: list[Any] = [] if convnet_parms["dropout"][0] <= 0 else [Dropout2d(convnet_parms["dropout"][0])]
         convnet_arch.extend(
             [
                 Conv2d(
@@ -266,7 +266,7 @@ class ConvTransformNetworkImageEmbeddings(ImageEmbeddings):
 
         return x
 
-    def _add_embeddings_internal(self, images: List[Image]):
+    def _add_embeddings_internal(self, images: list[Image]):
         image_tensor = torch.stack([image.data for image in images])
         image_embeddings = self.forward(image_tensor)
         for image_id, image in enumerate(images):

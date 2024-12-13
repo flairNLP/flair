@@ -2,7 +2,7 @@
 
 This tutorials shows you how to do sentiment analysis in Flair.
 
-## Tagging sentiment with our standard model​
+## Tagging sentiment with our standard model
 
 Our standard sentiment analysis model uses distilBERT embeddings and was trained over a mix of corpora, notably
 the Amazon review corpus, and can thus handle a variety of domains and language.
@@ -75,5 +75,9 @@ We end this section with a list of all models we currently ship with Flair:
 | 'de-offensive-language' | German | detecting offensive language | [GermEval 2018 Task 1](https://projects.fzai.h-da.de/iggsa/projekt/) |  **75.71** (Macro F1) |
 
 
+### Next
 
+Congrats, you learned how to predict sentiment with Flair! 
+
+Next, let's discuss how to [link entities to Wikipedia with Flair](entity-linking.md). 
 

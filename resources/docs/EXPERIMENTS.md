@@ -55,7 +55,7 @@ tag_type = 'ner'
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 
 # initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
+embedding_types: list[TokenEmbeddings] = [
 
     # GloVe embeddings
     WordEmbeddings('glove'),
@@ -124,7 +124,7 @@ tag_type = 'ner'
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 
 # initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
+embedding_types: list[TokenEmbeddings] = [
     WordEmbeddings('de'),
     PooledFlairEmbeddings('german-forward'),
     PooledFlairEmbeddings('german-backward'),
@@ -225,7 +225,7 @@ tag_type = 'ner'
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 
 # initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
+embedding_types: list[TokenEmbeddings] = [
     WordEmbeddings('crawl'),
     WordEmbeddings('twitter'),
     FlairEmbeddings('news-forward'),
@@ -292,7 +292,7 @@ tag_type = 'ner'
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 
 # initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
+embedding_types: list[TokenEmbeddings] = [
     WordEmbeddings('crawl'),
     FlairEmbeddings('news-forward'),
     FlairEmbeddings('news-backward'),
@@ -361,7 +361,7 @@ tag_type = 'pos'
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 
 # initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
+embedding_types: list[TokenEmbeddings] = [
     WordEmbeddings('extvec'),
     FlairEmbeddings('news-forward'),
     FlairEmbeddings('news-backward'),
@@ -416,7 +416,7 @@ tag_type = 'np'
 tag_dictionary = corpus.make_tag_dictionary(tag_type=tag_type)
 
 # initialize embeddings
-embedding_types: List[TokenEmbeddings] = [
+embedding_types: list[TokenEmbeddings] = [
     WordEmbeddings('extvec'),
     FlairEmbeddings('news-forward'),
     FlairEmbeddings('news-backward'),

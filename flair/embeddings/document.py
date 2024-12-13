@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 
 import torch
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -67,7 +67,7 @@ class TransformerDocumentEmbeddings(DocumentEmbeddings, TransformerEmbeddings):
 class DocumentPoolEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
-        embeddings: Union[TokenEmbeddings, List[TokenEmbeddings]],
+        embeddings: Union[TokenEmbeddings, list[TokenEmbeddings]],
         fine_tune_mode: str = "none",
         pooling: str = "mean",
     ) -> None:
@@ -114,7 +114,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, sentences: Union[List[Sentence], Sentence]):
+    def embed(self, sentences: Union[list[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences.
 
         If embeddings are already added, updates only if embeddings are non-static.
@@ -146,18 +146,18 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 
             sentence.set_embedding(self.name, pooled_embedding)
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: list[Sentence]):
         pass
 
     def extra_repr(self):
         return f"fine_tune_mode={self.fine_tune_mode}, pooling={self.pooling}"
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "DocumentPoolEmbeddings":
+    def from_params(cls, params: dict[str, Any]) -> "DocumentPoolEmbeddings":
         embeddings = cast(StackedEmbeddings, load_embeddings(params.pop("embeddings"))).embeddings
         return cls(embeddings=embeddings, **params)
 
-    def to_params(self) -> Dict[str, Any]:
+    def to_params(self) -> dict[str, Any]:
         return {
             "pooling": self.pooling,
             "fine_tune_mode": self.fine_tune_mode,
@@ -169,7 +169,7 @@ class DocumentPoolEmbeddings(DocumentEmbeddings):
 class DocumentTFIDFEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
-        train_dataset: List[Sentence],
+        train_dataset: list[Sentence],
         vectorizer: Optional[TfidfVectorizer] = None,
         **vectorizer_params,
     ) -> None:
@@ -203,7 +203,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def embed(self, sentences: Union[List[Sentence], Sentence]):
+    def embed(self, sentences: Union[list[Sentence], Sentence]):
         """Add embeddings to every sentence in the given list of sentences."""
         # if only one sentence is passed, convert to list of sentence
         if isinstance(sentences, Sentence):
@@ -215,14 +215,14 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
         for sentence_id, sentence in enumerate(sentences):
             sentence.set_embedding(self.name, tfidf_vectors[sentence_id])
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: list[Sentence]):
         pass
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "DocumentTFIDFEmbeddings":
+    def from_params(cls, params: dict[str, Any]) -> "DocumentTFIDFEmbeddings":
         return cls(train_dataset=[], vectorizer=params["vectorizer"])
 
-    def to_params(self) -> Dict[str, Any]:
+    def to_params(self) -> dict[str, Any]:
         return {
             "vectorizer": self.vectorizer,
         }
@@ -232,7 +232,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
 class DocumentRNNEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
-        embeddings: List[TokenEmbeddings],
+        embeddings: list[TokenEmbeddings],
         hidden_size=128,
         rnn_layers=1,
         reproject_words: bool = True,
@@ -317,7 +317,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: list[Sentence]):
         """Add embeddings to all sentences in the given list of sentences.
 
         If embeddings are already added, update only if embeddings are non-static.
@@ -332,7 +332,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         # embed words in the sentence
         self.embeddings.embed(sentences)
 
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        lengths: list[int] = [len(sentence.tokens) for sentence in sentences]
         longest_token_sequence_in_batch: int = max(lengths)
 
         pre_allocated_zero_tensor = torch.zeros(
@@ -341,7 +341,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             device=flair.device,
         )
 
-        all_embs: List[torch.Tensor] = []
+        all_embs: list[torch.Tensor] = []
         for sentence in sentences:
             all_embs += [emb for token in sentence for emb in token.get_each_embedding()]
             nb_padding_tokens = longest_token_sequence_in_batch - len(sentence)
@@ -371,7 +371,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
             sentence_tensor = self.word_reprojection_map(sentence_tensor)
 
         # push through RNN
-        packed = pack_padded_sequence(sentence_tensor, lengths, enforce_sorted=False, batch_first=True)  # type: ignore[arg-type]
+        packed = pack_padded_sequence(sentence_tensor, lengths, enforce_sorted=False, batch_first=True)
         rnn_out, hidden = self.rnn(packed)
         outputs, output_lengths = pad_packed_sequence(rnn_out, batch_first=True)
 
@@ -436,7 +436,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
         return model_state
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "DocumentRNNEmbeddings":
+    def from_params(cls, params: dict[str, Any]) -> "DocumentRNNEmbeddings":
         stacked_embeddings = load_embeddings(params["embeddings"])
         assert isinstance(stacked_embeddings, StackedEmbeddings)
         return cls(
@@ -484,7 +484,7 @@ class DocumentRNNEmbeddings(DocumentEmbeddings):
 
 @register_embeddings
 class DocumentLMEmbeddings(DocumentEmbeddings):
-    def __init__(self, flair_embeddings: List[FlairEmbeddings]) -> None:
+    def __init__(self, flair_embeddings: list[FlairEmbeddings]) -> None:
         super().__init__()
 
         self.embeddings = flair_embeddings
@@ -503,7 +503,7 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self._embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: list[Sentence]):
         for embedding in self.embeddings:
             embedding.embed(sentences)
 
@@ -520,17 +520,17 @@ class DocumentLMEmbeddings(DocumentEmbeddings):
 
         return sentences
 
-    def get_names(self) -> List[str]:
+    def get_names(self) -> list[str]:
         if "__names" not in self.__dict__:
             self.__names = [name for embedding in self.embeddings for name in embedding.get_names()]
 
         return self.__names
 
-    def to_params(self) -> Dict[str, Any]:
+    def to_params(self) -> dict[str, Any]:
         return {"flair_embeddings": [embedding.save_embeddings(False) for embedding in self.embeddings]}
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "DocumentLMEmbeddings":
+    def from_params(cls, params: dict[str, Any]) -> "DocumentLMEmbeddings":
         return cls([cast(FlairEmbeddings, load_embeddings(embedding)) for embedding in params["flair_embeddings"]])
 
 
@@ -566,7 +566,7 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         self.static_embeddings = True
         self.eval()
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         sentence_batches = [
             sentences[i * self.batch_size : (i + 1) * self.batch_size]
             for i in range((len(sentences) + self.batch_size - 1) // self.batch_size)
@@ -577,7 +577,7 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
 
         return sentences
 
-    def _add_embeddings_to_sentences(self, sentences: List[Sentence]):
+    def _add_embeddings_to_sentences(self, sentences: list[Sentence]):
         # convert to plain strings, embedded in a list for the encode function
         sentences_plain_text = [sentence.to_plain_string() for sentence in sentences]
 
@@ -591,10 +591,10 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
         return self.model.get_sentence_embedding_dimension()
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "SentenceTransformerDocumentEmbeddings":
+    def from_params(cls, params: dict[str, Any]) -> "SentenceTransformerDocumentEmbeddings":
         return cls(**params)
 
-    def to_params(self) -> Dict[str, Any]:
+    def to_params(self) -> dict[str, Any]:
         return {
             "model": self.model_name,
             "batch_size": self.batch_size,
@@ -605,7 +605,7 @@ class SentenceTransformerDocumentEmbeddings(DocumentEmbeddings):
 class DocumentCNNEmbeddings(DocumentEmbeddings):
     def __init__(
         self,
-        embeddings: List[TokenEmbeddings],
+        embeddings: list[TokenEmbeddings],
         kernels=((100, 3), (100, 4), (100, 5)),
         reproject_words: bool = True,
         reproject_words_dimension: Optional[int] = None,
@@ -673,7 +673,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: list[Sentence]):
         """Add embeddings to all sentences in the given list of sentences.
 
         If embeddings are already added, update only if embeddings are non-static.
@@ -689,7 +689,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
         # embed words in the sentence
         self.embeddings.embed(sentences)
 
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        lengths: list[int] = [len(sentence.tokens) for sentence in sentences]
         padding_length: int = max(max(lengths), self.min_sequence_length)
 
         pre_allocated_zero_tensor = torch.zeros(
@@ -698,7 +698,7 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
             device=flair.device,
         )
 
-        all_embs: List[torch.Tensor] = []
+        all_embs: list[torch.Tensor] = []
         for sentence in sentences:
             all_embs += [emb for token in sentence for emb in token.get_each_embedding()]
             nb_padding_tokens = padding_length - len(sentence)
@@ -757,11 +757,11 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
             child_module._apply(fn)
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "DocumentCNNEmbeddings":
+    def from_params(cls, params: dict[str, Any]) -> "DocumentCNNEmbeddings":
         embeddings = cast(StackedEmbeddings, load_embeddings(params.pop("embeddings"))).embeddings
         return cls(embeddings=embeddings, **params)
 
-    def to_params(self) -> Dict[str, Any]:
+    def to_params(self) -> dict[str, Any]:
         return {
             "embeddings": self.embeddings.save_embeddings(False),
             "kernels": self.kernels,

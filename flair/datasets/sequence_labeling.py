@@ -3,22 +3,22 @@ import json
 import logging
 import os
 import re
+import gzip
 import shutil
+import tarfile
+import tempfile
+import zipfile
 from collections import defaultdict
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import (
     Any,
-    DefaultDict,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
     Optional,
-    Tuple,
     Union,
     cast,
 )
 
+import requests
 from torch.utils.data import ConcatDataset, Dataset
 
 import flair
@@ -33,6 +33,7 @@ from flair.data import (
 )
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file
+from flair.tokenization import Tokenizer
 
 log = logging.getLogger("flair")
 
@@ -50,6 +51,7 @@ class MultiFileJsonlCorpus(Corpus):
         label_column_name: str = "label",
         metadata_column_name: str = "metadata",
         label_type: str = "ner",
+        use_tokenizer: Union[bool, Tokenizer] = True,
         **corpusargs,
     ) -> None:
         """Instantiates a MuliFileJsonlCorpus as, e.g., created with doccanos JSONL export.
@@ -61,9 +63,12 @@ class MultiFileJsonlCorpus(Corpus):
         :param train_files: the name of the train files
         :param test_files: the name of the test files
         :param dev_files: the name of the dev files, if empty, dev data is sampled from train
+        :param encoding: file encoding (default "utf-8")
         :param text_column_name: Name of the text column inside the jsonl files.
         :param label_column_name: Name of the label column inside the jsonl files.
         :param metadata_column_name: Name of the metadata column inside the jsonl files.
+        :param label_type: he type of label to predict (default "ner")
+        :param use_tokenizer: Specify a custom tokenizer to split the text into tokens.
 
         :raises RuntimeError: If no paths are given
         """
@@ -77,6 +82,7 @@ class MultiFileJsonlCorpus(Corpus):
                         metadata_column_name=metadata_column_name,
                         label_type=label_type,
                         encoding=encoding,
+                        use_tokenizer=use_tokenizer,
                     )
                     for train_file in train_files
                 ]
@@ -95,6 +101,8 @@ class MultiFileJsonlCorpus(Corpus):
                         label_column_name=label_column_name,
                         metadata_column_name=metadata_column_name,
                         label_type=label_type,
+                        encoding=encoding,
+                        use_tokenizer=use_tokenizer,
                     )
                     for test_file in test_files
                 ]
@@ -113,6 +121,8 @@ class MultiFileJsonlCorpus(Corpus):
                         label_column_name=label_column_name,
                         metadata_column_name=metadata_column_name,
                         label_type=label_type,
+                        encoding=encoding,
+                        use_tokenizer=use_tokenizer,
                     )
                     for dev_file in dev_files
                 ]
@@ -137,6 +147,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
         label_type: str = "ner",
         autofind_splits: bool = True,
         name: Optional[str] = None,
+        use_tokenizer: Union[bool, Tokenizer] = True,
         **corpusargs,
     ) -> None:
         """Instantiates a JsonlCorpus with one file per Dataset (train, dev, and test).
@@ -145,11 +156,14 @@ class JsonlCorpus(MultiFileJsonlCorpus):
         :param train_file: the name of the train file
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
+        :param encoding: file encoding (default "utf-8")
         :param text_column_name: Name of the text column inside the JSONL file.
         :param label_column_name: Name of the label column inside the JSONL file.
         :param metadata_column_name: Name of the metadata column inside the JSONL file.
+        :param label_type: The type of label to predict (default "ner")
         :param autofind_splits: Whether train, test and dev file should be determined automatically
         :param name: name of the Corpus see flair.data.Corpus
+        :param use_tokenizer: Specify a custom tokenizer to split the text into tokens.
         """
         # find train, dev and test files if not specified
         dev_file, test_file, train_file = find_train_dev_test_files(
@@ -165,6 +179,7 @@ class JsonlCorpus(MultiFileJsonlCorpus):
             label_type=label_type,
             name=name if data_folder is None else str(data_folder),
             encoding=encoding,
+            use_tokenizer=use_tokenizer,
             **corpusargs,
         )
 
@@ -178,6 +193,7 @@ class JsonlDataset(FlairDataset):
         label_column_name: str = "label",
         metadata_column_name: str = "metadata",
         label_type: str = "ner",
+        use_tokenizer: Union[bool, Tokenizer] = True,
     ) -> None:
         """Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.
 
@@ -193,9 +209,12 @@ class JsonlDataset(FlairDataset):
 
         Args:
             path_to_jsonl_file: File to read
+            encoding: file encoding (default "utf-8")
             text_column_name: Name of the text column
             label_column_name: Name of the label column
             metadata_column_name: Name of the metadata column
+            label_type: The type of label to predict (default "ner")
+            use_tokenizer: Specify a custom tokenizer to split the text into tokens.
         """
         path_to_json_file = Path(path_to_jsonl_file)
 
@@ -205,21 +224,21 @@ class JsonlDataset(FlairDataset):
         self.label_type = label_type
         self.path_to_json_file = path_to_json_file
 
-        self.sentences: List[Sentence] = []
+        self.sentences: list[Sentence] = []
         with path_to_json_file.open(encoding=encoding) as jsonl_fp:
             for line in jsonl_fp:
                 current_line = json.loads(line)
                 raw_text = current_line[text_column_name]
                 current_labels = current_line[label_column_name]
                 current_metadatas = current_line.get(self.metadata_column_name, [])
-                current_sentence = Sentence(raw_text)
+                current_sentence = Sentence(raw_text, use_tokenizer=use_tokenizer)
 
                 self._add_labels_to_sentence(raw_text, current_sentence, current_labels)
                 self._add_metadatas_to_sentence(current_sentence, current_metadatas)
 
                 self.sentences.append(current_sentence)
 
-    def _add_labels_to_sentence(self, raw_text: str, sentence: Sentence, labels: List[List[Any]]):
+    def _add_labels_to_sentence(self, raw_text: str, sentence: Sentence, labels: list[list[Any]]):
         # Add tags for each annotated span
         for label in labels:
             self._add_label_to_sentence(raw_text, sentence, label[0], label[1], label[2])
@@ -269,7 +288,7 @@ class JsonlDataset(FlairDataset):
 
         sentence[start_idx : end_idx + 1].add_label(self.label_type, label)
 
-    def _add_metadatas_to_sentence(self, sentence: Sentence, metadatas: List[Tuple[str, str]]):
+    def _add_metadatas_to_sentence(self, sentence: Sentence, metadatas: list[tuple[str, str]]):
         # Add metadatas for sentence
         for metadata in metadatas:
             self._add_metadata_to_sentence(sentence, metadata[0], metadata[1])
@@ -294,7 +313,7 @@ class JsonlDataset(FlairDataset):
 class MultiFileColumnCorpus(Corpus):
     def __init__(
         self,
-        column_format: Dict[int, str],
+        column_format: dict[int, str],
         train_files=None,
         test_files=None,
         dev_files=None,
@@ -304,8 +323,8 @@ class MultiFileColumnCorpus(Corpus):
         document_separator_token: Optional[str] = None,
         skip_first_line: bool = False,
         in_memory: bool = True,
-        label_name_map: Optional[Dict[str, str]] = None,
-        banned_sentences: Optional[List[str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
+        banned_sentences: Optional[list[str]] = None,
         default_whitespace_after: int = 1,
         **corpusargs,
     ) -> None:
@@ -319,6 +338,7 @@ class MultiFileColumnCorpus(Corpus):
             dev_files: the name of the dev files, if empty, dev data is sampled from train
             column_delimiter: default is to split on any separatator, but you can overwrite for instance with "\t" to split only on tabs
             comment_symbol: if set, lines that begin with this symbol are treated as comments
+            encoding: file encoding (default "utf-8")
             document_separator_token: If provided, sentences that function as document boundaries are so marked
             skip_first_line: set to True if your dataset has a header line
             in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
@@ -404,7 +424,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
     def __init__(
         self,
         data_folder: Union[str, Path],
-        column_format: Dict[int, str],
+        column_format: dict[int, str],
         train_file=None,
         test_file=None,
         dev_file=None,
@@ -455,15 +475,15 @@ class ColumnDataset(FlairDataset):
     def __init__(
         self,
         path_to_column_file: Union[str, Path],
-        column_name_map: Dict[int, str],
+        column_name_map: dict[int, str],
         column_delimiter: str = r"\s+",
         comment_symbol: Optional[str] = None,
-        banned_sentences: Optional[List[str]] = None,
+        banned_sentences: Optional[list[str]] = None,
         in_memory: bool = True,
         document_separator_token: Optional[str] = None,
         encoding: str = "utf-8",
         skip_first_line: bool = False,
-        label_name_map: Optional[Dict[str, str]] = None,
+        label_name_map: Optional[dict[str, str]] = None,
         default_whitespace_after: int = 1,
     ) -> None:
         r"""Instantiates a column dataset.
@@ -517,7 +537,7 @@ class ColumnDataset(FlairDataset):
 
             # option 1: keep Sentence objects in memory
             if self.in_memory:
-                self.sentences: List[Sentence] = []
+                self.sentences: list[Sentence] = []
 
                 # pointer to previous
                 previous_sentence = None
@@ -559,7 +579,7 @@ class ColumnDataset(FlairDataset):
 
             # option 2: keep source data in memory
             if not self.in_memory:
-                self.sentences_raw: List[List[str]] = []
+                self.sentences_raw: list[list[str]] = []
 
                 while True:
                     # read lines for next sentence, but don't parse
@@ -659,10 +679,10 @@ class ColumnDataset(FlairDataset):
         return lines
 
     def _convert_lines_to_sentence(
-        self, lines, word_level_tag_columns: Dict[int, str], span_level_tag_columns: Optional[Dict[int, str]] = None
+        self, lines, word_level_tag_columns: dict[int, str], span_level_tag_columns: Optional[dict[int, str]] = None
     ):
         token: Optional[Token] = None
-        tokens: List[Token] = []
+        tokens: list[Token] = []
         filtered_lines = []
         comments = []
         for line in lines:
@@ -729,9 +749,9 @@ class ColumnDataset(FlairDataset):
             return sentence
         return None
 
-    def _parse_token(self, line: str, column_name_map: Dict[int, str], last_token: Optional[Token] = None) -> Token:
+    def _parse_token(self, line: str, column_name_map: dict[int, str], last_token: Optional[Token] = None) -> Token:
         # get fields from line
-        fields: List[str] = self.column_delimiter.split(line.rstrip())
+        fields: list[str] = self.column_delimiter.split(line.rstrip())
         field_count = len(fields)
         # get head_id if exists (only in dependency parses)
         head_id = int(fields[self.head_id_column]) if self.head_id_column else None
@@ -835,7 +855,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         base_path: Optional[Union[str, Path]] = None,
         version: str = "v4",
         language: str = "english",
-        domain: Union[None, str, List[str], Dict[str, Union[None, str, List[str]]]] = None,
+        domain: Union[None, str, list[str], dict[str, Union[None, str, list[str]]]] = None,
         in_memory: bool = True,
         **corpusargs,
     ) -> None:
@@ -873,7 +893,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         version: str = "v4",
         language: str = "english",
         split: str = "train",
-    ) -> List[str]:
+    ) -> list[str]:
         processed_data_path = cls._ensure_data_processed(base_path=base_path, language=language, version=version)
 
         processed_split_path = processed_data_path / "splits" / version / language / split
@@ -887,7 +907,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         split: str = "train",
         version: str = "v4",
         language: str = "english",
-        domain: Optional[Union[str, List[str], Dict[str, Union[None, str, List[str]]]]] = None,
+        domain: Optional[Union[str, list[str], dict[str, Union[None, str, list[str]]]]] = None,
     ) -> Iterable[Path]:
         processed_split_path = processed_data_path / "splits" / version / language / split
 
@@ -989,8 +1009,8 @@ class ONTONOTES(MultiFileColumnCorpus):
         cls,
         label: str,
         word_index: int,
-        clusters: DefaultDict[int, List[Tuple[int, int]]],
-        coref_stacks: DefaultDict[int, List[int]],
+        clusters: defaultdict[int, list[tuple[int, int]]],
+        coref_stacks: defaultdict[int, list[int]],
     ) -> None:
         """For a given coref label, add it to a currently open span(s), complete a span(s) or ignore it, if it is outside of all spans.
 
@@ -1028,9 +1048,9 @@ class ONTONOTES(MultiFileColumnCorpus):
     @classmethod
     def _process_span_annotations_for_word(
         cls,
-        annotations: List[str],
-        span_labels: List[List[str]],
-        current_span_labels: List[Optional[str]],
+        annotations: list[str],
+        span_labels: list[list[str]],
+        current_span_labels: list[Optional[str]],
     ) -> None:
         for annotation_index, annotation in enumerate(annotations):
             # strip all bracketing information to
@@ -1056,33 +1076,33 @@ class ONTONOTES(MultiFileColumnCorpus):
                 current_span_labels[annotation_index] = None
 
     @classmethod
-    def _conll_rows_to_sentence(cls, conll_rows: List[str]) -> Dict:
+    def _conll_rows_to_sentence(cls, conll_rows: list[str]) -> dict:
         document_id: str
         sentence_id: int
         # The words in the sentence.
-        sentence: List[str] = []
+        sentence: list[str] = []
         # The pos tags of the words in the sentence.
-        pos_tags: List[str] = []
+        pos_tags: list[str] = []
         # the pieces of the parse tree.
-        parse_pieces: List[Optional[str]] = []
+        parse_pieces: list[Optional[str]] = []
         # The lemmatised form of the words in the sentence which
         # have SRL or word sense information.
-        predicate_lemmas: List[Optional[str]] = []
+        predicate_lemmas: list[Optional[str]] = []
         # The FrameNet ID of the predicate.
-        predicate_framenet_ids: List[Optional[str]] = []
+        predicate_framenet_ids: list[Optional[str]] = []
         # The sense of the word, if available.
-        word_senses: List[Optional[float]] = []
+        word_senses: list[Optional[float]] = []
         # The current speaker, if available.
-        speakers: List[Optional[str]] = []
+        speakers: list[Optional[str]] = []
 
-        verbal_predicates: List[str] = []
-        span_labels: List[List[str]] = []
-        current_span_labels: List[Optional[str]] = []
+        verbal_predicates: list[str] = []
+        span_labels: list[list[str]] = []
+        current_span_labels: list[Optional[str]] = []
 
         # Cluster id -> List of (start_index, end_index) spans.
-        clusters: DefaultDict[int, List[Tuple[int, int]]] = defaultdict(list)
+        clusters: defaultdict[int, list[tuple[int, int]]] = defaultdict(list)
         # Cluster id -> List of start_indices which are open for this id.
-        coref_stacks: DefaultDict[int, List[int]] = defaultdict(list)
+        coref_stacks: defaultdict[int, list[int]] = defaultdict(list)
 
         for index, row in enumerate(conll_rows):
             conll_components = row.split()
@@ -1158,7 +1178,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         srl_frames = list(zip(verbal_predicates, span_labels[1:]))
 
         # this would not be reached if parse_pieces contained None, hence the cast
-        parse_tree = "".join(cast(List[str], parse_pieces)) if all(parse_pieces) else None
+        parse_tree = "".join(cast(list[str], parse_pieces)) if all(parse_pieces) else None
 
         coref_span_tuples = {(cluster_id, span) for cluster_id, span_list in clusters.items() for span in span_list}
         return {
@@ -1177,7 +1197,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         }
 
     @classmethod
-    def dataset_document_iterator(cls, file_path: Union[Path, str]) -> Iterator[List]:
+    def dataset_document_iterator(cls, file_path: Union[Path, str]) -> Iterator[list[dict]]:
         """An iterator over CONLL formatted files which yields documents, regardless of the number of document annotations in a particular file.
 
         This is useful for conll data which has been preprocessed, such
@@ -1186,7 +1206,7 @@ class ONTONOTES(MultiFileColumnCorpus):
         """
         with open(file_path, encoding="utf8") as open_file:
             conll_rows = []
-            document: List = []
+            document: list[dict] = []
             for line in open_file:
                 line = line.strip()
                 if line != "" and not line.startswith("#"):
@@ -1405,6 +1425,240 @@ class CONLL_03_SPANISH(ColumnCorpus):
         )
 
 
+class CLEANCONLL(ColumnCorpus):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ) -> None:
+        """Initialize the CleanCoNLL corpus.
+
+        Args:
+            base_path: Base directory for the dataset. If None, defaults to flair.cache_root / "datasets".
+            in_memory: If True, keeps dataset in memory for faster training.
+        """
+        # Set the base path for the dataset
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
+
+        # Define column format
+        columns = {0: "text", 1: "pos", 2: "nel", 3: "ner*", 4: "ner"}
+
+        # Define dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        # Define data folder path
+        data_folder = base_path / dataset_name
+
+        # Check if the train data file exists, otherwise download and prepare the dataset
+        train_set = data_folder / "cleanconll.train"
+
+        if not train_set.exists():
+            print("CleanCoNLL files not found, so downloading and creating them.")
+
+            # Download and prepare the dataset
+            self.download_and_prepare_data(data_folder)
+
+        else:
+            print("Found files for CleanCoNLL in:", data_folder)
+
+        # Initialize the parent class with the specified parameters
+        super().__init__(
+            data_folder,
+            columns,
+            encoding="utf-8",
+            in_memory=in_memory,
+            document_separator_token="-DOCSTART-",
+            **corpusargs,
+        )
+
+    @staticmethod
+    def download_and_prepare_data(data_folder: Path):
+        def parse_patch(patch_file_path):
+            """Parses a patch file and returns a structured representation of the changes."""
+            changes = []
+            current_change = None
+
+            with open(patch_file_path, encoding="utf-8") as patch_file:
+                for line in patch_file:
+                    # Check if the line is a change, delete or add command (like 17721c17703,17705 or 5728d5727)
+                    if line and (line[0].isdigit() and ("c" in line or "d" in line or "a" in line)):
+                        if current_change:
+                            # Append the previous change block to the changes list
+                            changes.append(current_change)
+
+                        # Start a new change block
+                        current_change = {"command": line, "original": [], "new": []}
+
+                    # Capture original lines (those marked with "<")
+                    elif line.startswith("<"):
+                        if current_change:
+                            current_change["original"].append(line[2:])  # Remove the "< " part
+
+                    # Capture new lines (those marked with ">")
+                    elif line.startswith(">"):
+                        if current_change:
+                            current_change["new"].append(line[2:])  # Remove the "> " part
+
+                # Append the last change block to the changes list
+                if current_change:
+                    changes.append(current_change)
+
+            return changes
+
+        def parse_line_range(line_range_str):
+            """Utility function to parse a line range string like '17703,17705' or '5727' and returns a tuple (start, end)."""
+            parts = line_range_str.split(",")
+            if len(parts) == 1:
+                start = int(parts[0]) - 1
+                return (start, start + 1)
+            else:
+                start = int(parts[0]) - 1
+                end = int(parts[1])
+                return (start, end)
+
+        def apply_patch_to_file(original_file, changes, output_file_path):
+            """Applies the patch instructions to the content of the original file."""
+            with open(original_file, encoding="utf-8") as f:
+                original_lines = f.readlines()
+
+            modified_lines = original_lines[:]  # Make a copy of original lines
+
+            # Apply each change in reverse order (important to avoid index shift issues)
+            for change in reversed(changes):
+                command = change["command"]
+
+                # Determine the type of the change: `c` for change, `d` for delete, `a` for add
+                if "c" in command:
+                    # Example command: 17721c17703,17705
+                    original_line_range, new_line_range = command.split("c")
+                    original_line_range = parse_line_range(original_line_range)
+                    modified_lines[original_line_range[0] : original_line_range[1]] = change["new"]
+
+                elif "d" in command:
+                    # Example command: 5728d5727
+                    original_line_number = int(command.split("d")[0]) - 1
+                    del modified_lines[original_line_number]
+
+                elif "a" in command:
+                    # Example command: 1000a1001,1002
+                    original_line_number = int(command.split("a")[0]) - 1
+                    insertion_point = original_line_number + 1
+                    for new_token in reversed(change["new"]):
+                        modified_lines.insert(insertion_point, new_token)
+
+            # Write the modified content to the output file
+            with open(output_file_path, "w", encoding="utf-8") as output_file:
+                output_file.writelines(modified_lines)
+
+        def apply_patch(file_path, patch_path, output_path):
+            patch_instructions = parse_patch(patch_path)
+            apply_patch_to_file(file_path, patch_instructions, output_path)
+
+        def extract_tokens(file_path: Path, output_path: Path):
+            with open(file_path, encoding="utf-8") as f_in, open(output_path, "w", encoding="utf-8") as f_out:
+                for line in f_in:
+                    # Strip whitespace to check if the line is empty
+                    stripped_line = line.strip()
+                    if stripped_line:
+                        # Write the first token followed by a newline if the line is not empty
+                        f_out.write(stripped_line.split()[0] + "\n")
+                    else:
+                        # Write an empty line if the line is empty
+                        f_out.write("\n")
+
+        def merge_annotations(tokens_file, annotations_file, output_file):
+            with (
+                open(tokens_file, encoding="utf-8") as tokens_file,
+                open(annotations_file, encoding="utf-8") as annotations_file,
+                open(output_file, "w", encoding="utf-8") as output_file,
+            ):
+                tokens = tokens_file.readlines()
+                annotations = annotations_file.readlines()
+
+                for token, annotation in zip(tokens, annotations):
+                    # Strip the leading '[TOKEN]\t' from the annotation
+                    stripped_annotation = "\t".join(annotation.strip().split("\t")[1:])
+                    output_file.write(token.strip() + "\t" + stripped_annotation + "\n")
+
+        # Create a temporary directory
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            tmpdir = Path(tmpdirname)
+
+            github_url = "https://github.com/flairNLP/CleanCoNLL/archive/main.zip"
+            zip_path = cached_path(github_url, tmpdir)
+            unpack_file(zip_path, tmpdir, "zip", False)
+            cleanconll_data_root = tmpdir / "CleanCoNLL-main"
+
+            # Check the contents of the temporary directory
+            print(f"Contents of the temporary directory: {list(tmpdir.iterdir())}")
+
+            conll03_dir = data_folder / "original_conll-03"
+            if conll03_dir.exists() and conll03_dir.is_dir() and "train.txt" in [f.name for f in conll03_dir.iterdir()]:
+                print(f"Original CoNLL03 files detected here: {conll03_dir}")
+
+            else:
+                conll_url = "https://data.deepai.org/conll2003.zip"
+
+                conll03_dir.mkdir(parents=True, exist_ok=True)
+                print(f"Downloading the original CoNLL03 from {conll_url} into {conll03_dir} ...")
+
+                zip_path = conll03_dir / "conll2003.zip"
+                response = requests.get(conll_url)
+                zip_path.write_bytes(response.content)
+
+                with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                    zip_ref.extractall(conll03_dir)
+
+            conll03_train = conll03_dir / "train.txt"
+            conll03_dev = conll03_dir / "valid.txt"
+            conll03_test = conll03_dir / "test.txt"
+
+            patch_dir = cleanconll_data_root / "data" / "patch_files"
+            tokens_dir = cleanconll_data_root / "data" / "tokens_updated"
+            tokens_dir.mkdir(parents=True, exist_ok=True)
+
+            # Extract only the tokens from the original CoNLL03 files
+            extract_tokens(conll03_train, tokens_dir / "train_tokens.txt")
+            extract_tokens(conll03_dev, tokens_dir / "valid_tokens.txt")
+            extract_tokens(conll03_test, tokens_dir / "test_tokens.txt")
+
+            # Apply the downloaded patch files to apply our token modifications (e.g. line breaks)
+            apply_patch(
+                tokens_dir / "train_tokens.txt",
+                patch_dir / "train_tokens.patch",
+                tokens_dir / "train_tokens_updated.txt",
+            )
+            apply_patch(
+                tokens_dir / "valid_tokens.txt", patch_dir / "dev_tokens.patch", tokens_dir / "dev_tokens_updated.txt"
+            )
+            apply_patch(
+                tokens_dir / "test_tokens.txt", patch_dir / "test_tokens.patch", tokens_dir / "test_tokens_updated.txt"
+            )
+
+            # Merge the updated token files with the CleanCoNLL annotations
+            cleanconll_annotations_dir = cleanconll_data_root / "data" / "cleanconll_annotations"
+            data_folder.mkdir(parents=True, exist_ok=True)
+
+            merge_annotations(
+                tokens_dir / "train_tokens_updated.txt",
+                cleanconll_annotations_dir / "cleanconll_annotations.train",
+                data_folder / "cleanconll.train",
+            )
+            merge_annotations(
+                tokens_dir / "dev_tokens_updated.txt",
+                cleanconll_annotations_dir / "cleanconll_annotations.dev",
+                data_folder / "cleanconll.dev",
+            )
+            merge_annotations(
+                tokens_dir / "test_tokens_updated.txt",
+                cleanconll_annotations_dir / "cleanconll_annotations.test",
+                data_folder / "cleanconll.test",
+            )
+
+            print("Done with creating. CleanCoNLL files are placed here:", data_folder)
+
+
 class CONLL_2000(ColumnCorpus):
     def __init__(
         self,
@@ -1435,18 +1689,22 @@ class CONLL_2000(ColumnCorpus):
         if not data_file.is_file():
             cached_path(f"{conll_2000_path}train.txt.gz", Path("datasets") / dataset_name)
             cached_path(f"{conll_2000_path}test.txt.gz", Path("datasets") / dataset_name)
-            import gzip
-            import shutil
 
-            with gzip.open(flair.cache_root / "datasets" / dataset_name / "train.txt.gz", "rb") as f_in, open(
-                flair.cache_root / "datasets" / dataset_name / "train.txt",
-                "wb",
-            ) as f_out:
+            with (
+                gzip.open(flair.cache_root / "datasets" / dataset_name / "train.txt.gz", "rb") as f_in,
+                open(
+                    flair.cache_root / "datasets" / dataset_name / "train.txt",
+                    "wb",
+                ) as f_out,
+            ):
                 shutil.copyfileobj(f_in, f_out)
-            with gzip.open(flair.cache_root / "datasets" / dataset_name / "test.txt.gz", "rb") as f_in, open(
-                flair.cache_root / "datasets" / dataset_name / "test.txt",
-                "wb",
-            ) as f_out:
+            with (
+                gzip.open(flair.cache_root / "datasets" / dataset_name / "test.txt.gz", "rb") as f_in,
+                open(
+                    flair.cache_root / "datasets" / dataset_name / "test.txt",
+                    "wb",
+                ) as f_out,
+            ):
                 shutil.copyfileobj(f_in, f_out)
 
         super().__init__(
@@ -1715,8 +1973,6 @@ class NER_BASQUE(ColumnCorpus):
         data_file = data_path / "named_ent_eu.train"
         if not data_file.is_file():
             cached_path(f"{ner_basque_path}/eiec_v1.0.tgz", Path("datasets") / dataset_name)
-            import shutil
-            import tarfile
 
             with tarfile.open(
                 flair.cache_root / "datasets" / dataset_name / "eiec_v1.0.tgz",
@@ -2227,15 +2483,13 @@ class NER_ENGLISH_WEBPAGES(ColumnCorpus):
         if not base_path:
             base_path = Path(flair.cache_root) / "datasets"
         data_folder = base_path / dataset_name
-        import tarfile
 
         if not os.path.isfile(data_folder / "webpages_ner.txt"):
             #     # download zip
             tar_file = "https://cogcomp.seas.upenn.edu/Data/NERWebpagesColumns.tgz"
             webpages_ner_path = cached_path(tar_file, Path("datasets") / dataset_name)
-            tf = tarfile.open(webpages_ner_path)
-            tf.extractall(data_folder)
-            tf.close()
+            with tarfile.open(webpages_ner_path) as tf:
+                tf.extractall(data_folder)
         outputfile = os.path.abspath(data_folder)
 
         # merge the files in one as the zip is containing multiples files
@@ -2518,7 +2772,7 @@ class NER_GERMAN_EUROPARL(ColumnCorpus):
             Specifies the ner-tagged column. The default is 1 (the second column).
         """
 
-        def add_I_prefix(current_line: List[str], ner: int, tag: str):
+        def add_I_prefix(current_line: list[str], ner: int, tag: str):
             for i in range(len(current_line)):
                 if i == 0:
                     f.write(line_list[i])
@@ -2759,9 +3013,11 @@ class NER_GERMAN_POLITICS(ColumnCorpus):
             train_len = round(num_lines * 0.8)
             test_len = round(num_lines * 0.1)
 
-            with (data_folder / "train.txt").open("w", encoding="utf-8") as train, (data_folder / "test.txt").open(
-                "w", encoding="utf-8"
-            ) as test, (data_folder / "dev.txt").open("w", encoding="utf-8") as dev:
+            with (
+                (data_folder / "train.txt").open("w", encoding="utf-8") as train,
+                (data_folder / "test.txt").open("w", encoding="utf-8") as test,
+                (data_folder / "dev.txt").open("w", encoding="utf-8") as dev,
+            ):
                 for k, line in enumerate(file.readlines(), start=1):
                     if k <= train_len:
                         train.write(line)
@@ -2952,7 +3208,7 @@ class NER_JAPANESE(ColumnCorpus):
 class NER_MASAKHANE(MultiCorpus):
     def __init__(
         self,
-        languages: Union[str, List[str]] = "luo",
+        languages: Union[str, list[str]] = "luo",
         version: str = "v2",
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
@@ -3036,7 +3292,7 @@ class NER_MASAKHANE(MultiCorpus):
         if languages == ["all"]:
             languages = list(language_to_code.values())
 
-        corpora: List[Corpus] = []
+        corpora: list[Corpus] = []
         for language in languages:
             if language in language_to_code:
                 language = language_to_code[language]
@@ -3219,7 +3475,7 @@ class NER_MULTI_CONER_V2(MultiFileColumnCorpus):
 class NER_MULTI_WIKIANN(MultiCorpus):
     def __init__(
         self,
-        languages: Union[str, List[str]] = "en",
+        languages: Union[str, list[str]] = "en",
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
@@ -3231,7 +3487,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
 
         Parameters
         ----------
-        languages : Union[str, List[str]]
+        languages : Union[str, list[str]]
             Should be an abbreviation of a language ("en", "de",..) or a list of abbreviations.
             The datasets of all passed languages will be saved in one MultiCorpus.
             (Note that, even though listed on https://elisa-ie.github.io/wikiann/ some datasets are empty.
@@ -3262,7 +3518,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         # this list is handed to the multicorpus
 
         # list that contains the columncopora
-        corpora: List[Corpus] = []
+        corpora: list[Corpus] = []
 
         google_drive_path = "https://drive.google.com/uc?id="
         # download data if necessary
@@ -3274,8 +3530,6 @@ class NER_MULTI_WIKIANN(MultiCorpus):
             # if language not downloaded yet, download it
             if not language_folder.exists():
                 if first:
-                    import tarfile
-
                     import gdown
 
                     first = False
@@ -3290,10 +3544,8 @@ class NER_MULTI_WIKIANN(MultiCorpus):
 
                 # unzip
                 log.info("Extracting data...")
-                tar = tarfile.open(str(language_folder / language) + ".tar.gz", "r:gz")
-                # tar.extractall(language_folder,members=[tar.getmember(file_name)])
-                tar.extract(file_name, str(language_folder))
-                tar.close()
+                with tarfile.open(str(language_folder / language) + ".tar.gz", "r:gz") as tar:
+                    tar.extract(file_name, str(language_folder))
                 log.info("...done.")
 
                 # transform data into required format
@@ -3322,9 +3574,10 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         )
 
     def _silver_standard_to_simple_ner_annotation(self, data_file: Union[str, Path]):
-        with open(data_file, encoding="utf-8") as f_read, open(
-            str(data_file) + "_new", "w+", encoding="utf-8"
-        ) as f_write:
+        with (
+            open(data_file, encoding="utf-8") as f_read,
+            open(str(data_file) + "_new", "w+", encoding="utf-8") as f_write,
+        ):
             while True:
                 line = f_read.readline()
                 if line:
@@ -3640,7 +3893,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
 class NER_MULTI_XTREME(MultiCorpus):
     def __init__(
         self,
-        languages: Union[str, List[str]] = "en",
+        languages: Union[str, list[str]] = "en",
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
@@ -3652,7 +3905,7 @@ class NER_MULTI_XTREME(MultiCorpus):
 
         Parameters
         ----------
-        languages : Union[str, List[str]], optional
+        languages : Union[str, list[str]], optional
             Specify the languages you want to load. Provide an empty list or string to select all languages.
         base_path : Union[str, Path], optional
             Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this to point to a different folder but typically this should not be necessary.
@@ -3723,7 +3976,7 @@ class NER_MULTI_XTREME(MultiCorpus):
         # This list is handed to the multicorpus
 
         # list that contains the columncopora
-        corpora: List[Corpus] = []
+        corpora: list[Corpus] = []
 
         hu_path = "https://nlp.informatik.hu-berlin.de/resources/datasets/panx_dataset"
 
@@ -3745,12 +3998,10 @@ class NER_MULTI_XTREME(MultiCorpus):
 
                 # unzip
                 log.info("Extracting data...")
-                import tarfile
 
-                tar = tarfile.open(str(temp_file), "r:gz")
-                for part in ["train", "test", "dev"]:
-                    tar.extract(part, str(language_folder))
-                tar.close()
+                with tarfile.open(str(temp_file), "r:gz") as tar:
+                    for part in ["train", "test", "dev"]:
+                        tar.extract(part, str(language_folder))
                 log.info("...done.")
 
                 # transform data into required format
@@ -3789,7 +4040,7 @@ class NER_MULTI_XTREME(MultiCorpus):
 class NER_MULTI_WIKINER(MultiCorpus):
     def __init__(
         self,
-        languages: Union[str, List[str]] = "en",
+        languages: Union[str, list[str]] = "en",
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
@@ -3808,7 +4059,7 @@ class NER_MULTI_WIKINER(MultiCorpus):
 
         data_folder = base_path / dataset_name
 
-        corpora: List[Corpus] = []
+        corpora: list[Corpus] = []
         for language in languages:
             language_folder = data_folder / language
 
@@ -3848,11 +4099,14 @@ class NER_MULTI_WIKINER(MultiCorpus):
                 flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.bz2",
                 "rb",
             )
-            with bz_file as f, open(
-                flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train",
-                "w",
-                encoding="utf-8",
-            ) as out:
+            with (
+                bz_file as f,
+                open(
+                    flair.cache_root / "datasets" / dataset_name / f"aij-wikiner-{lc}-wp3.train",
+                    "w",
+                    encoding="utf-8",
+                ) as out,
+            ):
                 for lineb in f:
                     line = lineb.decode("utf-8")
                     words = line.split(" ")
@@ -4720,7 +4974,7 @@ class NER_ICDAR_EUROPEANA(ColumnCorpus):
 class NER_NERMUD(MultiCorpus):
     def __init__(
         self,
-        domains: Union[str, List[str]] = "all",
+        domains: Union[str, list[str]] = "all",
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = False,
         **corpusargs,
@@ -4759,7 +5013,7 @@ class NER_NERMUD(MultiCorpus):
 
         data_folder = base_path / dataset_name
 
-        corpora: List[Corpus] = []
+        corpora: list[Corpus] = []
 
         github_path = "https://raw.githubusercontent.com/dhfbk/KIND/main/evalita-2023"
 
@@ -4903,7 +5157,7 @@ class NER_ESTONIAN_NOISY(ColumnCorpus):
         return base_path
 
     @classmethod
-    def _load_features(cls, base_path) -> List[List[str]]:
+    def _load_features(cls, base_path) -> list[list[str]]:
         print(base_path)
         unpack_file(cached_path(cls.data_url, base_path), base_path, "zip", False)
         with open(f"{base_path}/estner.cnll", encoding="utf-8") as in_file:
@@ -4912,17 +5166,17 @@ class NER_ESTONIAN_NOISY(ColumnCorpus):
         return features
 
     @classmethod
-    def _process_clean_labels(cls, features) -> List[List[str]]:
+    def _process_clean_labels(cls, features) -> list[list[str]]:
         preinstances = [[instance[0], instance[len(instance) - 1]] for instance in features]
         return preinstances
 
     @classmethod
-    def _rmv_clean_labels(cls, features) -> List[str]:
+    def _rmv_clean_labels(cls, features) -> list[str]:
         rdcd_features = [feature[:-1] for feature in features]
         return rdcd_features
 
     @classmethod
-    def _load_noisy_labels(cls, version, base_path) -> List[str]:
+    def _load_noisy_labels(cls, version, base_path) -> list[str]:
         file_name = f"NoisyNER_labelset{version}.labels"
         cached_path(f"{cls.label_url}/{file_name}", base_path)
         with open(f"{base_path}/{file_name}", encoding="utf-8") as in_file:
@@ -4930,7 +5184,7 @@ class NER_ESTONIAN_NOISY(ColumnCorpus):
         return labels
 
     @classmethod
-    def _process_noisy_labels(cls, rdcd_features, labels) -> List[List[str]]:
+    def _process_noisy_labels(cls, rdcd_features, labels) -> list[list[str]]:
         instances = []
         label_idx = 0
         for feature in rdcd_features:
@@ -4945,7 +5199,7 @@ class NER_ESTONIAN_NOISY(ColumnCorpus):
         return instances
 
     @classmethod
-    def _delete_empty_labels(cls, version, preinstances) -> List[str]:
+    def _delete_empty_labels(cls, version, preinstances) -> list[str]:
         instances = []
         if version == 0:
             for instance in preinstances:
@@ -4958,7 +5212,7 @@ class NER_ESTONIAN_NOISY(ColumnCorpus):
         return instances
 
     @classmethod
-    def _split_data(cls, instances) -> Tuple[List[str], List[str], List[str]]:
+    def _split_data(cls, instances) -> tuple[list[str], list[str], list[str]]:
         train = instances[:185708]
         dev = instances[185708:208922]
         test = instances[208922:]
@@ -5179,7 +5433,7 @@ class NER_NOISEBENCH(ColumnCorpus):
 class MASAKHA_POS(MultiCorpus):
     def __init__(
         self,
-        languages: Union[str, List[str]] = "bam",
+        languages: Union[str, list[str]] = "bam",
         version: str = "v1",
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
@@ -5246,7 +5500,7 @@ class MASAKHA_POS(MultiCorpus):
         if languages == ["all"]:
             languages = supported_languages
 
-        corpora: List[Corpus] = []
+        corpora: list[Corpus] = []
         for language in languages:
             if language not in supported_languages:
                 log.error(f"Language '{language}' is not in list of supported languages!")

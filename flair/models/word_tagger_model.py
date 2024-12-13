@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 import torch
 from deprecated.sphinx import deprecated
@@ -99,7 +99,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         names = self.embeddings.get_names()
         return prediction_data_point.get_embedding(names)
 
-    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Token]:
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> list[Token]:
         # special handling during training if this is a span prediction problem
         if self.training and self.span_prediction_problem:
             for token in sentence.tokens:
@@ -125,7 +125,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
             for sentence in batch:
                 # internal variables
                 previous_tag = "O-"
-                current_span: List[Token] = []
+                current_span: list[Token] = []
 
                 for token in sentence:
                     bioes_tag = token.get_label(label_name).value
@@ -222,7 +222,7 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         return lines
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "TokenClassifier":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "TokenClassifier":
         from typing import cast
 
         return cast("TokenClassifier", super().load(model_path=model_path))

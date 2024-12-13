@@ -1,5 +1,4 @@
 import typing
-from typing import List
 
 import torch
 
@@ -69,7 +68,7 @@ class TextTripleClassifier(flair.nn.DefaultClassifier[TextTriple, TextTriple]):
     def label_type(self):
         return self._label_type
 
-    def _get_data_points_from_sentence(self, sentence: TextTriple) -> List[TextTriple]:
+    def _get_data_points_from_sentence(self, sentence: TextTriple) -> list[TextTriple]:
         return [sentence]
 
     def _get_embedding_for_data_point(self, prediction_data_point: TextTriple) -> torch.Tensor:
@@ -121,7 +120,7 @@ class TextTripleClassifier(flair.nn.DefaultClassifier[TextTriple, TextTriple]):
 
     def get_used_tokens(
         self, corpus: Corpus, context_length: int = 0, respect_document_boundaries: bool = True
-    ) -> typing.Iterable[List[str]]:
+    ) -> typing.Iterable[list[str]]:
         for sentence_pair in _iter_dataset(corpus.get_all_sentences()):
             yield [t.text for t in sentence_pair.first]
             yield [t.text for t in sentence_pair.first.left_context(context_length, respect_document_boundaries)]

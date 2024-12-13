@@ -1,8 +1,7 @@
 # Train a span classifier
 
 Span Classification models are used to model problems such as entity linking, where you already have extracted some
-relevant spans
-within the {term}`Sentence` and want to predict some more fine-grained labels.
+relevant spans within the `Sentence` and want to predict some more fine-grained labels.
 
 This tutorial section show you how to train models using the [Span Classifier](#flair.models.SpanClassifier) in Flair.
 
