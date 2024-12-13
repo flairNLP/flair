@@ -5297,28 +5297,30 @@ class NER_NOISEBENCH(ColumnCorpus):
     def _read_column_file(filename: Union[str, Path]) -> list[list[str]]:
         with open(filename, "r", errors="replace", encoding="utf-8") as file:
             lines = file.readlines()
-            all_x = []
-            point = []
+            all_sentences = []
+            sentence = []
             for line in lines:
                 if "\t" in line.strip():
-                    stripped_line = line.strip().split("\t") if "\t" in line.strip() else line.strip().split(" ")
+                    stripped_line = line.strip().split("\t") 
+                else:
+                    stripped_line = line.strip().split(" ")
 
-                point.append(stripped_line)
+                sentence.append(stripped_line)
                 if line.strip() == "":
-                    if len(point[:-1]) > 0:
-                        all_x.append(point[:-1])
-                    point = []
+                    if len(sentence[:-1]) > 0:
+                        all_sentences.append(sentence[:-1])
+                    sentence = []
 
-        if len(point) > 0:
-            all_x.append(point)
+        if len(sentence) > 0:
+            all_sentences.append(sentence)
 
-        all_x = all_x
-        return all_x
+        all_sentences = all_sentences
+        return all_sentences
 
     @staticmethod
-    def _save_to_column_file(filename: Union[str, Path], list: list[list[str]]) -> None:
+    def _save_to_column_file(filename: Union[str, Path], sentences: list[list[str]]) -> None:
         with open(filename, "w", encoding="utf-8") as f:
-            for sentence in list:
+            for sentence in sentences:
                 for token in sentence:
                     f.write("\t".join(token))
                     f.write("\n")
@@ -5391,11 +5393,10 @@ class NER_NOISEBENCH(ColumnCorpus):
         all_clean_test_sentences = self._read_column_file(self.cleanconll_base_path / f"{origin_dataset_name}.test")
 
         test_sentences = []
-        for s in all_clean_test_sentences:
-            new_s = []
-            for token in s:
-                new_s.append([token[0], token[4]])
-            test_sentences.append(new_s)
+
+        for sentence in all_clean_test_sentences:
+            new_sentence = [[tokens[0], tokens[4]] for tokens in sentence]
+            test_sentences.append(new_sentence)
 
         self._save_to_column_file(self.base_path / "clean.test", test_sentences)
 
