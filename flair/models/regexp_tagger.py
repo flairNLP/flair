@@ -41,7 +41,7 @@ class TokenCollection:
         """
         span_start: int = self.__tokens_start_pos.index(span[0])
         span_end: int = self.__tokens_end_pos.index(span[1])
-        return Span(self.tokens[span_start : span_end + 1])
+        return self.sentence[span_start : span_end + 1]
 
 
 class RegexpTagger:
