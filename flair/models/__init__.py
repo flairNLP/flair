@@ -14,6 +14,8 @@ from .text_classification_model import TextClassifier
 from .text_regression_model import TextRegressor
 from .word_tagger_model import TokenClassifier, WordTagger
 from .dual_encoder_ED import DualEncoderEntityDisambiguation, GreedyDualEncoderEntityDisambiguation
+from .dual_encoder_ED_frozen_v1 import DualEncoderEntityDisambiguation as DualEncoderEntityDisambiguation_frozen_v1, GreedyDualEncoderEntityDisambiguation as GreedyDualEncoderEntityDisambiguation_frozen_v1
+
 
 __all__ = [
     "SpanClassifier",
@@ -35,5 +37,7 @@ __all__ = [
     "ClusteringModel",
     "MultitaskModel",
     "DualEncoderEntityDisambiguation",
-    "GreedyDualEncoderEntityDisambiguation"
+    "GreedyDualEncoderEntityDisambiguation",
+    "DualEncoderEntityDisambiguation_frozen_v1",
+    "GreedyDualEncoderEntityDisambiguation_frozen_v1",
 ]
