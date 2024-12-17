@@ -657,9 +657,9 @@ class ModelTrainer(Pluggable):
 
                         # forward and backward for batch
                         for batch_step_no, batch_step in enumerate(batch_steps):
-                            skip_sync = multi_gpu and batch_step_no < len(batch_steps) - 1
-                            gradient_sync = contextlib.nullcontext() if skip_sync else self.ddp_model.no_sync()
-                            with gradient_sync:
+                            enable_gradient_sync = multi_gpu and batch_step_no == len(batch_steps) - 1
+                            sync_context = self.ddp_model.no_sync() if enable_gradient_sync else contextlib.nullcontext()
+                            with sync_context:
                                 # forward pass
                                 with torch.autocast(device_type=flair.device.type, enabled=use_amp):
                                     if multi_gpu:
@@ -690,6 +690,8 @@ class ModelTrainer(Pluggable):
                         self.dispatch("before_training_optimizer_step", **batch_kw)
 
                         # do the optimizer step
+                        if multi_gpu:
+                            self._scale_gradients(torch.distributed.get_world_size())  # DDP averages across processes but we want the sum
                         scaler.unscale_(self.optimizer)
                         if max_grad_norm is not None:
                             gradient_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
@@ -988,3 +990,8 @@ class ModelTrainer(Pluggable):
             self.model.save(model_file, checkpoint)
         if torch.distributed.is_initialized():
             torch.distributed.barrier()  # Prevent any process from loading a model until writing is complete
+
+    def _scale_gradients(self, constant):
+        for param in self.model.parameters():
+            if param.grad is not None:
+                param.grad.data.mul_(constant)
