@@ -656,33 +656,36 @@ class ModelTrainer(Pluggable):
                         batch_steps = self.get_batch_steps(batch, mini_batch_chunk_size=mini_batch_chunk_size)
 
                         # forward and backward for batch
-                        for batch_step in batch_steps:
-                            # forward pass
-                            with torch.autocast(device_type=flair.device.type, enabled=use_amp):
-                                if multi_gpu:
-                                    # We need to __call__ ddp_model() because this triggers hooks that sync gradients.
-                                    # But that calls forward rather than forward_loss. So we patch forward to redirect
-                                    # to forward_loss. Then undo the patch in case forward_loss itself calls forward.
-                                    def wrapped_forward_loss(*args, **kwargs2):
-                                        self.model.forward = original_forward
-                                        return self.model.forward_loss(*args, **kwargs2)
+                        for batch_step_no, batch_step in enumerate(batch_steps):
+                            skip_sync = multi_gpu and batch_step_no < len(batch_steps) - 1
+                            gradient_sync = contextlib.nullcontext() if skip_sync else self.ddp_model.no_sync()
+                            with gradient_sync:
+                                # forward pass
+                                with torch.autocast(device_type=flair.device.type, enabled=use_amp):
+                                    if multi_gpu:
+                                        # We need to __call__ ddp_model() because this triggers hooks that sync gradients.
+                                        # But that calls forward rather than forward_loss. So we patch forward to redirect
+                                        # to forward_loss. Then undo the patch in case forward_loss itself calls forward.
+                                        def wrapped_forward_loss(*args, **kwargs2):
+                                            self.model.forward = original_forward
+                                            return self.model.forward_loss(*args, **kwargs2)
 
-                                    self.model.forward = wrapped_forward_loss
-                                    loss, datapoint_count = self.ddp_model(batch_step)
-                                else:
-                                    loss, datapoint_count = self.model.forward_loss(batch_step)
+                                        self.model.forward = wrapped_forward_loss
+                                        loss, datapoint_count = self.ddp_model(batch_step)
+                                    else:
+                                        loss, datapoint_count = self.model.forward_loss(batch_step)
 
-                            batch_train_samples += datapoint_count
-                            batch_train_loss += loss.item()
+                                batch_train_samples += datapoint_count
+                                batch_train_loss += loss.item()
 
-                            self._backward(scaler.scale(loss))
+                                self._backward(scaler.scale(loss))
 
-                            # identify dynamic embeddings (always deleted) on first sentence
-                            if dynamic_embeddings is None:
-                                dynamic_embeddings = identify_dynamic_embeddings(batch)
+                                # identify dynamic embeddings (always deleted) on first sentence
+                                if dynamic_embeddings is None:
+                                    dynamic_embeddings = identify_dynamic_embeddings(batch)
 
-                            # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                            store_embeddings(batch_step, embeddings_storage_mode, dynamic_embeddings)
+                                # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+                                store_embeddings(batch_step, embeddings_storage_mode, dynamic_embeddings)
 
                         self.dispatch("before_training_optimizer_step", **batch_kw)
 
