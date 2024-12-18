@@ -1,4 +1,3 @@
-from .deepncm_classification_model import DeepNCMDecoder
 from .entity_linker_model import SpanClassifier
 from .entity_mention_linking import EntityMentionLinker
 from .language_model import LanguageModel
@@ -38,5 +37,4 @@ __all__ = [
     "TextClassifier",
     "TextRegressor",
     "MultitaskModel",
-    "DeepNCMDecoder",
 ]

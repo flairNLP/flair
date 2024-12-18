@@ -4,7 +4,8 @@ import torch
 from flair.data import Sentence
 from flair.datasets import ClassificationCorpus
 from flair.embeddings import TransformerDocumentEmbeddings
-from flair.models import DeepNCMDecoder, TextClassifier
+from flair.models import TextClassifier
+from flair.nn import DeepNCMDecoder
 from flair.trainers import ModelTrainer
 from flair.trainers.plugins import DeepNCMPlugin
 from tests.model_test_utils import BaseModelTest

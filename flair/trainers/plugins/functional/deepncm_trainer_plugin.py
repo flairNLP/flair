@@ -1,7 +1,7 @@
 import torch
 
 from flair.models import MultitaskModel
-from flair.models.deepncm_classification_model import DeepNCMDecoder
+from flair.nn import DeepNCMDecoder
 from flair.trainers.plugins.base import TrainerPlugin
 
 
