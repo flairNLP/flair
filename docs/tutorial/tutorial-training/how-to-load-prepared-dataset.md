@@ -115,7 +115,8 @@ This will print out the created dictionary:
 Dictionary with 17 tags: PROPN, PUNCT, ADJ, NOUN, VERB, DET, ADP, AUX, PRON, PART, SCONJ, NUM, ADV, CCONJ, X, INTJ, SYM
 ```
 
-#### Dictionaries for other label types
+
+### Printing label statistics
 
 If you don't know the label types in a corpus, just call [`Corpus.make_label_dictionary`](#flair.data.Corpus.make_label_dictionary) with
 any random label name (e.g. `corpus.make_label_dictionary(label_type='abcd')`). This will print
@@ -138,17 +139,6 @@ tense_dictionary = corpus.make_label_dictionary(label_type='number')
 
 If you print these dictionaries, you will find that the POS dictionary contains 50 tags and the number dictionary only 2 for this corpus (singular and plural).
 
-
-#### Dictionaries for other corpora types
-
-The method [`Corpus.make_label_dictionary`](#flair.data.Corpus.make_label_dictionary) can be used for any corpus, including text classification corpora:
-
-```python
-# create label dictionary for a text classification task
-from flair.datasets import TREC_6
-corpus = TREC_6()
-corpus.make_label_dictionary('question_class')
-```
 
 ### The MultiCorpus Object
 
@@ -175,6 +165,7 @@ The [`MultiCorpus`](#flair.data.MultiCorpus) inherits from [`Corpus`](#flair.dat
 Flair supports many datasets out of the box. It usually automatically downloads and sets up the data the first time you
 call the corresponding constructor ID.
 The datasets are split into multiple modules, however they all can be imported from `flair.datasets` too.
+
 You can look up the respective modules to find the possible datasets.
 
 The following datasets are supported:
