@@ -3,8 +3,9 @@ import logging
 import math
 import random
 import time
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional, Type, Union
+from typing import Any, Optional, Union
 
 import torch
 from torch import cuda
@@ -155,16 +156,16 @@ class LanguageModelTrainer:
         self,
         model: LanguageModel,
         corpus: TextCorpus,
-        optimizer: Type[Optimizer] = SGD,
+        optimizer: type[Optimizer] = SGD,
         test_mode: bool = False,
         epoch: int = 0,
         split: int = 0,
         loss: float = 10000,
-        optimizer_state: Optional[Dict[str, Any]] = None,
-        scaler_state: Optional[Dict[str, Any]] = None,
+        optimizer_state: Optional[dict[str, Any]] = None,
+        scaler_state: Optional[dict[str, Any]] = None,
     ) -> None:
         self.model: LanguageModel = model
-        self.optimizer: Type[Optimizer] = optimizer
+        self.optimizer: type[Optimizer] = optimizer
         self.corpus: TextCorpus = corpus
         self.test_mode: bool = test_mode
 
@@ -362,7 +363,7 @@ class LanguageModelTrainer:
                     )
 
                     with open(loss_txt, "a") as myfile:
-                        myfile.write("%s\n" % summary)
+                        myfile.write(f"{summary}\n")
 
                     log.info(summary)
                     log.info("-" * 89)
@@ -386,7 +387,7 @@ class LanguageModelTrainer:
 
         summary = f"TEST: valid loss {test_loss:5.4f} | valid ppl {math.exp(test_loss):8.4f}"
         with open(loss_txt, "a") as myfile:
-            myfile.write("%s\n" % summary)
+            myfile.write(f"{summary}\n")
 
         log.info(summary)
         log.info("-" * 89)
@@ -440,7 +441,7 @@ class LanguageModelTrainer:
     def load_checkpoint(
         checkpoint_file: Union[str, Path],
         corpus: TextCorpus,
-        optimizer: Type[Optimizer] = SGD,
+        optimizer: type[Optimizer] = SGD,
     ):
         if isinstance(checkpoint_file, str):
             checkpoint_file = Path(checkpoint_file)

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, Union
+from typing import Any, Optional, Union
 
 from segtok.segmenter import split_multi
 
@@ -16,16 +16,34 @@ class SentenceSplitter(ABC):
     r"""An abstract class representing a :class:`SentenceSplitter`.
 
     Sentence splitters are used to represent algorithms and models to split plain text into
-    sentences and individual tokens / words. All subclasses should overwrite :meth:`splits`,
-    which splits the given plain text into a sequence of sentences (:class:`Sentence`). The
-    individual sentences are in turn subdivided into tokens / words. In most cases, this can
-    be controlled by passing custom implementation of :class:`Tokenizer`.
+    sentences and individual tokens / words. All subclasses should overwrite :func:`split`,
+    which splits the given plain text into a list of :class:`flair.data.Sentence` objects. The
+    individual sentences are in turn subdivided into tokens. In most cases, this can
+    be controlled by passing custom implementation of :class:`flair.tokenization.Tokenizer`.
 
     Moreover, subclasses may overwrite :meth:`name`, returning a unique identifier representing
     the sentence splitter's configuration.
+
+    The most common class in Flair that implements this base class is :class:`SegtokSentenceSplitter`.
     """
 
-    def split(self, text: str, link_sentences: Optional[bool] = True) -> List[Sentence]:
+    def split(self, text: str, link_sentences: bool = True) -> list[Sentence]:
+        """
+        Takes as input a text as a plain string and outputs a list of :class:`flair.data.Sentence` objects.
+
+        If link_sentences is set (by default, it is). The :class:`flair.data.Sentence` objects will include pointers
+        to the preceding and following sentences in the original text. This way, the original sequence information will
+        always be preserved.
+
+        Args:
+            text (str): The plain text to split.
+            link_sentences (bool): If set to True, :class:`flair.data.Sentence` objects will include pointers
+                to the preceding and following sentences in the original text.
+
+        Returns:
+            A list of :class:`flair.data.Sentence` objects that each represent one sentence in the given text.
+
+        """
         sentences = self._perform_split(text)
         if not link_sentences:
             return sentences
@@ -34,15 +52,17 @@ class SentenceSplitter(ABC):
         return sentences
 
     @abstractmethod
-    def _perform_split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> list[Sentence]:
         raise NotImplementedError
 
     @property
     def name(self) -> str:
+        """A string identifier of the sentence splitter."""
         return self.__class__.__name__
 
     @property
     def tokenizer(self) -> Tokenizer:
+        """The :class:`flair.tokenization.Tokenizer` class used to tokenize sentences after they are split."""
         raise NotImplementedError
 
     @tokenizer.setter
@@ -62,11 +82,11 @@ class SegtokSentenceSplitter(SentenceSplitter):
         super().__init__()
         self._tokenizer = tokenizer
 
-    def _perform_split(self, text: str) -> List[Sentence]:
-        plain_sentences: List[str] = split_multi(text)
+    def _perform_split(self, text: str) -> list[Sentence]:
+        plain_sentences: list[str] = split_multi(text)
         sentence_offset = 0
 
-        sentences: List[Sentence] = []
+        sentences: list[Sentence] = []
         for sentence in plain_sentences:
             try:
                 sentence_offset = text.index(sentence, sentence_offset)
@@ -133,7 +153,7 @@ class SpacySentenceSplitter(SentenceSplitter):
         else:
             self._tokenizer = tokenizer
 
-    def _perform_split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> list[Sentence]:
         document = self.model(text)
 
         sentences = [
@@ -192,7 +212,7 @@ class TagSentenceSplitter(SentenceSplitter):
         self._tokenizer = tokenizer
         self.tag = tag
 
-    def _perform_split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> list[Sentence]:
         plain_sentences = text.split(self.tag)
 
         sentences = []
@@ -252,7 +272,7 @@ class NoSentenceSplitter(SentenceSplitter):
         super().__init__()
         self._tokenizer = tokenizer
 
-    def _perform_split(self, text: str) -> List[Sentence]:
+    def _perform_split(self, text: str) -> list[Sentence]:
         return [Sentence(text=text, use_tokenizer=self._tokenizer, start_position=0)]
 
     @property

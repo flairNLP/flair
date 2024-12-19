@@ -5,8 +5,9 @@ import logging
 import os
 import re
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Optional, Union
 
 import conllu
 import gdown
@@ -279,7 +280,7 @@ class RE_ENGLISH_TACRED(ColumnCorpus):
                             token_list = self._tacred_example_to_token_list(example)
                             target_file.write(token_list.serialize())
 
-    def _tacred_example_to_token_list(self, example: Dict[str, Any]) -> conllu.TokenList:
+    def _tacred_example_to_token_list(self, example: dict[str, Any]) -> conllu.TokenList:
         id_ = example["id"]
         tokens = example["token"]
         ner = example["stanford_ner"]
@@ -379,7 +380,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
         }
         metadata_parsers = {"__fallback__": lambda k, v: tuple(k.split())}
 
-        lines: List[str] = []
+        lines: list[str] = []
         for index, line in enumerate(source_file):
             if index > 0 and line.startswith("#"):
                 source_str = "".join(lines)
@@ -416,9 +417,10 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
         ]
 
         for source_filename, target_filename in zip(source_filenames, target_filenames):
-            with (source_data_folder / source_filename).open(encoding="utf-8") as source_file, (
-                data_folder / target_filename
-            ).open("w", encoding="utf-8") as target_file:
+            with (
+                (source_data_folder / source_filename).open(encoding="utf-8") as source_file,
+                (data_folder / target_filename).open("w", encoding="utf-8") as target_file,
+            ):
                 # write CoNLL-U Plus header
                 target_file.write("# global.columns = id form ner\n")
 
@@ -426,7 +428,7 @@ class RE_ENGLISH_CONLL04(ColumnCorpus):
                     token_list = self._src_token_list_to_token_list(src_token_list)
                     target_file.write(token_list.serialize())
 
-    def _bio_tags_to_spans(self, tags: List[str]) -> List[Tuple[int, int]]:
+    def _bio_tags_to_spans(self, tags: list[str]) -> list[tuple[int, int]]:
         spans = []
         span_start = 0
         span_end = 0
@@ -590,7 +592,7 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
                         ent2 = arg2.split(":")[1]
                         pmid_to_relations[pmid].add((rel_type, ent1, ent2))
 
-                tokenlists: List[conllu.TokenList] = []
+                tokenlists: list[conllu.TokenList] = []
                 with zip_file.open(
                     f"drugprot-gs-training-development/{split}/drugprot_{split}_abstracs.tsv"
                 ) as abstracts_file:
@@ -652,13 +654,13 @@ class RE_ENGLISH_DRUGPROT(ColumnCorpus):
     def drugprot_document_to_tokenlists(
         self,
         pmid: str,
-        title_sentences: List[Sentence],
-        abstract_sentences: List[Sentence],
+        title_sentences: list[Sentence],
+        abstract_sentences: list[Sentence],
         abstract_offset: int,
-        entities: Dict[str, Tuple[str, int, int, str]],
-        relations: Set[Tuple[str, str, str]],
-    ) -> List[conllu.TokenList]:
-        tokenlists: List[conllu.TokenList] = []
+        entities: dict[str, tuple[str, int, int, str]],
+        relations: set[tuple[str, str, str]],
+    ) -> list[conllu.TokenList]:
+        tokenlists: list[conllu.TokenList] = []
         sentence_id = 1
         for offset, sents in [
             (0, title_sentences),

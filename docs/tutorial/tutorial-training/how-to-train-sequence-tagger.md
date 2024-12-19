@@ -223,3 +223,6 @@ trainer.train('resources/taggers/example-universal-pos',
 This gives you a multilingual model. Try experimenting with more languages!
 
 
+## Next 
+
+Next, learn [how to train a text classifier](how-to-train-text-classifier.md).

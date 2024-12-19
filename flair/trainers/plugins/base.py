@@ -1,27 +1,24 @@
 import logging
 from collections import defaultdict
+from collections.abc import Iterator, Sequence
 from inspect import isclass, signature
 from itertools import count
 from queue import Queue
 from typing import (
     Any,
     Callable,
-    Dict,
-    Iterator,
-    List,
     NewType,
     Optional,
-    Sequence,
-    Set,
-    Type,
     Union,
     cast,
 )
 
+from flair.distributed_utils import is_main_process
+
 log = logging.getLogger("flair")
 
 
-PluginArgument = Union["BasePlugin", Type["BasePlugin"]]
+PluginArgument = Union["BasePlugin", type["BasePlugin"]]
 HookHandleId = NewType("HookHandleId", int)
 
 EventIdenifier = str
@@ -34,7 +31,7 @@ class TrainingInterrupt(Exception):
 class Pluggable:
     """Dispatches events which attached plugins can react to."""
 
-    valid_events: Optional[Set[EventIdenifier]] = None
+    valid_events: Optional[set[EventIdenifier]] = None
 
     def __init__(self, *, plugins: Sequence[PluginArgument] = []) -> None:
         """Initialize a `Pluggable`.
@@ -42,11 +39,11 @@ class Pluggable:
         Args:
             plugins: Plugins which should be attached to this `Pluggable`.
         """
-        self._hook_handles: Dict[EventIdenifier, Dict[HookHandleId, HookHandle]] = defaultdict(dict)
+        self._hook_handles: dict[EventIdenifier, dict[HookHandleId, HookHandle]] = defaultdict(dict)
 
         self._hook_handle_id_counter = count()
 
-        self._plugins: List[BasePlugin] = []
+        self._plugins: list[BasePlugin] = []
 
         # This flag tracks, whether an event is currently being processed (otherwise it is added to the queue)
         self._processing_events = False
@@ -62,6 +59,11 @@ class Pluggable:
 
     @property
     def plugins(self):
+        """Returns all plugins attached to this instance as a list of :class:`BasePlugin`.
+
+        Returns:
+            List of :class:`BasePlugin` instances attached to this `Pluggable`.
+        """
         return self._plugins
 
     def append_plugin(self, plugin):
@@ -181,7 +183,7 @@ class BasePlugin:
 
     def __init__(self) -> None:
         """Initialize the base plugin."""
-        self._hook_handles: List[HookHandle] = []
+        self._hook_handles: list[HookHandle] = []
         self._pluggable: Optional[Pluggable] = None
 
     def attach_to(self, pluggable: Pluggable):
@@ -189,6 +191,8 @@ class BasePlugin:
         assert self._pluggable is None
         assert len(self._hook_handles) == 0
 
+        if not is_main_process() and not self.attach_to_all_processes:
+            return
         self._pluggable = pluggable
 
         pluggable.append_plugin(self)
@@ -257,10 +261,15 @@ class BasePlugin:
     def pluggable(self) -> Optional[Pluggable]:
         return self._pluggable
 
+    @property
+    def attach_to_all_processes(self) -> bool:
+        """If set, the plugin will be attached to all processes when distributed, not just the main process."""
+        return True
+
     def __str__(self) -> str:
         return self.__class__.__name__
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         return {"__cls__": f"{self.__module__}.{self.__class__.__name__}"}
 
 

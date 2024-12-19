@@ -24,8 +24,8 @@ the code should hopefully be easy.
 
 ### Setup
 
-Flair requires python-3.8 or higher. To make sure your code also runs on the oldest supported
-python version, it is recommended to use python-3.8.x for flair development.
+Flair requires python-3.9 or higher. To make sure your code also runs on the oldest supported
+python version, it is recommended to use python-3.9.x for flair development.
 
 Create a python environment of your preference and run:
 ```bash

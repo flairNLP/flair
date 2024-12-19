@@ -1,4 +1,8 @@
 flair
 =====
 
-.. automodule:: flair
+.. currentmodule:: flair
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:

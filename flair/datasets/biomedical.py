@@ -7,6 +7,7 @@ import shutil
 import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
+from collections.abc import Iterable
 from copy import copy
 from operator import attrgetter
 from pathlib import Path
@@ -18,7 +19,7 @@ from tarfile import (
     StreamError,
     TarError,
 )
-from typing import Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple, Optional, Union
 from zipfile import BadZipFile, LargeZipFile
 
 import ftfy
@@ -56,7 +57,7 @@ class Entity:
     text as well as the type of entity (e.g. Chemical, Gene, and so on).
     """
 
-    def __init__(self, char_span: Tuple[int, int], entity_type: str) -> None:
+    def __init__(self, char_span: tuple[int, int], entity_type: str) -> None:
         assert char_span[0] < char_span[1]
         self.char_span = range(*char_span)
         self.type = entity_type
@@ -98,9 +99,9 @@ class InternalBioNerDataset:
 
     def __init__(
         self,
-        documents: Dict[str, str],
-        entities_per_document: Dict[str, List[Entity]],
-        entity_types: List[str] = [],
+        documents: dict[str, str],
+        entities_per_document: dict[str, list[Entity]],
+        entity_types: list[str] = [],
     ):
         self.documents = documents
         self.entities_per_document = entities_per_document
@@ -134,7 +135,7 @@ def merge_datasets(data_sets: Iterable[InternalBioNerDataset]):
 
 
 def filter_and_map_entities(
-    dataset: InternalBioNerDataset, entity_type_to_canonical: Dict[str, str]
+    dataset: InternalBioNerDataset, entity_type_to_canonical: dict[str, str]
 ) -> InternalBioNerDataset:
     mapped_entities_per_document = {}
     entity_types = list(entity_type_to_canonical.values())
@@ -223,7 +224,7 @@ def bioc_to_internal(bioc_file: Path):
 
     for document in Tqdm.tqdm(documents, desc="Converting to internal"):
         document_id = document.xpath("./id")[0].text
-        texts: List[str] = []
+        texts: list[str] = []
         entities = []
 
         for passage in document.xpath("passage"):
@@ -358,7 +359,7 @@ class CoNLLWriter:
         """
         self.sentence_splitter = sentence_splitter
 
-    def process_dataset(self, datasets: Dict[str, InternalBioNerDataset], out_dir: Path):
+    def process_dataset(self, datasets: dict[str, InternalBioNerDataset], out_dir: Path):
         if "train" in datasets:
             self.write_to_conll(datasets["train"], out_dir / (self.sentence_splitter.name + "_train.conll"))
         if "dev" in datasets:
@@ -450,7 +451,7 @@ class HunerDataset(ColumnCorpus, ABC):
 
     @staticmethod
     @abstractmethod
-    def split_url() -> Union[str, List[str]]:
+    def split_url() -> Union[str, list[str]]:
         raise NotImplementedError
 
     def get_corpus_sentence_splitter(self) -> Optional[SentenceSplitter]:
@@ -596,8 +597,8 @@ class BIO_INFER(ColumnCorpus):
 
     @classmethod
     def parse_dataset(cls, original_file: Path):
-        documents: Dict[str, str] = {}
-        entities_per_document: Dict[str, List[Entity]] = {}
+        documents: dict[str, str] = {}
+        entities_per_document: dict[str, list[Entity]] = {}
 
         tree = etree.parse(str(original_file))
         sentence_elems = tree.xpath("//sentence")
@@ -647,7 +648,7 @@ class HUNER_GENE_BIO_INFER(HunerDataset):
 
         return merge_datasets([train_data, test_data])
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -726,14 +727,14 @@ class HunerJNLPBA:
 
     @classmethod
     def read_file(cls, input_iob_file: Path, sentence_tag: str) -> InternalBioNerDataset:
-        documents: Dict[str, str] = {}
-        entities_per_document: Dict[str, List[Entity]] = defaultdict(list)
+        documents: dict[str, str] = {}
+        entities_per_document: dict[str, list[Entity]] = defaultdict(list)
 
         with open(str(input_iob_file), encoding="utf8") as file_reader:
             document_id: Optional[str] = None
             document_text: Optional[str] = None
 
-            entities: List[Entity] = []
+            entities: list[Entity] = []
             entity_type: Optional[str] = None
             entity_start = 0
 
@@ -818,7 +819,7 @@ class HUNER_JNLPBA(HunerDataset):
 
         return merge_datasets([train_data, test_data])
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -994,7 +995,7 @@ class HUNER_ALL_CELL_FINDER(HunerDataset):
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    def split_url() -> List[str]:
+    def split_url() -> list[str]:
         split_urls = [
             "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cellfinder_cellline",
             "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/cellfinder_species",
@@ -1009,7 +1010,7 @@ class HUNER_ALL_CELL_FINDER(HunerDataset):
 
         return data
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -1176,7 +1177,7 @@ class HUNER_MIRNA(HunerDataset):
 
         return merge_datasets([train_data, test_data])
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -1566,7 +1567,7 @@ class HUNER_LOCTEXT(HunerDataset):
 
         return filter_and_map_entities(dataset, self.entity_type_mapping)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -1747,8 +1748,8 @@ class IEPA(ColumnCorpus):
 
     @classmethod
     def parse_dataset(cls, original_file: Path):
-        documents: Dict[str, str] = {}
-        entities_per_document: Dict[str, List[Entity]] = {}
+        documents: dict[str, str] = {}
+        entities_per_document: dict[str, list[Entity]] = {}
 
         tree = etree.parse(str(original_file))
         document_elems = tree.xpath("//document")
@@ -1905,7 +1906,7 @@ class HUNER_SPECIES_LINNEAUS(HunerDataset):
     def to_internal(self, data_dir: Path) -> InternalBioNerDataset:
         return LINNEAUS.download_and_parse_dataset(data_dir)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -1995,7 +1996,7 @@ class HUNER_DISEASE_CDR(HunerDataset):
 
         return all_data
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2021,7 +2022,7 @@ class HUNER_CHEMICAL_CDR(HunerDataset):
 
         return all_data
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2033,7 +2034,7 @@ class HUNER_ALL_CDR(HunerDataset):
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    def split_url() -> List[str]:
+    def split_url() -> list[str]:
         split_urls = [
             "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/CDRDisease",
             "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/CDRChem",
@@ -2052,7 +2053,7 @@ class HUNER_ALL_CDR(HunerDataset):
 
         return all_data
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2167,7 +2168,7 @@ class HUNER_GENE_VARIOME(HunerDataset):
 
         return all_data
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2190,7 +2191,7 @@ class HUNER_DISEASE_VARIOME(HunerDataset):
 
         return all_data
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2213,7 +2214,7 @@ class HUNER_SPECIES_VARIOME(HunerDataset):
 
         return all_data
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2230,7 +2231,7 @@ class HUNER_ALL_VARIOME(HunerDataset):
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    def split_url() -> List[str]:
+    def split_url() -> list[str]:
         split_urls = [
             "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/variome_gene",
             "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/variome_disease",
@@ -2247,7 +2248,7 @@ class HUNER_ALL_VARIOME(HunerDataset):
 
         return all_data
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2343,7 +2344,7 @@ class NCBI_DISEASE(ColumnCorpus):
         with open(str(input_file), encoding="utf8") as file:
             document_id = ""
             document_text = ""
-            entities: List[Entity] = []
+            entities: list[Entity] = []
 
             c = 1
             for line in file:
@@ -2406,7 +2407,7 @@ class HUNER_DISEASE_NCBI(HunerDataset):
 
         return merge_datasets([train_data, dev_data, test_data])
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2455,13 +2456,13 @@ class ScaiCorpus(ColumnCorpus):
 
     @staticmethod
     def parse_input_file(input_file: Path):
-        documents: Dict[str, str] = {}
-        entities_per_document: Dict[str, List[Entity]] = {}
+        documents: dict[str, str] = {}
+        entities_per_document: dict[str, list[Entity]] = {}
 
         with open(str(input_file), encoding="iso-8859-1") as file:
             document_id = None
             document_text = ""
-            entities: List[Entity] = []
+            entities: list[Entity] = []
             entity_type = None
             entity_start = 0
 
@@ -2584,7 +2585,7 @@ class HUNER_CHEMICAL_SCAI(HunerDataset):
 
         return filter_and_map_entities(corpus, self.entity_type_mapping)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2605,7 +2606,7 @@ class HUNER_DISEASE_SCAI(HunerDataset):
 
         return filter_and_map_entities(corpus, self.entity_type_mapping)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2628,7 +2629,7 @@ class HUNER_ALL_SCAI(HunerDataset):
         super().__init__(*args, **kwargs)
 
     @staticmethod
-    def split_url() -> List[str]:
+    def split_url() -> list[str]:
         split_urls = [
             "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/scai_chemicals",
             "https://raw.githubusercontent.com/hu-ner/huner/master/ner_scripts/splits/scai_disease",
@@ -2641,7 +2642,7 @@ class HUNER_ALL_SCAI(HunerDataset):
 
         return filter_and_map_entities(corpus, self.entity_type_mapping)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2763,7 +2764,7 @@ class HUNER_GENE_OSIRIS(HunerDataset):
 
         return filter_and_map_entities(corpus, self.entity_type_mapping)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2863,7 +2864,7 @@ class HUNER_SPECIES_S800(HunerDataset):
 
         return data
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -2945,7 +2946,7 @@ class GPRO(ColumnCorpus):
     @staticmethod
     def parse_input_file(text_file: Path, ann_file: Path) -> InternalBioNerDataset:
         documents = {}
-        entities_per_document: Dict[str, List[Entity]] = {}
+        entities_per_document: dict[str, list[Entity]] = {}
 
         document_title_length = {}
 
@@ -3010,7 +3011,7 @@ class HUNER_GENE_GPRO(HunerDataset):
 
         return merge_datasets([train_data, dev_data])
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -3071,8 +3072,8 @@ class DECA(ColumnCorpus):
 
     @staticmethod
     def parse_corpus(text_dir: Path, gold_file: Path) -> InternalBioNerDataset:
-        documents: Dict[str, str] = {}
-        entities_per_document: Dict[str, List[Entity]] = {}
+        documents: dict[str, str] = {}
+        entities_per_document: dict[str, list[Entity]] = {}
 
         text_files = [file for file in os.listdir(str(text_dir)) if not file.startswith(".")]
 
@@ -3122,7 +3123,7 @@ class HUNER_GENE_DECA(HunerDataset):
 
         return DECA.parse_corpus(text_dir, gold_file)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -3221,7 +3222,7 @@ class FSU(ColumnCorpus):
                         akt_pos += len(words[i]) + 1
                     sentences += [tmp_sentence]
 
-                pre_entities: List[List[Tuple[int, int, str]]] = [[] for _ in sentences]
+                pre_entities: list[list[tuple[int, int, str]]] = [[] for _ in sentences]
                 for protein in protein_tree:
                     for span in protein.get("span").split(","):
                         start = word_to_id[span.split("..")[0]]
@@ -3287,7 +3288,7 @@ class HUNER_GENE_FSU(HunerDataset):
 
         return filter_and_map_entities(corpus, self.entity_type_mapping)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -3450,8 +3451,8 @@ class BIOSEMANTICS(ColumnCorpus):
             ]
         text_files = sorted(text_files)
 
-        documents: Dict[str, str] = {}
-        entities_per_document: Dict[str, List[Entity]] = {}
+        documents: dict[str, str] = {}
+        entities_per_document: dict[str, list[Entity]] = {}
 
         for text_file in sorted(text_files):
             document_id = os.path.basename(text_file).split("_")[0]
@@ -3590,7 +3591,7 @@ class BC2GM(ColumnCorpus):
     @staticmethod
     def parse_dataset(text_file: Path, ann_file: Path) -> InternalBioNerDataset:
         documents = {}
-        entities_per_document: Dict[str, List[Entity]] = {}
+        entities_per_document: dict[str, list[Entity]] = {}
 
         with open(str(text_file), encoding="utf8") as text_file_reader:
             for line in text_file_reader:
@@ -3733,7 +3734,7 @@ class CEMP(ColumnCorpus):
     @staticmethod
     def parse_input_file(text_file: Path, ann_file: Path) -> InternalBioNerDataset:
         documents = {}
-        entities_per_document: Dict[str, List[Entity]] = {}
+        entities_per_document: dict[str, list[Entity]] = {}
         document_abstract_length = {}
 
         with open(str(text_file), encoding="utf8") as text_reader:
@@ -3806,7 +3807,7 @@ class HUNER_CHEMICAL_CEMP(HunerDataset):
         dataset = merge_datasets([train_data, dev_data])
         return filter_and_map_entities(dataset, self.entity_type_mapping)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -3945,7 +3946,7 @@ class HUNER_CHEBI(HunerDataset):
         dataset = CHEBI.parse_dataset(corpus_dir, annotator=annotator)
         return filter_and_map_entities(dataset, self.entity_type_mapping)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -4038,7 +4039,7 @@ class BioNLPCorpus(ColumnCorpus):
 
     @staticmethod
     @abstractmethod
-    def download_corpus(data_folder: Path) -> Tuple[Path, Path, Path]:
+    def download_corpus(data_folder: Path) -> tuple[Path, Path, Path]:
         pass
 
     @staticmethod
@@ -4083,7 +4084,7 @@ class BIONLP2013_PC(BioNLPCorpus):
     """
 
     @staticmethod
-    def download_corpus(download_folder: Path) -> Tuple[Path, Path, Path]:
+    def download_corpus(download_folder: Path) -> tuple[Path, Path, Path]:
         train_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_training_data.tar.gz"
         dev_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_development_data.tar.gz"
         test_url = "http://2013.bionlp-st.org/tasks/BioNLP-ST_2013_PC_test_data.tar.gz"
@@ -4125,7 +4126,7 @@ class BIONLP2013_CG(BioNLPCorpus):
     """
 
     @staticmethod
-    def download_corpus(download_folder: Path) -> Tuple[Path, Path, Path]:
+    def download_corpus(download_folder: Path) -> tuple[Path, Path, Path]:
         url = "https://github.com/openbiocorpora/bionlp-st-2013-cg/archive/refs/heads/master.zip"
 
         cached_path(url, download_folder)
@@ -4292,9 +4293,10 @@ class BioBertHelper(ColumnCorpus):
     @staticmethod
     def convert_and_write(download_folder, data_folder, tag_type):
         data_folder.mkdir(parents=True, exist_ok=True)
-        with (download_folder / "train.tsv").open(encoding="utf8") as f_in, (data_folder / "train.conll").open(
-            "w", encoding="utf8"
-        ) as f_out:
+        with (
+            (download_folder / "train.tsv").open(encoding="utf8") as f_in,
+            (data_folder / "train.conll").open("w", encoding="utf8") as f_out,
+        ):
             for line in f_in:
                 if not line.strip():
                     f_out.write("\n")
@@ -4305,9 +4307,10 @@ class BioBertHelper(ColumnCorpus):
                     tag = tag + "-" + tag_type
                 f_out.write(f"{token} {tag}\n")
 
-        with (download_folder / "devel.tsv").open(encoding="utf8") as f_in, (data_folder / "dev.conll").open(
-            "w", encoding="utf8"
-        ) as f_out:
+        with (
+            (download_folder / "devel.tsv").open(encoding="utf8") as f_in,
+            (data_folder / "dev.conll").open("w", encoding="utf8") as f_out,
+        ):
             for line in f_in:
                 if not line.strip():
                     f_out.write("\n")
@@ -4317,9 +4320,10 @@ class BioBertHelper(ColumnCorpus):
                     tag = tag + "-" + tag_type
                 f_out.write(f"{token} {tag}\n")
 
-        with (download_folder / "test.tsv").open(encoding="utf8") as f_in, (data_folder / "test.conll").open(
-            "w", encoding="utf8"
-        ) as f_out:
+        with (
+            (download_folder / "test.tsv").open(encoding="utf8") as f_in,
+            (data_folder / "test.conll").open("w", encoding="utf8") as f_out,
+        ):
             for line in f_in:
                 if not line.strip():
                     f_out.write("\n")
@@ -4638,7 +4642,7 @@ class CRAFT_V4(ColumnCorpus):
     @staticmethod
     def prepare_splits(
         data_dir: Path, corpus: InternalBioNerDataset
-    ) -> Tuple[InternalBioNerDataset, InternalBioNerDataset, InternalBioNerDataset]:
+    ) -> tuple[InternalBioNerDataset, InternalBioNerDataset, InternalBioNerDataset]:
         splits_dir = data_dir / "splits"
         os.makedirs(str(splits_dir), exist_ok=True)
 
@@ -4734,7 +4738,7 @@ class HUNER_CRAFT_V4(HunerDataset):
 
         return filter_and_map_entities(corpus, self.entity_type_mapping)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -4792,7 +4796,7 @@ class HUNER_BIONLP2013_CG(HunerDataset):
 
         return filter_and_map_entities(corpus, self.entity_type_mapping)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -4896,7 +4900,7 @@ class AZDZ(ColumnCorpus):
             prev_sentence_id: Optional[str] = None
 
             document_text: Optional[str] = None
-            entities: List[Entity] = []
+            entities: list[Entity] = []
             offset: Optional[int] = None
 
             for line in azdz_reader:
@@ -5014,7 +5018,7 @@ class HUNER_DISEASE_PDR(HunerDataset):
 
         return corpus_data
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return self.entity_type_mapping
 
 
@@ -5221,7 +5225,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
             sample_missing_splits=True,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         """Return the mapping of entity type given in the dataset to canonical types.
 
         Note, if a entity type is not present in the map it is discarded.
@@ -5279,8 +5283,8 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
 
     def to_internal_dataset(self, dataset, split: str) -> InternalBioNerDataset:
         """Converts a dataset given in hugging datasets format to our internal corpus representation."""
-        id_to_text: Dict[str, str] = {}
-        id_to_entities: Dict[str, list] = {}
+        id_to_text: dict[str, str] = {}
+        id_to_entities: dict[str, list] = {}
         entity_type_set = set()
         for document in dataset[split]:
             document_id = document["document_id"]
@@ -5331,10 +5335,10 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
 
     def bin_search_passage(
         self,
-        passages: List[Tuple[str, List[Tuple[int, int]]]],
+        passages: list[tuple[str, list[tuple[int, int]]]],
         low: int,
         high: int,
-        entity: Dict,
+        entity: dict,
     ):
         """Helper methods to find the passage to a given entity mention (incl. offset).
 
@@ -5381,7 +5385,7 @@ class HUNER_GENE_NLM_GENE(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {
             "Gene": GENE_TAG,
             "GENERIF": GENE_TAG,
@@ -5414,7 +5418,7 @@ class HUNER_GENE_DRUGPROT(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"GENE-N": GENE_TAG, "GENE-Y": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5441,7 +5445,7 @@ class HUNER_CHEMICAL_DRUGPROT(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"CHEMICAL": CHEMICAL_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5452,7 +5456,7 @@ class HUNER_ALL_DRUGPROT(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, dataset_name="drugprot", **kwargs)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"GENE-N": GENE_TAG, "GENE-Y": GENE_TAG, "CHEMICAL": CHEMICAL_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5479,7 +5483,7 @@ class HUNER_GENE_BIORED(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"GeneOrGeneProduct": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5506,7 +5510,7 @@ class HUNER_CHEMICAL_BIORED(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"ChemicalEntity": CHEMICAL_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5533,7 +5537,7 @@ class HUNER_DISEASE_BIORED(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"DiseaseOrPhenotypicFeature": DISEASE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5560,7 +5564,7 @@ class HUNER_SPECIES_BIORED(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"OrganismTaxon": SPECIES_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5587,7 +5591,7 @@ class HUNER_CELL_LINE_BIORED(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"CellLine": CELL_LINE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5598,7 +5602,7 @@ class HUNER_ALL_BIORED(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, dataset_name="biored", **kwargs)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {
             "GeneOrGeneProduct": GENE_TAG,
             "ChemicalEntity": CHEMICAL_TAG,
@@ -5631,7 +5635,7 @@ class HUNER_GENE_CPI(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"protein": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5658,7 +5662,7 @@ class HUNER_CHEMICAL_CPI(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"compound": CHEMICAL_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5669,7 +5673,7 @@ class HUNER_ALL_CPI(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, dataset_name="cpi", **kwargs)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"protein": GENE_TAG, "compound": CHEMICAL_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5696,7 +5700,7 @@ class HUNER_GENE_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Gene_or_gene_product": GENE_TAG, "Complex": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5723,7 +5727,7 @@ class HUNER_CHEMICAL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Simple_chemical": CHEMICAL_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5734,7 +5738,7 @@ class HUNER_ALL_BIONLP_ST_2013_PC(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, dataset_name="bionlp_st_2013_pc", **kwargs)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {
             "Gene_or_gene_product": GENE_TAG,
             "Complex": GENE_TAG,
@@ -5765,7 +5769,7 @@ class HUNER_GENE_BIONLP_ST_2013_GE(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"protein": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5792,7 +5796,7 @@ class HUNER_GENE_BIONLP_ST_2011_GE(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Protein": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5819,7 +5823,7 @@ class HUNER_GENE_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Protein": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5846,7 +5850,7 @@ class HUNER_CHEMICAL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Chemical": CHEMICAL_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5873,7 +5877,7 @@ class HUNER_SPECIES_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Organism": SPECIES_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5884,7 +5888,7 @@ class HUNER_ALL_BIONLP_ST_2011_ID(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, dataset_name="bionlp_st_2011_id", **kwargs)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {
             "Protein": GENE_TAG,
             "Chemical": CHEMICAL_TAG,
@@ -5915,7 +5919,7 @@ class HUNER_GENE_BIONLP_ST_2011_REL(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Protein": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5942,7 +5946,7 @@ class HUNER_GENE_BIONLP_ST_2011_EPI(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Protein": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5969,7 +5973,7 @@ class HUNER_SPECIES_BIONLP_ST_2019_BB(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Microorganism": SPECIES_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -5996,7 +6000,7 @@ class HUNER_GENE_BIOID(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"gene": GENE_TAG, "protein": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -6023,7 +6027,7 @@ class HUNER_CHEMICAL_BIOID(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"chemical": CHEMICAL_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -6050,7 +6054,7 @@ class HUNER_SPECIES_BIOID(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"species": SPECIES_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -6077,7 +6081,7 @@ class HUNER_CELL_LINE_BIOID(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         # TODO whether cell or cell line is the correct tag
         return {"cellline": CELL_LINE_TAG}
 
@@ -6089,7 +6093,7 @@ class HUNER_ALL_BIOID(BIGBIO_NER_CORPUS):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, dataset_name="bioid", **kwargs)
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         # TODO whether cell or cell line is the correct tag
         return {
             "gene": GENE_TAG,
@@ -6123,7 +6127,7 @@ class HUNER_GENE_GNORMPLUS(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Gene": GENE_TAG, "FamilyName": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -6155,7 +6159,7 @@ class HUNER_GENE_PROGENE(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"progene_text": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -6182,7 +6186,7 @@ class HUNER_CHEMICAL_NLM_CHEM(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Chemical": CHEMICAL_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -6209,7 +6213,7 @@ class HUNER_GENE_SETH_CORPUS(BIGBIO_NER_CORPUS):
             test_split_name=test_split_name,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Gene": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:
@@ -6224,7 +6228,7 @@ class HUNER_GENE_TMVAR_V3(BIGBIO_NER_CORPUS):
             **kwargs,
         )
 
-    def get_entity_type_mapping(self) -> Optional[Dict]:
+    def get_entity_type_mapping(self) -> Optional[dict]:
         return {"Gene": GENE_TAG}
 
     def build_corpus_directory_name(self, dataset_name: str) -> str:

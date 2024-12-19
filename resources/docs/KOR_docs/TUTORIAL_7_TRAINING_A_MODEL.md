@@ -313,7 +313,7 @@ label_type = 'ner'
 # 3. 말뭉치에서 레이블 사전 만들기
 label_dict = corpus.make_label_dictionary(label_type=label_type, add_unk=False)
 # 4. 임베딩 초기화하기
-embedding_types: List[TokenEmbeddings] = [
+embedding_types: list[TokenEmbeddings] = [
     WordEmbeddings('glove')
 ]
 embeddings: StackedEmbeddings = StackedEmbeddings(embeddings=embedding_types)
