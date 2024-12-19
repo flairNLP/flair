@@ -1,9 +1,9 @@
 import copy
+import gzip
 import json
 import logging
 import os
 import re
-import gzip
 import shutil
 import tarfile
 import tempfile
@@ -5225,6 +5225,179 @@ class NER_ESTONIAN_NOISY(ColumnCorpus):
             for instance in data:
                 out_file.write(column_separator.join(instance))
                 out_file.write("\n")
+
+
+class NER_NOISEBENCH(ColumnCorpus):
+    label_url = "https://raw.githubusercontent.com/elenamer/NoiseBench/main/data/annotations/"
+    SAVE_TRAINDEV_FILE = False
+
+    def __init__(
+        self,
+        noise: str = "clean",
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ) -> None:
+        """Initialize the NoiseBench corpus.
+
+        Args:
+            noise (string): Chooses the labelset for the data.
+                clean (default): Clean labels
+                crowd,crowdbest,expert,distant,weak,llm : Different kinds of noisy labelsets (details: ...)
+            base_path (Optional[Union[str, Path]]): Path to the data.
+                Default is None, meaning the corpus gets automatically downloaded and saved.
+                You can override this by passing a path to a directory containing the unprocessed files but typically this
+                should not be necessary.
+            in_memory (bool): If True the dataset is kept in memory achieving speedups in training.
+            **corpusargs: The arguments propagated to :meth:'flair.datasets.ColumnCorpus.__init__'.
+        """
+        VALUE_NOISE_VALUES = ["clean", "crowd", "crowdbest", "expert", "distant", "weak", "llm"]
+
+        if noise not in VALUE_NOISE_VALUES:
+            raise ValueError(
+                f"Unsupported value for noise type argument. Got {noise}, expected one of {VALUE_NOISE_VALUES}!"
+            )
+
+        self.base_path = flair.cache_root / "datasets" / "noisebench" if not base_path else Path(base_path)
+
+        filename = "clean" if noise == "clean" else f"noise_{noise}"
+        file_paths = [
+            self.base_path / f"{filename}.train",
+            self.base_path / f"{filename}.dev",
+            self.base_path / "clean.test",
+        ]
+        files_exist = [path.exists() for path in file_paths]
+
+        if not all(files_exist):
+            cached_path(f"{self.label_url}/{filename}.traindev", self.base_path / "annotations_only")
+            cached_path(f"{self.label_url}/index.txt", self.base_path / "annotations_only")
+
+            cleanconll_corpus = CLEANCONLL()
+
+            self.cleanconll_base_path = flair.cache_root / "datasets" / cleanconll_corpus.__class__.__name__.lower()
+
+            # create dataset files from index and train/test splits
+            self._generate_data_files(filename, cleanconll_corpus.__class__.__name__.lower())
+
+        super().__init__(
+            data_folder=self.base_path,
+            train_file=f"{filename}.train",
+            dev_file=f"{filename}.dev",
+            test_file="clean.test",  # test set is always clean (without noise)
+            column_format={0: "text", 1: "ner"},
+            in_memory=in_memory,
+            column_delimiter="\t",
+            document_separator_token="-DOCSTART-",
+            **corpusargs,
+        )
+
+    @staticmethod
+    def _read_column_file(filename: Union[str, Path]) -> list[list[list[str]]]:
+        with open(filename, errors="replace", encoding="utf-8") as file:
+            lines = file.readlines()
+            all_sentences = []
+            sentence = []
+            for line in lines:
+                stripped_line = line.strip().split("\t") if "\t" in line.strip() else line.strip().split(" ")
+
+                sentence.append(stripped_line)
+                if line.strip() == "":
+                    if len(sentence[:-1]) > 0:
+                        all_sentences.append(sentence[:-1])
+                    sentence = []
+
+        if len(sentence) > 0:
+            all_sentences.append(sentence)
+
+        all_sentences = all_sentences
+        return all_sentences
+
+    @staticmethod
+    def _save_to_column_file(filename: Union[str, Path], sentences: list[list[list[str]]]) -> None:
+        with open(filename, "w", encoding="utf-8") as f:
+            for sentence in sentences:
+                for token in sentence:
+                    f.write("\t".join(token))
+                    f.write("\n")
+                f.write("\n")
+
+    def _create_train_dev_splits(
+        self, filename: Path, all_sentences: Optional[list] = None, datestring: str = "1996-08-24"
+    ) -> None:
+        if not all_sentences:
+            all_sentences = self._read_column_file(filename)
+
+        train_sentences = []
+        dev_sentences = []
+        for i, s in enumerate(all_sentences):
+            if "DOCSTART" in s[0][0]:
+                assert i + 3 < len(all_sentences)  # last document is too short
+
+                # news date is usually in 3rd or 4th sentence of each article
+                if datestring in all_sentences[i + 2][-1][0] or datestring in all_sentences[i + 3][-1][0]:
+                    save_to_dev = True
+                else:
+                    save_to_dev = False
+
+            if save_to_dev:
+                dev_sentences.append(s)
+            else:
+                train_sentences.append(s)
+
+        self._save_to_column_file(
+            filename.parent / f"{filename.stem}.dev",
+            dev_sentences,
+        )
+        self._save_to_column_file(
+            filename.parent / f"{filename.stem}.train",
+            train_sentences,
+        )
+
+    def _merge_tokens_labels(
+        self, corpus: str, all_clean_sentences: list, token_indices: list
+    ) -> list[list[list[str]]]:
+        # generate NoiseBench dataset variants, given CleanCoNLL, noisy label files and index file
+
+        noisy_labels = self._read_column_file(self.base_path / "annotations_only" / f"{corpus}.traindev")
+        for index, sentence in zip(token_indices, noisy_labels):
+
+            if index.strip() == "docstart":
+                assert len(sentence) == 1
+                sentence[0][0] = "-DOCSTART-"
+                continue
+            clean_sentence = all_clean_sentences[int(index.strip())]
+
+            assert len(clean_sentence) == len(sentence)  # this means indexing is wrong
+
+            for token, label in zip(clean_sentence, sentence):
+                label[0] = token[0]  # token[0] -> text, token[1] -> BIO label
+        if self.SAVE_TRAINDEV_FILE:
+            self._save_to_column_file(self.base_path / f"{corpus}.traindev", noisy_labels)
+        return noisy_labels
+
+    def _generate_data_files(self, filename: str, origin_dataset_name: str) -> None:
+
+        with open(self.base_path / "annotations_only" / "index.txt", encoding="utf-8") as index_file:
+            token_indices = index_file.readlines()
+            all_clean_sentences = self._read_column_file(self.cleanconll_base_path / f"{origin_dataset_name}.train")
+
+            # os.makedirs(os.path.join('data','noisebench'), exist_ok=True)
+
+            noisy_sentences = self._merge_tokens_labels(filename, all_clean_sentences, token_indices)
+            self._create_train_dev_splits(
+                all_sentences=noisy_sentences, filename=self.base_path / f"{filename}.traindev"
+            )
+
+        # copy test set
+        all_clean_test_sentences = self._read_column_file(self.cleanconll_base_path / f"{origin_dataset_name}.test")
+
+        test_sentences = []
+
+        for sentence in all_clean_test_sentences:
+            new_sentence = [[tokens[0], tokens[4]] for tokens in sentence]
+            test_sentences.append(new_sentence)
+
+        self._save_to_column_file(self.base_path / "clean.test", test_sentences)
 
 
 class MASAKHA_POS(MultiCorpus):
