@@ -22,6 +22,17 @@ log = logging.getLogger("flair")
 
 
 class SequenceTagger(flair.nn.Classifier[Sentence]):
+    """The SequenceTagger is one of two main architectures in Flair used for sequence tagging.
+
+    Sequence tagging means classifying words in a sentence, for instance for part-of-speech tagging or named entity
+    recognition. The SequenceTagger implements the "classic" model based on the LSTM-CRF architecture: words are first
+    embedded using one or multiple :class:`flair.embeddings.TokenEmbeddings`, these embeddings are then passed to the
+    LSTM. Its hidden states for each input word are used to make the final prediction with a softmax classifier.
+    For decoding, the SequenceTagger by default uses a CRF approach.
+
+    Alternatively, you can use the class :class:`flair.models.TokenClassifier` for sequence tagging without a LSTM-CRF.
+    """
+
     def __init__(
         self,
         embeddings: TokenEmbeddings,
@@ -44,9 +55,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         init_from_state_dict: bool = False,
         allow_unk_predictions: bool = False,
     ) -> None:
-        """Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
-
-        In case of multitask learning, pass shared embeddings or shared rnn into respective attributes.
+        """Constructor for this class.
 
         Args:
             embeddings: Embeddings to use during training and prediction
@@ -268,6 +277,16 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return RNN
 
     def forward_loss(self, sentences: list[Sentence]) -> tuple[torch.Tensor, int]:
+        """Conducts a forward pass through the SequenceTagger using labeled sentences and return the loss.
+
+        Args:
+            sentences: A batch of labeled sentences.
+
+        Returns:
+            A tuple consisting of the loss tensor and the number of tokens in the batch.
+
+        """
+
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
@@ -291,7 +310,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return sentence_tensor, lengths
 
     def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):
-        """Forward propagation through network.
+        """Forward pass through the SequenceTagger.
 
         Args:
             sentence_tensor: A tensor representing the batch of sentences.
@@ -439,7 +458,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         embedding_storage_mode="none",
         force_token_predictions: bool = False,
     ):
-        """Predicts labels for current batch with CRF or Softmax.
+        """Call this method to predict labels for sentences.
+
+        Predictions are directly added to the Sentence objects that are passed to this method. This means that
+        the predict() method does not return predictions. Rather, predictions are stored at each sentence and can
+        be retrieved by calling :func:`flair.data.Sentence.get_labels()` on each :class:`flair.data.Sentence`.
 
         Args:
             sentences: List of sentences in batch
