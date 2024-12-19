@@ -993,7 +993,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         state["locked_dropout"] = self.locked_dropout.dropout_rate
         state["multi_label"] = self.multi_label
         state["multi_label_threshold"] = self.multi_label_threshold
-        state["loss_weights"] = self.loss_weights
+        state["loss_weights"] = self.weight_dict
         state["train_on_gold_pairs_only"] = self.train_on_gold_pairs_only
         state["inverse_model"] = self.inverse_model
         if self._custom_decoder:
