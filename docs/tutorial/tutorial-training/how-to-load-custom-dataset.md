@@ -159,3 +159,6 @@ example we chose `label_type='topic'` to denote that we are loading a corpus wit
 
 
 
+## Next 
+
+Next, learn [how to train a sequence tagger](how-to-train-sequence-tagger.md).

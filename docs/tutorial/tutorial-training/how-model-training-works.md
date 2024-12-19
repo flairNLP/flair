@@ -279,16 +279,10 @@ print(sentence.to_tagged_string())
 
 If the model works well, it will correctly tag 'love' as a verb in this example.
 
-## Summary
+## Next
 
-This tutorial gave you a general overview of the main steps to train a model:
+Congrats, you now have a general overview of the main steps to train a model in Flair!
 
--    load a corpus
--    choose a label type
--    create a label dictionary
--    choose embeddings
--    initialize model
--    initialize trainer
--    train
+Next, learn about the [two main training approaches in Flair](train-vs-fine-tune.md).
 
 
