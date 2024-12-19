@@ -165,13 +165,22 @@ The [`MultiCorpus`](#flair.data.MultiCorpus) inherits from [`Corpus`](#flair.dat
 Flair supports many datasets out of the box. It usually automatically downloads and sets up the data the first time you
 call the corresponding constructor ID.
 The datasets are split into multiple modules, however they all can be imported from `flair.datasets` too.
+
+They are imported from :mod:`flair.datasets`.
+
+They are imported from :mod:`flair.datasets`
+
+[datasets](module:flair.datasets)
+
+To learn more about the class, refer to the :class:`flair.data.Corpus` class.
+
 You can look up the respective modules to find the possible datasets.
 
 The following datasets are supported:
 
 | Task                                | Module                                                                                                                                      |
 |-------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| Named Entity Recognition            | [flair.datasets.sequence_labeling](../../api/datasets/sequence_labeling.html)                                                                                                  |
+| Named Entity Recognition            | [flair.datasets.sequence_labeling](#flair.datasets.sequence_labeling)                                                                       |
 | Text Classification                 | [flair.datasets.document_classification](#flair.datasets.document_classification)                                                           |
 | Text Regression                     | [flair.datasets.document_classification](#flair.datasets.document_classification)                                                           |
 | Biomedical Named Entity Recognition | [flair.datasets.biomedical](#flair.datasets.biomedical)                                                                                     |
