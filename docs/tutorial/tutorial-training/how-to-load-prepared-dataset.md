@@ -166,14 +166,6 @@ Flair supports many datasets out of the box. It usually automatically downloads 
 call the corresponding constructor ID.
 The datasets are split into multiple modules, however they all can be imported from `flair.datasets` too.
 
-They are imported from :mod:`flair.datasets`.
-
-They are imported from :mod:`flair.datasets`
-
-[datasets](module:flair.datasets)
-
-To learn more about the class, refer to the :class:`flair.data.Corpus` class.
-
 You can look up the respective modules to find the possible datasets.
 
 The following datasets are supported:
