@@ -1,14 +1,15 @@
 import time
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Iterable, Iterator, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 RecordType = Enum("RecordType", ["scalar", "image", "histogram", "string", "scalar_list"])
 
 
 class MetricName:
     def __init__(self, name) -> None:
-        self.parts: Tuple[str, ...]
+        self.parts: tuple[str, ...]
 
         if isinstance(name, str):
             self.parts = tuple(name.split("/"))

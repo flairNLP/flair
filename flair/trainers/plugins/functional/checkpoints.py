@@ -1,5 +1,7 @@
 import logging
-from typing import Any, Dict
+from typing import Any
+
+import torch
 
 from flair.trainers.plugins.base import TrainerPlugin
 
@@ -29,7 +31,11 @@ class CheckpointPlugin(TrainerPlugin):
             model_name = "model_epoch_" + str(epoch) + ".pt"
             self.model.save(self.base_path / model_name, checkpoint=self.save_optimizer_state)
 
-    def get_state(self) -> Dict[str, Any]:
+    @property
+    def attach_to_all_processes(self) -> bool:
+        return False
+
+    def get_state(self) -> dict[str, Any]:
         return {
             **super().get_state(),
             "base_path": str(self.base_path),

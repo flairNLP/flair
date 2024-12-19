@@ -12,7 +12,7 @@ class TestTarsTagger(BaseModelTest):
     train_label_type = "ner"
     model_args = {"task_name": "2_NER"}
     training_args = {"mini_batch_size": 1, "max_epochs": 2}
-    pretrained_model = "tars-ner"
+    # pretrained_model = "tars-ner"  # disabled due to too much space requirements.
 
     @pytest.fixture()
     def corpus(self, tasks_base_path):

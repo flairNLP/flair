@@ -1,5 +1,5 @@
 from operator import itemgetter
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Optional
 
 import pytest
 from torch.utils.data import Dataset
@@ -20,7 +20,7 @@ from flair.models.relation_classifier_model import (
 )
 from tests.model_test_utils import BaseModelTest
 
-encoding_strategies: Dict[EncodingStrategy, List[Tuple[str, str]]] = {
+encoding_strategies: dict[EncodingStrategy, list[tuple[str, str]]] = {
     EntityMask(): [("[HEAD]", "[TAIL]") for _ in range(7)],
     TypedEntityMask(): [
         ("[HEAD-ORG]", "[TAIL-PER]"),
@@ -140,7 +140,7 @@ class TestRelationClassifier(BaseModelTest):
         return sentence
 
     def assert_training_example(self, predicted_training_example):
-        relations: List[Relation] = predicted_training_example.get_relations("relation")
+        relations: list[Relation] = predicted_training_example.get_relations("relation")
         assert len(relations) == 2
 
         # Intel ----founded_by---> Gordon Moore
@@ -164,7 +164,7 @@ class TestRelationClassifier(BaseModelTest):
     @staticmethod
     def check_transformation_correctness(
         split: Optional[Dataset],
-        ground_truth: Set[Tuple[str, Tuple[str, ...]]],
+        ground_truth: set[tuple[str, tuple[str, ...]]],
     ) -> None:
         # Ground truth is a set of tuples of (<Sentence Text>, <Relation Label Values>)
         assert split is not None
@@ -190,7 +190,7 @@ class TestRelationClassifier(BaseModelTest):
         embeddings: TransformerDocumentEmbeddings,
         cross_augmentation: bool,
         encoding_strategy: EncodingStrategy,
-        encoded_entity_pairs: List[Tuple[str, str]],
+        encoded_entity_pairs: list[tuple[str, str]],
     ) -> None:
         label_dictionary = corpus.make_label_dictionary("relation")
         model: RelationClassifier = self.build_model(
@@ -200,7 +200,7 @@ class TestRelationClassifier(BaseModelTest):
 
         # Check sentence masking and relation label annotation on
         # training, validation and test dataset (in this test the splits are the same)
-        ground_truth: Set[Tuple[str, Tuple[str, ...]]] = {
+        ground_truth: set[tuple[str, tuple[str, ...]]] = {
             # Entity pair permutations of: "Larry Page and Sergey Brin founded Google ."
             (f"{encoded_entity_pairs[0][1]} and Sergey Brin founded {encoded_entity_pairs[0][0]} .", ("founded_by",)),
             (f"Larry Page and {encoded_entity_pairs[1][1]} founded {encoded_entity_pairs[1][0]} .", ("founded_by",)),

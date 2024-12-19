@@ -4,7 +4,7 @@ import re
 import tempfile
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 import numpy as np
 import torch
@@ -64,7 +64,7 @@ class TransformerWordEmbeddings(TokenEmbeddings, TransformerEmbeddings):
 class StackedEmbeddings(TokenEmbeddings):
     """A stack of embeddings, used if you need to combine several different embedding types."""
 
-    def __init__(self, embeddings: List[TokenEmbeddings], overwrite_names: bool = True) -> None:
+    def __init__(self, embeddings: list[TokenEmbeddings], overwrite_names: bool = True) -> None:
         """The constructor takes a list of embeddings to be combined."""
         super().__init__()
 
@@ -88,7 +88,7 @@ class StackedEmbeddings(TokenEmbeddings):
             self.__embedding_length += embedding.embedding_length
         self.eval()
 
-    def embed(self, sentences: Union[Sentence, List[Sentence]], static_embeddings: bool = True):
+    def embed(self, sentences: Union[Sentence, list[Sentence]], static_embeddings: bool = True):
         # if only one sentence is passed, convert to list of sentence
         if type(sentences) is Sentence:
             sentences = [sentences]
@@ -104,7 +104,7 @@ class StackedEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         for embedding in self.embeddings:
             embedding._add_embeddings_internal(sentences)
 
@@ -113,7 +113,7 @@ class StackedEmbeddings(TokenEmbeddings):
     def __str__(self) -> str:
         return f'StackedEmbeddings [{",".join([str(e) for e in self.embeddings])}]'
 
-    def get_names(self) -> List[str]:
+    def get_names(self) -> list[str]:
         """Returns a list of embedding names.
 
         In most cases, it is just a list with one item, namely the name of this embedding. But in some cases, the
@@ -125,13 +125,6 @@ class StackedEmbeddings(TokenEmbeddings):
             self.__names = [name for embedding in self.embeddings for name in embedding.get_names()]
 
         return self.__names
-
-    def get_named_embeddings_dict(self) -> Dict:
-        named_embeddings_dict = {}
-        for embedding in self.embeddings:
-            named_embeddings_dict.update(embedding.get_named_embeddings_dict())
-
-        return named_embeddings_dict
 
     @classmethod
     def from_params(cls, params):
@@ -154,7 +147,7 @@ class WordEmbeddings(TokenEmbeddings):
         force_cpu: bool = True,
         stable: bool = False,
         no_header: bool = False,
-        vocab: Optional[Dict[str, int]] = None,
+        vocab: Optional[dict[str, int]] = None,
         embedding_length: Optional[int] = None,
         name: Optional[str] = None,
     ) -> None:
@@ -334,10 +327,10 @@ class WordEmbeddings(TokenEmbeddings):
         else:
             return len(self.vocab)  # <unk> token
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         tokens = [token for sentence in sentences for token in sentence.tokens]
 
-        word_indices: List[int] = []
+        word_indices: list[int] = []
         for token in tokens:
             word = token.text if self.field is None else token.get_label(self.field).value
             word_indices.append(self.get_cached_token_index(word))
@@ -386,7 +379,7 @@ class WordEmbeddings(TokenEmbeddings):
             return None
         return super().__getattribute__(item)
 
-    def __setstate__(self, state: Dict[str, Any]):
+    def __setstate__(self, state: dict[str, Any]):
         state.pop("get_cached_vec", None)
         state.setdefault("embeddings", state["name"])
         state.setdefault("force_cpu", True)
@@ -416,10 +409,10 @@ class WordEmbeddings(TokenEmbeddings):
         super().__setstate__(state)
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "WordEmbeddings":
+    def from_params(cls, params: dict[str, Any]) -> "WordEmbeddings":
         return cls(embeddings=None, **params)
 
-    def to_params(self) -> Dict[str, Any]:
+    def to_params(self) -> dict[str, Any]:
         return {
             "vocab": self.vocab,
             "stable": self.stable,
@@ -487,7 +480,7 @@ class CharacterEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: list[Sentence]):
         for sentence in sentences:
             tokens_char_indices = []
 
@@ -520,7 +513,7 @@ class CharacterEmbeddings(TokenEmbeddings):
 
             character_embeddings = self.char_embedding(chars).transpose(0, 1)
 
-            packed = torch.nn.utils.rnn.pack_padded_sequence(character_embeddings, chars2_length)  # type: ignore[arg-type]
+            packed = torch.nn.utils.rnn.pack_padded_sequence(character_embeddings, chars2_length)
 
             lstm_out, self.hidden = self.char_rnn(packed)
 
@@ -544,10 +537,10 @@ class CharacterEmbeddings(TokenEmbeddings):
         return self.name
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "CharacterEmbeddings":
+    def from_params(cls, params: dict[str, Any]) -> "CharacterEmbeddings":
         return cls(**params)
 
-    def to_params(self) -> Dict[str, Any]:
+    def to_params(self) -> dict[str, Any]:
         return {
             "path_to_char_dict": self.char_dictionary,
             "char_embedding_dim": self.char_embedding_dim,
@@ -793,7 +786,7 @@ class FlairEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         # gradients are enable if fine-tuning is enabled
         gradient_context = torch.enable_grad() if self.fine_tune else torch.no_grad()
 
@@ -885,7 +878,7 @@ class FlairEmbeddings(TokenEmbeddings):
         lm = LanguageModel(**model_params)
         return cls(lm, **params)
 
-    def __setstate__(self, d: Dict[str, Any]):
+    def __setstate__(self, d: dict[str, Any]):
         # make compatible with old models
         d.setdefault("fine_tune", False)
         d.setdefault("chars_per_chunk", 512)
@@ -920,8 +913,8 @@ class PooledFlairEmbeddings(TokenEmbeddings):
         self.name = self.context_embeddings.name + "-context"
 
         # these fields are for the embedding memory
-        self.word_embeddings: Dict[str, torch.Tensor] = {}
-        self.word_count: Dict[str, int] = {}
+        self.word_embeddings: dict[str, torch.Tensor] = {}
+        self.word_count: dict[str, int] = {}
 
         # whether to add only capitalized words to memory (faster runtime and lower memory consumption)
         self.only_capitalized = only_capitalized
@@ -940,7 +933,7 @@ class PooledFlairEmbeddings(TokenEmbeddings):
             self.word_embeddings = {}
             self.word_count = {}
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         self.context_embeddings.embed(sentences)
 
         # if we keep a pooling, it needs to be updated continuously
@@ -989,10 +982,10 @@ class PooledFlairEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def get_names(self) -> List[str]:
+    def get_names(self) -> list[str]:
         return [self.name, self.context_embeddings.name]
 
-    def __setstate__(self, d: Dict[str, Any]):
+    def __setstate__(self, d: dict[str, Any]):
         super().__setstate__(d)
 
         if flair.device.type != "cpu":
@@ -1073,7 +1066,7 @@ class FastTextEmbeddings(TokenEmbeddings):
         word_embedding = torch.tensor(word_embedding.tolist(), device=flair.device, dtype=torch.float)
         return word_embedding
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         for sentence in sentences:
             for token in sentence.tokens:
                 word = token.text if self.field is None else token.get_label(self.field).value
@@ -1152,7 +1145,7 @@ class OneHotEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         tokens = [t for sentence in sentences for t in sentence.tokens]
 
         if self.field == "text":
@@ -1240,7 +1233,7 @@ class HashEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]):
+    def _add_embeddings_internal(self, sentences: list[Sentence]):
         def get_idx_for_item(text):
             hash_function = hashlib.new(self.__hash_method)
             hash_function.update(bytes(str(text), "utf-8"))
@@ -1282,7 +1275,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
         self.name: str = "muse-crosslingual"
         self.static_embeddings = True
         self.__embedding_length: int = 300
-        self.language_embeddings: Dict[str, Any] = {}
+        self.language_embeddings: dict[str, Any] = {}
         (KeyedVectors,) = lazy_import("word-embeddings", "gensim.models", "KeyedVectors")
         self.kv = KeyedVectors
         super().__init__()
@@ -1304,7 +1297,7 @@ class MuseCrosslingualEmbeddings(TokenEmbeddings):
         word_embedding = torch.tensor(word_embedding, device=flair.device, dtype=torch.float)
         return word_embedding
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         for _i, sentence in enumerate(sentences):
             language_code = sentence.get_language_code()
             supported = [
@@ -1465,10 +1458,10 @@ class BytePairEmbeddings(TokenEmbeddings):
     def embedding_length(self) -> int:
         return self.__embedding_length
 
-    def _add_embeddings_internal(self, sentences: List[Sentence]) -> List[Sentence]:
+    def _add_embeddings_internal(self, sentences: list[Sentence]) -> list[Sentence]:
         tokens = [token for sentence in sentences for token in sentence.tokens]
 
-        word_indices: List[List[int]] = []
+        word_indices: list[list[int]] = []
         for token in tokens:
             word = token.text if self.field is None else token.get_label(self.field).value
 
@@ -1601,13 +1594,13 @@ class NILCEmbeddings(WordEmbeddings):
         else:
             embeddings_path = embeddings
 
-        log.info("Reading embeddings from %s" % embeddings_path)
+        log.info("Reading embeddings from %s", embeddings_path)
         super().__init__(
             embeddings=str(extract_single_zip_file(embeddings_path, cache_dir=cache_dir)), name="NILC-" + embeddings
         )
 
     @classmethod
-    def from_params(cls, params: Dict[str, Any]) -> "WordEmbeddings":
+    def from_params(cls, params: dict[str, Any]) -> "WordEmbeddings":
         #  no need to recreate as NILCEmbeddings
         return WordEmbeddings(embeddings=None, **params)
 

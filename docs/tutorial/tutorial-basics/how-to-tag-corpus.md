@@ -30,3 +30,10 @@ for sentence in sentences:
 Using the `mini_batch_size` parameter of the [`Classifier.predict()`](#flair.nn.Classifier.predict) method, you can set the size of mini batches passed to the
 tagger. Depending on your resources, you might want to play around with this parameter to optimize speed.
 
+### Next 
+
+That's it - you completed tutorial 1! Congrats!
+
+You've learned how basic classes work and how to use Flair to make various predictions. 
+
+Next, you can check out our tutorial on how to [train your own model](../tutorial-training/how-model-training-works.md).

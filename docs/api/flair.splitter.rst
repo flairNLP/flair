@@ -1,4 +1,9 @@
 flair.splitter
 ==============
 
-.. automodule:: flair.splitter
+.. currentmodule:: flair.splitter
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:
+

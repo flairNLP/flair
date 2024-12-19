@@ -20,5 +20,5 @@ setup(
         "word-embeddings": ["gensim>=4.2.0", "bpemb>=0.3.5"],
     },
     include_package_data=True,
-    python_requires=">=3.8",
+    python_requires=">=3.9",
 )

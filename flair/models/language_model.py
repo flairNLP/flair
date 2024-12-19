@@ -1,6 +1,6 @@
 import math
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import torch
 from torch import logsumexp, nn
@@ -111,7 +111,7 @@ class LanguageModel(nn.Module):
 
     def get_representation(
         self,
-        strings: List[str],
+        strings: list[str],
         start_marker: str,
         end_marker: str,
         chars_per_chunk: int = 512,
@@ -119,7 +119,7 @@ class LanguageModel(nn.Module):
         len_longest_str: int = len(max(strings, key=len))
 
         # pad strings with whitespaces to longest sentence
-        padded_strings: List[str] = []
+        padded_strings: list[str] = []
 
         for string in strings:
             if not self.is_forward_lm:
@@ -141,11 +141,11 @@ class LanguageModel(nn.Module):
 
         padding_char_index = self.dictionary.get_idx_for_item(" ")
 
-        batches: List[torch.Tensor] = []
+        batches: list[torch.Tensor] = []
         # push each chunk through the RNN language model
         for chunk in chunks:
             len_longest_chunk: int = len(max(chunk, key=len))
-            sequences_as_char_indices: List[List[int]] = []
+            sequences_as_char_indices: list[list[int]] = []
             for string in chunk:
                 char_indices = self.dictionary.get_idx_for_items(list(string))
                 char_indices += [padding_char_index] * (len_longest_chunk - len(string))
@@ -176,7 +176,7 @@ class LanguageModel(nn.Module):
 
     def repackage_hidden(self, h):
         """Wraps hidden states in new Variables, to detach them from their history."""
-        if type(h) == torch.Tensor:
+        if isinstance(h, torch.Tensor):
             return h.clone().detach()
         else:
             return tuple(self.repackage_hidden(v) for v in h)
@@ -296,7 +296,7 @@ class LanguageModel(nn.Module):
         number_of_characters: int = 1000,
         temperature: float = 1.0,
         break_on_suffix=None,
-    ) -> Tuple[str, float]:
+    ) -> tuple[str, float]:
         if prefix == "":
             prefix = "\n"
 

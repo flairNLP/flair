@@ -10,7 +10,7 @@ jobs:
     name: Build the docs using Sphinx and push to gh-pages
     runs-on: ubuntu-latest
     env:
-      python-version: 3.8
+      python-version: 3.9
     steps:
       - name: Checkout code
         uses: actions/checkout@v3

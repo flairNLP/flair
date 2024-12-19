@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Optional, Union, cast
 
 import torch
 import torch.nn
@@ -22,6 +22,17 @@ log = logging.getLogger("flair")
 
 
 class SequenceTagger(flair.nn.Classifier[Sentence]):
+    """The SequenceTagger is one of two main architectures in Flair used for sequence tagging.
+
+    Sequence tagging means classifying words in a sentence, for instance for part-of-speech tagging or named entity
+    recognition. The SequenceTagger implements the "classic" model based on the LSTM-CRF architecture: words are first
+    embedded using one or multiple :class:`flair.embeddings.TokenEmbeddings`, these embeddings are then passed to the
+    LSTM. Its hidden states for each input word are used to make the final prediction with a softmax classifier.
+    For decoding, the SequenceTagger by default uses a CRF approach.
+
+    Alternatively, you can use the class :class:`flair.models.TokenClassifier` for sequence tagging without a LSTM-CRF.
+    """
+
     def __init__(
         self,
         embeddings: TokenEmbeddings,
@@ -40,13 +51,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         word_dropout: float = 0.05,
         locked_dropout: float = 0.5,
         train_initial_hidden_state: bool = False,
-        loss_weights: Optional[Dict[str, float]] = None,
+        loss_weights: Optional[dict[str, float]] = None,
         init_from_state_dict: bool = False,
         allow_unk_predictions: bool = False,
     ) -> None:
-        """Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
-
-        In case of multitask learning, pass shared embeddings or shared rnn into respective attributes.
+        """Constructor for this class.
 
         Args:
             embeddings: Embeddings to use during training and prediction
@@ -204,7 +213,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def label_type(self):
         return self.tag_type
 
-    def _init_loss_weights(self, loss_weights: Dict[str, float]) -> torch.Tensor:
+    def _init_loss_weights(self, loss_weights: dict[str, float]) -> torch.Tensor:
         """Initializes the loss weights based on given dictionary.
 
         Args:
@@ -267,7 +276,17 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return RNN
 
-    def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, sentences: list[Sentence]) -> tuple[torch.Tensor, int]:
+        """Conducts a forward pass through the SequenceTagger using labeled sentences and return the loss.
+
+        Args:
+            sentences: A batch of labeled sentences.
+
+        Returns:
+            A tuple consisting of the loss tensor and the number of tokens in the batch.
+
+        """
+
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
@@ -281,7 +300,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         # calculate loss given scores and labels
         return self._calculate_loss(scores, gold_labels)
 
-    def _prepare_tensors(self, data_points: Union[List[Sentence], Sentence]) -> Tuple[torch.Tensor, torch.LongTensor]:
+    def _prepare_tensors(self, data_points: Union[list[Sentence], Sentence]) -> tuple[torch.Tensor, torch.LongTensor]:
         sentences = [data_points] if not isinstance(data_points, list) else data_points
         self.embeddings.embed(sentences)
 
@@ -291,7 +310,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return sentence_tensor, lengths
 
     def forward(self, sentence_tensor: torch.Tensor, lengths: torch.LongTensor):
-        """Forward propagation through network.
+        """Forward pass through the SequenceTagger.
 
         Args:
             sentence_tensor: A tensor representing the batch of sentences.
@@ -331,15 +350,15 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return scores
 
-    def _calculate_loss(self, scores: torch.Tensor, labels: torch.LongTensor) -> Tuple[torch.Tensor, int]:
+    def _calculate_loss(self, scores: torch.Tensor, labels: torch.LongTensor) -> tuple[torch.Tensor, int]:
         if labels.size(0) == 0:
             return torch.tensor(0.0, requires_grad=True, device=flair.device), 1
 
         return self.loss_function(scores, labels), len(labels)
 
-    def _make_padded_tensor_for_batch(self, sentences: List[Sentence]) -> Tuple[torch.LongTensor, torch.Tensor]:
+    def _make_padded_tensor_for_batch(self, sentences: list[Sentence]) -> tuple[torch.LongTensor, torch.Tensor]:
         names = self.embeddings.get_names()
-        lengths: List[int] = [len(sentence.tokens) for sentence in sentences]
+        lengths: list[int] = [len(sentence.tokens) for sentence in sentences]
         longest_token_sequence_in_batch: int = max(lengths)
         pre_allocated_zero_tensor = torch.zeros(
             self.embeddings.embedding_length * longest_token_sequence_in_batch,
@@ -382,7 +401,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return scores
 
-    def _get_gold_labels(self, sentences: List[Sentence]) -> List[str]:
+    def _get_gold_labels(self, sentences: list[Sentence]) -> list[str]:
         """Extracts gold labels from each sentence.
 
         Args:
@@ -419,7 +438,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return labels
 
-    def _prepare_label_tensor(self, sentences: List[Sentence]):
+    def _prepare_label_tensor(self, sentences: list[Sentence]):
         gold_labels = self._get_gold_labels(sentences)
         labels = torch.tensor(
             [self.label_dictionary.get_idx_for_item(label) for label in gold_labels],
@@ -430,7 +449,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence],
+        sentences: Union[list[Sentence], Sentence],
         mini_batch_size: int = 32,
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
@@ -439,7 +458,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         embedding_storage_mode="none",
         force_token_predictions: bool = False,
     ):
-        """Predicts labels for current batch with CRF or Softmax.
+        """Call this method to predict labels for sentences.
+
+        Predictions are directly added to the Sentence objects that are passed to this method. This means that
+        the predict() method does not return predictions. Rather, predictions are stored at each sentence and can
+        be retrieved by calling :func:`flair.data.Sentence.get_labels()` on each :class:`flair.data.Sentence`.
 
         Args:
             sentences: List of sentences in batch
@@ -462,7 +485,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
                 sentences = [sentences]
 
-            Sentence.set_context_for_sentences(cast(List[Sentence], sentences))
+            Sentence.set_context_for_sentences(cast(list[Sentence], sentences))
 
             # filter empty sentences
             sentences = [sentence for sentence in sentences if len(sentence) > 0]
@@ -542,7 +565,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 return overall_loss, label_count
             return None
 
-    def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
+    def _standard_inference(self, features: torch.Tensor, batch: list[Sentence], probabilities_for_all_classes: bool):
         """Softmax over emission scores from forward propagation.
 
         Args:
@@ -573,7 +596,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return predictions, all_tags
 
-    def _all_scores_for_token(self, sentences: List[Sentence], score_tensor: torch.Tensor, lengths: List[int]):
+    def _all_scores_for_token(self, sentences: list[Sentence], score_tensor: torch.Tensor, lengths: list[int]):
         """Returns all scores for each tag in tag dictionary."""
         scores = score_tensor.numpy()
         tokens = [token for sentence in sentences for token in sentence]
@@ -589,7 +612,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         previous = 0
         for length in lengths:
             prob_tags_per_sentence.append(prob_all_tags[previous : previous + length])
-            previous = length
+            previous += length
         return prob_tags_per_sentence
 
     def _get_state_dict(self):
@@ -861,7 +884,7 @@ for entity in sentence.get_spans('ner'):
             return repo_url
 
     @staticmethod
-    def _filter_empty_sentences(sentences: List[Sentence]) -> List[Sentence]:
+    def _filter_empty_sentences(sentences: list[Sentence]) -> list[Sentence]:
         filtered_sentences = [sentence for sentence in sentences if sentence.tokens]
         if len(sentences) != len(filtered_sentences):
             log.warning(f"Ignore {len(sentences) - len(filtered_sentences)} sentence(s) with no tokens.")
@@ -919,7 +942,7 @@ for entity in sentence.get_spans('ner'):
         return lines
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "SequenceTagger":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "SequenceTagger":
         from typing import cast
 
         return cast("SequenceTagger", super().load(model_path=model_path))

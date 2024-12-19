@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from flair.embeddings import MuseCrosslingualEmbeddings, NILCEmbeddings, WordEmbeddings
 from tests.embedding_test_utils import BaseEmbeddingsTest
@@ -18,7 +18,7 @@ class TestMuseCrosslingualEmbeddings(BaseEmbeddingsTest):
     embedding_cls = MuseCrosslingualEmbeddings
     is_token_embedding = True
     is_document_embedding = False
-    default_args: Dict[str, Any] = {}
+    default_args: dict[str, Any] = {}
 
 
 class TestNILCEmbeddings(BaseEmbeddingsTest):

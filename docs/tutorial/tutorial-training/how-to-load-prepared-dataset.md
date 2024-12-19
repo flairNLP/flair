@@ -168,7 +168,7 @@ from flair.data import MultiCorpus
 multi_corpus = MultiCorpus([english_corpus, german_corpus, dutch_corpus])
 ```
 
-The [`MultiCorpus`](#flair.data.MultiCorpus) inherits from `[`Corpus`](#flair.data.Corpus), so you can use it like any other corpus to train your models.
+The [`MultiCorpus`](#flair.data.MultiCorpus) inherits from [`Corpus`](#flair.data.Corpus), so you can use it like any other corpus to train your models.
 
 ## Datasets included in Flair
 
@@ -193,3 +193,7 @@ The following datasets are supported:
 | Universal Dependency Treebanks      | [flair.datasets.treebanks](#flair.datasets.treebanks)                                                                                       |
 | OCR-Layout-NER                      | [flair.datasets.ocr](#flair.datasets.ocr)                                                                                                   |
 
+
+## Next 
+
+Next, learn how to load a [custom dataset](how-to-load-custom-dataset.md).

@@ -3,7 +3,7 @@ import logging
 import math
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,7 +27,7 @@ class Plotter:
     def _extract_evaluation_data(file_name: Union[str, Path], score: str = "F1") -> dict:
         file_name = Path(file_name)
 
-        training_curves: Dict[str, Dict[str, List[float]]] = {
+        training_curves: dict[str, dict[str, list[float]]] = {
             "train": {"loss": [], "score": []},
             "test": {"loss": [], "score": []},
             "dev": {"loss": [], "score": []},
@@ -70,7 +70,7 @@ class Plotter:
         if isinstance(file_name, str):
             file_name = Path(file_name)
 
-        weights: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
+        weights: dict[str, dict[str, list[float]]] = defaultdict(lambda: defaultdict(list))
 
         with open(file_name) as f:
             tsvin = csv.reader(f, delimiter="\t")
@@ -151,7 +151,7 @@ class Plotter:
         log.info(f"Weights plots are saved in {path}")  # to let user know the path of the save plots
         plt.close(fig)
 
-    def plot_training_curves(self, file_name: Union[str, Path], plot_values: List[str] = ["loss", "F1"]):
+    def plot_training_curves(self, file_name: Union[str, Path], plot_values: list[str] = ["loss", "F1"]):
         file_name = Path(file_name)
 
         fig = plt.figure(figsize=(15, 10))

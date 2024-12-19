@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Optional, Union, cast
 
 import torch
 from torch.utils.data import Dataset
@@ -26,7 +26,7 @@ class SentenceAugmentationStrategy(ABC):
 
     @abstractmethod
     def augment_sentence(
-        self, sentence: Sentence, annotation_layers: Optional[Union[str, List[str]]] = None
+        self, sentence: Sentence, annotation_layers: Optional[Union[str, list[str]]] = None
     ) -> PrefixedSentence:
         """Augments the given sentence text with additional instructions for working / predicting the task on the given annotations.
 
@@ -64,7 +64,7 @@ class SentenceAugmentationStrategy(ABC):
         """Initializes the strategy from the given state."""
 
     def augment_dataset(
-        self, dataset: Dataset[Sentence], annotation_layers: Optional[Union[str, List[str]]] = None
+        self, dataset: Dataset[Sentence], annotation_layers: Optional[Union[str, list[str]]] = None
     ) -> FlairDatapointDataset[PrefixedSentence]:
         """Transforms a dataset into a dataset containing augmented sentences specific to the `PrefixedSequenceTagger`.
 
@@ -78,14 +78,14 @@ class SentenceAugmentationStrategy(ABC):
         Returns: A dataset of augmented sentences specific to the `PrefixedSequenceTagger`
         """
         data_loader: DataLoader = DataLoader(dataset, batch_size=1)
-        original_sentences: List[Sentence] = [batch[0] for batch in iter(data_loader)]
+        original_sentences: list[Sentence] = [batch[0] for batch in iter(data_loader)]
 
         augmented_sentences = [self.augment_sentence(sentence, annotation_layers) for sentence in original_sentences]
 
         return FlairDatapointDataset(augmented_sentences)
 
     def augment_corpus(
-        self, corpus: Corpus[Sentence], annotation_layers: Optional[Union[str, List[str]]] = None
+        self, corpus: Corpus[Sentence], annotation_layers: Optional[Union[str, list[str]]] = None
     ) -> Corpus[PrefixedSentence]:
         """Transforms a corpus into a corpus containing augmented sentences specific to the `PrefixedSequenceTagger`.
 
@@ -120,7 +120,7 @@ class EntityTypeTaskPromptAugmentationStrategy(SentenceAugmentationStrategy):
         "[Tag gene and disease] Mutations in the TP53 tumour suppressor gene are found in ~50% of human cancers"
     """
 
-    def __init__(self, entity_types: List[str]):
+    def __init__(self, entity_types: list[str]):
         if len(entity_types) <= 0:
             raise AssertionError
 
@@ -128,7 +128,7 @@ class EntityTypeTaskPromptAugmentationStrategy(SentenceAugmentationStrategy):
         self.task_prompt = self._build_tag_prompt_prefix(entity_types)
 
     def augment_sentence(
-        self, sentence: Sentence, annotation_layers: Optional[Union[str, List[str]]] = None
+        self, sentence: Sentence, annotation_layers: Optional[Union[str, list[str]]] = None
     ) -> PrefixedSentence:
         # Prepend the task description prompt to the sentence text
         augmented_sentence = PrefixedSentence(
@@ -182,7 +182,7 @@ class EntityTypeTaskPromptAugmentationStrategy(SentenceAugmentationStrategy):
             ]
             orig_span.add_label(target_annotation_layer, label.value, label.score)
 
-    def _build_tag_prompt_prefix(self, entity_types: List[str]) -> List[str]:
+    def _build_tag_prompt_prefix(self, entity_types: list[str]) -> list[str]:
         if len(self.entity_types) == 1:
             prompt = f"[ Tag {entity_types[0]} ]"
         else:
@@ -219,29 +219,29 @@ class PrefixedSequenceTagger(SequenceTagger):
         return super()._init_model_with_state_dict(state, augmentation_strategy=strategy, **kwargs)
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "PrefixedSequenceTagger":
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "PrefixedSequenceTagger":
         from typing import cast
 
         return cast("PrefixedSequenceTagger", super().load(model_path=model_path))
 
-    def forward_loss(self, sentences: Union[List[Sentence], List[PrefixedSentence]]) -> Tuple[torch.Tensor, int]:
+    def forward_loss(self, sentences: Union[list[Sentence], list[PrefixedSentence]]) -> tuple[torch.Tensor, int]:
         # If all sentences are not augmented -> augment them
         if all(isinstance(sentence, Sentence) for sentence in sentences):
             # mypy does not infer the type of "sentences" restricted by the if statement
-            sentences = cast(List[Sentence], sentences)
+            sentences = cast(list[Sentence], sentences)
 
             sentences = self.augment_sentences(sentences=sentences, annotation_layers=self.tag_type)
         elif not all(isinstance(sentence, PrefixedSentence) for sentence in sentences):
             raise ValueError("All passed sentences must be either uniformly augmented or not.")
 
         # mypy does not infer the type of "sentences" restricted by code above
-        sentences = cast(List[Sentence], sentences)
+        sentences = cast(list[Sentence], sentences)
 
         return super().forward_loss(sentences)
 
     def predict(
         self,
-        sentences: Union[List[Sentence], Sentence, List[PrefixedSentence], PrefixedSentence],
+        sentences: Union[list[Sentence], Sentence, list[PrefixedSentence], PrefixedSentence],
         mini_batch_size: int = 32,
         return_probabilities_for_all_classes: bool = False,
         verbose: bool = False,
@@ -260,7 +260,7 @@ class PrefixedSequenceTagger(SequenceTagger):
         # If all sentences are already augmented (i.e. compatible with this class), just forward the sentences
         if all(isinstance(sentence, PrefixedSentence) for sentence in sentences):
             # mypy does not infer the type of "sentences" restricted by the if statement
-            sentences = cast(List[Sentence], sentences)
+            sentences = cast(list[Sentence], sentences)
 
             return super().predict(
                 sentences,
@@ -280,12 +280,12 @@ class PrefixedSequenceTagger(SequenceTagger):
             for sentence in sentences:
                 sentence.remove_labels(prediction_label_type)
 
-        sentences = cast(List[Sentence], sentences)
+        sentences = cast(list[Sentence], sentences)
 
         # Augment sentences - copy all annotation of the given tag type
         augmented_sentences = self.augment_sentences(sentences, self.tag_type)
 
-        mypy_safe_augmented_sentences = cast(List[Sentence], augmented_sentences)
+        mypy_safe_augmented_sentences = cast(list[Sentence], augmented_sentences)
 
         # Predict on augmented sentence and store it in an internal annotation layer / label
         loss_and_count = super().predict(
@@ -312,8 +312,8 @@ class PrefixedSequenceTagger(SequenceTagger):
             return loss_and_count
 
     def augment_sentences(
-        self, sentences: Union[Sentence, List[Sentence]], annotation_layers: Optional[Union[str, List[str]]] = None
-    ) -> List[PrefixedSentence]:
+        self, sentences: Union[Sentence, list[Sentence]], annotation_layers: Optional[Union[str, list[str]]] = None
+    ) -> list[PrefixedSentence]:
         if not isinstance(sentences, list) and not isinstance(sentences, flair.data.Dataset):
             sentences = [sentences]
 

@@ -1,7 +1,7 @@
 import logging
 from abc import abstractmethod
 from pathlib import Path
-from typing import Generic, List, Optional, Union
+from typing import Generic, Optional, Union
 
 import torch.utils.data.dataloader
 from deprecated.sphinx import deprecated
@@ -41,7 +41,7 @@ class DataLoader(torch.utils.data.dataloader.DataLoader):
 class FlairDatapointDataset(FlairDataset, Generic[DT]):
     """A simple Dataset object to wrap a List of Datapoints, for example Sentences."""
 
-    def __init__(self, datapoints: Union[DT, List[DT]]) -> None:
+    def __init__(self, datapoints: Union[DT, list[DT]]) -> None:
         """Instantiate FlairDatapointDataset.
 
         Args:
@@ -64,7 +64,7 @@ class FlairDatapointDataset(FlairDataset, Generic[DT]):
 
 class SentenceDataset(FlairDatapointDataset):
     @deprecated(version="0.11", reason="The 'SentenceDataset' class was renamed to 'FlairDatapointDataset'")
-    def __init__(self, sentences: Union[Sentence, List[Sentence]]) -> None:
+    def __init__(self, sentences: Union[Sentence, list[Sentence]]) -> None:
         super().__init__(sentences)
 
 
@@ -73,7 +73,7 @@ class StringDataset(FlairDataset):
 
     def __init__(
         self,
-        texts: Union[str, List[str]],
+        texts: Union[str, list[str]],
         use_tokenizer: Union[bool, Tokenizer] = SpaceTokenizer(),
     ) -> None:
         """Instantiate StringDataset.
@@ -111,7 +111,7 @@ class MongoDataset(FlairDataset):
         database: str,
         collection: str,
         text_field: str,
-        categories_field: Optional[List[str]] = None,
+        categories_field: Optional[list[str]] = None,
         max_tokens_per_doc: int = -1,
         max_chars_per_doc: int = -1,
         tokenizer: Tokenizer = SegtokTokenizer(),
@@ -195,7 +195,7 @@ class MongoDataset(FlairDataset):
     def _parse_document_to_sentence(
         self,
         text: str,
-        labels: List[str],
+        labels: list[str],
         tokenizer: Union[bool, Tokenizer],
     ):
         if self.max_chars_per_doc > 0:

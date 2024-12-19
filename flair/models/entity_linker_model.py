@@ -2,7 +2,7 @@ import logging
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
+from typing import Any, Callable, Optional, Union, cast
 from unicodedata import category
 
 import torch
@@ -19,9 +19,9 @@ log = logging.getLogger("flair")
 class CandidateGenerator:
     """Given a string, the CandidateGenerator returns possible target classes as candidates."""
 
-    def __init__(self, candidates: Union[str, Dict[str, List[str]]], backoff: bool = True) -> None:
+    def __init__(self, candidates: Union[str, dict[str, list[str]]], backoff: bool = True) -> None:
         # internal candidate lists of generator
-        self.mention_to_candidates_map: Dict = {}
+        self.mention_to_candidates_map: dict[str, list[str]] = {}
 
         # load Zelda candidates if so passed
         if isinstance(candidates, str) and candidates.lower() == "zelda":
@@ -39,16 +39,15 @@ class CandidateGenerator:
 
             self.mention_to_candidates_map = candidate_lists
 
-        elif isinstance(candidates, Dict):
+        elif isinstance(candidates, dict):
             self.mention_to_candidates_map = candidates
         else:
             raise ValueError(f"'{candidates}' could not be loaded.")
-        self.mention_to_candidates_map = cast(Dict[str, List[str]], self.mention_to_candidates_map)
         # if lower casing is enabled, create candidate lists of lower cased versions
         self.backoff = backoff
         if self.backoff:
             # create a new dictionary for lower cased mentions
-            lowercased_mention_to_candidates_map: Dict = {}
+            lowercased_mention_to_candidates_map: dict[str, list[str]] = {}
 
             # go through each mention and its candidates
             for mention, candidates_list in self.mention_to_candidates_map.items():
@@ -56,8 +55,8 @@ class CandidateGenerator:
                 # check if backoff mention already seen. If so, add candidates. Else, create new entry.
                 if backoff_mention in lowercased_mention_to_candidates_map:
                     current_candidates = lowercased_mention_to_candidates_map[backoff_mention]
-                    lowercased_mention_to_candidates_map[backoff_mention] = set(current_candidates).union(
-                        candidates_list
+                    lowercased_mention_to_candidates_map[backoff_mention] = list(
+                        set(current_candidates).union(candidates_list)
                     )
                 else:
                     lowercased_mention_to_candidates_map[backoff_mention] = candidates_list
@@ -72,7 +71,7 @@ class CandidateGenerator:
         backoff_mention = re.sub(" +", " ", backoff_mention)
         return backoff_mention
 
-    def get_candidates(self, mention: str) -> Set[str]:
+    def get_candidates(self, mention: str) -> set[str]:
         """Given a mention, this method returns a set of candidate classes."""
         if self.backoff:
             mention = self._make_backoff_string(mention)
@@ -125,7 +124,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
         self._label_type = label_type
         self._span_label_type = span_label_type
 
-        cases: Dict[str, Callable[[Span, List[str]], torch.Tensor]] = {
+        cases: dict[str, Callable[[Span, list[str]], torch.Tensor]] = {
             "average": self.emb_mean,
             "first": self.emb_first,
             "last": self.emb_last,
@@ -155,7 +154,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
     def emb_mean(self, span, embedding_names):
         return torch.mean(torch.stack([token.get_embedding(embedding_names) for token in span], 0), 0)
 
-    def _get_data_points_from_sentence(self, sentence: Sentence) -> List[Span]:
+    def _get_data_points_from_sentence(self, sentence: Sentence) -> list[Span]:
         if self._span_label_type is not None:
             spans = sentence.get_spans(self._span_label_type)
             # only use span label type if there are predictions, otherwise search for output label type (training labels)
@@ -223,7 +222,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
     def label_type(self):
         return self._label_type
 
-    def _mask_scores(self, scores: torch.Tensor, data_points: List[Span]):
+    def _mask_scores(self, scores: torch.Tensor, data_points: list[Span]):
         if not self.candidates:
             return scores
 
@@ -242,9 +241,7 @@ class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
         return masked_scores
 
     @classmethod
-    def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "SpanClassifier":
-        from typing import cast
-
+    def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "SpanClassifier":
         return cast("SpanClassifier", super().load(model_path=model_path))
 
 
