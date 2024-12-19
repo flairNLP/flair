@@ -16,16 +16,34 @@ class SentenceSplitter(ABC):
     r"""An abstract class representing a :class:`SentenceSplitter`.
 
     Sentence splitters are used to represent algorithms and models to split plain text into
-    sentences and individual tokens / words. All subclasses should overwrite :meth:`splits`,
-    which splits the given plain text into a sequence of sentences (:class:`Sentence`). The
-    individual sentences are in turn subdivided into tokens / words. In most cases, this can
-    be controlled by passing custom implementation of :class:`Tokenizer`.
+    sentences and individual tokens / words. All subclasses should overwrite :func:`split`,
+    which splits the given plain text into a list of :class:`flair.data.Sentence` objects. The
+    individual sentences are in turn subdivided into tokens. In most cases, this can
+    be controlled by passing custom implementation of :class:`flair.tokenization.Tokenizer`.
 
     Moreover, subclasses may overwrite :meth:`name`, returning a unique identifier representing
     the sentence splitter's configuration.
+
+    The most common class in Flair that implements this base class is :class:`SegtokSentenceSplitter`.
     """
 
-    def split(self, text: str, link_sentences: Optional[bool] = True) -> list[Sentence]:
+    def split(self, text: str, link_sentences: bool = True) -> list[Sentence]:
+        """
+        Takes as input a text as a plain string and outputs a list of :class:`flair.data.Sentence` objects.
+
+        If link_sentences is set (by default, it is). The :class:`flair.data.Sentence` objects will include pointers
+        to the preceding and following sentences in the original text. This way, the original sequence information will
+        always be preserved.
+
+        Args:
+            text (str): The plain text to split.
+            link_sentences (bool): If set to True, :class:`flair.data.Sentence` objects will include pointers
+                to the preceding and following sentences in the original text.
+
+        Returns:
+            A list of :class:`flair.data.Sentence` objects that each represent one sentence in the given text.
+
+        """
         sentences = self._perform_split(text)
         if not link_sentences:
             return sentences
@@ -39,10 +57,12 @@ class SentenceSplitter(ABC):
 
     @property
     def name(self) -> str:
+        """A string identifier of the sentence splitter."""
         return self.__class__.__name__
 
     @property
     def tokenizer(self) -> Tokenizer:
+        """The :class:`flair.tokenization.Tokenizer` class used to tokenize sentences after they are split."""
         raise NotImplementedError
 
     @tokenizer.setter

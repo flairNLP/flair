@@ -150,3 +150,10 @@ We end this section with a list of all other models we currently ship with Flair
 | 'de-historic-reported' | historical reported speech | German |  @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 | 'de-historic-free-indirect' | historical free-indirect speech | German | @redewiedergabe project |  **87.94** (F1) | [redewiedergabe](https://github.com/redewiedergabe/tagger) | |
 
+
+### Next
+
+Congrats, you learned about some other models we have in Flair! 
+
+So far, we only focused on predicting for single sentences. Next, let's discuss how
+to create [predictions for a whole corpus of documents](how-to-tag-corpus.md).

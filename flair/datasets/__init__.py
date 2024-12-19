@@ -171,6 +171,7 @@ from .relation_extraction import (
 # Expose all sequence labeling datasets
 from .sequence_labeling import (
     BIOSCOPE,
+    CLEANCONLL,
     CONLL_03,
     CONLL_03_DUTCH,
     CONLL_03_GERMAN,
@@ -216,6 +217,7 @@ from .sequence_labeling import (
     NER_MULTI_WIKINER,
     NER_MULTI_XTREME,
     NER_NERMUD,
+    NER_NOISEBENCH,
     NER_SWEDISH,
     NER_TURKU,
     NER_UKRAINIAN,
@@ -465,6 +467,7 @@ __all__ = [
     "CONLL_03_DUTCH",
     "CONLL_03_GERMAN",
     "CONLL_03_SPANISH",
+    "CLEANCONLL",
     "CONLL_2000",
     "FEWNERD",
     "KEYPHRASE_INSPEC",
@@ -494,6 +497,7 @@ __all__ = [
     "NER_GERMAN_MOBIE",
     "NER_GERMAN_POLITICS",
     "NER_HIPE_2022",
+    "NER_NOISEBENCH",
     "NER_HUNGARIAN",
     "NER_ICDAR_EUROPEANA",
     "NER_ICELANDIC",

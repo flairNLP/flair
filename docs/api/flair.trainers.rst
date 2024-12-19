@@ -1,4 +1,8 @@
 flair.trainers
 ==============
 
-.. automodule:: flair.trainers
+.. currentmodule:: flair.trainers
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:

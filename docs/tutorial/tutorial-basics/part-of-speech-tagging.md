@@ -167,4 +167,9 @@ You choose which pre-trained model you load by passing the appropriate string to
 A full list of our current and community-contributed models can be browsed on the [__model hub__](https://huggingface.co/models?library=flair&sort=downloads).
 
 
+### Next
+
+Congrats, you learned how to predict part-of-speech tags with Flair! 
+
+Next, we'll present some [other models in Flair](other-models.md) you might find useful.
 

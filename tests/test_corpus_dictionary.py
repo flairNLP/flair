@@ -110,9 +110,9 @@ def test_tagged_corpus_make_vocab_dictionary():
     vocab = corpus.make_vocab_dictionary(max_tokens=2, min_freq=-1)
 
     assert len(vocab) == 3
-    assert "<unk>" in vocab.get_items()
-    assert "training" in vocab.get_items()
-    assert "." in vocab.get_items()
+    assert vocab.has_item("<unk>")
+    assert vocab.has_item("training")
+    assert vocab.has_item(".")
 
     vocab = corpus.make_vocab_dictionary(max_tokens=-1, min_freq=-1)
 
@@ -121,9 +121,9 @@ def test_tagged_corpus_make_vocab_dictionary():
     vocab = corpus.make_vocab_dictionary(max_tokens=-1, min_freq=2)
 
     assert len(vocab) == 3
-    assert "<unk>" in vocab.get_items()
-    assert "training" in vocab.get_items()
-    assert "." in vocab.get_items()
+    assert vocab.has_item("<unk>")
+    assert vocab.has_item("training")
+    assert vocab.has_item(".")
 
 
 def test_label_set_confidence():
@@ -153,9 +153,9 @@ def test_tagged_corpus_make_label_dictionary():
     label_dict = corpus.make_label_dictionary("label", add_unk=True)
 
     assert len(label_dict) == 3
-    assert "<unk>" in label_dict.get_items()
-    assert "class_1" in label_dict.get_items()
-    assert "class_2" in label_dict.get_items()
+    assert label_dict.has_item("<unk>")
+    assert label_dict.has_item("class_1")
+    assert label_dict.has_item("class_2")
 
     with pytest.warns(DeprecationWarning):  # test to make sure the warning comes, but function works
         corpus.make_tag_dictionary("label")

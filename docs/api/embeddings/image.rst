@@ -1,4 +1,8 @@
 flair.embeddings.image
 ======================
 
-.. automodule:: flair.embeddings.image
+.. currentmodule:: flair.embeddings.image
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:

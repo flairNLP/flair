@@ -1,0 +1,157 @@
+@import url("https://fonts.googleapis.com/css2?family=Afacad:ital,wght@0,400..700;1,400..700&family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap");
+
+:root {
+	--flair-orange: #f79910;
+	--flair-orange-light: #ffc063;
+	--flair-orange-transparent: rgba(247, 153, 16, 0.5);
+	--white-transparent: rgba(255, 255, 255, 0.5);
+	--flair-blue: #2f2e41;
+	--flair-dark-blue: #262635;
+	--light-gray: #e6e6e6;
+	--white-blue: white;
+	--blue-white: var(--flair-blue);
+	--orange-white: var(--flair-orange);
+	--orange-white-transparent: var(--flair-orange-transparent);
+	--orange-blue: var(--flair-orange);
+	--blue-orange: var(--flair-blue);
+	--gray-dark-blue: var(--light-gray);
+	--gray-white: var(--light-gray);
+	--error-red: #e32239;
+	--header-height: 90px;
+	--footer-height: 60px;
+	--track-color: #dddddd;
+	--track-thumb: #bbbbbb;
+	--track-thumb-hover: #999999;
+	font-family: "Afacad", sans-serif;
+	font-optical-sizing: auto;
+	font-weight: 400;
+	font-size: 21px;
+	font-style: normal;
+}
+
+:root .dark-mode {
+	--white-blue: var(--flair-blue);
+	--blue-white: white;
+	--orange-white: white;
+	--orange-blue: var(--flair-blue);
+	--blue-orange: var(--flair-orange);
+	--orange-white-transparent: var(--white-transparent);
+	--gray-dark-blue: var(--flair-dark-blue);
+	--gray-white: white;
+	--track-color: #38374a;
+	--track-thumb: #4c4b5c;
+	--track-thumb-hover: #5c5b69;
+}
+
+.fill-white-blue {
+	fill: var(--white-blue);
+	stroke: none;
+}
+
+.fill-orange {
+	fill: var(--flair-orange);
+	stroke: none;
+}
+
+.stroke-orange-white {
+	stroke: var(--orange-white);
+	fill: none;
+}
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font: inherit;
+	vertical-align: baseline;
+	line-height: 1.2em;
+}
+
+button {
+	font-family: inherit;
+}
+
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+
+body {
+	line-height: 1;
+	background-color: var(--white-blue);
+}
+
+main {
+	min-height: calc(100vh - var(--header-height) - var(--footer-height));
+}
+
+ol, ul {
+	list-style: none;
+}
+
+blockquote, q {
+	quotes: none;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+a {
+	color: var(--flair-orange);
+	text-decoration: none;
+	transition: color 200ms cubic-bezier(0, 0.35, 0.08, 0.89);
+}
+
+a:visited {
+	color: var(--flair-orange);
+}
+
+a:hover {
+	color: var(--flair-orange-light);
+	text-decoration: none;
+}
+
+::selection {
+	background: var(--flair-orange);
+	color: var(--white-blue);
+}
+
+.inv-sel::selection {
+	background: var(--white-blue);
+	color: var(--flair-orange);
+}
+
+.bd-container__inner {
+	max-width: 100%;
+}
+
+body::-webkit-scrollbar, ::-webkit-scrollbar {
+	width: 10px;
+}
+
+body::-webkit-scrollbar-track, ::-webkit-scrollbar-track {
+	background: var(--track-color);
+}
+
+body::-webkit-scrollbar-thumb, ::-webkit-scrollbar-thumb {
+	background: var(--track-thumb);
+	border-radius: 0;
+}
+
+body::-webkit-scrollbar-thumb:hover, ::-webkit-scrollbar-thumb:hover {
+	background: var(--track-thumb-hover);
+}

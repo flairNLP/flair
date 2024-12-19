@@ -76,3 +76,8 @@ the text of label.data_point is: "Washington"
 ```
 
 
+### Next
+
+Congrats, you've made your first predictions with Flair and accessed value and confidence scores of each prediction.
+
+Next, let's discuss specifically how to [predict named entities with Flair](tagging-entities.md). 

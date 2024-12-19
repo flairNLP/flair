@@ -1,0 +1,78 @@
+.bd-search-container h1 {
+	color: var(--blue-white);
+	font-size: 3rem;
+	font-weight: 600;
+}
+
+.bd-search-container h2 {
+	color: var(--blue-white);
+	font-weight: 600;
+	font-size: 1.5rem;
+}
+
+.bd-search-container form.bd-search i {
+	display: none;
+}
+
+.bd-search-container form.bd-search input {
+	border: 2px var(--flair-orange) solid;
+	color: var(--flair-blue);
+	box-shadow: none;
+	padding: .25em 5.5em .25em .75em;
+	border-radius: 1rem;
+	font-size: 1.2rem;
+}
+
+.bd-search-container form.bd-search .search-button__kbd-shortcut {
+	align-items: center;
+}
+
+.bd-search-container p.search-summary {
+	color: var(--blue-white) !important;
+}
+
+.bd-search-container ul.search li {
+	border-top: 2px solid var(--blue-white);
+	margin: 0 0 .05em 0;
+}
+
+.bd-search-container ul.search li:first-of-type {
+	margin-top: 1rem;
+	border: none;
+}
+
+.bd-search-container ul.search li a {
+	font-weight: 400;
+}
+
+.bd-search-container ul.search li span {
+	color: var(--blue-white);
+}
+
+.highlighted {
+	background: var(--flair-orange) !important;
+	color: white !important;
+	border-radius: 5px !important;
+}
+
+div#searchbox p.highlight-link {
+	box-shadow: none !important;
+	margin: 1rem 0;
+}
+
+div#searchbox p.highlight-link a {
+	background: var(--white-blue) !important;
+	border: 2px var(--flair-orange) solid;
+	color: var(--flair-orange);
+	transition: all 200ms ease-in-out;
+}
+
+div#searchbox p.highlight-link a:hover {
+	background: var(--flair-orange) !important;
+	color: white !important;
+	box-shadow: none !important;
+}
+
+div#searchbox p.highlight-link a::before {
+	content: none;
+}

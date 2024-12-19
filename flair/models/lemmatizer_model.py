@@ -491,7 +491,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
                     for t_id, token in enumerate(tokens_in_batch):
                         predicted_lemma = "".join(
-                            self.char_dictionary.get_item_for_index(idx) if idx != self.end_index else ""
+                            self.char_dictionary.get_item_for_index(int(idx)) if idx != self.end_index else ""
                             for idx in predicted[t_id]
                         )
                         token.set_label(typename=label_name, value=predicted_lemma)

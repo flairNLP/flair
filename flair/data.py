@@ -74,7 +74,8 @@ class Dictionary:
         Args:
             item: a string for which to assign an id.
 
-        Returns: ID of string
+        Returns:
+            ID of string
         """
         bytes_item = item.encode("utf-8")
         if bytes_item not in self.item2idx:
@@ -88,7 +89,8 @@ class Dictionary:
         Args:
             item: string for which ID is requested
 
-        Returns: ID of string, otherwise 0
+        Returns:
+            ID of string, otherwise 0
         """
         item_encoded = item.encode("utf-8")
         if item_encoded in self.item2idx:
@@ -108,7 +110,8 @@ class Dictionary:
         Args:
             items: List of string for which IDs are requested
 
-        Returns: List of ID of strings
+        Returns:
+            List of ID of strings
         """
         if not hasattr(self, "item2idx_not_encoded"):
             d = {key.decode("UTF-8"): value for key, value in self.item2idx.items()}
@@ -122,18 +125,18 @@ class Dictionary:
         return list(results)
 
     def get_items(self) -> list[str]:
-        items = []
-        for item in self.idx2item:
-            items.append(item.decode("UTF-8"))
-        return items
+        return [item.decode("UTF-8") for item in self.idx2item]
 
     def __len__(self) -> int:
         return len(self.idx2item)
 
-    def get_item_for_index(self, idx):
+    def get_item_for_index(self, idx: int) -> str:
         return self.idx2item[idx].decode("UTF-8")
 
-    def set_start_stop_tags(self):
+    def has_item(self, item: str) -> bool:
+        return item.encode("utf-8") in self.item2idx
+
+    def set_start_stop_tags(self) -> None:
         self.add_item("<START>")
         self.add_item("<STOP>")
 
@@ -347,6 +350,17 @@ class DataPoint:
         return key in self._metadata
 
     def add_label(self, typename: str, value: str, score: float = 1.0, **metadata) -> "DataPoint":
+        """Adds a label to the :class:`DataPoint` by internally creating a :class:`Label` object.
+
+        Args:
+            typename: A string that identifies the layer of annotation, such as "ner" for named entity labels or "sentiment" for sentiment labels
+            value: A string that sets the value of the label.
+            score: Optional value setting the confidence level of the label (between 0 and 1). If not set, a default confidence of 1 is used.
+            **metadata: Additional metadata information.
+
+        Returns:
+            A pointer to itself (DataPoint object, now with an added label).
+        """
         label = Label(self, value, score, **metadata)
 
         if typename not in self.annotation_layers:
@@ -370,6 +384,17 @@ class DataPoint:
         return self.get_labels(label_type)[0]
 
     def get_labels(self, typename: Optional[str] = None) -> list[Label]:
+        """Returns all labels of this datapoint belonging to a specific annotation layer.
+
+        For instance, if a data point has been labeled with `"sentiment"`-labels, you can call this function as
+        `get_labels("sentiment")` to return a list of all sentiment labels.
+
+        Args:
+            typename: The string identifier of the annotation layer, like "sentiment" or "ner".
+
+        Returns:
+            A list of :class:`Label` objects belonging to this annotation layer for this data point.
+        """
         if typename is None:
             return self.labels
 
@@ -766,7 +791,11 @@ class Relation(_PartOfSentence):
 
 
 class Sentence(DataPoint):
-    """A Sentence is a list of tokens and is used to represent a sentence or text fragment."""
+    """A Sentence is a central object in Flair that represents either a single sentence or a whole text.
+
+    Internally, it consists of a list of Token objects that represent each word in the text. Additionally,
+    this object stores all metadata related to a text such as labels, language code, etc.
+    """
 
     def __init__(
         self,
@@ -775,14 +804,12 @@ class Sentence(DataPoint):
         language_code: Optional[str] = None,
         start_position: int = 0,
     ) -> None:
-        """Class to hold all metadata related to a text.
-
-        Metadata can be tokens, labels, predictions, language code, etc.
+        """Create a sentence object by passing either a text or a list of tokens.
 
         Args:
-            text: original string (sentence), or a pre tokenized list of tokens.
-            use_tokenizer: Specify a custom tokenizer to split the text into tokens. The Default is
-                :class:`flair.tokenization.SegTokTokenizer`. If `use_tokenizer` is set to False,
+            text: Either pass the text as a string, or provide an already tokenized text as either a list of strings or a list of :class:`Token` objects.
+            use_tokenizer: You can optionally specify a custom tokenizer to split the text into tokens. By default we use
+                :class:`flair.tokenization.SegtokTokenizer`. If `use_tokenizer` is set to False,
                 :class:`flair.tokenization.SpaceTokenizer` will be used instead. The tokenizer will be ignored,
                 if `text` refers to pretokenized tokens.
             language_code: Language of the sentence. If not provided, `langdetect <https://pypi.org/project/langdetect/>`_
@@ -1345,6 +1372,14 @@ class Image(DataPoint):
 
 
 class Corpus(typing.Generic[T_co]):
+    """The main object in Flair for holding a dataset used for training and testing.
+
+    A corpus consists of three splits: A `train` split used for training, a `dev` split used for model selection
+    and/or early stopping and a `test` split used for testing. All three splits are optional, so it is possible
+    to create a corpus only using one or two splits. If the option `sample_missing_splits` is set to True,
+    missing splits will be randomly sampled from the training split.
+    """
+
     def __init__(
         self,
         train: Optional[Dataset[T_co]] = None,
@@ -1354,6 +1389,26 @@ class Corpus(typing.Generic[T_co]):
         sample_missing_splits: Union[bool, str] = True,
         random_seed: Optional[int] = None,
     ) -> None:
+        """
+        Constructor method to initialize a :class:`Corpus`. You can define the train, dev and test split
+        by passing the corresponding Dataset object to the constructor. At least one split should be defined.
+        If the option `sample_missing_splits` is set to True, missing splits will be randomly sampled from the
+        train split.
+
+        In most cases, you will not use the constructor yourself. Rather, you will create a corpus using one of our
+        helper methods that read common NLP filetypes. For instance, you can use
+        :class:`flair.datasets.sequence_labeling.ColumnCorpus` to read CoNLL-formatted files directly into
+        a :class:`Corpus`.
+
+        Args:
+            train: The split you use for model training.
+            dev: A holdout split typically used for model selection or early stopping.
+            test: The final test data to compute the score of the model.
+            name: A name that identifies the corpus.
+            sample_missing_splits: If set to True, missing splits are sampled from train. If set to False,
+                missing splits are not sampled and left empty. Default: True.
+            random_seed: Set a random seed to control the sampling of missing splits.
+        """
         # set name
         self.name: str = name
 
@@ -1392,14 +1447,17 @@ class Corpus(typing.Generic[T_co]):
 
     @property
     def train(self) -> Optional[Dataset[T_co]]:
+        """The training split as a :class:`torch.utils.data.Dataset` object."""
         return self._train
 
     @property
     def dev(self) -> Optional[Dataset[T_co]]:
+        """The dev split as a :class:`torch.utils.data.Dataset` object."""
         return self._dev
 
     @property
     def test(self) -> Optional[Dataset[T_co]]:
+        """The test split as a :class:`torch.utils.data.Dataset` object."""
         return self._test
 
     def downsample(
@@ -1410,7 +1468,23 @@ class Corpus(typing.Generic[T_co]):
         downsample_test: bool = True,
         random_seed: Optional[int] = None,
     ) -> "Corpus":
-        """Reduce all datasets in corpus proportionally to the given percentage."""
+        """Randomly downsample the corpus to the given percentage (by removing data points).
+
+        This method is an in-place operation, meaning that the Corpus object itself is modified by removing
+        data points. It additionally returns a pointer to itself for use in method chaining.
+
+        Args:
+            percentage: A float value between 0. and 1. that indicates to which percentage the corpus
+                should be downsampled. Default value is 0.1, meaning it gets downsampled to 10%.
+            downsample_train: Whether or not to include the training split in downsampling. Default is True.
+            downsample_dev: Whether or not to include the dev split in downsampling. Default is True.
+            downsample_test: Whether or not to include the test split in downsampling. Default is True.
+            random_seed: An optional random seed to make downsampling reproducible.
+
+        Returns:
+            A pointer to itself for optional use in method chaining.
+        """
+
         if downsample_train and self._train is not None:
             self._train = self._downsample_to_proportion(self._train, percentage, random_seed)
 
@@ -1423,6 +1497,10 @@ class Corpus(typing.Generic[T_co]):
         return self
 
     def filter_empty_sentences(self):
+        """A method that filters all sentences consisting of 0 tokens.
+
+        This is an in-place operation that directly modifies the Corpus object itself by removing these sentences.
+        """
         log.info("Filtering empty sentences")
         if self._train is not None:
             self._train = Corpus._filter_empty_sentences(self._train)
@@ -1433,6 +1511,15 @@ class Corpus(typing.Generic[T_co]):
         log.info(self)
 
     def filter_long_sentences(self, max_charlength: int):
+        """
+        A method that filters all sentences for which the plain text is longer than a specified number of characters.
+
+        This is an in-place operation that directly modifies the Corpus object itself by removing these sentences.
+
+        Args:
+            max_charlength: The maximum permissible character length of a sentence.
+
+        """
         log.info("Filtering long sentences")
         if self._train is not None:
             self._train = Corpus._filter_long_sentences(self._train, max_charlength)
@@ -1477,7 +1564,7 @@ class Corpus(typing.Generic[T_co]):
         return subset
 
     def make_vocab_dictionary(self, max_tokens: int = -1, min_freq: int = 1) -> Dictionary:
-        """Creates a dictionary of all tokens contained in the corpus.
+        """Creates a :class:`Dictionary` of all tokens contained in the corpus.
 
         By defining `max_tokens` you can set the maximum number of tokens that should be contained in the dictionary.
         If there are more than `max_tokens` tokens in the corpus, the most frequent tokens are added first.
@@ -1485,10 +1572,13 @@ class Corpus(typing.Generic[T_co]):
         to be added to the dictionary.
 
         Args:
-            max_tokens: the maximum number of tokens that should be added to the dictionary (-1 = take all tokens)
-            min_freq: a token needs to occur at least `min_freq` times to be added to the dictionary (-1 = there is no limitation)
+            max_tokens: The maximum number of tokens that should be added to the dictionary (providing a value of "-1"
+                means that there is no maximum in this regard).
+            min_freq: A token needs to occur at least `min_freq` times to be added to the dictionary (providing a value
+                of "-1" means that there is no limitation in this regard).
 
-        Returns: dictionary of tokens
+        Returns:
+            A :class:`Dictionary` of all unique tokens in the corpus.
         """
         tokens = self._get_most_common_tokens(max_tokens, min_freq)
 
@@ -1521,9 +1611,17 @@ class Corpus(typing.Generic[T_co]):
         return splits[0]
 
     def obtain_statistics(self, label_type: Optional[str] = None, pretty_print: bool = True) -> Union[dict, str]:
-        """Print statistics about the class distribution and sentence sizes.
+        """Print statistics about the corpus, including the length of the sentences and the labels in the corpus.
 
-        only labels of sentences are taken into account
+        Args:
+            label_type: Optionally set this value to obtain statistics only for one specific type of label (such
+                as "ner" or "pos"). If not set, statistics for all labels will be returned.
+            pretty_print: If set to True, returns pretty json (indented for readabilty). If not, the json is
+                returned as a single line. Default: True.
+
+        Returns:
+            If pretty_print is True, returns a pretty print formatted string in json format. Otherwise, returns a
+                dictionary holding a json.
         """
         json_data = {
             "TRAIN": self._obtain_statistics_for(self.train, "TRAIN", label_type),
@@ -1595,7 +1693,21 @@ class Corpus(typing.Generic[T_co]):
     ) -> Dictionary:
         """Creates a dictionary of all labels assigned to the sentences in the corpus.
 
-        :return: dictionary of labels
+        Args:
+            label_type: The name of the label type for which the dictionary should be created. Some corpora have
+                multiple layers of annotation, such as "pos" and "ner". In this case, you should choose the label type
+                you are interested in.
+            min_count: Optionally set this to exclude rare labels from the dictionary (i.e., labels seen fewer
+                than the provided integer value).
+            add_unk: Optionally set this to True to include a "UNK" value in the dictionary. In most cases, this
+                is not needed since the label dictionary is well-defined, but some use cases might have open classes
+                and require this.
+            add_dev_test: Optionally set this to True to construct the label dictionary not only from the train
+                split, but also from dev and test. This is only necessary if some labels never appear in train but do
+                appear in one of the other splits.
+
+        Returns:
+            A Dictionary of all unique labels in the corpus.
         """
         if min_count > 0 and not add_unk:
             add_unk = True
@@ -1659,7 +1771,7 @@ class Corpus(typing.Generic[T_co]):
                 unked_count += count
 
         if len(label_dictionary.idx2item) == 0 or (
-            len(label_dictionary.idx2item) == 1 and "<unk>" in label_dictionary.get_items()
+            len(label_dictionary.idx2item) == 1 and label_dictionary.has_item("<unk>")
         ):
             log.error(f"ERROR: You specified label_type='{label_type}' which is not in this dataset!")
             contained_labels = ", ".join(
@@ -1774,6 +1886,13 @@ class Corpus(typing.Generic[T_co]):
         )
 
     def get_label_distribution(self):
+        """Counts occurrences of each label in the corpus and returns them as a dictionary object.
+
+        This allows you to get an idea of which label appears how often in the Corpus.
+
+        Returns:
+            Dictionary with labels as keys and their occurrences as values.
+        """
         class_to_count = defaultdict(lambda: 0)
         for sent in self.train:
             for label in sent.labels:
@@ -1781,6 +1900,11 @@ class Corpus(typing.Generic[T_co]):
         return class_to_count
 
     def get_all_sentences(self) -> ConcatDataset:
+        """Returns all sentences (spanning all three splits) in the :class:`Corpus`.
+
+        Returns:
+            A :class:`torch.utils.data.Dataset` object that includes all sentences of this corpus.
+        """
         parts = []
         if self.train:
             parts.append(self.train)
@@ -1797,7 +1921,8 @@ class Corpus(typing.Generic[T_co]):
         Args:
             tag_type: the label type to gather the tag labels
 
-        Returns: A Dictionary containing the labeled tags, including "O" and "<START>" and "<STOP>"
+        Returns:
+            A Dictionary containing the labeled tags, including "O" and "<START>" and "<STOP>"
 
         """
         tag_dictionary: Dictionary = Dictionary(add_unk=False)

@@ -83,3 +83,15 @@ As we can see, the linker can resolve that:
 - the first mention of "Barcelona" refers to the soccer club "[FC Barcelona](https://en.wikipedia.org/wiki/FC_Barcelona)"
 - the second mention of "Barcelona" refers to the city of "[Barcelona](https://en.wikipedia.org/wiki/Barcelona)"
 
+
+### Linking biomedical entities
+
+If you are working with biomedical data, we have a special entity linker capable of linking 
+biomedical entities to specific knowledge bases. In this case, check out this [advanced tutorial on 
+linking biomedical entities](entity-mention-linking.md).
+
+### Next
+
+Congrats, you learned how to link entities with Flair! 
+
+Next, let's discuss how to [predict part-of-speech tags with Flair](part-of-speech-tagging.md).

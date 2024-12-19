@@ -1,4 +1,8 @@
 flair.embeddings.transformer
 ============================
 
-.. automodule:: flair.embeddings.transformer
+.. currentmodule:: flair.embeddings.transformer
+
+.. autosummary::
+    :toctree: generated
+    :nosignatures:

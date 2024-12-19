@@ -1,4 +1,6 @@
-from flair.data import Dictionary
+import pytest
+
+from flair.data import Dictionary, Sentence
 from flair.embeddings import TransformerDocumentEmbeddings
 from flair.models import TextClassifier
 from flair.nn import Classifier
@@ -37,3 +39,16 @@ def test_if_loaded_embeddings_have_all_attributes(tasks_base_path):
     # check that context_length and use_context_separator is the same for both
     assert model.embeddings.context_length == loaded_single_task.embeddings.context_length
     assert model.embeddings.use_context_separator == loaded_single_task.embeddings.use_context_separator
+
+
+@pytest.mark.parametrize("cls_pooling", ["cls", "mean", "max"])
+def test_cls_pooling(cls_pooling):
+    embeddings = TransformerDocumentEmbeddings(
+        model="distilbert-base-uncased",
+        layers="-1",
+        cls_pooling=cls_pooling,
+        allow_long_sentences=True,
+    )
+    sentence = Sentence("Today is a good day.")
+    embeddings.embed(sentence)
+    assert sentence.embedding is not None

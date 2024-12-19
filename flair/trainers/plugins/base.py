@@ -59,6 +59,11 @@ class Pluggable:
 
     @property
     def plugins(self):
+        """Returns all plugins attached to this instance as a list of :class:`BasePlugin`.
+
+        Returns:
+            List of :class:`BasePlugin` instances attached to this `Pluggable`.
+        """
         return self._plugins
 
     def append_plugin(self, plugin):

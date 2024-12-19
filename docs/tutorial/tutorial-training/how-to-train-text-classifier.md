@@ -58,3 +58,7 @@ classifier.predict(sentence)
 print(sentence.labels)
 ```
 
+
+## Next 
+
+Next, learn [how to train an entity linker](how-to-train-span-classifier.md).
