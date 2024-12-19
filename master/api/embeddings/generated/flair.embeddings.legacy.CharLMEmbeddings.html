@@ -802,7 +802,7 @@ is written to the provided directory.</p></li>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.embeddings.legacy.CharLMEmbeddings.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(model[, detach, use_cache, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.embeddings.legacy.CharLMEmbeddings.__init__" title="flair.embeddings.legacy.CharLMEmbeddings.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(model[, detach, use_cache, ...])</p></td>
 <td><p>Initializes contextual string embeddings using a character-level language model.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -1004,30 +1004,6 @@ is written to the provided directory.</p></li>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">detach</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/legacy.py#L165-L379"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initializes contextual string embeddings using a character-level language model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – model string, one of ‘news-forward’, ‘news-backward’, ‘news-forward-fast’, ‘news-backward-fast’,
-‘mix-forward’, ‘mix-backward’, ‘german-forward’, ‘german-backward’, ‘polish-backward’, ‘polish-forward’
-depending on which character language model is desired.</p></li>
-<li><p><strong>detach</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if set to False, the gradient will propagate into the language model. this dramatically slows down
-training and often leads to worse results, so not recommended.</p></li>
-<li><p><strong>use_cache</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if set to False, will not write embeddings to file for later retrieval. this saves disk space but will
-not allow re-use of once computed embeddings that do not fit into memory</p></li>
-<li><p><strong>cache_directory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – if cache_directory is not set, the cache will be written to ~/.flair/embeddings. otherwise the cache
-is written to the provided directory.</p></li>
-</ul>
-</dd>
-</dl>
-<div class="deprecated">
-<p><span class="versionmodified deprecated">Deprecated since version 0.4: </span>Use ‘FlairEmbeddings’ instead.</p>
-</div>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.legacy.CharLMEmbeddings.train">
 <span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/legacy.py#L381-L382"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.legacy.CharLMEmbeddings.train" title="Link to this definition">#</a></dt>

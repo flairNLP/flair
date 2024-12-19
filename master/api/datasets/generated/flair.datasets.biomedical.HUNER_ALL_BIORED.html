@@ -823,13 +823,13 @@ segments the text into sentences and tokens (default <code class="xref py py-cla
 <td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Returns all sentences (spanning all three splits) in the <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.biomedical.HUNER_ALL_BIORED.get_entity_type_mapping" title="flair.datasets.biomedical.HUNER_ALL_BIORED.get_entity_type_mapping"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_entity_type_mapping</span></code></a>()</p></td>
 <td><p>Return the mapping of entity type given in the dataset to canonical types.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label_distribution</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_label_dictionary</span></code>(label_type[, ...])</p></td>
 <td><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p></td>
@@ -841,7 +841,7 @@ segments the text into sentences and tokens (default <code class="xref py py-cla
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
-<td><p>Print statistics about the class distribution and sentence sizes.</p></td>
+<td><p>Print statistics about the corpus, including the length of the sentences and the labels in the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_internal_dataset</span></code>(dataset, split)</p></td>
 <td><p>Converts a dataset given in hugging datasets format to our internal corpus representation.</p></td>
@@ -852,13 +852,13 @@ segments the text into sentences and tokens (default <code class="xref py py-cla
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dev</span></code></p></td>
-<td><p></p></td>
+<td><p>The dev split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></p></td>
-<td><p></p></td>
+<td><p>The test split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></p></td>
-<td><p></p></td>
+<td><p>The training split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 </tbody>
 </table>

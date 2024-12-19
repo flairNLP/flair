@@ -802,7 +802,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.text_text.OpusParallelCorpus.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(dataset, l1, l2[, use_tokenizer, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.text_text.OpusParallelCorpus.__init__" title="flair.datasets.text_text.OpusParallelCorpus.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(dataset, l1, l2[, use_tokenizer, ...])</p></td>
 <td><p>Instantiates a Parallel Corpus from OPUS.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
@@ -818,10 +818,10 @@ button.search-button {
 <td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Returns all sentences (spanning all three splits) in the <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label_distribution</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_in_memory</span></code>()</p></td>
 <td><p></p></td>
@@ -836,7 +836,7 @@ button.search-button {
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
-<td><p>Print statistics about the class distribution and sentence sizes.</p></td>
+<td><p>Print statistics about the corpus, including the length of the sentences and the labels in the corpus.</p></td>
 </tr>
 </tbody>
 </table>
@@ -844,37 +844,16 @@ button.search-button {
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dev</span></code></p></td>
-<td><p></p></td>
+<td><p>The dev split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></p></td>
-<td><p></p></td>
+<td><p>The test split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></p></td>
-<td><p></p></td>
+<td><p>The training split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/text_text.py#L61-L120"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates a Parallel Corpus from OPUS.</p>
-<p>see <a class="reference external" href="http://opus.nlpl.eu/">http://opus.nlpl.eu/</a>
-:type dataset: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param dataset: Name of the dataset (one of “tatoeba”)
-:type l1: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param l1: Language code of first language in pair (“en”, “de”, etc.)
-:type l2: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param l2: Language code of second language in pair (“en”, “de”, etc.)
-:type use_tokenizer: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>
-:param use_tokenizer: Whether or not to use in-built tokenizer
-:type max_tokens_per_doc: 
-:param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
-:type max_chars_per_doc: 
-:param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
-:type in_memory: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>
-:param in_memory: If True, keeps dataset fully in memory</p>
-</dd></dl>
-
 </dd></dl>
 
 </section>

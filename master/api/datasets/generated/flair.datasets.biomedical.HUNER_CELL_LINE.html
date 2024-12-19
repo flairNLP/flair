@@ -782,13 +782,34 @@ button.search-button {
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.HUNER_CELL_LINE.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/biomedical.py#L5093-L5094"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.HUNER_CELL_LINE.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Constructor method to initialize a <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>. You can define the train, dev and test split
+by passing the corresponding Dataset object to the constructor. At least one split should be defined.
+If the option <cite>sample_missing_splits</cite> is set to True, missing splits will be randomly sampled from the
+train split.</p>
+<p>In most cases, you will not use the constructor yourself. Rather, you will create a corpus using one of our
+helper methods that read common NLP filetypes. For instance, you can use
+<a class="reference internal" href="flair.datasets.sequence_labeling.ColumnCorpus.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.datasets.sequence_labeling.ColumnCorpus</span></code></a> to read CoNLL-formatted files directly into
+a <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>train</strong> – The split you use for model training.</p></li>
+<li><p><strong>dev</strong> – A holdout split typically used for model selection or early stopping.</p></li>
+<li><p><strong>test</strong> – The final test data to compute the score of the model.</p></li>
+<li><p><strong>name</strong> – A name that identifies the corpus.</p></li>
+<li><p><strong>sample_missing_splits</strong> – If set to True, missing splits are sampled from train. If set to False,
+missing splits are not sampled and left empty. Default: True.</p></li>
+<li><p><strong>random_seed</strong> – Set a random seed to control the sampling of missing splits.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.biomedical.HUNER_CELL_LINE.__init__" title="flair.datasets.biomedical.HUNER_CELL_LINE.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([sentence_splitter])</p></td>
-<td><p></p></td>
+<td><p>Constructor method to initialize a <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
 <td><p>Generates uniform label noise distribution in the chosen dataset split.</p></td>
@@ -803,10 +824,10 @@ button.search-button {
 <td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Returns all sentences (spanning all three splits) in the <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label_distribution</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_label_dictionary</span></code>(label_type[, ...])</p></td>
 <td><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p></td>
@@ -818,7 +839,7 @@ button.search-button {
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
-<td><p>Print statistics about the class distribution and sentence sizes.</p></td>
+<td><p>Print statistics about the corpus, including the length of the sentences and the labels in the corpus.</p></td>
 </tr>
 </tbody>
 </table>
@@ -826,13 +847,13 @@ button.search-button {
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dev</span></code></p></td>
-<td><p></p></td>
+<td><p>The dev split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></p></td>
-<td><p></p></td>
+<td><p>The test split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></p></td>
-<td><p></p></td>
+<td><p>The training split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 </tbody>
 </table>

@@ -797,7 +797,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.embeddings.document.DocumentCNNEmbeddings.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(embeddings[, kernels, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.embeddings.document.DocumentCNNEmbeddings.__init__" title="flair.embeddings.document.DocumentCNNEmbeddings.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(embeddings[, kernels, ...])</p></td>
 <td><p>Instantiates a CNN that works upon some token embeddings.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -999,26 +999,6 @@ button.search-button {
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">((100,</span> <span class="pre">3),</span> <span class="pre">(100,</span> <span class="pre">4),</span> <span class="pre">(100,</span> <span class="pre">5))</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reproject_words_dimension</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locked_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L606-L670"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates a CNN that works upon some token embeddings.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.embeddings.base.TokenEmbeddings.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]</span>) – a list of token embeddings</p></li>
-<li><p><strong>kernels</strong> – list of (number of kernels, kernel size)</p></li>
-<li><p><strong>reproject_words</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – boolean value, indicating whether to reproject the token embeddings in a separate linear layer before putting them into the rnn or not</p></li>
-<li><p><strong>reproject_words_dimension</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – output dimension of reprojecting token embeddings. If None the same output dimension as before will be taken.</p></li>
-<li><p><strong>dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the dropout value to be used</p></li>
-<li><p><strong>word_dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the word dropout value to be used, if 0.0 word dropout is not used</p></li>
-<li><p><strong>locked_dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the locked dropout value to be used, if 0.0 locked dropout is not used</p></li>
-<li><p><strong>fine_tune</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if True, allow to finetune the embeddings.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py attribute">
 <dt class="sig sig-object py" id="flair.embeddings.document.DocumentCNNEmbeddings.embeddings_name">
 <span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'DocumentCNNEmbeddings'</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentCNNEmbeddings.embeddings_name" title="Link to this definition">#</a></dt>

@@ -824,7 +824,7 @@ maximum length for the decoding will be used for all sentences.</p></li>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.models.Lemmatizer.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([embeddings, label_type, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.Lemmatizer.__init__" title="flair.models.Lemmatizer.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([embeddings, label_type, ...])</p></td>
 <td><p>Initializes a Lemmatizer model.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -1038,44 +1038,6 @@ maximum length for the decoding will be used for all sentences.</p></li>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lemma'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnn_input_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnn_hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rnn_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encode_characters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">char_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'common-chars-lemmatizer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sequence_length_dependent_on_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sequence_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_attention</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beam_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_symbol_for_encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_symbol_for_encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bidirectional_encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/lemmatizer_model.py#L18-L154"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initializes a Lemmatizer model.</p>
-<p>The model consists of a decoder and an encoder. The encoder is either a RNN-cell (torch.nn.GRU)
-or a Token-Embedding from flair if an embedding is handed to the constructor (token_embedding).
-The output of the encoder is used as the initial hidden state to the decoder, which is an RNN-cell (GRU)
-that predicts the lemma of the given token one letter at a time.
-Note that one can use data in which only those words are annotated that differ from their lemma or data
-in which all words are annotated with a (maybe equal) lemma.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>encode_characters</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, use a character embedding to additionally encode tokens per character.</p></li>
-<li><p><strong>start_symbol_for_encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, use a start symbol for encoding characters.</p></li>
-<li><p><strong>end_symbol_for_encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, use an end symbol for encoding characters.</p></li>
-<li><p><strong>bidirectional_encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, the character encoding is bidirectional.</p></li>
-<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../embeddings/generated/flair.embeddings.base.TokenEmbeddings.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a>]</span>) – Embedding used to encode sentence</p></li>
-<li><p><strong>rnn_input_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Input size of the RNN(‘s). Each letter of a token is represented by a hot-one-vector over
-the given character dictionary. This vector is transformed to a input_size vector with a linear layer.</p></li>
-<li><p><strong>rnn_hidden_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – size of the hidden state of the RNN(‘s).</p></li>
-<li><p><strong>rnn_layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of stacked RNN cells</p></li>
-<li><p><strong>beam_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of hypothesis used when decoding the output of the RNN. Only used in prediction.</p></li>
-<li><p><strong>char_dict</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a>]</span>) – Dictionary of characters the model is able to process. The dictionary must contain &lt;unk&gt; for
-the handling of unknown characters. If None, a standard dictionary will be loaded. One can either hand
-over a path to a dictionary or the dictionary itself.</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the gold labels to use.</p></li>
-<li><p><strong>max_sequence_length_dependent_on_input</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If set to True, the maximum length of a decoded sequence in
-the prediction depends on the sentences you want to lemmatize. To be precise the maximum length is
-computed as the length of the longest token in the sentences plus one.</p></li>
-<li><p><strong>max_sequence_length</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set to True and max_sequence_length_dependend_on_input is False a fixed
-maximum length for the decoding will be used for all sentences.</p></li>
-<li><p><strong>use_attention</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – whether to use attention. Only sensible if encoding via RNN</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.models.Lemmatizer.label_type">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label_type</span></span><a class="headerlink" href="#flair.models.Lemmatizer.label_type" title="Link to this definition">#</a></dt>

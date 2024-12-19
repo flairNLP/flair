@@ -806,23 +806,6 @@ modes. For instance, if you want to use an annealing scheduler during training, 
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.trainers.ModelTrainer.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corpus</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/trainer.py#L77-L92"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.ModelTrainer.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize a model trainer by passing a <a class="reference internal" href="flair.nn.Model.html#flair.nn.Model" title="flair.nn.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.nn.Model</span></code></a> (the architecture you want to train) and a
-<a class="reference internal" href="flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Corpus</span></code></a> (the labeled data you use to train and evaluate the model).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.nn.Model.html#flair.nn.Model" title="flair.nn.model.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a></span>) – The model that you want to train. The model should inherit from <a class="reference internal" href="flair.nn.Model.html#flair.nn.Model" title="flair.nn.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.nn.Model</span></code></a>. So for
-instance you should pass a <a class="reference internal" href="flair.models.TextClassifier.html#flair.models.TextClassifier" title="flair.models.TextClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.models.TextClassifier</span></code></a> if you want to train a text classifier,
-or <a class="reference internal" href="flair.models.SequenceTagger.html#flair.models.SequenceTagger" title="flair.models.SequenceTagger"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.models.SequenceTagger</span></code></a> if you want to train an RNN-based sequence labeler.</p></li>
-<li><p><strong>corpus</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a></span>) – The dataset (of type <a class="reference internal" href="flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Corpus</span></code></a>) used to train the model.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.ModelTrainer.reset_training_attributes">
 <span class="sig-name descname"><span class="pre">reset_training_attributes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/trainer.py#L94-L101"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.ModelTrainer.reset_training_attributes" title="Link to this definition">#</a></dt>
 <dd></dd></dl>

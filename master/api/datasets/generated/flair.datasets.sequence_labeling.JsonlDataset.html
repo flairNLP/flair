@@ -808,7 +808,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.sequence_labeling.JsonlDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path_to_jsonl_file[, encoding, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.sequence_labeling.JsonlDataset.__init__" title="flair.datasets.sequence_labeling.JsonlDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path_to_jsonl_file[, encoding, ...])</p></td>
 <td><p>Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.datasets.sequence_labeling.JsonlDataset.is_in_memory" title="flair.datasets.sequence_labeling.JsonlDataset.is_in_memory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_in_memory</span></code></a>()</p></td>
@@ -816,33 +816,6 @@ button.search-button {
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_jsonl_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_column_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_column_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'label'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metadata_column_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'metadata'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/sequence_labeling.py#L188-L239"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates a JsonlDataset and converts all annotated char spans to token tags using the IOB scheme.</p>
-<p>The expected file format is:</p>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;&lt;text_column_name&gt;&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;text&gt;&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;&lt;label_column_name&gt;&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="err">&lt;s</span><span class="kc">tart</span><span class="err">_char_i</span><span class="kc">n</span><span class="err">dex&gt;</span><span class="p">,</span><span class="w"> </span><span class="err">&lt;e</span><span class="kc">n</span><span class="err">d_char_i</span><span class="kc">n</span><span class="err">dex&gt;</span><span class="p">,</span><span class="w"> </span><span class="err">&lt;label&gt;</span><span class="p">],</span><span class="err">...</span><span class="p">],</span>
-<span class="w">    </span><span class="nt">&quot;&lt;metadata_column_name&gt;&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[[</span><span class="err">&lt;me</span><span class="kc">ta</span><span class="err">da</span><span class="kc">ta</span><span class="err">_key&gt;</span><span class="p">,</span><span class="w"> </span><span class="err">&lt;me</span><span class="kc">ta</span><span class="err">da</span><span class="kc">ta</span><span class="err">_value&gt;</span><span class="p">],</span><span class="err">...</span><span class="p">]</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path_to_jsonl_file</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – File to read</p></li>
-<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – file encoding (default “utf-8”)</p></li>
-<li><p><strong>text_column_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the text column</p></li>
-<li><p><strong>label_column_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the label column</p></li>
-<li><p><strong>metadata_column_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the metadata column</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The type of label to predict (default “ner”)</p></li>
-<li><p><strong>use_tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../../generated/flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Specify a custom tokenizer to split the text into tokens.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.sequence_labeling.JsonlDataset.is_in_memory">
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/sequence_labeling.py#L300-L302"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.sequence_labeling.JsonlDataset.is_in_memory" title="Link to this definition">#</a></dt>

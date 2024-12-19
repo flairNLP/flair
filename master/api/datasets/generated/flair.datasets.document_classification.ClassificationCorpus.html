@@ -807,7 +807,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.document_classification.ClassificationCorpus.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(data_folder[, label_type, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus.__init__" title="flair.datasets.document_classification.ClassificationCorpus.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(data_folder[, label_type, ...])</p></td>
 <td><p>Instantiates a Corpus from text classification-formatted task data.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
@@ -823,10 +823,10 @@ button.search-button {
 <td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Returns all sentences (spanning all three splits) in the <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label_distribution</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_label_dictionary</span></code>(label_type[, ...])</p></td>
 <td><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p></td>
@@ -838,7 +838,7 @@ button.search-button {
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
-<td><p>Print statistics about the class distribution and sentence sizes.</p></td>
+<td><p>Print statistics about the corpus, including the length of the sentences and the labels in the corpus.</p></td>
 </tr>
 </tbody>
 </table>
@@ -846,41 +846,16 @@ button.search-button {
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dev</span></code></p></td>
-<td><p></p></td>
+<td><p>The dev split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></p></td>
-<td><p></p></td>
+<td><p>The test split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></p></td>
-<td><p></p></td>
+<td><p>The training split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type='class'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_tokens=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_chars=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_if_longer_than=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_labels=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_examples_without_labels=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/document_classification.py#L28-L120"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates a Corpus from text classification-formatted task data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data_folder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – base folder with the task data</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the label</p></li>
-<li><p><strong>train_file</strong> – the name of the train file</p></li>
-<li><p><strong>test_file</strong> – the name of the test file</p></li>
-<li><p><strong>dev_file</strong> – the name of the dev file, if None, dev data is sampled from train</p></li>
-<li><p><strong>truncate_to_max_tokens</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of tokens</p></li>
-<li><p><strong>truncate_to_max_chars</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of chars</p></li>
-<li><p><strong>filter_if_longer_than</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, filters documents that are longer that the specified number of tokens.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../../generated/flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Tokenizer for dataset, default is SegtokTokenizer</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’ if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if even this is too much for your memory, use ‘disk’.</p></li>
-<li><p><strong>label_name_map</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Optionally map label names to different schema.</p></li>
-<li><p><strong>allow_examples_without_labels</strong> – set to True to allow Sentences without label in the corpus.</p></li>
-<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Default is ‘utf-8’ but some datasets are in ‘latin-1</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>

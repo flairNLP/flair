@@ -804,7 +804,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.models.TokenClassifier.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(embeddings, label_dictionary, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.TokenClassifier.__init__" title="flair.models.TokenClassifier.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(embeddings, label_dictionary, ...)</p></td>
 <td><p>Initializes a TokenClassifier.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -1006,23 +1006,6 @@ button.search-button {
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BIOES'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifierargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/word_tagger_model.py#L18-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initializes a TokenClassifier.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../embeddings/generated/flair.embeddings.base.TokenEmbeddings.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a></span>) – word embeddings used in tagger</p></li>
-<li><p><strong>label_dictionary</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a></span>) – dictionary of labels or BIO/BIOES tags you want to predict</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – string identifier for tag type</p></li>
-<li><p><strong>span_encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the format to encode spans as tags, either “BIO” or “BIOES”</p></li>
-<li><p><strong>**classifierargs</strong> – The arguments propagated to <a class="reference internal" href="flair.nn.DefaultClassifier.html#flair.nn.DefaultClassifier.__init__" title="flair.nn.DefaultClassifier.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.nn.DefaultClassifier.__init__()</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.models.TokenClassifier.label_type">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label_type</span></span><a class="headerlink" href="#flair.models.TokenClassifier.label_type" title="Link to this definition">#</a></dt>

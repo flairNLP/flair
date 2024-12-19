@@ -788,12 +788,6 @@ button.search-button {
 <span class="sig-name descname"><span class="pre">embeddings_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#flair.embeddings.base.Embeddings.embeddings_name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/embeddings/base.py#L20-L27"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.Embeddings.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Set some attributes that would otherwise result in errors. Overwrite these in your embedding class.</p>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.embeddings.base.Embeddings.embedding_length">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.base.Embeddings.embedding_length" title="Link to this definition">#</a></dt>
@@ -894,21 +888,6 @@ This method was proposed by Liu et al. (2019) in the paper:
 <p>The implementation is copied and slightly modified from the allennlp repository and is licensed under Apache 2.0.
 It can be found under:
 <a class="github reference external" href="https://github.com/allenai/allennlp/blob/master/allennlp/modules/scalar_mix.py">allenai/allennlp</a>.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.embeddings.base.ScalarMix.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mixture_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/embeddings/base.py#L122-L156"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.ScalarMix.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Inits scalar mix implementation.</p>
-<p><code class="docutils literal notranslate"><span class="pre">mixture</span> <span class="pre">=</span> <span class="pre">gamma</span> <span class="pre">*</span> <span class="pre">sum(s_k</span> <span class="pre">*</span> <span class="pre">tensor_k)</span></code> where <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">=</span> <span class="pre">softmax(w)</span></code>, with <code class="docutils literal notranslate"><span class="pre">w</span></code> and <code class="docutils literal notranslate"><span class="pre">gamma</span></code> scalar parameters.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>mixture_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – size of mixtures (usually the number of layers)</p></li>
-<li><p><strong>trainable</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – weather or not the weights should be learnable.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.embeddings.base.ScalarMix.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensors</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/embeddings/base.py#L158-L182"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.base.ScalarMix.forward" title="Link to this definition">#</a></dt>

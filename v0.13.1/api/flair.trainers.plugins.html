@@ -1015,22 +1015,6 @@ button.search-button {
 <dd><p>Bases: <a class="reference internal" href="#flair.trainers.plugins.TrainerPlugin" title="flair.trainers.plugins.base.TrainerPlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainerPlugin</span></code></a></p>
 <p>Plugin that takes care of tensorboard logging.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/trainers/plugins/loggers/tensorboard.py#L14-L43"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initializes the TensorboardLogger.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>log_dir</strong> – Directory into which tensorboard log files will be written</p></li>
-<li><p><strong>comment</strong> – The comment to specify Comment log_dir suffix appended to the default
-<code class="docutils literal notranslate"><span class="pre">log_dir</span></code>. If <code class="docutils literal notranslate"><span class="pre">log_dir</span></code> is assigned, this argument has no effect.</p></li>
-<li><p><strong>tracked_metrics</strong> – List of tuples that specify which metrics (in addition to the main_score) shall be plotted in tensorboard, could be [(“macro avg”, ‘f1-score’), (“macro avg”, ‘precision’)] for example</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger.metric_recorded">
 <span class="sig-name descname"><span class="pre">metric_recorded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/trainers/plugins/loggers/tensorboard.py#L45-L54"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger.metric_recorded" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -1052,12 +1036,6 @@ button.search-button {
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">BasePlugin</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/trainers/plugins/base.py#L179-L264"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Base class for all plugins.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/trainers/plugins/base.py#L182-L185"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the base plugin.</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.BasePlugin.attach_to">
 <span class="sig-name descname"><span class="pre">attach_to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pluggable</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/trainers/plugins/base.py#L187-L209"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.BasePlugin.attach_to" title="Link to this definition">#</a></dt>
@@ -1121,17 +1099,6 @@ button.search-button {
 <dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.valid_events">
 <span class="sig-name descname"><span class="pre">valid_events</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#flair.trainers.plugins.Pluggable.valid_events" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plugins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/trainers/plugins/base.py#L39-L61"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.Pluggable.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize a <cite>Pluggable</cite>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>plugins</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="#flair.trainers.plugins.BasePlugin" title="flair.trainers.plugins.base.BasePlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasePlugin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<a class="reference internal" href="#flair.trainers.plugins.BasePlugin" title="flair.trainers.plugins.base.BasePlugin"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasePlugin</span></code></a>]]]</span>) – Plugins which should be attached to this <cite>Pluggable</cite>.</p>
-</dd>
-</dl>
-</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.trainers.plugins.Pluggable.plugins">
@@ -1236,23 +1203,6 @@ button.search-button {
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.trainers.plugins.</span></span><span class="sig-name descname"><span class="pre">MetricRecord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">walltime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/trainers/plugins/metric_records.py#L64-L132"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricRecord" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Represents a recorded metric value.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">typ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">walltime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/trainers/plugins/metric_records.py#L68-L90"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Create a metric record.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Name of the metric.</p></li>
-<li><p><strong>typ</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecordType</span></code></span>) – Type of metric.</p></li>
-<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span>) – Value of the metric (can be anything: scalar, tensor, image, etc.).</p></li>
-<li><p><strong>global_step</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The time_step of the log. This should be incremented the next time this metric is logged again. E.g. if you log every epoch, set the global_step to the current epoch.</p></li>
-<li><p><strong>walltime</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – Time of recording this metric.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.trainers.plugins.MetricRecord.joined_name">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">joined_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.trainers.plugins.MetricRecord.joined_name" title="Link to this definition">#</a></dt>

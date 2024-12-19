@@ -808,7 +808,7 @@ To use all labels from ‘ner’, pass ‘ner’</p></li>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.models.EntityMentionLinker.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(candidate_generator, preprocessor, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.EntityMentionLinker.__init__" title="flair.models.EntityMentionLinker.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(candidate_generator, preprocessor, ...)</p></td>
 <td><p>Initializes an entity mention linker.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -1016,27 +1016,6 @@ To use all labels from ‘ner’, pass ‘ner’</p></li>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">candidate_generator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_label_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/entity_mention_linking.py#L670-L699"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initializes an entity mention linker.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>candidate_generator</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">CandidateSearchIndex</span></code></span>) – Strategy to find matching entities for a given mention</p></li>
-<li><p><strong>preprocessor</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">EntityPreprocessor</span></code></span>) – Pre-processing strategy to transform / clean entity mentions</p></li>
-<li><p><strong>entity_label_types</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]]</span>) – A label type or sequence of label types of the required entities.
-You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set.
-E.g. to use only ‘disease’ and ‘chemical’ labels from a NER-tagger: <cite>{‘ner’: {‘disease’, ‘chemical’}}</cite>.
-To use all labels from ‘ner’, pass ‘ner’</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The label under which the predictions of the linker should be stored</p></li>
-<li><p><strong>dictionary</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../datasets/generated/flair.datasets.entity_linking.EntityLinkingDictionary.html#flair.datasets.entity_linking.EntityLinkingDictionary" title="flair.datasets.entity_linking.EntityLinkingDictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">EntityLinkingDictionary</span></code></a></span>) – The dictionary listing all entities</p></li>
-<li><p><strong>batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Batch size to encode mentions/dictionary names</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.EntityMentionLinker.get_entity_label_types">
 <span class="sig-name descname"><span class="pre">get_entity_label_types</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entity_label_types</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/entity_mention_linking.py#L701-L722"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.EntityMentionLinker.get_entity_label_types" title="Link to this definition">#</a></dt>

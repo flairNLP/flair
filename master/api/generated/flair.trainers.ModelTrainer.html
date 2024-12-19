@@ -797,7 +797,7 @@ or <a class="reference internal" href="flair.models.SequenceTagger.html#flair.mo
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.trainers.ModelTrainer.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(model, corpus)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.trainers.ModelTrainer.__init__" title="flair.trainers.ModelTrainer.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(model, corpus)</p></td>
 <td><p>Initialize a model trainer by passing a <a class="reference internal" href="flair.nn.Model.html#flair.nn.Model" title="flair.nn.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.nn.Model</span></code></a> (the architecture you want to train) and a <a class="reference internal" href="flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Corpus</span></code></a> (the labeled data you use to train and evaluate the model).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_plugin</span></code>(plugin)</p></td>
@@ -850,23 +850,6 @@ or <a class="reference internal" href="flair.models.SequenceTagger.html#flair.mo
 <dt class="sig sig-object py" id="flair.trainers.ModelTrainer.valid_events">
 <span class="sig-name descname"><span class="pre">valid_events</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional[set[EventIdenifier]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'_training_exception',</span> <span class="pre">'_training_finally',</span> <span class="pre">'after_evaluation',</span> <span class="pre">'after_setup',</span> <span class="pre">'after_training',</span> <span class="pre">'after_training_batch',</span> <span class="pre">'after_training_epoch',</span> <span class="pre">'after_training_loop',</span> <span class="pre">'before_training_batch',</span> <span class="pre">'before_training_epoch',</span> <span class="pre">'before_training_optimizer_step',</span> <span class="pre">'metric_recorded',</span> <span class="pre">'training_interrupt'}</span></em><a class="headerlink" href="#flair.trainers.ModelTrainer.valid_events" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corpus</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/trainer.py#L77-L92"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initialize a model trainer by passing a <a class="reference internal" href="flair.nn.Model.html#flair.nn.Model" title="flair.nn.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.nn.Model</span></code></a> (the architecture you want to train) and a
-<a class="reference internal" href="flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Corpus</span></code></a> (the labeled data you use to train and evaluate the model).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.nn.Model.html#flair.nn.Model" title="flair.nn.model.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a></span>) – The model that you want to train. The model should inherit from <a class="reference internal" href="flair.nn.Model.html#flair.nn.Model" title="flair.nn.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.nn.Model</span></code></a>. So for
-instance you should pass a <a class="reference internal" href="flair.models.TextClassifier.html#flair.models.TextClassifier" title="flair.models.TextClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.models.TextClassifier</span></code></a> if you want to train a text classifier,
-or <a class="reference internal" href="flair.models.SequenceTagger.html#flair.models.SequenceTagger" title="flair.models.SequenceTagger"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.models.SequenceTagger</span></code></a> if you want to train an RNN-based sequence labeler.</p></li>
-<li><p><strong>corpus</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a></span>) – The dataset (of type <a class="reference internal" href="flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Corpus</span></code></a>) used to train the model.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="flair.trainers.ModelTrainer.model">

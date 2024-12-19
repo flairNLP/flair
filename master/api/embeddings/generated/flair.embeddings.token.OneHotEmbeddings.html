@@ -794,7 +794,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.embeddings.token.OneHotEmbeddings.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(vocab_dictionary[, field, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.embeddings.token.OneHotEmbeddings.__init__" title="flair.embeddings.token.OneHotEmbeddings.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(vocab_dictionary[, field, ...])</p></td>
 <td><p>Initializes one-hot encoded word embeddings and a trainable embedding layer.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -999,22 +999,6 @@ button.search-button {
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vocab_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'text'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/token.py#L1107-L1142"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initializes one-hot encoded word embeddings and a trainable embedding layer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>vocab_dictionary</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../../generated/flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a></span>) – the vocabulary that will be encoded</p></li>
-<li><p><strong>field</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – by default, the ‘text’ of tokens is embedded, but you can also embed tags such as ‘pos’</p></li>
-<li><p><strong>embedding_length</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – dimensionality of the trainable embedding layer</p></li>
-<li><p><strong>stable</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if True, use the stable embeddings as described in <a class="reference external" href="https://arxiv.org/abs/2110.02861">https://arxiv.org/abs/2110.02861</a></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.embeddings.token.OneHotEmbeddings.embedding_length">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.token.OneHotEmbeddings.embedding_length" title="Link to this definition">#</a></dt>

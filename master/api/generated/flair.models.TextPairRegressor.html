@@ -812,7 +812,7 @@ otherwise a linear layer with random parameters will be created.</p></li>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.models.TextPairRegressor.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(embeddings, label_type[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.TextPairRegressor.__init__" title="flair.models.TextPairRegressor.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(embeddings, label_type[, ...])</p></td>
 <td><p>Initialize the Text Pair Regression Model.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -1011,27 +1011,6 @@ otherwise a linear layer with random parameters will be created.</p></li>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_separately</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locked_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/pairwise_regression_model.py#L27-L86"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the Text Pair Regression Model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the label</p></li>
-<li><p><strong>embed_separately</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if True, the sentence embeddings will be concatenated,
-if False both sentences will be combined and newly embedded.</p></li>
-<li><p><strong>dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – dropout</p></li>
-<li><p><strong>locked_dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – locked_dropout</p></li>
-<li><p><strong>word_dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – word_dropout</p></li>
-<li><p><strong>decoder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>]</span>) – if provided, a that specific layer will be used as decoder,
-otherwise a linear layer with random parameters will be created.</p></li>
-<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../embeddings/generated/flair.embeddings.base.DocumentEmbeddings.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></span>) – embeddings used to embed each data point</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.models.TextPairRegressor.label_type">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label_type</span></span><a class="headerlink" href="#flair.models.TextPairRegressor.label_type" title="Link to this definition">#</a></dt>

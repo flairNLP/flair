@@ -786,8 +786,7 @@ button.search-button {
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.PrefixedSequenceTagger.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augmentation_strategy</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/prefixed_tagger.py#L202-L208"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.PrefixedSequenceTagger.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.</p>
-<p>In case of multitask learning, pass shared embeddings or shared rnn into respective attributes.</p>
+<dd><p>Constructor for this class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -822,7 +821,7 @@ button.search-button {
 <td><p>Static wrapper function returning an RNN instance from PyTorch.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.models.PrefixedSequenceTagger.__init__" title="flair.models.PrefixedSequenceTagger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(*args, augmentation_strategy, **kwargs)</p></td>
-<td><p>Sequence Tagger class for predicting labels for single tokens.</p></td>
+<td><p>Constructor for this class.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
 <td><p>Add a child module to the current module.</p></td>
@@ -867,10 +866,10 @@ button.search-button {
 <td><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">float</span></code> datatype.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code>(sentence_tensor, lengths)</p></td>
-<td><p>Forward propagation through network.</p></td>
+<td><p>Forward pass through the SequenceTagger.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.models.PrefixedSequenceTagger.forward_loss" title="flair.models.PrefixedSequenceTagger.forward_loss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward_loss</span></code></a>(sentences)</p></td>
-<td><p>Performs a forward pass and returns a loss tensor for backpropagation.</p></td>
+<td><p>Conducts a forward pass through the SequenceTagger using labeled sentences and return the loss.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_buffer</span></code>(target)</p></td>
 <td><p>Return the buffer given by <code class="docutils literal notranslate"><span class="pre">target</span></code> if it exists, otherwise throw an error.</p></td>
@@ -921,7 +920,7 @@ button.search-button {
 <td><p>Return an iterator over module parameters.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.PrefixedSequenceTagger.predict" title="flair.models.PrefixedSequenceTagger.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(sentences[, mini_batch_size, ...])</p></td>
-<td><p>Predicts labels for current batch with CRF or Softmax.</p></td>
+<td><p>Call this method to predict labels for sentences.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_model_card</span></code>()</p></td>
 <td><p>This method produces a log message that includes all recorded parameters the model was trained with.</p></td>
@@ -1046,11 +1045,16 @@ button.search-button {
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.PrefixedSequenceTagger.forward_loss">
 <span class="sig-name descname"><span class="pre">forward_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/prefixed_tagger.py#L227-L240"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.PrefixedSequenceTagger.forward_loss" title="Link to this definition">#</a></dt>
-<dd><p>Performs a forward pass and returns a loss tensor for backpropagation.</p>
-<p>Implement this to enable training.</p>
+<dd><p>Conducts a forward pass through the SequenceTagger using labeled sentences and return the loss.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span></p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sentences</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">PrefixedSentence</span></code>]]</span>) – A batch of labeled sentences.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple consisting of the loss tensor and the number of tokens in the batch.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1058,7 +1062,10 @@ button.search-button {
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.PrefixedSequenceTagger.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_probabilities_for_all_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_storage_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_token_predictions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/prefixed_tagger.py#L242-L312"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.PrefixedSequenceTagger.predict" title="Link to this definition">#</a></dt>
-<dd><p>Predicts labels for current batch with CRF or Softmax.</p>
+<dd><p>Call this method to predict labels for sentences.</p>
+<p>Predictions are directly added to the Sentence objects that are passed to this method. This means that
+the predict() method does not return predictions. Rather, predictions are stored at each sentence and can
+be retrieved by calling <a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence.get_labels" title="flair.data.Sentence.get_labels"><code class="xref py py-func docutils literal notranslate"><span class="pre">flair.data.Sentence.get_labels()</span></code></a> on each <a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.data.Sentence</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

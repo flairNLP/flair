@@ -806,7 +806,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.sequence_labeling.MultiFileColumnCorpus.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(column_format[, train_files, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.sequence_labeling.MultiFileColumnCorpus.__init__" title="flair.datasets.sequence_labeling.MultiFileColumnCorpus.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(column_format[, train_files, ...])</p></td>
 <td><p>Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
@@ -822,10 +822,10 @@ button.search-button {
 <td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Returns all sentences (spanning all three splits) in the <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label_distribution</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_label_dictionary</span></code>(label_type[, ...])</p></td>
 <td><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p></td>
@@ -837,7 +837,7 @@ button.search-button {
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
-<td><p>Print statistics about the class distribution and sentence sizes.</p></td>
+<td><p>Print statistics about the corpus, including the length of the sentences and the labels in the corpus.</p></td>
 </tr>
 </tbody>
 </table>
@@ -845,41 +845,16 @@ button.search-button {
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dev</span></code></p></td>
-<td><p></p></td>
+<td><p>The dev split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></p></td>
-<td><p></p></td>
+<td><p>The test split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></p></td>
-<td><p></p></td>
+<td><p>The training split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column_format</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_files</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_delimiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\\\\s+'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment_symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">document_separator_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_first_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">banned_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_whitespace_after</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/sequence_labeling.py#L314-L420"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data_folder</strong> – base folder with the task data</p></li>
-<li><p><strong>column_format</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – a map specifying the column format</p></li>
-<li><p><strong>train_files</strong> – the name of the train files</p></li>
-<li><p><strong>test_files</strong> – the name of the test files</p></li>
-<li><p><strong>dev_files</strong> – the name of the dev files, if empty, dev data is sampled from train</p></li>
-<li><p><strong>column_delimiter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – default is to split on any separatator, but you can overwrite for instance with “t” to split only on tabs</p></li>
-<li><p><strong>comment_symbol</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – if set, lines that begin with this symbol are treated as comments</p></li>
-<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – file encoding (default “utf-8”)</p></li>
-<li><p><strong>document_separator_token</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – If provided, sentences that function as document boundaries are so marked</p></li>
-<li><p><strong>skip_first_line</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – set to True if your dataset has a header line</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads</p></li>
-<li><p><strong>label_name_map</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Optionally map tag names to different schema.</p></li>
-<li><p><strong>banned_sentences</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Optionally remove sentences from the corpus. Works only if <cite>in_memory</cite> is true</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>

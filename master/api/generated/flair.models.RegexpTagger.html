@@ -802,7 +802,7 @@ The regexp are compiled internally and an re.error will be raised if the compila
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.models.RegexpTagger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(mapping)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.RegexpTagger.__init__" title="flair.models.RegexpTagger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(mapping)</p></td>
 <td><p>This tagger is capable of tagging sentence objects with given regexp -&gt; label mappings.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.models.RegexpTagger.predict" title="flair.models.RegexpTagger.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(sentences)</p></td>
@@ -824,22 +824,6 @@ The regexp are compiled internally and an re.error will be raised if the compila
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mapping</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/regexp_tagger.py#L48-L62"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>This tagger is capable of tagging sentence objects with given regexp -&gt; label mappings.</p>
-<p>I.e: The tuple (r’([”'])(?:(?=(\?))2.)*?1’, ‘QUOTE’) maps every match of the regexp to
-a &lt;QUOTE&gt; labeled span and therefore labels the given sentence object with RegexpTagger.predict().
-This tagger supports multilabeling so tokens can be included in multiple labeled spans.
-The regexp are compiled internally and an re.error will be raised if the compilation of a given regexp fails.</p>
-<p>If a match violates (in this case overlaps) a token span, an exception is raised.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>mapping</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]], <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – A list of tuples or a single tuple representing a mapping as regexp -&gt; label</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.models.RegexpTagger.registered_labels">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">registered_labels</span></span><a class="headerlink" href="#flair.models.RegexpTagger.registered_labels" title="Link to this definition">#</a></dt>

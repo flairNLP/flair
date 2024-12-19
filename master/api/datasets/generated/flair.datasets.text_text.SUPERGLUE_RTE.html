@@ -790,7 +790,7 @@ This file contains unlabeled test data to evaluate models on the SuperGlue RTE t
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.text_text.SUPERGLUE_RTE.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([base_path, max_tokens_per_doc, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.text_text.SUPERGLUE_RTE.__init__" title="flair.datasets.text_text.SUPERGLUE_RTE.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([base_path, max_tokens_per_doc, ...])</p></td>
 <td><p>Creates a DataPairCorpus for the SuperGlue Recognizing Textual Entailment (RTE) data.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
@@ -806,10 +806,10 @@ This file contains unlabeled test data to evaluate models on the SuperGlue RTE t
 <td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Returns all sentences (spanning all three splits) in the <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label_distribution</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.datasets.text_text.SUPERGLUE_RTE.jsonl_from_eval_dataset" title="flair.datasets.text_text.SUPERGLUE_RTE.jsonl_from_eval_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jsonl_from_eval_dataset</span></code></a>(folder_path)</p></td>
 <td><p></p></td>
@@ -824,7 +824,7 @@ This file contains unlabeled test data to evaluate models on the SuperGlue RTE t
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
-<td><p>Print statistics about the class distribution and sentence sizes.</p></td>
+<td><p>Print statistics about the corpus, including the length of the sentences and the labels in the corpus.</p></td>
 </tr>
 </tbody>
 </table>
@@ -832,25 +832,16 @@ This file contains unlabeled test data to evaluate models on the SuperGlue RTE t
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dev</span></code></p></td>
-<td><p></p></td>
+<td><p>The dev split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></p></td>
-<td><p></p></td>
+<td><p>The test split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></p></td>
-<td><p></p></td>
+<td><p>The training split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/text_text.py#L1307-L1372"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Creates a DataPairCorpus for the SuperGlue Recognizing Textual Entailment (RTE) data.</p>
-<p>See <a class="reference external" href="https://super.gluebenchmark.com/tasks">https://super.gluebenchmark.com/tasks</a>
-Additionaly to the Corpus we have a eval_dataset containing the test file of the SuperGlue data.
-This file contains unlabeled test data to evaluate models on the SuperGlue RTE task.</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.text_text.SUPERGLUE_RTE.jsonl_from_eval_dataset">
 <span class="sig-name descname"><span class="pre">jsonl_from_eval_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/text_text.py#L1379-L1390"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.text_text.SUPERGLUE_RTE.jsonl_from_eval_dataset" title="Link to this definition">#</a></dt>

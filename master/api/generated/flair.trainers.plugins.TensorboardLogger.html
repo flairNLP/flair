@@ -799,7 +799,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.trainers.plugins.TensorboardLogger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([log_dir, comment, tracked_metrics])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.trainers.plugins.TensorboardLogger.__init__" title="flair.trainers.plugins.TensorboardLogger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([log_dir, comment, tracked_metrics])</p></td>
 <td><p>Initializes the TensorboardLogger.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">attach_to</span></code>(pluggable)</p></td>
@@ -842,22 +842,6 @@ button.search-button {
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tracked_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/tensorboard.py#L14-L43"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initializes the TensorboardLogger.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>log_dir</strong> – Directory into which tensorboard log files will be written</p></li>
-<li><p><strong>comment</strong> – The comment to specify Comment log_dir suffix appended to the default
-<code class="docutils literal notranslate"><span class="pre">log_dir</span></code>. If <code class="docutils literal notranslate"><span class="pre">log_dir</span></code> is assigned, this argument has no effect.</p></li>
-<li><p><strong>tracked_metrics</strong> – List of tuples that specify which metrics (in addition to the main_score) shall be plotted in tensorboard, could be [(“macro avg”, ‘f1-score’), (“macro avg”, ‘precision’)] for example</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.trainers.plugins.TensorboardLogger.metric_recorded">
 <span class="sig-name descname"><span class="pre">metric_recorded</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/trainers/plugins/loggers/tensorboard.py#L45-L54"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.trainers.plugins.TensorboardLogger.metric_recorded" title="Link to this definition">#</a></dt>

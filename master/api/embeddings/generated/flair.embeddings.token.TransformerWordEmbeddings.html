@@ -784,7 +784,7 @@ button.search-button {
 <li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of transformer model (see <a class="reference external" href="https://huggingface.co/transformers/pretrained_models.html">https://huggingface.co/transformers/pretrained_models.html</a> for options)</p></li>
 <li><p><strong>is_document_embedding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, the embedding can be used as DocumentEmbedding too.</p></li>
 <li><p><strong>allow_long_sentences</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, too long sentences will be patched and strided and afterwards combined.</p></li>
-<li><p><strong>**kwargs</strong> – Arguments propagated to <a class="reference internal" href="flair.embeddings.transformer.TransformerEmbeddings.html#id0" title="flair.embeddings.transformer.TransformerEmbeddings.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.embeddings.transformer.TransformerEmbeddings.__init__()</span></code></a></p></li>
+<li><p><strong>**kwargs</strong> – Arguments propagated to <a class="reference internal" href="flair.embeddings.transformer.TransformerEmbeddings.html#flair.embeddings.transformer.TransformerEmbeddings.__init__" title="flair.embeddings.transformer.TransformerEmbeddings.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.embeddings.transformer.TransformerEmbeddings.__init__()</span></code></a></p></li>
 </ul>
 </dd>
 </dl>
@@ -793,7 +793,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.embeddings.token.TransformerWordEmbeddings.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([model, is_document_embedding, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.embeddings.token.TransformerWordEmbeddings.__init__" title="flair.embeddings.token.TransformerWordEmbeddings.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([model, is_document_embedding, ...])</p></td>
 <td><p>Bidirectional transformer embeddings of words from various transformer architectures.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -1011,22 +1011,6 @@ button.search-button {
 <dt class="sig sig-object py" id="flair.embeddings.token.TransformerWordEmbeddings.onnx_cls">
 <span class="sig-name descname"><span class="pre">onnx_cls</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/transformer.py#L985-L991"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.token.TransformerWordEmbeddings.onnx_cls" title="Link to this definition">#</a></dt>
 <dd><p>alias of <a class="reference internal" href="flair.embeddings.transformer.TransformerOnnxWordEmbeddings.html#flair.embeddings.transformer.TransformerOnnxWordEmbeddings" title="flair.embeddings.transformer.TransformerOnnxWordEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerOnnxWordEmbeddings</span></code></a></p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bert-base-uncased'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_document_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_long_sentences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/token.py#L32-L54"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Bidirectional transformer embeddings of words from various transformer architectures.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of transformer model (see <a class="reference external" href="https://huggingface.co/transformers/pretrained_models.html">https://huggingface.co/transformers/pretrained_models.html</a> for options)</p></li>
-<li><p><strong>is_document_embedding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, the embedding can be used as DocumentEmbedding too.</p></li>
-<li><p><strong>allow_long_sentences</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, too long sentences will be patched and strided and afterwards combined.</p></li>
-<li><p><strong>**kwargs</strong> – Arguments propagated to <a class="reference internal" href="flair.embeddings.transformer.TransformerEmbeddings.html#id0" title="flair.embeddings.transformer.TransformerEmbeddings.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.embeddings.transformer.TransformerEmbeddings.__init__()</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">

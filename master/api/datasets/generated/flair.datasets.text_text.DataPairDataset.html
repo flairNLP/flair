@@ -808,7 +808,7 @@ For each data pair we create a flair.data.DataPair object.</p>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.text_text.DataPairDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path_to_data[, columns, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.text_text.DataPairDataset.__init__" title="flair.datasets.text_text.DataPairDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path_to_data[, columns, ...])</p></td>
 <td><p>Creates a Dataset for pairs of sentences/paragraphs.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.datasets.text_text.DataPairDataset.is_in_memory" title="flair.datasets.text_text.DataPairDataset.is_in_memory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_in_memory</span></code></a>()</p></td>
@@ -816,33 +816,6 @@ For each data pair we create a flair.data.DataPair object.</p>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_first_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\\t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/text_text.py#L319-L410"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Creates a Dataset for pairs of sentences/paragraphs.</p>
-<p>The file needs to be in a column format,
-where each line has a column for the first sentence/paragraph, the second sentence/paragraph and the label
-seperated by e.g. ‘t’ (just like in the glue RTE-dataset <a class="reference external" href="https://gluebenchmark.com/tasks">https://gluebenchmark.com/tasks</a>) .
-For each data pair we create a flair.data.DataPair object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path_to_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – path to the data file</p></li>
-<li><p><strong>columns</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – list of integers that indicate the respective columns. The first entry is the column for the first sentence, the second for the second sentence and the third for the label. Default [0,1,2]</p></li>
-<li><p><strong>max_tokens_per_doc</strong> – If set, shortens sentences to this maximum number of tokens</p></li>
-<li><p><strong>max_chars_per_doc</strong> – If set, shortens sentences to this maximum number of characters</p></li>
-<li><p><strong>use_tokenizer</strong> – Whether to use in-built tokenizer</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, data will be saved in list of flair.data.DataPair objects, otherwise we use lists with simple strings which needs less space</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Name of the label of the data pairs</p></li>
-<li><p><strong>skip_first_line</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, first line of data file will be ignored</p></li>
-<li><p><strong>separator</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Separator between columns in the data file</p></li>
-<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Encoding of the data file</p></li>
-<li><p><strong>label</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If False, the dataset expects unlabeled data</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.text_text.DataPairDataset.is_in_memory">
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/text_text.py#L428-L429"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.text_text.DataPairDataset.is_in_memory" title="Link to this definition">#</a></dt>

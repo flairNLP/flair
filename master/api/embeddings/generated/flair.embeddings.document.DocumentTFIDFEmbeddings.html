@@ -792,7 +792,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.embeddings.document.DocumentTFIDFEmbeddings.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(train_dataset[, vectorizer])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.__init__" title="flair.embeddings.document.DocumentTFIDFEmbeddings.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(train_dataset[, vectorizer])</p></td>
 <td><p>The constructor for DocumentTFIDFEmbeddings.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -994,21 +994,6 @@ button.search-button {
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vectorizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">vectorizer_params</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/embeddings/document.py#L170-L200"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>The constructor for DocumentTFIDFEmbeddings.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>train_dataset</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="../../generated/flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span>) – the train dataset which will be used to construct a vectorizer</p></li>
-<li><p><strong>vectorizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TfidfVectorizer</span></code>]</span>) – a precalculated vectorizer. If provided, requires the train_dataset to be an empty list.</p></li>
-<li><p><strong>vectorizer_params</strong> – parameters given to Scikit-learn’s TfidfVectorizer constructor</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.embeddings.document.DocumentTFIDFEmbeddings.embedding_length">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.embeddings.document.DocumentTFIDFEmbeddings.embedding_length" title="Link to this definition">#</a></dt>

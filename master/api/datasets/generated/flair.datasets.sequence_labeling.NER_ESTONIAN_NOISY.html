@@ -802,7 +802,7 @@ should not be necessary.</p></li>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.sequence_labeling.NER_ESTONIAN_NOISY.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([version, base_path, in_memory])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.sequence_labeling.NER_ESTONIAN_NOISY.__init__" title="flair.datasets.sequence_labeling.NER_ESTONIAN_NOISY.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([version, base_path, in_memory])</p></td>
 <td><p>Initialize the NoisyNER corpus.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
@@ -818,10 +818,10 @@ should not be necessary.</p></li>
 <td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Returns all sentences (spanning all three splits) in the <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label_distribution</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_label_dictionary</span></code>(label_type[, ...])</p></td>
 <td><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p></td>
@@ -833,7 +833,7 @@ should not be necessary.</p></li>
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
-<td><p>Print statistics about the class distribution and sentence sizes.</p></td>
+<td><p>Print statistics about the corpus, including the length of the sentences and the labels in the corpus.</p></td>
 </tr>
 </tbody>
 </table>
@@ -844,16 +844,16 @@ should not be necessary.</p></li>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dev</span></code></p></td>
-<td><p></p></td>
+<td><p>The dev split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.sequence_labeling.NER_ESTONIAN_NOISY.label_url" title="flair.datasets.sequence_labeling.NER_ESTONIAN_NOISY.label_url"><code class="xref py py-obj docutils literal notranslate"><span class="pre">label_url</span></code></a></p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></p></td>
-<td><p></p></td>
+<td><p>The test split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></p></td>
-<td><p></p></td>
+<td><p>The training split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 </tbody>
 </table>
@@ -866,27 +866,6 @@ should not be necessary.</p></li>
 <dt class="sig sig-object py" id="flair.datasets.sequence_labeling.NER_ESTONIAN_NOISY.label_url">
 <span class="sig-name descname"><span class="pre">label_url</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'https://raw.githubusercontent.com/uds-lsv/NoisyNER/master/data/only_labels'</span></em><a class="headerlink" href="#flair.datasets.sequence_labeling.NER_ESTONIAN_NOISY.label_url" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/sequence_labeling.py#L5100-L5152"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the NoisyNER corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>version</strong> (<em>int</em>) – Chooses the labelset for the data.
-v0 (default): Clean labels
-v1 to v7: Different kinds of noisy labelsets (details: <a class="reference external" href="https://ojs.aaai.org/index.php/AAAI/article/view/16938">https://ojs.aaai.org/index.php/AAAI/article/view/16938</a>)</p></li>
-<li><p><strong>base_path</strong> (<em>Optional</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em><em>]</em>) – Path to the data.
-Default is None, meaning the corpus gets automatically downloaded and saved.
-You can override this by passing a path to a directory containing the unprocessed files but typically this
-should not be necessary.</p></li>
-<li><p><strong>in_memory</strong> (<em>bool</em>) – If True the dataset is kept in memory achieving speedups in training.</p></li>
-<li><p><strong>**corpusargs</strong> – The arguments propagated to :meth:’flair.datasets.ColumnCorpus.__init__’.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
 
 </dd></dl>
 

@@ -813,7 +813,7 @@ unspecified it will default to 1.0</p></li>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.models.TextClassifier.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(embeddings, label_type, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.TextClassifier.__init__" title="flair.models.TextClassifier.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(embeddings, label_type, ...)</p></td>
 <td><p>Initializes a TextClassifier.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -1015,28 +1015,6 @@ unspecified it will default to 1.0</p></li>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifierargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/text_classification_model.py#L24-L53"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initializes a TextClassifier.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../embeddings/generated/flair.embeddings.base.DocumentEmbeddings.html#flair.embeddings.base.DocumentEmbeddings" title="flair.embeddings.base.DocumentEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">DocumentEmbeddings</span></code></a></span>) – embeddings used to embed each data point</p></li>
-<li><p><strong>label_dictionary</strong> – dictionary of labels you want to predict</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – string identifier for tag type</p></li>
-<li><p><strong>multi_label</strong> – auto-detected by default, but you can set this to True to force multi-label predictions
-or False to force single-label predictions.</p></li>
-<li><p><strong>multi_label_threshold</strong> – If multi-label you can set the threshold to make predictions</p></li>
-<li><p><strong>beta</strong> – Parameter for F-beta score for evaluation and training annealing</p></li>
-<li><p><strong>loss_weights</strong> – Dictionary of weights for labels for the loss function. If any label’s weight is
-unspecified it will default to 1.0</p></li>
-<li><p><strong>**classifierargs</strong> – The arguments propagated to <a class="reference internal" href="flair.nn.DefaultClassifier.html#flair.nn.DefaultClassifier.__init__" title="flair.nn.DefaultClassifier.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.nn.DefaultClassifier.__init__()</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.models.TextClassifier.label_type">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label_type</span></span><a class="headerlink" href="#flair.models.TextClassifier.label_type" title="Link to this definition">#</a></dt>

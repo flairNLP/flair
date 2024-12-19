@@ -812,7 +812,7 @@ text representation we take the average of the embeddings of the token in the me
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.models.SpanClassifier.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(embeddings, label_dictionary[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.SpanClassifier.__init__" title="flair.models.SpanClassifier.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(embeddings, label_dictionary[, ...])</p></td>
 <td><p>Initializes an SpanClassifier.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -1026,28 +1026,6 @@ text representation we take the average of the embeddings of the token in the me
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling_operation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first_last'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">classifierargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/entity_linker_model.py#L90-L141"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initializes an SpanClassifier.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../embeddings/generated/flair.embeddings.base.TokenEmbeddings.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></a></span>) – embeddings used to embed the tokens of the sentences.</p></li>
-<li><p><strong>label_dictionary</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a></span>) – dictionary that gives ids to all classes. Should contain &lt;unk&gt;.</p></li>
-<li><p><strong>pooling_operation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – either <cite>average</cite>, <cite>first</cite>, <cite>last</cite> or <cite>first_last</cite>. Specifies the way of how text
-representations of entity mentions (with more than one token) are handled. E.g. <cite>average</cite> means that as
-text representation we take the average of the embeddings of the token in the mention.
-<cite>first_last</cite> concatenates the embedding of the first and the embedding of the last token.</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the label you use.</p></li>
-<li><p><strong>span_label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – name of the label you use for inputs of predictions.</p></li>
-<li><p><strong>candidates</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">CandidateGenerator</span></code>]</span>) – If provided, use a <code class="xref py py-class docutils literal notranslate"><span class="pre">CandidateGenerator</span></code> for prediction candidates.</p></li>
-<li><p><strong>**classifierargs</strong> – The arguments propagated to <a class="reference internal" href="flair.nn.DefaultClassifier.html#flair.nn.DefaultClassifier.__init__" title="flair.nn.DefaultClassifier.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flair.nn.DefaultClassifier.__init__()</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.models.SpanClassifier.emb_first">
 <span class="sig-name descname"><span class="pre">emb_first</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/entity_linker_model.py#L143-L144"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.models.SpanClassifier.emb_first" title="Link to this definition">#</a></dt>

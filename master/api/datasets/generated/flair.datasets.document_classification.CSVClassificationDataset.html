@@ -807,7 +807,7 @@ button.search-button {
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.document_classification.CSVClassificationDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path_to_file, column_name_map, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.document_classification.CSVClassificationDataset.__init__" title="flair.datasets.document_classification.CSVClassificationDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path_to_file, column_name_map, ...)</p></td>
 <td><p>Instantiates a Dataset for text classification from CSV column formatted data.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.datasets.document_classification.CSVClassificationDataset.is_in_memory" title="flair.datasets.document_classification.CSVClassificationDataset.is_in_memory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_in_memory</span></code></a>()</p></td>
@@ -815,31 +815,6 @@ button.search-button {
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_name_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_header=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_class_label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**fmtparams</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/document_classification.py#L401-L495"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates a Dataset for text classification from CSV column formatted data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path_to_file</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – path to the file with the CSV data</p></li>
-<li><p><strong>column_name_map</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – a column name map that indicates which column is text and which the label(s)</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the label</p></li>
-<li><p><strong>max_tokens_per_doc</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of Tokens</p></li>
-<li><p><strong>max_chars_per_doc</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of chars</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../../generated/flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Tokenizer for dataset, default is SegTokTokenizer</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset as Sentences in memory, otherwise only keeps strings</p></li>
-<li><p><strong>skip_header</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, skips first line because it is header</p></li>
-<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Most datasets are ‘utf-8’ but some are ‘latin-1’</p></li>
-<li><p><strong>fmtparams</strong> – additional parameters for the CSV file reader</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>a Corpus with annotated train, dev and test data</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.document_classification.CSVClassificationDataset.is_in_memory">
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/document_classification.py#L537-L538"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.CSVClassificationDataset.is_in_memory" title="Link to this definition">#</a></dt>

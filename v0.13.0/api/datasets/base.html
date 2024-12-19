@@ -794,17 +794,6 @@ button.search-button {
 <dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.FlairDataset" title="flair.data.FlairDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlairDataset</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">DT</span></code>]</p>
 <p>A simple Dataset object to wrap a List of Datapoints, for example Sentences.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.base.FlairDatapointDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datapoints</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/base.py#L44-L53"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.FlairDatapointDataset.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiate FlairDatapointDataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>datapoints</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">DT</span></code>, bound= <a class="reference internal" href="../flair.data.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a>), <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">DT</span></code>, bound= <a class="reference internal" href="../flair.data.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a>)]]</span>) – DT or List of DT that make up FlairDatapointDataset</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.base.FlairDatapointDataset.is_in_memory">
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/base.py#L55-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.FlairDatapointDataset.is_in_memory" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -820,15 +809,6 @@ button.search-button {
 <dt class="sig sig-object py" id="flair.datasets.base.SentenceDataset">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">SentenceDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/base.py#L65-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.SentenceDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.base.FlairDatapointDataset" title="flair.datasets.base.FlairDatapointDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlairDatapointDataset</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.base.SentenceDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/base.py#L66-L68"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.SentenceDataset.__init__" title="Link to this definition">#</a></dt>
-<dd><div class="deprecated">
-<p><span class="versionmodified deprecated">Deprecated since version 0.11: </span>The ‘SentenceDataset’ class was renamed to
-‘FlairDatapointDataset’</p>
-</div>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -836,21 +816,6 @@ button.search-button {
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">StringDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/base.py#L71-L102"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.StringDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.FlairDataset" title="flair.data.FlairDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlairDataset</span></code></a></p>
 <p>A Dataset taking string as input and returning Sentence during iteration.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.base.StringDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/base.py#L74-L91"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.StringDataset.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiate StringDataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>texts</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – a string or List of string that make up StringDataset</p></li>
-<li><p><strong>use_tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use. If instead of providing a function, this parameter is just set to True,
-<code class="xref py py-class docutils literal notranslate"><span class="pre">flair.tokenization.SegTokTokenizer</span></code> will be used.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.base.StringDataset.is_in_memory">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/base.py#L93-L95"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.StringDataset.is_in_memory" title="Link to this definition">#</a></dt>
@@ -867,41 +832,6 @@ button.search-button {
 <dt class="sig sig-object py" id="flair.datasets.base.MongoDataset">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.base.</span></span><span class="sig-name descname"><span class="pre">MongoDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories_field=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_type='class'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/base.py#L105-L231"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.MongoDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.FlairDataset" title="flair.data.FlairDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlairDataset</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.base.MongoDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">database</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categories_field=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag_type='class'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/base.py#L106-L193"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.MongoDataset.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Reads Mongo collections.</p>
-<p>Each collection should contain one document/text per item.</p>
-<p>Each item should have the following format:
-{
-‘Beskrivning’: ‘Abrahamsby. Gård i Gottröra sn, Långhundra hd, Stockholms län, nära Långsjön.’,
-‘Län’:’Stockholms län’,
-‘Härad’: ‘Långhundra’,
-‘Församling’: ‘Gottröra’,
-‘Plats’: ‘Abrahamsby’
-}</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>query</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Query, e.g. {‘Län’: ‘Stockholms län’}</p></li>
-<li><p><strong>host</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Host, e.g. ‘localhost’,</p></li>
-<li><p><strong>port</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Port, e.g. 27017</p></li>
-<li><p><strong>database</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Database, e.g. ‘rosenberg’,</p></li>
-<li><p><strong>collection</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Collection, e.g. ‘book’,</p></li>
-<li><p><strong>text_field</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Text field, e.g. ‘Beskrivning’,</p></li>
-<li><p><strong>categories_field</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – List of category fields, e.g [‘Län’, ‘Härad’, ‘Tingslag’, ‘Församling’, ‘Plats’],</p></li>
-<li><p><strong>max_tokens_per_doc</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Takes at most this amount of tokens per document. If set to -1 all documents are taken as is.</p></li>
-<li><p><strong>max_tokens_per_doc</strong> – If set, truncates each Sentence to a maximum number of Tokens</p></li>
-<li><p><strong>max_chars_per_doc</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of chars</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default SegtokTokenizer)</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset as Sentences in memory, otherwise only keeps strings</p></li>
-<li><p><strong>tag_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The tag type to assign labels to.</p></li>
-</ul>
-</dd>
-</dl>
-<p>Returns: list of sentences</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.base.MongoDataset.is_in_memory">
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/base.py#L215-L216"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.base.MongoDataset.is_in_memory" title="Link to this definition">#</a></dt>

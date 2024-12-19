@@ -819,7 +819,7 @@ and the fourth for the label. Default [0, 1, 2, 3]
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.text_text.DataTripleDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path_to_data[, columns, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.text_text.DataTripleDataset.__init__" title="flair.datasets.text_text.DataTripleDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path_to_data[, columns, ...])</p></td>
 <td><p>Creates a Dataset for triples of sentences/paragraphs.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.datasets.text_text.DataTripleDataset.is_in_memory" title="flair.datasets.text_text.DataTripleDataset.is_in_memory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_in_memory</span></code></a>()</p></td>
@@ -827,44 +827,6 @@ and the fourth for the label. Default [0, 1, 2, 3]
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_first_line</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\\t'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/text_text.py#L564-L660"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Creates a Dataset for triples of sentences/paragraphs.</p>
-<p>The file needs to be in a column format,
-where each line has a column for the first sentence/paragraph, the second sentence/paragraph, the third sentence/paragraph and the label
-seperated by e.g. ‘t’ (just like in the glue RTE-dataset <a class="reference external" href="https://gluebenchmark.com/tasks">https://gluebenchmark.com/tasks</a>) .
-For each data triple we create a flair.data.DataTriple object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path_to_data</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – path to the data file</p></li>
-<li><p><strong>columns</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – list of integers that indicate the respective columns. The first entry is the column</p></li>
-</ul>
-</dd>
-</dl>
-<p>for the first sentence, the second for the second sentence, the third for the third sentence,
-and the fourth for the label. Default [0, 1, 2, 3]
-:type max_tokens_per_doc: 
-:param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
-:type max_chars_per_doc: 
-:param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
-:type use_tokenizer: 
-:param use_tokenizer: Whether or not to use the in-built tokenizer
-:type in_memory: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>
-:param in_memory: If True, data will be saved in a list of flair.data.DataTriple objects, otherwise we use lists with simple strings which need less space
-:type label_type: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>
-:param label_type: Name of the label of the data triples
-:type skip_first_line: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>
-:param skip_first_line: If True, the first line of the data file will be ignored
-:type separator: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param separator: Separator between columns in the data file
-:type encoding: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param encoding: Encoding of the data file
-:type label: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>
-:param label: If False, the dataset expects unlabeled data</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.text_text.DataTripleDataset.is_in_memory">
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/text_text.py#L682-L683"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.text_text.DataTripleDataset.is_in_memory" title="Link to this definition">#</a></dt>

@@ -808,7 +808,7 @@ even this is too much for your memory, use ‘disk’.
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.document_classification.AMAZON_REVIEWS.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([split_max, label_name_map, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.document_classification.AMAZON_REVIEWS.__init__" title="flair.datasets.document_classification.AMAZON_REVIEWS.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([split_max, label_name_map, ...])</p></td>
 <td><p>Constructs corpus object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
@@ -827,10 +827,10 @@ even this is too much for your memory, use ‘disk’.
 <td><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_all_sentences</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Returns all sentences (spanning all three splits) in the <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label_distribution</span></code>()</p></td>
-<td><p></p></td>
+<td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_label_dictionary</span></code>(label_type[, ...])</p></td>
 <td><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p></td>
@@ -842,7 +842,7 @@ even this is too much for your memory, use ‘disk’.
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">obtain_statistics</span></code>([label_type, pretty_print])</p></td>
-<td><p>Print statistics about the class distribution and sentence sizes.</p></td>
+<td><p>Print statistics about the corpus, including the length of the sentences and the labels in the corpus.</p></td>
 </tr>
 </tbody>
 </table>
@@ -850,38 +850,16 @@ even this is too much for your memory, use ‘disk’.
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dev</span></code></p></td>
-<td><p></p></td>
+<td><p>The dev split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></p></td>
-<td><p></p></td>
+<td><p>The test split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></p></td>
-<td><p></p></td>
+<td><p>The training split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">split_max=30000,</span> <span class="pre">label_name_map={'1.0':</span> <span class="pre">'NEGATIVE',</span> <span class="pre">'2.0':</span> <span class="pre">'NEGATIVE',</span> <span class="pre">'3.0':</span> <span class="pre">'NEGATIVE',</span> <span class="pre">'4.0':</span> <span class="pre">'POSITIVE',</span> <span class="pre">'5.0':</span> <span class="pre">'POSITIVE'},</span> <span class="pre">skip_labels=['3.0',</span> <span class="pre">'4.0'],</span> <span class="pre">fraction_of_5_star_reviews=10,</span> <span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;,</span> <span class="pre">memory_mode='partial',</span> <span class="pre">**corpusargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/document_classification.py#L564-L702"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Constructs corpus object.</p>
-<p>Split_max indicates how many data points from each of the 28 splits are used, so
-set this higher or lower to increase/decrease corpus size.
-:type label_name_map: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>
-:param label_name_map: Map label names to different schema. By default, the 5-star rating is mapped onto 3
-classes (POSITIVE, NEGATIVE, NEUTRAL)
-:type split_max: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
-:param split_max: Split_max indicates how many data points from each of the 28 splits are used, so
-set this higher or lower to increase/decrease corpus size.
-:type memory_mode: 
-:param memory_mode: Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’
-if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if
-even this is too much for your memory, use ‘disk’.
-:type tokenizer: <span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../../generated/flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>
-:param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
-:type corpusargs: 
-:param corpusargs: Arguments for ClassificationCorpus</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.document_classification.AMAZON_REVIEWS.download_and_prepare_amazon_product_file">
 <span class="sig-name descname"><span class="pre">download_and_prepare_amazon_product_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_data_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction_of_5_star_reviews</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/document_classification.py#L704-L738"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.AMAZON_REVIEWS.download_and_prepare_amazon_product_file" title="Link to this definition">#</a></dt>

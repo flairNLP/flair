@@ -787,31 +787,6 @@ button.search-button {
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.document_classification.</span></span><span class="sig-name descname"><span class="pre">ClassificationCorpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type='class'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_tokens=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_chars=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_if_longer_than=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_labels=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_examples_without_labels=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L24-L119"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.ClassificationCorpus" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a></p>
 <p>A classification corpus from FastText-formatted text files.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.ClassificationCorpus.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type='class'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_tokens=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_chars=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_if_longer_than=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_labels=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_examples_without_labels=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L27-L119"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.ClassificationCorpus.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates a Corpus from text classification-formatted task data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data_folder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – base folder with the task data</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the label</p></li>
-<li><p><strong>train_file</strong> – the name of the train file</p></li>
-<li><p><strong>test_file</strong> – the name of the test file</p></li>
-<li><p><strong>dev_file</strong> – the name of the dev file, if None, dev data is sampled from train</p></li>
-<li><p><strong>truncate_to_max_tokens</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of tokens</p></li>
-<li><p><strong>truncate_to_max_chars</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of chars</p></li>
-<li><p><strong>filter_if_longer_than</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, filters documents that are longer that the specified number of tokens.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Tokenizer for dataset, default is SegtokTokenizer</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’ if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if even this is too much for your memory, use ‘disk’.</p></li>
-<li><p><strong>label_name_map</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>) – Optionally map label names to different schema.</p></li>
-<li><p><strong>allow_examples_without_labels</strong> – set to True to allow Sentences without label in the corpus.</p></li>
-<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Default is ‘utf-8’ but some datasets are in ‘latin-1</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -819,40 +794,6 @@ button.search-button {
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.document_classification.</span></span><span class="sig-name descname"><span class="pre">ClassificationDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_tokens=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_chars=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_if_longer_than=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_labels=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_examples_without_labels=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L122-L303"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.ClassificationDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.FlairDataset" title="flair.data.FlairDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlairDataset</span></code></a></p>
 <p>Dataset for classification instantiated from a single FastText-formatted file.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.ClassificationDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_tokens=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_chars=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_if_longer_than=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_labels=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_examples_without_labels=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L125-L242"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.ClassificationDataset.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Reads a data file for text classification.</p>
-<p>The file should contain one document/text per line.
-The line should have the following format:
-__label__&lt;class_name&gt; &lt;text&gt;
-If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
-__label__&lt;class_name_1&gt; __label__&lt;class_name_2&gt; &lt;text&gt;
-:type path_to_file: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>
-:param path_to_file: the path to the data file
-:type label_type: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param label_type: name of the label
-:type truncate_to_max_tokens: 
-:param truncate_to_max_tokens: If set, truncates each Sentence to a maximum number of tokens
-:type truncate_to_max_chars: 
-:param truncate_to_max_chars: If set, truncates each Sentence to a maximum number of chars
-:type filter_if_longer_than: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
-:param filter_if_longer_than: If set, filters documents that are longer that the specified number of tokens.
-:type tokenizer: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>
-:param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
-:type memory_mode: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param memory_mode: Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’
-if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if
-even this is too much for your memory, use ‘disk’.
-:type label_name_map: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>
-:param label_name_map: Optionally map label names to different schema.
-:type allow_examples_without_labels: 
-:param allow_examples_without_labels: set to True to allow Sentences without label in the Dataset.
-:type encoding: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param encoding: Default is ‘utf-8’ but some datasets are in ‘latin-1
-:return: list of sentences</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.document_classification.ClassificationDataset.is_in_memory">
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L279-L284"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.ClassificationDataset.is_in_memory" title="Link to this definition">#</a></dt>
@@ -870,34 +811,6 @@ even this is too much for your memory, use ‘disk’.
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.document_classification.</span></span><span class="sig-name descname"><span class="pre">CSVClassificationCorpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_name_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name='csv_corpus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_header=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_class_label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**fmtparams</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L306-L398"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.CSVClassificationCorpus" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a></p>
 <p>Classification corpus instantiated from CSV data files.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.CSVClassificationCorpus.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_name_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name='csv_corpus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_file=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_header=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_class_label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**fmtparams</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L309-L398"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.CSVClassificationCorpus.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates a Corpus for text classification from CSV column formatted data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data_folder</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – base folder with the task data</p></li>
-<li><p><strong>column_name_map</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – a column name map that indicates which column is text and which the label(s)</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the label</p></li>
-<li><p><strong>train_file</strong> – the name of the train file</p></li>
-<li><p><strong>test_file</strong> – the name of the test file</p></li>
-<li><p><strong>dev_file</strong> – the name of the dev file, if None, dev data is sampled from train</p></li>
-<li><p><strong>max_tokens_per_doc</strong> – If set, truncates each Sentence to a maximum number of Tokens</p></li>
-<li><p><strong>max_chars_per_doc</strong> – If set, truncates each Sentence to a maximum number of chars</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Tokenizer for dataset, default is SegtokTokenizer</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset as Sentences in memory, otherwise only keeps strings</p></li>
-<li><p><strong>skip_header</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, skips first line because it is header</p></li>
-<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Default is ‘utf-8’ but some datasets are in ‘latin-1</p></li>
-<li><p><strong>fmtparams</strong> – additional parameters for the CSV file reader</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>a Corpus with annotated train, dev and test data</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -905,31 +818,6 @@ even this is too much for your memory, use ‘disk’.
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.document_classification.</span></span><span class="sig-name descname"><span class="pre">CSVClassificationDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_name_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_header=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_class_label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**fmtparams</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L401-L554"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.CSVClassificationDataset" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="../flair.data.html#flair.data.FlairDataset" title="flair.data.FlairDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlairDataset</span></code></a></p>
 <p>Dataset for text classification from CSV column formatted data.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.CSVClassificationDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column_name_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_chars_per_doc=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_header=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_class_label=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**fmtparams</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L404-L498"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.CSVClassificationDataset.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates a Dataset for text classification from CSV column formatted data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>path_to_file</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>) – path to the file with the CSV data</p></li>
-<li><p><strong>column_name_map</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – a column name map that indicates which column is text and which the label(s)</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – name of the label</p></li>
-<li><p><strong>max_tokens_per_doc</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of Tokens</p></li>
-<li><p><strong>max_chars_per_doc</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – If set, truncates each Sentence to a maximum number of chars</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Tokenizer for dataset, default is SegTokTokenizer</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset as Sentences in memory, otherwise only keeps strings</p></li>
-<li><p><strong>skip_header</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, skips first line because it is header</p></li>
-<li><p><strong>encoding</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Most datasets are ‘utf-8’ but some are ‘latin-1’</p></li>
-<li><p><strong>fmtparams</strong> – additional parameters for the CSV file reader</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>a Corpus with annotated train, dev and test data</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.document_classification.CSVClassificationDataset.is_in_memory">
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L540-L541"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.CSVClassificationDataset.is_in_memory" title="Link to this definition">#</a></dt>
@@ -952,28 +840,6 @@ even this is too much for your memory, use ‘disk’.
 We download the 5-core subset which is still tens of millions of
 reviews.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.AMAZON_REVIEWS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">split_max=30000,</span> <span class="pre">label_name_map={'1.0':</span> <span class="pre">'NEGATIVE',</span> <span class="pre">'2.0':</span> <span class="pre">'NEGATIVE',</span> <span class="pre">'3.0':</span> <span class="pre">'NEGATIVE',</span> <span class="pre">'4.0':</span> <span class="pre">'POSITIVE',</span> <span class="pre">'5.0':</span> <span class="pre">'POSITIVE'},</span> <span class="pre">skip_labels=['3.0',</span> <span class="pre">'4.0'],</span> <span class="pre">fraction_of_5_star_reviews=10,</span> <span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;,</span> <span class="pre">memory_mode='partial',</span> <span class="pre">**corpusargs</span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L567-L705"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.AMAZON_REVIEWS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Constructs corpus object.</p>
-<p>Split_max indicates how many data points from each of the 28 splits are used, so
-set this higher or lower to increase/decrease corpus size.
-:type label_name_map: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>
-:param label_name_map: Map label names to different schema. By default, the 5-star rating is mapped onto 3
-classes (POSITIVE, NEGATIVE, NEUTRAL)
-:type split_max: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
-:param split_max: Split_max indicates how many data points from each of the 28 splits are used, so
-set this higher or lower to increase/decrease corpus size.
-:type memory_mode: 
-:param memory_mode: Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’
-if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if
-even this is too much for your memory, use ‘disk’.
-:type tokenizer: <span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>
-:param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
-:type corpusargs: 
-:param corpusargs: Arguments for ClassificationCorpus</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.document_classification.AMAZON_REVIEWS.download_and_prepare_amazon_product_file">
 <span class="sig-name descname"><span class="pre">download_and_prepare_amazon_product_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">part_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_data_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fraction_of_5_star_reviews</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L707-L741"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.AMAZON_REVIEWS.download_and_prepare_amazon_product_file" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -986,27 +852,6 @@ even this is too much for your memory, use ‘disk’.
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>Corpus of IMDB movie reviews labeled by sentiment (POSITIVE, NEGATIVE).</p>
 <p>Downloaded from and documented at <a class="reference external" href="http://ai.stanford.edu/~amaas/data/sentiment/">http://ai.stanford.edu/~amaas/data/sentiment/</a>.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.IMDB.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rebalance_corpus=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L750-L820"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.IMDB.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the IMDB move review sentiment corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>rebalance_corpus</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Weather to use a 80/10/10 data split instead of the original 50/0/50 split.</p></li>
-<li><p><strong>memory_mode</strong> – <p>Set to ‘partial’ because this is a huge corpus, but you can also set to ‘full’ for faster</p>
-<dl class="simple">
-<dt>processing or ‘none’ for less memory.</dt><dd><p>corpusargs: Other args for ClassificationCorpus.</p>
-</dd>
-</dl>
-</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1019,23 +864,6 @@ even this is too much for your memory, use ‘disk’.
 <div><p>Each data point is a full news article so documents may be very
 long.</p>
 </div></blockquote>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.NEWSGROUPS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L833-L907"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.NEWSGROUPS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates 20 newsgroups corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘partial’ because this is a big corpus, but you can also set to ‘full’ for faster
-processing or ‘none’ for less memory.</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1045,23 +873,6 @@ processing or ‘none’ for less memory.</p></li>
 <p>Stackoverflow corpus classifying questions into one of 20 labels.</p>
 <p>The data will be downloaded from “<a class="github reference external" href="https://github.com/jacoxu/StackOverflow">jacoxu/StackOverflow</a>”,</p>
 <p>Each data point is a question.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.STACKOVERFLOW.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L918-L993"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.STACKOVERFLOW.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates Stackoverflow corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the IMDB corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘partial’ because this is a big corpus, but you can also set to ‘full’ for faster
-processing or ‘none’ for less memory.</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1072,23 +883,6 @@ processing or ‘none’ for less memory.</p></li>
 <p>See <a class="reference external" href="http://help.sentiment140.com/for-students">http://help.sentiment140.com/for-students</a></p>
 <p>Two sentiments in train data (POSITIVE, NEGATIVE) and three
 sentiments in test data (POSITIVE, NEGATIVE, NEUTRAL).</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.SENTIMENT_140.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_name_map=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1005-L1067"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.SENTIMENT_140.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates twitter sentiment corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>label_name_map</strong> – By default, the numeric values are mapped to (‘NEGATIVE’, ‘POSITIVE’ and ‘NEUTRAL’)</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘partial’ because this is a big corpus, but you can also set to ‘full’ for faster
-processing or ‘none’ for less memory.</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1097,21 +891,6 @@ processing or ‘none’ for less memory.</p></li>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>The customer reviews dataset of SentEval, classified into NEGATIVE or POSITIVE sentiment.</p>
 <p>see <a class="github reference external" href="https://github.com/facebookresearch/SentEval">facebookresearch/SentEval</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.SENTEVAL_CR.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1076-L1118"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.SENTEVAL_CR.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates SentEval customer reviews dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer())</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1120,21 +899,6 @@ processing or ‘none’ for less memory.</p></li>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>The movie reviews dataset of SentEval, classified into NEGATIVE or POSITIVE sentiment.</p>
 <p>see <a class="github reference external" href="https://github.com/facebookresearch/SentEval">facebookresearch/SentEval</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.SENTEVAL_MR.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1127-L1169"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.SENTEVAL_MR.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates SentEval movie reviews dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1143,21 +907,6 @@ processing or ‘none’ for less memory.</p></li>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>The subjectivity dataset of SentEval, classified into SUBJECTIVE or OBJECTIVE sentiment.</p>
 <p>see <a class="github reference external" href="https://github.com/facebookresearch/SentEval">facebookresearch/SentEval</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.SENTEVAL_SUBJ.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1178-L1220"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.SENTEVAL_SUBJ.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates SentEval subjectivity dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1166,21 +915,6 @@ processing or ‘none’ for less memory.</p></li>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>The opinion-polarity dataset of SentEval, classified into NEGATIVE or POSITIVE polarity.</p>
 <p>see <a class="github reference external" href="https://github.com/facebookresearch/SentEval">facebookresearch/SentEval</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.SENTEVAL_MPQA.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1229-L1271"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.SENTEVAL_MPQA.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates SentEval opinion polarity dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1189,21 +923,6 @@ processing or ‘none’ for less memory.</p></li>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>The Stanford sentiment treebank dataset of SentEval, classified into NEGATIVE or POSITIVE sentiment.</p>
 <p>see <a class="github reference external" href="https://github.com/facebookresearch/SentEval">facebookresearch/SentEval</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.SENTEVAL_SST_BINARY.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1280-L1327"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.SENTEVAL_SST_BINARY.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates SentEval Stanford sentiment treebank dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1212,21 +931,6 @@ processing or ‘none’ for less memory.</p></li>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>The Stanford sentiment treebank dataset of SentEval, classified into 5 sentiment classes.</p>
 <p>see <a class="github reference external" href="https://github.com/facebookresearch/SentEval">facebookresearch/SentEval</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.SENTEVAL_SST_GRANULAR.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1336-L1378"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.SENTEVAL_SST_GRANULAR.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates SentEval Stanford sentiment treebank dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1238,21 +942,6 @@ processing or ‘none’ for less memory.</p></li>
 <p>The task is to predict whether an English sentence is grammatically
 correct. Additionaly to the Corpus we have eval_dataset containing
 the unlabeled test data for Glue evaluation.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.GLUE_COLA.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type='acceptability'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1391-L1457"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.GLUE_COLA.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates CoLA dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the COLA corpus in a specific folder.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.document_classification.GLUE_COLA.tsv_from_eval_dataset">
 <span class="sig-name descname"><span class="pre">tsv_from_eval_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1459-L1474"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.GLUE_COLA.tsv_from_eval_dataset" title="Link to this definition">#</a></dt>
@@ -1287,23 +976,6 @@ is called CoLA.tsv and is in the format required for submission to the Glue Benc
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>GoEmotions dataset containing 58k Reddit comments labeled with 27 emotion categories.</p>
 <p>see <a class="github reference external" href="https://github.com/google-research/google-research/tree/master/goemotions">google-research/google-research</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.GO_EMOTIONS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1564-L1660"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.GO_EMOTIONS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initializes the GoEmotions corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – Provide this only if you want to store the corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<em>Union</em><em>[</em><em>bool</em><em>, </em><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><em>Tokenizer</em></a><em>]</em>) – Specify which tokenizer to use, the default is SegtokTokenizer().</p></li>
-<li><p><strong>memory_mode</strong> (<em>str</em>) – Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’
-if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if
-even this is too much for your memory, use ‘disk’.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1311,22 +983,6 @@ even this is too much for your memory, use ‘disk’.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.document_classification.</span></span><span class="sig-name descname"><span class="pre">TREC_50</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1663-L1716"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.TREC_50" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>The TREC Question Classification Corpus, classifying questions into 50 fine-grained answer types.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.TREC_50.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1666-L1716"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.TREC_50.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates TREC Question Classification Corpus with 6 classes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the TREC corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1334,22 +990,6 @@ even this is too much for your memory, use ‘disk’.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.document_classification.</span></span><span class="sig-name descname"><span class="pre">TREC_6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1719-L1774"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.TREC_6" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>The TREC Question Classification Corpus, classifying questions into 6 coarse-grained answer types.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.TREC_6.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1722-L1774"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.TREC_6.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates TREC Question Classification Corpus with 6 classes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the TREC corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1357,22 +997,6 @@ even this is too much for your memory, use ‘disk’.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.document_classification.</span></span><span class="sig-name descname"><span class="pre">YAHOO_ANSWERS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1777-L1843"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.YAHOO_ANSWERS" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>The YAHOO Question Classification Corpus, classifying questions into 10 coarse-grained answer types.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.YAHOO_ANSWERS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1780-L1843"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.YAHOO_ANSWERS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates YAHOO Question Classification Corpus with 10 classes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the YAHOO corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> – Set to ‘partial’ by default since this is a rather big corpus. Can also be ‘full’ or ‘none’.</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1383,23 +1007,6 @@ even this is too much for your memory, use ‘disk’.</p></li>
 <p>Classifying German tweets into 2 coarse-grained categories OFFENSIVE
 and OTHER or 4 fine-grained categories ABUSE, INSULT, PROFATINTY and
 OTHER.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.GERMEVAL_2018_OFFENSIVE_LANGUAGE.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_grained_classes=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1854-L1909"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.GERMEVAL_2018_OFFENSIVE_LANGUAGE.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates GermEval 2018 Offensive Language Classification Corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the Offensive Language corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-<li><p><strong>fine_grained_classes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Set to True to load the dataset with 4 fine-grained classes</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1408,22 +1015,6 @@ OTHER.</p>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>The Communicative Functions Classification Corpus.</p>
 <p>Classifying sentences from scientific papers into 39 communicative functions.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.COMMUNICATIVE_FUNCTIONS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='full'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SpaceTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L1918-L1966"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.COMMUNICATIVE_FUNCTIONS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates Communicative Functions Classification Corpus with 39 classes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the Communicative Functions date in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom tokenizer to use (default is SpaceTokenizer)</p></li>
-<li><p><strong>memory_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Set to ‘full’ by default since this is a small corpus. Can also be ‘partial’ or ‘none’.</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1432,21 +1023,6 @@ OTHER.</p>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>WASSA-2017 anger emotion-intensity corpus.</p>
 <p>see <a class="reference external" href="https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html">https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html</a>.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.WASSA_ANGER.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L2000-L2019"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.WASSA_ANGER.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates WASSA-2017 anger emotion-intensity corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1455,21 +1031,6 @@ OTHER.</p>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>WASSA-2017 fear emotion-intensity corpus.</p>
 <p>see <a class="reference external" href="https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html">https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html</a>.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.WASSA_FEAR.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L2028-L2047"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.WASSA_FEAR.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates WASSA-2017 fear emotion-intensity corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1478,21 +1039,6 @@ OTHER.</p>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>WASSA-2017 joy emotion-intensity dataset corpus.</p>
 <p>see <a class="reference external" href="https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html">https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.WASSA_JOY.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L2056-L2075"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.WASSA_JOY.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates WASSA-2017 joy emotion-intensity corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1501,21 +1047,6 @@ OTHER.</p>
 <dd><p>Bases: <a class="reference internal" href="#flair.datasets.document_classification.ClassificationCorpus" title="flair.datasets.document_classification.ClassificationCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationCorpus</span></code></a></p>
 <p>WASSA-2017 sadness emotion-intensity corpus.</p>
 <p>see <a class="reference external" href="https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html">https://saifmohammad.com/WebPages/EmotionIntensity-SharedTask.html</a>.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.document_classification.WASSA_SADNESS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**corpusargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.0/flair/datasets/document_classification.py#L2084-L2103"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.WASSA_SADNESS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Instantiates WASSA-2017 sadness emotion-intensity dataset.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Provide this only if you store the WASSA corpus in a specific folder, otherwise use default.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – Custom tokenizer to use (default is SegtokTokenizer)</p></li>
-<li><p><strong>corpusargs</strong> – Other args for ClassificationCorpus.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </section>

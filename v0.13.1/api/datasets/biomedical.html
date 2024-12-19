@@ -922,17 +922,6 @@ text as well as the type of entity (e.g. Chemical, Gene, and so on).</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Utility class for writing <cite>InternalBioNerDataset</cite> to CoNLL files.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.CoNLLWriter.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L327-L336"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CoNLLWriter.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize CoNLLWriter.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a></span>) – Sentence splitter which segments the text into sentences and tokens.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.CoNLLWriter.process_dataset">
 <span class="sig-name descname"><span class="pre">process_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L338-L344"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CoNLLWriter.process_dataset" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -993,22 +982,6 @@ text as well as the type of entity (e.g. Chemical, Gene, and so on).</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.HunerDataset.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L431-L494"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.HunerDataset.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the HUNER corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Custom implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which
-segments the text into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.HunerDataset.get_subset">
 <span class="sig-name descname"><span class="pre">get_subset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L496-L506"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.HunerDataset.get_subset" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -1025,20 +998,6 @@ segments the text into sentences and tokens (default <code class="xref py py-cla
 <a class="reference external" href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-8-50">https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-8-50</a></p>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.BIO_INFER.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L517-L551"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.BIO_INFER.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the BioInfer corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.BIO_INFER.download_dataset">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L553-L559"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.BIO_INFER.download_dataset" title="Link to this definition">#</a></dt>
@@ -1095,20 +1054,6 @@ Entity Recognition Task at JNLPBA
 <p><span class="versionmodified deprecated">Deprecated since version 0.13.0: </span>Please use data set implementation from BigBio instead (see
 BIGBIO_NER_CORPUS)</p>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.JNLPBA.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L625-L667"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.JNLPBA.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the JNLPBA corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1232,22 +1177,6 @@ BIGBIO_NER_CORPUS)</p>
 evaluating text for stem cell research
 <a class="reference external" href="https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf">https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf</a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.CELL_FINDER.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L821-L854"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CELL_FINDER.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the CellFinder corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Custom implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments
-the text into sentences and tokens.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.CELL_FINDER.download_and_prepare">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_and_prepare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L856-L864"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CELL_FINDER.download_and_prepare" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -1362,24 +1291,6 @@ Mentions and Relations in Biomedical Literature
 <p><span class="versionmodified deprecated">Deprecated since version 0.13.0: </span>Please use data set implementation from BigBio instead (see
 BIGBIO_NER_CORPUS)</p>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.MIRNA.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L955-L1000"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.MIRNA.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the miRNA corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>tokenizer</strong> – Callable that segments a sentence into words,
-defaults to scispacy</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Callable that segments a document into sentences,
-defaults to scispacy</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.MIRNA.download_and_prepare_train">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_and_prepare_train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_separator</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1002-L1009"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.MIRNA.download_and_prepare_train" title="Link to this definition">#</a></dt>
@@ -1578,20 +1489,6 @@ defaults to scispacy</p></li>
 recognition in support of the identification of synthetic lethality
 in cancer from text
 <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.CLL.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1297-L1321"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CLL.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the CLL corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1641,20 +1538,6 @@ in cancer from text
 recognition in support of the identification of synthetic lethality
 in cancer from text
 <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4708107/</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.GELLUS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1359-L1391"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.GELLUS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the GELLUS corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
@@ -1705,22 +1588,6 @@ in cancer from text
 <a class="reference external" href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2021-9">https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2021-9</a></p>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.LOCTEXT.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1431-L1466"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.LOCTEXT.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the LOCTEXT corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Custom implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code>
-that segments a document into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.LOCTEXT.download_dataset">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1468-L1472"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.LOCTEXT.download_dataset" title="Link to this definition">#</a></dt>
@@ -1805,22 +1672,6 @@ of chemicals and drugs and its annotation principles
 BIGBIO_NER_CORPUS)</p>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.CHEMDNER.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1557-L1603"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CHEMDNER.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the CHEMDNER corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Custom implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which
-segements documents into sentences and tokens</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.CHEMDNER.download_dataset">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1605-L1609"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CHEMDNER.download_dataset" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -1866,20 +1717,6 @@ Mining MEDLINE: abstracts, sentences, or phrases?
 <p><span class="versionmodified deprecated">Deprecated since version 0.13.0: </span>Please use data set implementation from BigBio instead (see
 BIGBIO_NER_CORPUS)</p>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.IEPA.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1655-L1689"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.IEPA.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the IEPA corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.IEPA.download_dataset">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1691-L1697"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.IEPA.download_dataset" title="Link to this definition">#</a></dt>
@@ -1934,22 +1771,6 @@ BIGBIO_NER_CORPUS)</p>
 BIGBIO_NER_CORPUS)</p>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.LINNEAUS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1764-L1800"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.LINNEAUS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the LINNEAUS corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Custom implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code> which segments
-sentence into tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.LINNEAUS.download_and_parse_dataset">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_and_parse_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1802-L1837"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.LINNEAUS.download_and_parse_dataset" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -1995,22 +1816,6 @@ corpus: a resource for chemical disease relation extraction
 <p><span class="versionmodified deprecated">Deprecated since version 0.13.0: </span>Please use data set implementation from BigBio instead (see
 BIGBIO_NER_CORPUS)</p>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.CDR.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1863-L1909"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CDR.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the CDR corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments
-documents into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.CDR.download_dataset">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1911-L1915"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CDR.download_dataset" title="Link to this definition">#</a></dt>
@@ -2084,22 +1889,6 @@ biomedical literature for the human variome
 <p><span class="versionmodified deprecated">Deprecated since version 0.13.0: </span>Please use data set implementation from BigBio instead (see
 BIGBIO_NER_CORPUS)</p>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.VARIOME.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L1971-L2009"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.VARIOME.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the Variome corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments
-documents into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.VARIOME.download_dataset">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2011-L2015"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.VARIOME.download_dataset" title="Link to this definition">#</a></dt>
@@ -2212,22 +2001,6 @@ NCBI disease corpus: a resource for disease name recognition and concept normali
 BIGBIO_NER_CORPUS)</p>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.NCBI_DISEASE.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2122-L2164"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.NCBI_DISEASE.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the NCBI disease corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments
-documents into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.NCBI_DISEASE.download_corpus">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2166-L2186"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.NCBI_DISEASE.download_corpus" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -2281,22 +2054,6 @@ documents into sentences and tokens (default <code class="xref py py-class docut
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.biomedical.</span></span><span class="sig-name descname"><span class="pre">ScaiCorpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2266-L2356"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.ScaiCorpus" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></a></p>
 <p>Base class to support the SCAI chemicals and disease corpora.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.ScaiCorpus.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2269-L2304"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.ScaiCorpus.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the SCAU corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments
-documents into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.ScaiCorpus.download_corpus">
 <span class="sig-name descname"><span class="pre">download_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2306-L2307"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.ScaiCorpus.download_corpus" title="Link to this definition">#</a></dt>
@@ -2451,25 +2208,6 @@ biomedical literature
 BIGBIO_NER_CORPUS)</p>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.OSIRIS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_original_unfixed_annotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2473-L2512"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.OSIRIS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the OSIRIS corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which
-segments documents into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-<li><p><strong>load_original_unfixed_annotation</strong> – The original annotation of Osiris
-erroneously annotates two sentences as a protein. Set to True if you don’t
-want the fixed version.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.OSIRIS.download_dataset">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2514-L2520"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.OSIRIS.download_dataset" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -2522,22 +2260,6 @@ want the fixed version.</p></li>
 Pafilis et al.: The SPECIES and ORGANISMS Resources for Fast and Accurate Identification of Taxonomic Names in Text
 <a class="reference external" href="http://www.plosone.org/article/info:doi%2F10.1371%2Fjournal.pone.0065390">http://www.plosone.org/article/info:doi%2F10.1371%2Fjournal.pone.0065390</a>.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.S800.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2590-L2628"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.S800.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the S800 corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments documents
-into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.S800.download_dataset">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2630-L2634"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.S800.download_dataset" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -2588,22 +2310,6 @@ into sentences and tokens (default <code class="xref py py-class docutils litera
 <p>Original GPRO corpus containing gene annotations.</p>
 <p>For further information see:
 <a class="reference external" href="https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/gpro-detailed-task-description/">https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/gpro-detailed-task-description/</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.GPRO.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2685-L2729"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.GPRO.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the GPRO corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments documents
-into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.GPRO.download_train_corpus">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_train_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2731-L2740"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.GPRO.download_train_corpus" title="Link to this definition">#</a></dt>
@@ -2672,22 +2378,6 @@ into sentences and tokens (default <code class="xref py py-class docutils litera
 species of biomedical named entities using natural language parsers
 <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2828111/">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2828111/</a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.DECA.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2824-L2861"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.DECA.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the DECA corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments
-documents into sentences and tokens (default BioSpacySentenceSpliiter)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.DECA.download_corpus">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2863-L2869"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.DECA.download_corpus" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -2744,20 +2434,6 @@ documents into sentences and tokens (default BioSpacySentenceSpliiter)</p></li>
 <p>For further information see
 Hahn et al.:   A proposal for a configurable silver standard
 <a class="reference external" href="https://www.aclweb.org/anthology/W10-1838/">https://www.aclweb.org/anthology/W10-1838/</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.FSU.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2927-L2953"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.FSU.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the FSU corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.FSU.download_corpus">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L2955-L2961"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.FSU.download_corpus" title="Link to this definition">#</a></dt>
@@ -2827,22 +2503,6 @@ Hahn et al.:   A proposal for a configurable silver standard
 craft corpus
 <a class="reference external" href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-161">https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-13-161</a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.CRAFT.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3087-L3122"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CRAFT.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the CRAFT corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments documents
-into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.CRAFT.download_corpus">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3124-L3130"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CRAFT.download_corpus" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -2872,22 +2532,6 @@ into sentences and tokens (default <code class="xref py py-class docutils litera
 <p>For further information see Akhondi et al.:   Annotated chemical
 patent corpus: a gold standard for text mining
 <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4182036/">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4182036/</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.BIOSEMANTICS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3178-L3213"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.BIOSEMANTICS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the Biosemantics corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments documents
-into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.BIOSEMANTICS.download_dataset">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3215-L3221"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.BIOSEMANTICS.download_dataset" title="Link to this definition">#</a></dt>
@@ -2922,22 +2566,6 @@ BioCreative II gene mention recognition
 <p><span class="versionmodified deprecated">Deprecated since version 0.13: </span>Please use data set implementation from BigBio instead (see
 BIGBIO_NER_CORPUS)</p>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.BC2GM.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3309-L3347"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.BC2GM.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the BioCreative-II-GM corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments documents
-into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.BC2GM.download_dataset">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3349-L3359"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.BC2GM.download_dataset" title="Link to this definition">#</a></dt>
@@ -3015,22 +2643,6 @@ into sentences and tokens (default <code class="xref py py-class docutils litera
 <p>For further information see:
 <a class="reference external" href="https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/cemp-detailed-task-description/">https://biocreative.bioinformatics.udel.edu/tasks/biocreative-v/cemp-detailed-task-description/</a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.CEMP.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3450-L3494"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CEMP.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the CEMP corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments
-documents into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.CEMP.download_train_corpus">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_train_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3496-L3505"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CEMP.download_train_corpus" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -3102,24 +2714,6 @@ Database
 <p><span class="versionmodified deprecated">Deprecated since version 0.13: </span>Please use data set implementation from BigBio instead (see
 BIGBIO_NER_CORPUS)</p>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.CHEBI.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3605-L3643"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CHEBI.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the CHEBI corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments documents
-into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-<li><p><strong>annotator</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The abstracts have been annotated by two annotators, which can be
-selected by choosing annotator 1 or 2. If annotator is 0, the union of both annotations is used.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.CHEBI.download_dataset">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3645-L3651"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CHEBI.download_dataset" title="Link to this definition">#</a></dt>
@@ -3236,22 +2830,6 @@ selected by choosing annotator 1 or 2. If annotator is 0, the union of both anno
 <p>For further information see:
 <a class="reference external" href="http://2013.bionlp-st.org/Intro">http://2013.bionlp-st.org/Intro</a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.BioNLPCorpus.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3772-L3814"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.BioNLPCorpus.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the BioNLP Corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments documents
-into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.BioNLPCorpus.download_corpus">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3816-L3819"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.BioNLPCorpus.download_corpus" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -3334,22 +2912,6 @@ entity mention recognition at literature scale
 <p><span class="versionmodified deprecated">Deprecated since version 0.13: </span>Please use data set implementation from BigBio instead (see
 BIGBIO_NER_CORPUS)</p>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.ANAT_EM.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3926-L3970"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.ANAT_EM.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the anatomical named entity mention recognition Corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code> which segments
-sentences into tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.ANAT_EM.download_corpus">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_folder</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L3972-L3985"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.ANAT_EM.download_corpus" title="Link to this definition">#</a></dt>
@@ -3482,22 +3044,6 @@ et al.:
 <p>Version 4.0.1 of the CRAFT corpus containing all but the co-reference and structural annotations.</p>
 <p>For further information see:
 <a class="github reference external" href="https://github.com/UCDenver-ccp/CRAFT">UCDenver-ccp/CRAFT</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.CRAFT_V4.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L4351-L4395"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CRAFT_V4.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initializes version 4.0.1 of the CRAFT corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which segments
-documents into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.CRAFT_V4.filter_entities">
 <span class="sig-name descname"><span class="pre">filter_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">corpus</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L4397-L4398"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.CRAFT_V4.filter_entities" title="Link to this definition">#</a></dt>
@@ -3733,22 +3279,6 @@ documents into sentences and tokens (default <code class="xref py py-class docut
 <p>For further information see:
 <a class="reference external" href="http://diego.asu.edu/index.php">http://diego.asu.edu/index.php</a></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.AZDZ.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L4648-L4684"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.AZDZ.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initializes the Arizona Disease Corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.tokenization.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code> which segments sentences
-into tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.AZDZ.download_corpus">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L4686-L4691"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.AZDZ.download_corpus" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
@@ -3783,22 +3313,6 @@ relations in the biomedical domain
 <p><span class="versionmodified deprecated">Deprecated since version 0.13: </span>Please use data set implementation from BigBio instead (see
 BIGBIO_NER_CORPUS)</p>
 </div>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.PDR.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L4755-L4792"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.PDR.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the plant-disease relations Corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which
-segments documents into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.PDR.download_corpus">
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download_corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L4794-L4800"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.PDR.download_corpus" title="Link to this definition">#</a></dt>
@@ -3889,26 +3403,6 @@ segments documents into sentences and tokens (default <code class="xref py py-cl
 <p>The BigBio framework harmonizes over 120 biomedical data sets and provides a uniform
 programming api to access them. This adapter allows to use all named entity recognition
 data sets by using the bigbio_kb schema.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.datasets.biomedical.BIGBIO_NER_CORPUS.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_split_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev_split_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_split_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L4915-L4996"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.BIGBIO_NER_CORPUS.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the BigBio Corpus.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>dataset_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the dataset in the huggingface hub (e.g. nlmchem or bigbio/nlmchem)</p></li>
-<li><p><strong>base_path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>]</span>) – Path to the corpus on your machine</p></li>
-<li><p><strong>in_memory</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, keeps dataset in memory giving speedups in training.</p></li>
-<li><p><strong>sentence_splitter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="../flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></a>]</span>) – Custom implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">SentenceSplitter</span></code> which
-segments the text into sentences and tokens (default <code class="xref py py-class docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code>)</p></li>
-<li><p><strong>train_split_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Name of the training split in bigbio, usually train (default: None)</p></li>
-<li><p><strong>dev_split_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Name of the development split in bigbio, usually validation (default: None)</p></li>
-<li><p><strong>test_split_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – Name of the test split in bigbio, usually test (default: None)</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.BIGBIO_NER_CORPUS.get_entity_type_mapping">
 <span class="sig-name descname"><span class="pre">get_entity_type_mapping</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.13.1/flair/datasets/biomedical.py#L4998-L5003"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.BIGBIO_NER_CORPUS.get_entity_type_mapping" title="Link to this definition">#</a></dt>

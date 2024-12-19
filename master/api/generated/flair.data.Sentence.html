@@ -816,7 +816,7 @@ will be called when the language_code is accessed for the first time.</p></li>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.data.Sentence.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(text[, use_tokenizer, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Sentence.__init__" title="flair.data.Sentence.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(text[, use_tokenizer, ...])</p></td>
 <td><p>Create a sentence object by passing either a text or a list of tokens.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label</span></code>(typename, value[, score])</p></td>
@@ -946,27 +946,6 @@ will be called when the language_code is accessed for the first time.</p></li>
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L800-L886"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Create a sentence object by passing either a text or a list of tokens.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Token.html#flair.data.Token" title="flair.data.Token"><code class="xref py py-class docutils literal notranslate"><span class="pre">Token</span></code></a>]]</span>) – Either pass the text as a string, or provide an already tokenized text as either a list of strings or a list of <a class="reference internal" href="flair.data.Token.html#flair.data.Token" title="flair.data.Token"><code class="xref py py-class docutils literal notranslate"><span class="pre">Token</span></code></a> objects.</p></li>
-<li><p><strong>use_tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>) – You can optionally specify a custom tokenizer to split the text into tokens. By default we use
-<a class="reference internal" href="flair.tokenization.SegtokTokenizer.html#flair.tokenization.SegtokTokenizer" title="flair.tokenization.SegtokTokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.tokenization.SegtokTokenizer</span></code></a>. If <cite>use_tokenizer</cite> is set to False,
-<a class="reference internal" href="flair.tokenization.SpaceTokenizer.html#flair.tokenization.SpaceTokenizer" title="flair.tokenization.SpaceTokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.tokenization.SpaceTokenizer</span></code></a> will be used instead. The tokenizer will be ignored,
-if <cite>text</cite> refers to pretokenized tokens.</p></li>
-<li><p><strong>language_code</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – <p>Language of the sentence. If not provided, <a class="reference external" href="https://pypi.org/project/langdetect/">langdetect</a>
-will be called when the language_code is accessed for the first time.</p>
-</p></li>
-<li><p><strong>start_position</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Start char offset of the sentence in the superordinate document.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.Sentence.unlabeled_identifier">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unlabeled_identifier</span></span><a class="headerlink" href="#flair.data.Sentence.unlabeled_identifier" title="Link to this definition">#</a></dt>

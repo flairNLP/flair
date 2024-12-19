@@ -811,7 +811,7 @@ all the negative labels if None is passed. That slows down the training consider
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.models.TARSTagger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([task_name, label_dictionary, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.models.TARSTagger.__init__" title="flair.models.TARSTagger.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([task_name, label_dictionary, ...])</p></td>
 <td><p>Initializes a TarsTagger.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_and_switch_to_new_task</span></code>(task_name, ...[, ...])</p></td>
@@ -1041,27 +1041,6 @@ all the negative labels if None is passed. That slows down the training consider
 <dt class="sig sig-object py" id="flair.models.TARSTagger.static_label_type">
 <span class="sig-name descname"><span class="pre">static_label_type</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'tars_label'</span></em><a class="headerlink" href="#flair.models.TARSTagger.static_label_type" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'bert-base-uncased'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_negative_labels_to_sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tagger_args</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/models/tars_model.py#L333-L399"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Initializes a TarsTagger.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>task_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – a string depicting the name of the task</p></li>
-<li><p><strong>label_dictionary</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a>]</span>) – dictionary of labels you want to predict</p></li>
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – label_type: name of the label</p></li>
-<li><p><strong>embeddings</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="../embeddings/generated/flair.embeddings.token.TransformerWordEmbeddings.html#flair.embeddings.token.TransformerWordEmbeddings" title="flair.embeddings.token.TransformerWordEmbeddings"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – name of the pre-trained transformer model e.g., ‘bert-base-uncased’</p></li>
-<li><p><strong>num_negative_labels_to_sample</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – number of negative labels to sample for each positive labels against a
-sentence during training. Defaults to 2 negative labels for each positive label. The model would sample
-all the negative labels if None is passed. That slows down the training considerably.</p></li>
-<li><p><strong>prefix</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – if True, the label will be concatenated at the start, else on the end.</p></li>
-<li><p><strong>**tagger_args</strong> – The arguments propagated to <a class="reference internal" href="flair.models.FewshotClassifier.html#flair.models.FewshotClassifier.__init__" title="flair.models.FewshotClassifier.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FewshotClassifier.__init__()</span></code></a></p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="flair.models.TARSTagger.tars_model">

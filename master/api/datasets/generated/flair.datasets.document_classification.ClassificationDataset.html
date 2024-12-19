@@ -816,7 +816,7 @@ even this is too much for your memory, use ‘disk’.
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.datasets.document_classification.ClassificationDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path_to_file, label_type[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.document_classification.ClassificationDataset.__init__" title="flair.datasets.document_classification.ClassificationDataset.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(path_to_file, label_type[, ...])</p></td>
 <td><p>Reads a data file for text classification.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.datasets.document_classification.ClassificationDataset.is_in_memory" title="flair.datasets.document_classification.ClassificationDataset.is_in_memory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_in_memory</span></code></a>()</p></td>
@@ -824,40 +824,6 @@ even this is too much for your memory, use ‘disk’.
 </tr>
 </tbody>
 </table>
-<dl class="py method">
-<dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path_to_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_tokens=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_to_max_chars=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_if_longer_than=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer=&lt;flair.tokenization.SegtokTokenizer</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_mode='partial'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_name_map=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_labels=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_examples_without_labels=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding='utf-8'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/document_classification.py#L126-L243"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>Reads a data file for text classification.</p>
-<p>The file should contain one document/text per line.
-The line should have the following format:
-__label__&lt;class_name&gt; &lt;text&gt;
-If you have a multi class task, you can have as many labels as you want at the beginning of the line, e.g.,
-__label__&lt;class_name_1&gt; __label__&lt;class_name_2&gt; &lt;text&gt;
-:type path_to_file: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code>]</span>
-:param path_to_file: the path to the data file
-:type label_type: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param label_type: name of the label
-:type truncate_to_max_tokens: 
-:param truncate_to_max_tokens: If set, truncates each Sentence to a maximum number of tokens
-:type truncate_to_max_chars: 
-:param truncate_to_max_chars: If set, truncates each Sentence to a maximum number of chars
-:type filter_if_longer_than: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>
-:param filter_if_longer_than: If set, filters documents that are longer that the specified number of tokens.
-:type tokenizer: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <a class="reference internal" href="../../generated/flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>]</span>
-:param tokenizer: Custom tokenizer to use (default is SegtokTokenizer)
-:type memory_mode: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param memory_mode: Set to what degree to keep corpus in memory (‘full’, ‘partial’ or ‘disk’). Use ‘full’
-if full corpus and all embeddings fits into memory for speedups during training. Otherwise use ‘partial’ and if
-even this is too much for your memory, use ‘disk’.
-:type label_name_map: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]]</span>
-:param label_name_map: Optionally map label names to different schema.
-:type allow_examples_without_labels: 
-:param allow_examples_without_labels: set to True to allow Sentences without label in the Dataset.
-:type encoding: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>
-:param encoding: Default is ‘utf-8’ but some datasets are in ‘latin-1
-:return: list of sentences</p>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.document_classification.ClassificationDataset.is_in_memory">
 <span class="sig-name descname"><span class="pre">is_in_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/document_classification.py#L280-L281"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.document_classification.ClassificationDataset.is_in_memory" title="Link to this definition">#</a></dt>
