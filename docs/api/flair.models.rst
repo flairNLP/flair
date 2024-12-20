@@ -8,7 +8,6 @@ flair.models
     :nosignatures:
     :exclude-members: Module
 
-# Manually exclude specific members from documentation
 .. autoclass:: flair.models.EntityMentionLinker
    :members:
    :exclude-members: Module
@@ -19,4 +18,3 @@ flair.models
 
 .. autoclass:: flair.models.TokenClassifier
    :members:
-   :exclude-members: Model
