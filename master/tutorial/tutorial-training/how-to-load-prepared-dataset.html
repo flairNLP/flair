@@ -853,8 +853,9 @@ Create label dictionaries for universal POS tags by passing <code class="docutil
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">Dictionary with 17 tags: PROPN, PUNCT, ADJ, NOUN, VERB, DET, ADP, AUX, PRON, PART, SCONJ, NUM, ADV, CCONJ, X, INTJ, SYM</span>
 </pre></div>
 </div>
-<section id="dictionaries-for-other-label-types">
-<h4>Dictionaries for other label types<a class="headerlink" href="#dictionaries-for-other-label-types" title="Link to this heading">#</a></h4>
+</section>
+<section id="printing-label-statistics">
+<h3>Printing label statistics<a class="headerlink" href="#printing-label-statistics" title="Link to this heading">#</a></h3>
 <p>If you don’t know the label types in a corpus, just call <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a> with
 any random label name (e.g. <code class="docutils literal notranslate"><span class="pre">corpus.make_label_dictionary(label_type='abcd')</span></code>). This will print
 out statistics on all label types in the corpus:</p>
@@ -871,17 +872,6 @@ and a morphological number tagging task:</p>
 </pre></div>
 </div>
 <p>If you print these dictionaries, you will find that the POS dictionary contains 50 tags and the number dictionary only 2 for this corpus (singular and plural).</p>
-</section>
-<section id="dictionaries-for-other-corpora-types">
-<h4>Dictionaries for other corpora types<a class="headerlink" href="#dictionaries-for-other-corpora-types" title="Link to this heading">#</a></h4>
-<p>The method <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary</span></code></span></a> can be used for any corpus, including text classification corpora:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create label dictionary for a text classification task</span>
-<span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">TREC_6</span>
-<span class="n">corpus</span> <span class="o">=</span> <span class="n">TREC_6</span><span class="p">()</span>
-<span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="s1">&#39;question_class&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
 </section>
 <section id="the-multicorpus-object">
 <h3>The MultiCorpus Object<a class="headerlink" href="#the-multicorpus-object" title="Link to this heading">#</a></h3>
@@ -906,8 +896,8 @@ consisting of the English, German and Dutch Universal Dependency Treebanks.</p>
 <h2>Datasets included in Flair<a class="headerlink" href="#datasets-included-in-flair" title="Link to this heading">#</a></h2>
 <p>Flair supports many datasets out of the box. It usually automatically downloads and sets up the data the first time you
 call the corresponding constructor ID.
-The datasets are split into multiple modules, however they all can be imported from <code class="docutils literal notranslate"><span class="pre">flair.datasets</span></code> too.
-You can look up the respective modules to find the possible datasets.</p>
+The datasets are split into multiple modules, however they all can be imported from <code class="docutils literal notranslate"><span class="pre">flair.datasets</span></code> too.</p>
+<p>You can look up the respective modules to find the possible datasets.</p>
 <p>The following datasets are supported:</p>
 <table class="table">
 <thead>
