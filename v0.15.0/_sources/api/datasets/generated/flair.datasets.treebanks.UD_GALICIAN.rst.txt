@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_GALICIAN
+=====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_GALICIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_GALICIAN.__init__
+      ~UD_GALICIAN.add_label_noise
+      ~UD_GALICIAN.downsample
+      ~UD_GALICIAN.filter_empty_sentences
+      ~UD_GALICIAN.filter_long_sentences
+      ~UD_GALICIAN.get_all_sentences
+      ~UD_GALICIAN.get_label_distribution
+      ~UD_GALICIAN.make_label_dictionary
+      ~UD_GALICIAN.make_tag_dictionary
+      ~UD_GALICIAN.make_vocab_dictionary
+      ~UD_GALICIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_GALICIAN.dev
+      ~UD_GALICIAN.test
+      ~UD_GALICIAN.train
+   
+   

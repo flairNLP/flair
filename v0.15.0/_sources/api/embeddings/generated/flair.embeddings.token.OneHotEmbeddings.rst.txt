@@ -1,0 +1,92 @@
+﻿flair.embeddings.token.OneHotEmbeddings
+=======================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: OneHotEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OneHotEmbeddings.__init__
+      ~OneHotEmbeddings.add_module
+      ~OneHotEmbeddings.apply
+      ~OneHotEmbeddings.bfloat16
+      ~OneHotEmbeddings.buffers
+      ~OneHotEmbeddings.children
+      ~OneHotEmbeddings.compile
+      ~OneHotEmbeddings.cpu
+      ~OneHotEmbeddings.cuda
+      ~OneHotEmbeddings.double
+      ~OneHotEmbeddings.embed
+      ~OneHotEmbeddings.eval
+      ~OneHotEmbeddings.extra_repr
+      ~OneHotEmbeddings.float
+      ~OneHotEmbeddings.forward
+      ~OneHotEmbeddings.from_corpus
+      ~OneHotEmbeddings.from_params
+      ~OneHotEmbeddings.get_buffer
+      ~OneHotEmbeddings.get_extra_state
+      ~OneHotEmbeddings.get_instance_parameters
+      ~OneHotEmbeddings.get_names
+      ~OneHotEmbeddings.get_parameter
+      ~OneHotEmbeddings.get_submodule
+      ~OneHotEmbeddings.half
+      ~OneHotEmbeddings.ipu
+      ~OneHotEmbeddings.load_embedding
+      ~OneHotEmbeddings.load_state_dict
+      ~OneHotEmbeddings.modules
+      ~OneHotEmbeddings.mtia
+      ~OneHotEmbeddings.named_buffers
+      ~OneHotEmbeddings.named_children
+      ~OneHotEmbeddings.named_modules
+      ~OneHotEmbeddings.named_parameters
+      ~OneHotEmbeddings.parameters
+      ~OneHotEmbeddings.register_backward_hook
+      ~OneHotEmbeddings.register_buffer
+      ~OneHotEmbeddings.register_forward_hook
+      ~OneHotEmbeddings.register_forward_pre_hook
+      ~OneHotEmbeddings.register_full_backward_hook
+      ~OneHotEmbeddings.register_full_backward_pre_hook
+      ~OneHotEmbeddings.register_load_state_dict_post_hook
+      ~OneHotEmbeddings.register_load_state_dict_pre_hook
+      ~OneHotEmbeddings.register_module
+      ~OneHotEmbeddings.register_parameter
+      ~OneHotEmbeddings.register_state_dict_post_hook
+      ~OneHotEmbeddings.register_state_dict_pre_hook
+      ~OneHotEmbeddings.requires_grad_
+      ~OneHotEmbeddings.save_embeddings
+      ~OneHotEmbeddings.set_extra_state
+      ~OneHotEmbeddings.set_submodule
+      ~OneHotEmbeddings.share_memory
+      ~OneHotEmbeddings.state_dict
+      ~OneHotEmbeddings.to
+      ~OneHotEmbeddings.to_empty
+      ~OneHotEmbeddings.to_params
+      ~OneHotEmbeddings.train
+      ~OneHotEmbeddings.type
+      ~OneHotEmbeddings.xpu
+      ~OneHotEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OneHotEmbeddings.T_destination
+      ~OneHotEmbeddings.call_super_init
+      ~OneHotEmbeddings.dump_patches
+      ~OneHotEmbeddings.embedding_length
+      ~OneHotEmbeddings.embedding_type
+      ~OneHotEmbeddings.embeddings_name
+      ~OneHotEmbeddings.training
+   
+   

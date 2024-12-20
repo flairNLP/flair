@@ -1,0 +1,41 @@
+﻿flair.datasets.text\_text.SUPERGLUE\_RTE
+========================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: SUPERGLUE_RTE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SUPERGLUE_RTE.__init__
+      ~SUPERGLUE_RTE.add_label_noise
+      ~SUPERGLUE_RTE.downsample
+      ~SUPERGLUE_RTE.filter_empty_sentences
+      ~SUPERGLUE_RTE.filter_long_sentences
+      ~SUPERGLUE_RTE.get_all_sentences
+      ~SUPERGLUE_RTE.get_label_distribution
+      ~SUPERGLUE_RTE.jsonl_from_eval_dataset
+      ~SUPERGLUE_RTE.make_label_dictionary
+      ~SUPERGLUE_RTE.make_tag_dictionary
+      ~SUPERGLUE_RTE.make_vocab_dictionary
+      ~SUPERGLUE_RTE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SUPERGLUE_RTE.dev
+      ~SUPERGLUE_RTE.test
+      ~SUPERGLUE_RTE.train
+   
+   

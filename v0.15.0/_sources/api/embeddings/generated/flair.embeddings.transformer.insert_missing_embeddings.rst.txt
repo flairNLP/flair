@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.insert\_missing\_embeddings
+========================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: insert_missing_embeddings

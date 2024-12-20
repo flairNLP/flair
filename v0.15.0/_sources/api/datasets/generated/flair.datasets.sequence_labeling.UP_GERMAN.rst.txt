@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.UP\_GERMAN
+============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: UP_GERMAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UP_GERMAN.__init__
+      ~UP_GERMAN.add_label_noise
+      ~UP_GERMAN.downsample
+      ~UP_GERMAN.filter_empty_sentences
+      ~UP_GERMAN.filter_long_sentences
+      ~UP_GERMAN.get_all_sentences
+      ~UP_GERMAN.get_label_distribution
+      ~UP_GERMAN.make_label_dictionary
+      ~UP_GERMAN.make_tag_dictionary
+      ~UP_GERMAN.make_vocab_dictionary
+      ~UP_GERMAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UP_GERMAN.dev
+      ~UP_GERMAN.test
+      ~UP_GERMAN.train
+   
+   

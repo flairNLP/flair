@@ -1,0 +1,6 @@
+﻿flair.datasets.base.find\_train\_dev\_test\_files
+=================================================
+
+.. currentmodule:: flair.datasets.base
+
+.. autofunction:: find_train_dev_test_files

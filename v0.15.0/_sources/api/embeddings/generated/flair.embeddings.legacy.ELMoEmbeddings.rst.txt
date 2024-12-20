@@ -1,0 +1,94 @@
+﻿flair.embeddings.legacy.ELMoEmbeddings
+======================================
+
+.. currentmodule:: flair.embeddings.legacy
+
+.. autoclass:: ELMoEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ELMoEmbeddings.__init__
+      ~ELMoEmbeddings.add_module
+      ~ELMoEmbeddings.apply
+      ~ELMoEmbeddings.bfloat16
+      ~ELMoEmbeddings.buffers
+      ~ELMoEmbeddings.children
+      ~ELMoEmbeddings.compile
+      ~ELMoEmbeddings.cpu
+      ~ELMoEmbeddings.cuda
+      ~ELMoEmbeddings.double
+      ~ELMoEmbeddings.embed
+      ~ELMoEmbeddings.eval
+      ~ELMoEmbeddings.extra_repr
+      ~ELMoEmbeddings.float
+      ~ELMoEmbeddings.forward
+      ~ELMoEmbeddings.from_params
+      ~ELMoEmbeddings.get_buffer
+      ~ELMoEmbeddings.get_extra_state
+      ~ELMoEmbeddings.get_instance_parameters
+      ~ELMoEmbeddings.get_names
+      ~ELMoEmbeddings.get_parameter
+      ~ELMoEmbeddings.get_submodule
+      ~ELMoEmbeddings.half
+      ~ELMoEmbeddings.ipu
+      ~ELMoEmbeddings.load_embedding
+      ~ELMoEmbeddings.load_state_dict
+      ~ELMoEmbeddings.modules
+      ~ELMoEmbeddings.mtia
+      ~ELMoEmbeddings.named_buffers
+      ~ELMoEmbeddings.named_children
+      ~ELMoEmbeddings.named_modules
+      ~ELMoEmbeddings.named_parameters
+      ~ELMoEmbeddings.parameters
+      ~ELMoEmbeddings.register_backward_hook
+      ~ELMoEmbeddings.register_buffer
+      ~ELMoEmbeddings.register_forward_hook
+      ~ELMoEmbeddings.register_forward_pre_hook
+      ~ELMoEmbeddings.register_full_backward_hook
+      ~ELMoEmbeddings.register_full_backward_pre_hook
+      ~ELMoEmbeddings.register_load_state_dict_post_hook
+      ~ELMoEmbeddings.register_load_state_dict_pre_hook
+      ~ELMoEmbeddings.register_module
+      ~ELMoEmbeddings.register_parameter
+      ~ELMoEmbeddings.register_state_dict_post_hook
+      ~ELMoEmbeddings.register_state_dict_pre_hook
+      ~ELMoEmbeddings.requires_grad_
+      ~ELMoEmbeddings.save_embeddings
+      ~ELMoEmbeddings.set_extra_state
+      ~ELMoEmbeddings.set_submodule
+      ~ELMoEmbeddings.share_memory
+      ~ELMoEmbeddings.state_dict
+      ~ELMoEmbeddings.to
+      ~ELMoEmbeddings.to_empty
+      ~ELMoEmbeddings.to_params
+      ~ELMoEmbeddings.train
+      ~ELMoEmbeddings.type
+      ~ELMoEmbeddings.use_layers_all
+      ~ELMoEmbeddings.use_layers_average
+      ~ELMoEmbeddings.use_layers_top
+      ~ELMoEmbeddings.xpu
+      ~ELMoEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ELMoEmbeddings.T_destination
+      ~ELMoEmbeddings.call_super_init
+      ~ELMoEmbeddings.dump_patches
+      ~ELMoEmbeddings.embedding_length
+      ~ELMoEmbeddings.embedding_type
+      ~ELMoEmbeddings.embeddings_name
+      ~ELMoEmbeddings.training
+   
+   

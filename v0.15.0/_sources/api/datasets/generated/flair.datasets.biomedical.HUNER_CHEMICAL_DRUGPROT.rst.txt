@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_CHEMICAL\_DRUGPROT
+===================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_CHEMICAL_DRUGPROT
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_CHEMICAL_DRUGPROT.__init__
+      ~HUNER_CHEMICAL_DRUGPROT.add_label_noise
+      ~HUNER_CHEMICAL_DRUGPROT.bin_search_passage
+      ~HUNER_CHEMICAL_DRUGPROT.build_corpus_directory_name
+      ~HUNER_CHEMICAL_DRUGPROT.downsample
+      ~HUNER_CHEMICAL_DRUGPROT.filter_empty_sentences
+      ~HUNER_CHEMICAL_DRUGPROT.filter_long_sentences
+      ~HUNER_CHEMICAL_DRUGPROT.get_all_sentences
+      ~HUNER_CHEMICAL_DRUGPROT.get_entity_type_mapping
+      ~HUNER_CHEMICAL_DRUGPROT.get_label_distribution
+      ~HUNER_CHEMICAL_DRUGPROT.make_label_dictionary
+      ~HUNER_CHEMICAL_DRUGPROT.make_tag_dictionary
+      ~HUNER_CHEMICAL_DRUGPROT.make_vocab_dictionary
+      ~HUNER_CHEMICAL_DRUGPROT.obtain_statistics
+      ~HUNER_CHEMICAL_DRUGPROT.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_CHEMICAL_DRUGPROT.dev
+      ~HUNER_CHEMICAL_DRUGPROT.test
+      ~HUNER_CHEMICAL_DRUGPROT.train
+   
+   

@@ -1,0 +1,30 @@
+﻿flair.splitter.NoSentenceSplitter
+=================================
+
+.. currentmodule:: flair.splitter
+
+.. autoclass:: NoSentenceSplitter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NoSentenceSplitter.__init__
+      ~NoSentenceSplitter.split
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NoSentenceSplitter.name
+      ~NoSentenceSplitter.tokenizer
+   
+   

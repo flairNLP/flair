@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.BioNLPCorpus
+======================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: BioNLPCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BioNLPCorpus.__init__
+      ~BioNLPCorpus.add_label_noise
+      ~BioNLPCorpus.download_corpus
+      ~BioNLPCorpus.downsample
+      ~BioNLPCorpus.filter_empty_sentences
+      ~BioNLPCorpus.filter_long_sentences
+      ~BioNLPCorpus.get_all_sentences
+      ~BioNLPCorpus.get_label_distribution
+      ~BioNLPCorpus.make_label_dictionary
+      ~BioNLPCorpus.make_tag_dictionary
+      ~BioNLPCorpus.make_vocab_dictionary
+      ~BioNLPCorpus.obtain_statistics
+      ~BioNLPCorpus.parse_input_files
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BioNLPCorpus.dev
+      ~BioNLPCorpus.test
+      ~BioNLPCorpus.train
+   
+   

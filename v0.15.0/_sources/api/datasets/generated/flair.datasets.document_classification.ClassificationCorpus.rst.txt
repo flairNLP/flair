@@ -1,0 +1,40 @@
+﻿flair.datasets.document\_classification.ClassificationCorpus
+============================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: ClassificationCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ClassificationCorpus.__init__
+      ~ClassificationCorpus.add_label_noise
+      ~ClassificationCorpus.downsample
+      ~ClassificationCorpus.filter_empty_sentences
+      ~ClassificationCorpus.filter_long_sentences
+      ~ClassificationCorpus.get_all_sentences
+      ~ClassificationCorpus.get_label_distribution
+      ~ClassificationCorpus.make_label_dictionary
+      ~ClassificationCorpus.make_tag_dictionary
+      ~ClassificationCorpus.make_vocab_dictionary
+      ~ClassificationCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ClassificationCorpus.dev
+      ~ClassificationCorpus.test
+      ~ClassificationCorpus.train
+   
+   

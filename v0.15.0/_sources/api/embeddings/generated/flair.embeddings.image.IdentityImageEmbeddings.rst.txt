@@ -1,0 +1,91 @@
+﻿flair.embeddings.image.IdentityImageEmbeddings
+==============================================
+
+.. currentmodule:: flair.embeddings.image
+
+.. autoclass:: IdentityImageEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~IdentityImageEmbeddings.__init__
+      ~IdentityImageEmbeddings.add_module
+      ~IdentityImageEmbeddings.apply
+      ~IdentityImageEmbeddings.bfloat16
+      ~IdentityImageEmbeddings.buffers
+      ~IdentityImageEmbeddings.children
+      ~IdentityImageEmbeddings.compile
+      ~IdentityImageEmbeddings.cpu
+      ~IdentityImageEmbeddings.cuda
+      ~IdentityImageEmbeddings.double
+      ~IdentityImageEmbeddings.embed
+      ~IdentityImageEmbeddings.eval
+      ~IdentityImageEmbeddings.extra_repr
+      ~IdentityImageEmbeddings.float
+      ~IdentityImageEmbeddings.forward
+      ~IdentityImageEmbeddings.from_params
+      ~IdentityImageEmbeddings.get_buffer
+      ~IdentityImageEmbeddings.get_extra_state
+      ~IdentityImageEmbeddings.get_instance_parameters
+      ~IdentityImageEmbeddings.get_names
+      ~IdentityImageEmbeddings.get_parameter
+      ~IdentityImageEmbeddings.get_submodule
+      ~IdentityImageEmbeddings.half
+      ~IdentityImageEmbeddings.ipu
+      ~IdentityImageEmbeddings.load_embedding
+      ~IdentityImageEmbeddings.load_state_dict
+      ~IdentityImageEmbeddings.modules
+      ~IdentityImageEmbeddings.mtia
+      ~IdentityImageEmbeddings.named_buffers
+      ~IdentityImageEmbeddings.named_children
+      ~IdentityImageEmbeddings.named_modules
+      ~IdentityImageEmbeddings.named_parameters
+      ~IdentityImageEmbeddings.parameters
+      ~IdentityImageEmbeddings.register_backward_hook
+      ~IdentityImageEmbeddings.register_buffer
+      ~IdentityImageEmbeddings.register_forward_hook
+      ~IdentityImageEmbeddings.register_forward_pre_hook
+      ~IdentityImageEmbeddings.register_full_backward_hook
+      ~IdentityImageEmbeddings.register_full_backward_pre_hook
+      ~IdentityImageEmbeddings.register_load_state_dict_post_hook
+      ~IdentityImageEmbeddings.register_load_state_dict_pre_hook
+      ~IdentityImageEmbeddings.register_module
+      ~IdentityImageEmbeddings.register_parameter
+      ~IdentityImageEmbeddings.register_state_dict_post_hook
+      ~IdentityImageEmbeddings.register_state_dict_pre_hook
+      ~IdentityImageEmbeddings.requires_grad_
+      ~IdentityImageEmbeddings.save_embeddings
+      ~IdentityImageEmbeddings.set_extra_state
+      ~IdentityImageEmbeddings.set_submodule
+      ~IdentityImageEmbeddings.share_memory
+      ~IdentityImageEmbeddings.state_dict
+      ~IdentityImageEmbeddings.to
+      ~IdentityImageEmbeddings.to_empty
+      ~IdentityImageEmbeddings.to_params
+      ~IdentityImageEmbeddings.train
+      ~IdentityImageEmbeddings.type
+      ~IdentityImageEmbeddings.xpu
+      ~IdentityImageEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~IdentityImageEmbeddings.T_destination
+      ~IdentityImageEmbeddings.call_super_init
+      ~IdentityImageEmbeddings.dump_patches
+      ~IdentityImageEmbeddings.embedding_length
+      ~IdentityImageEmbeddings.embedding_type
+      ~IdentityImageEmbeddings.embeddings_name
+      ~IdentityImageEmbeddings.training
+   
+   

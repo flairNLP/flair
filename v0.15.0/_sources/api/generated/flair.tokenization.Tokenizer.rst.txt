@@ -1,0 +1,29 @@
+﻿flair.tokenization.Tokenizer
+============================
+
+.. currentmodule:: flair.tokenization
+
+.. autoclass:: Tokenizer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Tokenizer.__init__
+      ~Tokenizer.tokenize
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Tokenizer.name
+   
+   

@@ -1,0 +1,91 @@
+﻿flair.embeddings.document.DocumentCNNEmbeddings
+===============================================
+
+.. currentmodule:: flair.embeddings.document
+
+.. autoclass:: DocumentCNNEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DocumentCNNEmbeddings.__init__
+      ~DocumentCNNEmbeddings.add_module
+      ~DocumentCNNEmbeddings.apply
+      ~DocumentCNNEmbeddings.bfloat16
+      ~DocumentCNNEmbeddings.buffers
+      ~DocumentCNNEmbeddings.children
+      ~DocumentCNNEmbeddings.compile
+      ~DocumentCNNEmbeddings.cpu
+      ~DocumentCNNEmbeddings.cuda
+      ~DocumentCNNEmbeddings.double
+      ~DocumentCNNEmbeddings.embed
+      ~DocumentCNNEmbeddings.eval
+      ~DocumentCNNEmbeddings.extra_repr
+      ~DocumentCNNEmbeddings.float
+      ~DocumentCNNEmbeddings.forward
+      ~DocumentCNNEmbeddings.from_params
+      ~DocumentCNNEmbeddings.get_buffer
+      ~DocumentCNNEmbeddings.get_extra_state
+      ~DocumentCNNEmbeddings.get_instance_parameters
+      ~DocumentCNNEmbeddings.get_names
+      ~DocumentCNNEmbeddings.get_parameter
+      ~DocumentCNNEmbeddings.get_submodule
+      ~DocumentCNNEmbeddings.half
+      ~DocumentCNNEmbeddings.ipu
+      ~DocumentCNNEmbeddings.load_embedding
+      ~DocumentCNNEmbeddings.load_state_dict
+      ~DocumentCNNEmbeddings.modules
+      ~DocumentCNNEmbeddings.mtia
+      ~DocumentCNNEmbeddings.named_buffers
+      ~DocumentCNNEmbeddings.named_children
+      ~DocumentCNNEmbeddings.named_modules
+      ~DocumentCNNEmbeddings.named_parameters
+      ~DocumentCNNEmbeddings.parameters
+      ~DocumentCNNEmbeddings.register_backward_hook
+      ~DocumentCNNEmbeddings.register_buffer
+      ~DocumentCNNEmbeddings.register_forward_hook
+      ~DocumentCNNEmbeddings.register_forward_pre_hook
+      ~DocumentCNNEmbeddings.register_full_backward_hook
+      ~DocumentCNNEmbeddings.register_full_backward_pre_hook
+      ~DocumentCNNEmbeddings.register_load_state_dict_post_hook
+      ~DocumentCNNEmbeddings.register_load_state_dict_pre_hook
+      ~DocumentCNNEmbeddings.register_module
+      ~DocumentCNNEmbeddings.register_parameter
+      ~DocumentCNNEmbeddings.register_state_dict_post_hook
+      ~DocumentCNNEmbeddings.register_state_dict_pre_hook
+      ~DocumentCNNEmbeddings.requires_grad_
+      ~DocumentCNNEmbeddings.save_embeddings
+      ~DocumentCNNEmbeddings.set_extra_state
+      ~DocumentCNNEmbeddings.set_submodule
+      ~DocumentCNNEmbeddings.share_memory
+      ~DocumentCNNEmbeddings.state_dict
+      ~DocumentCNNEmbeddings.to
+      ~DocumentCNNEmbeddings.to_empty
+      ~DocumentCNNEmbeddings.to_params
+      ~DocumentCNNEmbeddings.train
+      ~DocumentCNNEmbeddings.type
+      ~DocumentCNNEmbeddings.xpu
+      ~DocumentCNNEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DocumentCNNEmbeddings.T_destination
+      ~DocumentCNNEmbeddings.call_super_init
+      ~DocumentCNNEmbeddings.dump_patches
+      ~DocumentCNNEmbeddings.embedding_length
+      ~DocumentCNNEmbeddings.embedding_type
+      ~DocumentCNNEmbeddings.embeddings_name
+      ~DocumentCNNEmbeddings.training
+   
+   

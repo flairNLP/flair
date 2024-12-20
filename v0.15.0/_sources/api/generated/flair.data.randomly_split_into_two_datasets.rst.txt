@@ -1,0 +1,6 @@
+﻿flair.data.randomly\_split\_into\_two\_datasets
+===============================================
+
+.. currentmodule:: flair.data
+
+.. autofunction:: randomly_split_into_two_datasets

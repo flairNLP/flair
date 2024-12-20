@@ -1,0 +1,6 @@
+﻿flair.data.TextTriple
+=====================
+
+.. currentmodule:: flair.data
+
+.. autodata:: TextTriple

@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_TURKISH
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_TURKISH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_TURKISH.__init__
+      ~UD_TURKISH.add_label_noise
+      ~UD_TURKISH.downsample
+      ~UD_TURKISH.filter_empty_sentences
+      ~UD_TURKISH.filter_long_sentences
+      ~UD_TURKISH.get_all_sentences
+      ~UD_TURKISH.get_label_distribution
+      ~UD_TURKISH.make_label_dictionary
+      ~UD_TURKISH.make_tag_dictionary
+      ~UD_TURKISH.make_vocab_dictionary
+      ~UD_TURKISH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_TURKISH.dev
+      ~UD_TURKISH.test
+      ~UD_TURKISH.train
+   
+   

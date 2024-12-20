@@ -1,0 +1,40 @@
+﻿flair.datasets.biomedical.HunerMultiCorpus
+==========================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HunerMultiCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HunerMultiCorpus.__init__
+      ~HunerMultiCorpus.add_label_noise
+      ~HunerMultiCorpus.downsample
+      ~HunerMultiCorpus.filter_empty_sentences
+      ~HunerMultiCorpus.filter_long_sentences
+      ~HunerMultiCorpus.get_all_sentences
+      ~HunerMultiCorpus.get_label_distribution
+      ~HunerMultiCorpus.make_label_dictionary
+      ~HunerMultiCorpus.make_tag_dictionary
+      ~HunerMultiCorpus.make_vocab_dictionary
+      ~HunerMultiCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HunerMultiCorpus.dev
+      ~HunerMultiCorpus.test
+      ~HunerMultiCorpus.train
+   
+   

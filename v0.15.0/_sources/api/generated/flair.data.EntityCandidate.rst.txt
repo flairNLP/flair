@@ -1,0 +1,23 @@
+﻿flair.data.EntityCandidate
+==========================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: EntityCandidate
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~EntityCandidate.__init__
+      ~EntityCandidate.to_dict
+   
+   
+
+   
+   
+   

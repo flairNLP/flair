@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_HIPE\_2022
+=================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_HIPE_2022
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_HIPE_2022.__init__
+      ~NER_HIPE_2022.add_label_noise
+      ~NER_HIPE_2022.downsample
+      ~NER_HIPE_2022.filter_empty_sentences
+      ~NER_HIPE_2022.filter_long_sentences
+      ~NER_HIPE_2022.get_all_sentences
+      ~NER_HIPE_2022.get_label_distribution
+      ~NER_HIPE_2022.make_label_dictionary
+      ~NER_HIPE_2022.make_tag_dictionary
+      ~NER_HIPE_2022.make_vocab_dictionary
+      ~NER_HIPE_2022.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_HIPE_2022.dev
+      ~NER_HIPE_2022.test
+      ~NER_HIPE_2022.train
+   
+   

@@ -1,0 +1,91 @@
+﻿flair.models.TextTripleClassifier
+=================================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: TextTripleClassifier
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TextTripleClassifier.__init__
+      ~TextTripleClassifier.add_module
+      ~TextTripleClassifier.apply
+      ~TextTripleClassifier.bfloat16
+      ~TextTripleClassifier.buffers
+      ~TextTripleClassifier.children
+      ~TextTripleClassifier.compile
+      ~TextTripleClassifier.cpu
+      ~TextTripleClassifier.cuda
+      ~TextTripleClassifier.double
+      ~TextTripleClassifier.eval
+      ~TextTripleClassifier.evaluate
+      ~TextTripleClassifier.extra_repr
+      ~TextTripleClassifier.float
+      ~TextTripleClassifier.forward
+      ~TextTripleClassifier.forward_loss
+      ~TextTripleClassifier.get_buffer
+      ~TextTripleClassifier.get_extra_state
+      ~TextTripleClassifier.get_parameter
+      ~TextTripleClassifier.get_submodule
+      ~TextTripleClassifier.get_used_tokens
+      ~TextTripleClassifier.half
+      ~TextTripleClassifier.ipu
+      ~TextTripleClassifier.load
+      ~TextTripleClassifier.load_state_dict
+      ~TextTripleClassifier.modules
+      ~TextTripleClassifier.mtia
+      ~TextTripleClassifier.named_buffers
+      ~TextTripleClassifier.named_children
+      ~TextTripleClassifier.named_modules
+      ~TextTripleClassifier.named_parameters
+      ~TextTripleClassifier.parameters
+      ~TextTripleClassifier.predict
+      ~TextTripleClassifier.print_model_card
+      ~TextTripleClassifier.register_backward_hook
+      ~TextTripleClassifier.register_buffer
+      ~TextTripleClassifier.register_forward_hook
+      ~TextTripleClassifier.register_forward_pre_hook
+      ~TextTripleClassifier.register_full_backward_hook
+      ~TextTripleClassifier.register_full_backward_pre_hook
+      ~TextTripleClassifier.register_load_state_dict_post_hook
+      ~TextTripleClassifier.register_load_state_dict_pre_hook
+      ~TextTripleClassifier.register_module
+      ~TextTripleClassifier.register_parameter
+      ~TextTripleClassifier.register_state_dict_post_hook
+      ~TextTripleClassifier.register_state_dict_pre_hook
+      ~TextTripleClassifier.requires_grad_
+      ~TextTripleClassifier.save
+      ~TextTripleClassifier.set_extra_state
+      ~TextTripleClassifier.set_submodule
+      ~TextTripleClassifier.share_memory
+      ~TextTripleClassifier.state_dict
+      ~TextTripleClassifier.to
+      ~TextTripleClassifier.to_empty
+      ~TextTripleClassifier.train
+      ~TextTripleClassifier.type
+      ~TextTripleClassifier.xpu
+      ~TextTripleClassifier.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TextTripleClassifier.T_destination
+      ~TextTripleClassifier.call_super_init
+      ~TextTripleClassifier.dump_patches
+      ~TextTripleClassifier.label_type
+      ~TextTripleClassifier.model_card
+      ~TextTripleClassifier.multi_label_threshold
+      ~TextTripleClassifier.training
+   
+   

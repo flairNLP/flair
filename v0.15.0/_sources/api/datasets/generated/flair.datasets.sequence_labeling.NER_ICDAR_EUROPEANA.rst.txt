@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_ICDAR\_EUROPEANA
+=======================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_ICDAR_EUROPEANA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_ICDAR_EUROPEANA.__init__
+      ~NER_ICDAR_EUROPEANA.add_label_noise
+      ~NER_ICDAR_EUROPEANA.downsample
+      ~NER_ICDAR_EUROPEANA.filter_empty_sentences
+      ~NER_ICDAR_EUROPEANA.filter_long_sentences
+      ~NER_ICDAR_EUROPEANA.get_all_sentences
+      ~NER_ICDAR_EUROPEANA.get_label_distribution
+      ~NER_ICDAR_EUROPEANA.make_label_dictionary
+      ~NER_ICDAR_EUROPEANA.make_tag_dictionary
+      ~NER_ICDAR_EUROPEANA.make_vocab_dictionary
+      ~NER_ICDAR_EUROPEANA.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_ICDAR_EUROPEANA.dev
+      ~NER_ICDAR_EUROPEANA.test
+      ~NER_ICDAR_EUROPEANA.train
+   
+   

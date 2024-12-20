@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.truncate\_hidden\_states
+=====================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: truncate_hidden_states

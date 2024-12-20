@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.BIOSEMANTICS
+======================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: BIOSEMANTICS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BIOSEMANTICS.__init__
+      ~BIOSEMANTICS.add_label_noise
+      ~BIOSEMANTICS.download_dataset
+      ~BIOSEMANTICS.downsample
+      ~BIOSEMANTICS.filter_empty_sentences
+      ~BIOSEMANTICS.filter_long_sentences
+      ~BIOSEMANTICS.get_all_sentences
+      ~BIOSEMANTICS.get_label_distribution
+      ~BIOSEMANTICS.make_label_dictionary
+      ~BIOSEMANTICS.make_tag_dictionary
+      ~BIOSEMANTICS.make_vocab_dictionary
+      ~BIOSEMANTICS.obtain_statistics
+      ~BIOSEMANTICS.parse_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BIOSEMANTICS.dev
+      ~BIOSEMANTICS.test
+      ~BIOSEMANTICS.train
+   
+   

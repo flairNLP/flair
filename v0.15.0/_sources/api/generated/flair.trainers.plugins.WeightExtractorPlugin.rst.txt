@@ -1,0 +1,38 @@
+﻿flair.trainers.plugins.WeightExtractorPlugin
+============================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: WeightExtractorPlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WeightExtractorPlugin.__init__
+      ~WeightExtractorPlugin.after_training_batch
+      ~WeightExtractorPlugin.attach_to
+      ~WeightExtractorPlugin.detach
+      ~WeightExtractorPlugin.get_state
+      ~WeightExtractorPlugin.hook
+      ~WeightExtractorPlugin.mark_func_as_hook
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WeightExtractorPlugin.attach_to_all_processes
+      ~WeightExtractorPlugin.corpus
+      ~WeightExtractorPlugin.model
+      ~WeightExtractorPlugin.pluggable
+      ~WeightExtractorPlugin.trainer
+   
+   

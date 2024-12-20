@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.OSIRIS
+================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: OSIRIS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OSIRIS.__init__
+      ~OSIRIS.add_label_noise
+      ~OSIRIS.download_dataset
+      ~OSIRIS.downsample
+      ~OSIRIS.filter_empty_sentences
+      ~OSIRIS.filter_long_sentences
+      ~OSIRIS.get_all_sentences
+      ~OSIRIS.get_label_distribution
+      ~OSIRIS.make_label_dictionary
+      ~OSIRIS.make_tag_dictionary
+      ~OSIRIS.make_vocab_dictionary
+      ~OSIRIS.obtain_statistics
+      ~OSIRIS.parse_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OSIRIS.dev
+      ~OSIRIS.test
+      ~OSIRIS.train
+   
+   

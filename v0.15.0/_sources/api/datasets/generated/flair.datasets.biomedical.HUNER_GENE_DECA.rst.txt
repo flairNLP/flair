@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_DECA
+===========================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_DECA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_DECA.__init__
+      ~HUNER_GENE_DECA.add_label_noise
+      ~HUNER_GENE_DECA.downsample
+      ~HUNER_GENE_DECA.filter_empty_sentences
+      ~HUNER_GENE_DECA.filter_long_sentences
+      ~HUNER_GENE_DECA.get_all_sentences
+      ~HUNER_GENE_DECA.get_corpus_sentence_splitter
+      ~HUNER_GENE_DECA.get_entity_type_mapping
+      ~HUNER_GENE_DECA.get_label_distribution
+      ~HUNER_GENE_DECA.get_subset
+      ~HUNER_GENE_DECA.make_label_dictionary
+      ~HUNER_GENE_DECA.make_tag_dictionary
+      ~HUNER_GENE_DECA.make_vocab_dictionary
+      ~HUNER_GENE_DECA.obtain_statistics
+      ~HUNER_GENE_DECA.split_url
+      ~HUNER_GENE_DECA.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_DECA.dev
+      ~HUNER_GENE_DECA.test
+      ~HUNER_GENE_DECA.train
+   
+   

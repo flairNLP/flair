@@ -1,0 +1,41 @@
+﻿flair.datasets.biomedical.CDR
+=============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: CDR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CDR.__init__
+      ~CDR.add_label_noise
+      ~CDR.download_dataset
+      ~CDR.downsample
+      ~CDR.filter_empty_sentences
+      ~CDR.filter_long_sentences
+      ~CDR.get_all_sentences
+      ~CDR.get_label_distribution
+      ~CDR.make_label_dictionary
+      ~CDR.make_tag_dictionary
+      ~CDR.make_vocab_dictionary
+      ~CDR.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CDR.dev
+      ~CDR.test
+      ~CDR.train
+   
+   

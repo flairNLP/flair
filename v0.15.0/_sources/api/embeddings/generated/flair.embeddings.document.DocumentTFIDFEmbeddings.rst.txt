@@ -1,0 +1,91 @@
+﻿flair.embeddings.document.DocumentTFIDFEmbeddings
+=================================================
+
+.. currentmodule:: flair.embeddings.document
+
+.. autoclass:: DocumentTFIDFEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DocumentTFIDFEmbeddings.__init__
+      ~DocumentTFIDFEmbeddings.add_module
+      ~DocumentTFIDFEmbeddings.apply
+      ~DocumentTFIDFEmbeddings.bfloat16
+      ~DocumentTFIDFEmbeddings.buffers
+      ~DocumentTFIDFEmbeddings.children
+      ~DocumentTFIDFEmbeddings.compile
+      ~DocumentTFIDFEmbeddings.cpu
+      ~DocumentTFIDFEmbeddings.cuda
+      ~DocumentTFIDFEmbeddings.double
+      ~DocumentTFIDFEmbeddings.embed
+      ~DocumentTFIDFEmbeddings.eval
+      ~DocumentTFIDFEmbeddings.extra_repr
+      ~DocumentTFIDFEmbeddings.float
+      ~DocumentTFIDFEmbeddings.forward
+      ~DocumentTFIDFEmbeddings.from_params
+      ~DocumentTFIDFEmbeddings.get_buffer
+      ~DocumentTFIDFEmbeddings.get_extra_state
+      ~DocumentTFIDFEmbeddings.get_instance_parameters
+      ~DocumentTFIDFEmbeddings.get_names
+      ~DocumentTFIDFEmbeddings.get_parameter
+      ~DocumentTFIDFEmbeddings.get_submodule
+      ~DocumentTFIDFEmbeddings.half
+      ~DocumentTFIDFEmbeddings.ipu
+      ~DocumentTFIDFEmbeddings.load_embedding
+      ~DocumentTFIDFEmbeddings.load_state_dict
+      ~DocumentTFIDFEmbeddings.modules
+      ~DocumentTFIDFEmbeddings.mtia
+      ~DocumentTFIDFEmbeddings.named_buffers
+      ~DocumentTFIDFEmbeddings.named_children
+      ~DocumentTFIDFEmbeddings.named_modules
+      ~DocumentTFIDFEmbeddings.named_parameters
+      ~DocumentTFIDFEmbeddings.parameters
+      ~DocumentTFIDFEmbeddings.register_backward_hook
+      ~DocumentTFIDFEmbeddings.register_buffer
+      ~DocumentTFIDFEmbeddings.register_forward_hook
+      ~DocumentTFIDFEmbeddings.register_forward_pre_hook
+      ~DocumentTFIDFEmbeddings.register_full_backward_hook
+      ~DocumentTFIDFEmbeddings.register_full_backward_pre_hook
+      ~DocumentTFIDFEmbeddings.register_load_state_dict_post_hook
+      ~DocumentTFIDFEmbeddings.register_load_state_dict_pre_hook
+      ~DocumentTFIDFEmbeddings.register_module
+      ~DocumentTFIDFEmbeddings.register_parameter
+      ~DocumentTFIDFEmbeddings.register_state_dict_post_hook
+      ~DocumentTFIDFEmbeddings.register_state_dict_pre_hook
+      ~DocumentTFIDFEmbeddings.requires_grad_
+      ~DocumentTFIDFEmbeddings.save_embeddings
+      ~DocumentTFIDFEmbeddings.set_extra_state
+      ~DocumentTFIDFEmbeddings.set_submodule
+      ~DocumentTFIDFEmbeddings.share_memory
+      ~DocumentTFIDFEmbeddings.state_dict
+      ~DocumentTFIDFEmbeddings.to
+      ~DocumentTFIDFEmbeddings.to_empty
+      ~DocumentTFIDFEmbeddings.to_params
+      ~DocumentTFIDFEmbeddings.train
+      ~DocumentTFIDFEmbeddings.type
+      ~DocumentTFIDFEmbeddings.xpu
+      ~DocumentTFIDFEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DocumentTFIDFEmbeddings.T_destination
+      ~DocumentTFIDFEmbeddings.call_super_init
+      ~DocumentTFIDFEmbeddings.dump_patches
+      ~DocumentTFIDFEmbeddings.embedding_length
+      ~DocumentTFIDFEmbeddings.embedding_type
+      ~DocumentTFIDFEmbeddings.embeddings_name
+      ~DocumentTFIDFEmbeddings.training
+   
+   

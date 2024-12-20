@@ -1,0 +1,6 @@
+﻿flair.set\_seed
+===============
+
+.. currentmodule:: flair
+
+.. autofunction:: set_seed

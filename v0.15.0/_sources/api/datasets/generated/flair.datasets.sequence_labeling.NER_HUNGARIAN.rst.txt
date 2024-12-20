@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_HUNGARIAN
+================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_HUNGARIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_HUNGARIAN.__init__
+      ~NER_HUNGARIAN.add_label_noise
+      ~NER_HUNGARIAN.downsample
+      ~NER_HUNGARIAN.filter_empty_sentences
+      ~NER_HUNGARIAN.filter_long_sentences
+      ~NER_HUNGARIAN.get_all_sentences
+      ~NER_HUNGARIAN.get_label_distribution
+      ~NER_HUNGARIAN.make_label_dictionary
+      ~NER_HUNGARIAN.make_tag_dictionary
+      ~NER_HUNGARIAN.make_vocab_dictionary
+      ~NER_HUNGARIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_HUNGARIAN.dev
+      ~NER_HUNGARIAN.test
+      ~NER_HUNGARIAN.train
+   
+   

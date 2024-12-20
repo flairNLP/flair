@@ -1,0 +1,91 @@
+﻿flair.embeddings.image.NetworkImageEmbeddings
+=============================================
+
+.. currentmodule:: flair.embeddings.image
+
+.. autoclass:: NetworkImageEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NetworkImageEmbeddings.__init__
+      ~NetworkImageEmbeddings.add_module
+      ~NetworkImageEmbeddings.apply
+      ~NetworkImageEmbeddings.bfloat16
+      ~NetworkImageEmbeddings.buffers
+      ~NetworkImageEmbeddings.children
+      ~NetworkImageEmbeddings.compile
+      ~NetworkImageEmbeddings.cpu
+      ~NetworkImageEmbeddings.cuda
+      ~NetworkImageEmbeddings.double
+      ~NetworkImageEmbeddings.embed
+      ~NetworkImageEmbeddings.eval
+      ~NetworkImageEmbeddings.extra_repr
+      ~NetworkImageEmbeddings.float
+      ~NetworkImageEmbeddings.forward
+      ~NetworkImageEmbeddings.from_params
+      ~NetworkImageEmbeddings.get_buffer
+      ~NetworkImageEmbeddings.get_extra_state
+      ~NetworkImageEmbeddings.get_instance_parameters
+      ~NetworkImageEmbeddings.get_names
+      ~NetworkImageEmbeddings.get_parameter
+      ~NetworkImageEmbeddings.get_submodule
+      ~NetworkImageEmbeddings.half
+      ~NetworkImageEmbeddings.ipu
+      ~NetworkImageEmbeddings.load_embedding
+      ~NetworkImageEmbeddings.load_state_dict
+      ~NetworkImageEmbeddings.modules
+      ~NetworkImageEmbeddings.mtia
+      ~NetworkImageEmbeddings.named_buffers
+      ~NetworkImageEmbeddings.named_children
+      ~NetworkImageEmbeddings.named_modules
+      ~NetworkImageEmbeddings.named_parameters
+      ~NetworkImageEmbeddings.parameters
+      ~NetworkImageEmbeddings.register_backward_hook
+      ~NetworkImageEmbeddings.register_buffer
+      ~NetworkImageEmbeddings.register_forward_hook
+      ~NetworkImageEmbeddings.register_forward_pre_hook
+      ~NetworkImageEmbeddings.register_full_backward_hook
+      ~NetworkImageEmbeddings.register_full_backward_pre_hook
+      ~NetworkImageEmbeddings.register_load_state_dict_post_hook
+      ~NetworkImageEmbeddings.register_load_state_dict_pre_hook
+      ~NetworkImageEmbeddings.register_module
+      ~NetworkImageEmbeddings.register_parameter
+      ~NetworkImageEmbeddings.register_state_dict_post_hook
+      ~NetworkImageEmbeddings.register_state_dict_pre_hook
+      ~NetworkImageEmbeddings.requires_grad_
+      ~NetworkImageEmbeddings.save_embeddings
+      ~NetworkImageEmbeddings.set_extra_state
+      ~NetworkImageEmbeddings.set_submodule
+      ~NetworkImageEmbeddings.share_memory
+      ~NetworkImageEmbeddings.state_dict
+      ~NetworkImageEmbeddings.to
+      ~NetworkImageEmbeddings.to_empty
+      ~NetworkImageEmbeddings.to_params
+      ~NetworkImageEmbeddings.train
+      ~NetworkImageEmbeddings.type
+      ~NetworkImageEmbeddings.xpu
+      ~NetworkImageEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NetworkImageEmbeddings.T_destination
+      ~NetworkImageEmbeddings.call_super_init
+      ~NetworkImageEmbeddings.dump_patches
+      ~NetworkImageEmbeddings.embedding_length
+      ~NetworkImageEmbeddings.embedding_type
+      ~NetworkImageEmbeddings.embeddings_name
+      ~NetworkImageEmbeddings.training
+   
+   

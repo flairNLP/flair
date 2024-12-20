@@ -1,0 +1,91 @@
+﻿flair.embeddings.image.ConvTransformNetworkImageEmbeddings
+==========================================================
+
+.. currentmodule:: flair.embeddings.image
+
+.. autoclass:: ConvTransformNetworkImageEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ConvTransformNetworkImageEmbeddings.__init__
+      ~ConvTransformNetworkImageEmbeddings.add_module
+      ~ConvTransformNetworkImageEmbeddings.apply
+      ~ConvTransformNetworkImageEmbeddings.bfloat16
+      ~ConvTransformNetworkImageEmbeddings.buffers
+      ~ConvTransformNetworkImageEmbeddings.children
+      ~ConvTransformNetworkImageEmbeddings.compile
+      ~ConvTransformNetworkImageEmbeddings.cpu
+      ~ConvTransformNetworkImageEmbeddings.cuda
+      ~ConvTransformNetworkImageEmbeddings.double
+      ~ConvTransformNetworkImageEmbeddings.embed
+      ~ConvTransformNetworkImageEmbeddings.eval
+      ~ConvTransformNetworkImageEmbeddings.extra_repr
+      ~ConvTransformNetworkImageEmbeddings.float
+      ~ConvTransformNetworkImageEmbeddings.forward
+      ~ConvTransformNetworkImageEmbeddings.from_params
+      ~ConvTransformNetworkImageEmbeddings.get_buffer
+      ~ConvTransformNetworkImageEmbeddings.get_extra_state
+      ~ConvTransformNetworkImageEmbeddings.get_instance_parameters
+      ~ConvTransformNetworkImageEmbeddings.get_names
+      ~ConvTransformNetworkImageEmbeddings.get_parameter
+      ~ConvTransformNetworkImageEmbeddings.get_submodule
+      ~ConvTransformNetworkImageEmbeddings.half
+      ~ConvTransformNetworkImageEmbeddings.ipu
+      ~ConvTransformNetworkImageEmbeddings.load_embedding
+      ~ConvTransformNetworkImageEmbeddings.load_state_dict
+      ~ConvTransformNetworkImageEmbeddings.modules
+      ~ConvTransformNetworkImageEmbeddings.mtia
+      ~ConvTransformNetworkImageEmbeddings.named_buffers
+      ~ConvTransformNetworkImageEmbeddings.named_children
+      ~ConvTransformNetworkImageEmbeddings.named_modules
+      ~ConvTransformNetworkImageEmbeddings.named_parameters
+      ~ConvTransformNetworkImageEmbeddings.parameters
+      ~ConvTransformNetworkImageEmbeddings.register_backward_hook
+      ~ConvTransformNetworkImageEmbeddings.register_buffer
+      ~ConvTransformNetworkImageEmbeddings.register_forward_hook
+      ~ConvTransformNetworkImageEmbeddings.register_forward_pre_hook
+      ~ConvTransformNetworkImageEmbeddings.register_full_backward_hook
+      ~ConvTransformNetworkImageEmbeddings.register_full_backward_pre_hook
+      ~ConvTransformNetworkImageEmbeddings.register_load_state_dict_post_hook
+      ~ConvTransformNetworkImageEmbeddings.register_load_state_dict_pre_hook
+      ~ConvTransformNetworkImageEmbeddings.register_module
+      ~ConvTransformNetworkImageEmbeddings.register_parameter
+      ~ConvTransformNetworkImageEmbeddings.register_state_dict_post_hook
+      ~ConvTransformNetworkImageEmbeddings.register_state_dict_pre_hook
+      ~ConvTransformNetworkImageEmbeddings.requires_grad_
+      ~ConvTransformNetworkImageEmbeddings.save_embeddings
+      ~ConvTransformNetworkImageEmbeddings.set_extra_state
+      ~ConvTransformNetworkImageEmbeddings.set_submodule
+      ~ConvTransformNetworkImageEmbeddings.share_memory
+      ~ConvTransformNetworkImageEmbeddings.state_dict
+      ~ConvTransformNetworkImageEmbeddings.to
+      ~ConvTransformNetworkImageEmbeddings.to_empty
+      ~ConvTransformNetworkImageEmbeddings.to_params
+      ~ConvTransformNetworkImageEmbeddings.train
+      ~ConvTransformNetworkImageEmbeddings.type
+      ~ConvTransformNetworkImageEmbeddings.xpu
+      ~ConvTransformNetworkImageEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ConvTransformNetworkImageEmbeddings.T_destination
+      ~ConvTransformNetworkImageEmbeddings.call_super_init
+      ~ConvTransformNetworkImageEmbeddings.dump_patches
+      ~ConvTransformNetworkImageEmbeddings.embedding_length
+      ~ConvTransformNetworkImageEmbeddings.embedding_type
+      ~ConvTransformNetworkImageEmbeddings.embeddings_name
+      ~ConvTransformNetworkImageEmbeddings.training
+   
+   

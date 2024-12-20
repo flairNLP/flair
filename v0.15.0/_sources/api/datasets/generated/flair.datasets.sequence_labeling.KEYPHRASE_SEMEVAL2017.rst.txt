@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.KEYPHRASE\_SEMEVAL2017
+========================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: KEYPHRASE_SEMEVAL2017
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~KEYPHRASE_SEMEVAL2017.__init__
+      ~KEYPHRASE_SEMEVAL2017.add_label_noise
+      ~KEYPHRASE_SEMEVAL2017.downsample
+      ~KEYPHRASE_SEMEVAL2017.filter_empty_sentences
+      ~KEYPHRASE_SEMEVAL2017.filter_long_sentences
+      ~KEYPHRASE_SEMEVAL2017.get_all_sentences
+      ~KEYPHRASE_SEMEVAL2017.get_label_distribution
+      ~KEYPHRASE_SEMEVAL2017.make_label_dictionary
+      ~KEYPHRASE_SEMEVAL2017.make_tag_dictionary
+      ~KEYPHRASE_SEMEVAL2017.make_vocab_dictionary
+      ~KEYPHRASE_SEMEVAL2017.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~KEYPHRASE_SEMEVAL2017.dev
+      ~KEYPHRASE_SEMEVAL2017.test
+      ~KEYPHRASE_SEMEVAL2017.train
+   
+   

@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_CELL\_LINE\_CLL
+================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_CELL_LINE_CLL
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_CELL_LINE_CLL.__init__
+      ~HUNER_CELL_LINE_CLL.add_label_noise
+      ~HUNER_CELL_LINE_CLL.downsample
+      ~HUNER_CELL_LINE_CLL.filter_empty_sentences
+      ~HUNER_CELL_LINE_CLL.filter_long_sentences
+      ~HUNER_CELL_LINE_CLL.get_all_sentences
+      ~HUNER_CELL_LINE_CLL.get_corpus_sentence_splitter
+      ~HUNER_CELL_LINE_CLL.get_label_distribution
+      ~HUNER_CELL_LINE_CLL.get_subset
+      ~HUNER_CELL_LINE_CLL.make_label_dictionary
+      ~HUNER_CELL_LINE_CLL.make_tag_dictionary
+      ~HUNER_CELL_LINE_CLL.make_vocab_dictionary
+      ~HUNER_CELL_LINE_CLL.obtain_statistics
+      ~HUNER_CELL_LINE_CLL.split_url
+      ~HUNER_CELL_LINE_CLL.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_CELL_LINE_CLL.dev
+      ~HUNER_CELL_LINE_CLL.test
+      ~HUNER_CELL_LINE_CLL.train
+   
+   

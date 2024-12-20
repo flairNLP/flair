@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.BIGBIO\_EL\_BC5CDR\_CHEMICAL
+===========================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: BIGBIO_EL_BC5CDR_CHEMICAL
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.__init__
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.add_label_noise
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.downsample
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.filter_empty_sentences
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.filter_long_sentences
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.get_all_sentences
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.get_label_distribution
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.make_label_dictionary
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.make_tag_dictionary
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.make_vocab_dictionary
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.dev
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.test
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.train
+   
+   

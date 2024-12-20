@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_ENGLISH\_PERSON
+======================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_ENGLISH_PERSON
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_PERSON.__init__
+      ~NER_ENGLISH_PERSON.add_label_noise
+      ~NER_ENGLISH_PERSON.downsample
+      ~NER_ENGLISH_PERSON.filter_empty_sentences
+      ~NER_ENGLISH_PERSON.filter_long_sentences
+      ~NER_ENGLISH_PERSON.get_all_sentences
+      ~NER_ENGLISH_PERSON.get_label_distribution
+      ~NER_ENGLISH_PERSON.make_label_dictionary
+      ~NER_ENGLISH_PERSON.make_tag_dictionary
+      ~NER_ENGLISH_PERSON.make_vocab_dictionary
+      ~NER_ENGLISH_PERSON.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_PERSON.dev
+      ~NER_ENGLISH_PERSON.test
+      ~NER_ENGLISH_PERSON.train
+   
+   

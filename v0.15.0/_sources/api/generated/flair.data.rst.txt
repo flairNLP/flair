@@ -1,0 +1,34 @@
+﻿flair.data
+==========
+
+.. automodule:: flair.data
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      get_spans_from_bio
+      randomly_split_into_two_datasets
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      BoundingBox
+      ConcatFlairDataset
+      Corpus
+      DataPair
+      DataPoint
+      DataTriple
+      Dictionary
+      EntityCandidate
+      FlairDataset
+      Image
+      Label
+      MultiCorpus
+      Relation
+      Sentence
+      Span
+      Token
+   

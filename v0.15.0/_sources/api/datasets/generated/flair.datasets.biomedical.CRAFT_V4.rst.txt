@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.CRAFT\_V4
+===================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: CRAFT_V4
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CRAFT_V4.__init__
+      ~CRAFT_V4.add_label_noise
+      ~CRAFT_V4.download_corpus
+      ~CRAFT_V4.downsample
+      ~CRAFT_V4.filter_empty_sentences
+      ~CRAFT_V4.filter_entities
+      ~CRAFT_V4.filter_long_sentences
+      ~CRAFT_V4.get_all_sentences
+      ~CRAFT_V4.get_label_distribution
+      ~CRAFT_V4.make_label_dictionary
+      ~CRAFT_V4.make_tag_dictionary
+      ~CRAFT_V4.make_vocab_dictionary
+      ~CRAFT_V4.obtain_statistics
+      ~CRAFT_V4.parse_corpus
+      ~CRAFT_V4.prepare_splits
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CRAFT_V4.dev
+      ~CRAFT_V4.test
+      ~CRAFT_V4.train
+   
+   

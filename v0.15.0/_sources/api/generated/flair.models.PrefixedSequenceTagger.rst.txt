@@ -1,0 +1,93 @@
+﻿flair.models.PrefixedSequenceTagger
+===================================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: PrefixedSequenceTagger
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PrefixedSequenceTagger.RNN
+      ~PrefixedSequenceTagger.__init__
+      ~PrefixedSequenceTagger.add_module
+      ~PrefixedSequenceTagger.apply
+      ~PrefixedSequenceTagger.augment_sentences
+      ~PrefixedSequenceTagger.bfloat16
+      ~PrefixedSequenceTagger.buffers
+      ~PrefixedSequenceTagger.children
+      ~PrefixedSequenceTagger.compile
+      ~PrefixedSequenceTagger.cpu
+      ~PrefixedSequenceTagger.cuda
+      ~PrefixedSequenceTagger.double
+      ~PrefixedSequenceTagger.eval
+      ~PrefixedSequenceTagger.evaluate
+      ~PrefixedSequenceTagger.extra_repr
+      ~PrefixedSequenceTagger.float
+      ~PrefixedSequenceTagger.forward
+      ~PrefixedSequenceTagger.forward_loss
+      ~PrefixedSequenceTagger.get_buffer
+      ~PrefixedSequenceTagger.get_extra_state
+      ~PrefixedSequenceTagger.get_parameter
+      ~PrefixedSequenceTagger.get_submodule
+      ~PrefixedSequenceTagger.get_used_tokens
+      ~PrefixedSequenceTagger.half
+      ~PrefixedSequenceTagger.ipu
+      ~PrefixedSequenceTagger.load
+      ~PrefixedSequenceTagger.load_state_dict
+      ~PrefixedSequenceTagger.modules
+      ~PrefixedSequenceTagger.mtia
+      ~PrefixedSequenceTagger.named_buffers
+      ~PrefixedSequenceTagger.named_children
+      ~PrefixedSequenceTagger.named_modules
+      ~PrefixedSequenceTagger.named_parameters
+      ~PrefixedSequenceTagger.parameters
+      ~PrefixedSequenceTagger.predict
+      ~PrefixedSequenceTagger.print_model_card
+      ~PrefixedSequenceTagger.push_to_hub
+      ~PrefixedSequenceTagger.register_backward_hook
+      ~PrefixedSequenceTagger.register_buffer
+      ~PrefixedSequenceTagger.register_forward_hook
+      ~PrefixedSequenceTagger.register_forward_pre_hook
+      ~PrefixedSequenceTagger.register_full_backward_hook
+      ~PrefixedSequenceTagger.register_full_backward_pre_hook
+      ~PrefixedSequenceTagger.register_load_state_dict_post_hook
+      ~PrefixedSequenceTagger.register_load_state_dict_pre_hook
+      ~PrefixedSequenceTagger.register_module
+      ~PrefixedSequenceTagger.register_parameter
+      ~PrefixedSequenceTagger.register_state_dict_post_hook
+      ~PrefixedSequenceTagger.register_state_dict_pre_hook
+      ~PrefixedSequenceTagger.requires_grad_
+      ~PrefixedSequenceTagger.save
+      ~PrefixedSequenceTagger.set_extra_state
+      ~PrefixedSequenceTagger.set_submodule
+      ~PrefixedSequenceTagger.share_memory
+      ~PrefixedSequenceTagger.state_dict
+      ~PrefixedSequenceTagger.to
+      ~PrefixedSequenceTagger.to_empty
+      ~PrefixedSequenceTagger.train
+      ~PrefixedSequenceTagger.type
+      ~PrefixedSequenceTagger.xpu
+      ~PrefixedSequenceTagger.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PrefixedSequenceTagger.T_destination
+      ~PrefixedSequenceTagger.call_super_init
+      ~PrefixedSequenceTagger.dump_patches
+      ~PrefixedSequenceTagger.label_type
+      ~PrefixedSequenceTagger.model_card
+      ~PrefixedSequenceTagger.training
+   
+   

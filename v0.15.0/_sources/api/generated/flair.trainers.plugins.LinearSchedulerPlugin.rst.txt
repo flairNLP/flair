@@ -1,0 +1,41 @@
+﻿flair.trainers.plugins.LinearSchedulerPlugin
+============================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: LinearSchedulerPlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LinearSchedulerPlugin.__init__
+      ~LinearSchedulerPlugin.after_setup
+      ~LinearSchedulerPlugin.after_training_batch
+      ~LinearSchedulerPlugin.attach_to
+      ~LinearSchedulerPlugin.before_training_epoch
+      ~LinearSchedulerPlugin.detach
+      ~LinearSchedulerPlugin.get_state
+      ~LinearSchedulerPlugin.hook
+      ~LinearSchedulerPlugin.mark_func_as_hook
+      ~LinearSchedulerPlugin.store_learning_rate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LinearSchedulerPlugin.attach_to_all_processes
+      ~LinearSchedulerPlugin.corpus
+      ~LinearSchedulerPlugin.model
+      ~LinearSchedulerPlugin.pluggable
+      ~LinearSchedulerPlugin.trainer
+   
+   

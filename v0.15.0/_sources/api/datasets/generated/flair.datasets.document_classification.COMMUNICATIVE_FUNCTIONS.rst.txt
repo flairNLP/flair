@@ -1,0 +1,40 @@
+﻿flair.datasets.document\_classification.COMMUNICATIVE\_FUNCTIONS
+================================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: COMMUNICATIVE_FUNCTIONS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~COMMUNICATIVE_FUNCTIONS.__init__
+      ~COMMUNICATIVE_FUNCTIONS.add_label_noise
+      ~COMMUNICATIVE_FUNCTIONS.downsample
+      ~COMMUNICATIVE_FUNCTIONS.filter_empty_sentences
+      ~COMMUNICATIVE_FUNCTIONS.filter_long_sentences
+      ~COMMUNICATIVE_FUNCTIONS.get_all_sentences
+      ~COMMUNICATIVE_FUNCTIONS.get_label_distribution
+      ~COMMUNICATIVE_FUNCTIONS.make_label_dictionary
+      ~COMMUNICATIVE_FUNCTIONS.make_tag_dictionary
+      ~COMMUNICATIVE_FUNCTIONS.make_vocab_dictionary
+      ~COMMUNICATIVE_FUNCTIONS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~COMMUNICATIVE_FUNCTIONS.dev
+      ~COMMUNICATIVE_FUNCTIONS.test
+      ~COMMUNICATIVE_FUNCTIONS.train
+   
+   

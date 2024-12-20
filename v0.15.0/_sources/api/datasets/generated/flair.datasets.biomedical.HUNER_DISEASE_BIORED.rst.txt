@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_DISEASE\_BIORED
+================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_DISEASE_BIORED
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_DISEASE_BIORED.__init__
+      ~HUNER_DISEASE_BIORED.add_label_noise
+      ~HUNER_DISEASE_BIORED.bin_search_passage
+      ~HUNER_DISEASE_BIORED.build_corpus_directory_name
+      ~HUNER_DISEASE_BIORED.downsample
+      ~HUNER_DISEASE_BIORED.filter_empty_sentences
+      ~HUNER_DISEASE_BIORED.filter_long_sentences
+      ~HUNER_DISEASE_BIORED.get_all_sentences
+      ~HUNER_DISEASE_BIORED.get_entity_type_mapping
+      ~HUNER_DISEASE_BIORED.get_label_distribution
+      ~HUNER_DISEASE_BIORED.make_label_dictionary
+      ~HUNER_DISEASE_BIORED.make_tag_dictionary
+      ~HUNER_DISEASE_BIORED.make_vocab_dictionary
+      ~HUNER_DISEASE_BIORED.obtain_statistics
+      ~HUNER_DISEASE_BIORED.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_DISEASE_BIORED.dev
+      ~HUNER_DISEASE_BIORED.test
+      ~HUNER_DISEASE_BIORED.train
+   
+   

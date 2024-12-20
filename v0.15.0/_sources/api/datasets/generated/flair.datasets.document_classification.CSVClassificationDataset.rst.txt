@@ -1,0 +1,23 @@
+﻿flair.datasets.document\_classification.CSVClassificationDataset
+================================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: CSVClassificationDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CSVClassificationDataset.__init__
+      ~CSVClassificationDataset.is_in_memory
+   
+   
+
+   
+   
+   

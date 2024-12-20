@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.NEL\_ENGLISH\_AIDA
+=================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: NEL_ENGLISH_AIDA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NEL_ENGLISH_AIDA.__init__
+      ~NEL_ENGLISH_AIDA.add_label_noise
+      ~NEL_ENGLISH_AIDA.downsample
+      ~NEL_ENGLISH_AIDA.filter_empty_sentences
+      ~NEL_ENGLISH_AIDA.filter_long_sentences
+      ~NEL_ENGLISH_AIDA.get_all_sentences
+      ~NEL_ENGLISH_AIDA.get_label_distribution
+      ~NEL_ENGLISH_AIDA.make_label_dictionary
+      ~NEL_ENGLISH_AIDA.make_tag_dictionary
+      ~NEL_ENGLISH_AIDA.make_vocab_dictionary
+      ~NEL_ENGLISH_AIDA.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NEL_ENGLISH_AIDA.dev
+      ~NEL_ENGLISH_AIDA.test
+      ~NEL_ENGLISH_AIDA.train
+   
+   

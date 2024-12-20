@@ -1,0 +1,41 @@
+﻿flair.datasets.relation\_extraction.RE\_ENGLISH\_SEMEVAL2010
+============================================================
+
+.. currentmodule:: flair.datasets.relation_extraction
+
+.. autoclass:: RE_ENGLISH_SEMEVAL2010
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RE_ENGLISH_SEMEVAL2010.__init__
+      ~RE_ENGLISH_SEMEVAL2010.add_label_noise
+      ~RE_ENGLISH_SEMEVAL2010.downsample
+      ~RE_ENGLISH_SEMEVAL2010.extract_and_convert_to_conllu
+      ~RE_ENGLISH_SEMEVAL2010.filter_empty_sentences
+      ~RE_ENGLISH_SEMEVAL2010.filter_long_sentences
+      ~RE_ENGLISH_SEMEVAL2010.get_all_sentences
+      ~RE_ENGLISH_SEMEVAL2010.get_label_distribution
+      ~RE_ENGLISH_SEMEVAL2010.make_label_dictionary
+      ~RE_ENGLISH_SEMEVAL2010.make_tag_dictionary
+      ~RE_ENGLISH_SEMEVAL2010.make_vocab_dictionary
+      ~RE_ENGLISH_SEMEVAL2010.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RE_ENGLISH_SEMEVAL2010.dev
+      ~RE_ENGLISH_SEMEVAL2010.test
+      ~RE_ENGLISH_SEMEVAL2010.train
+   
+   

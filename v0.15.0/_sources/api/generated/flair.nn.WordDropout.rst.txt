@@ -1,0 +1,81 @@
+﻿flair.nn.WordDropout
+====================
+
+.. currentmodule:: flair.nn
+
+.. autoclass:: WordDropout
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WordDropout.__init__
+      ~WordDropout.add_module
+      ~WordDropout.apply
+      ~WordDropout.bfloat16
+      ~WordDropout.buffers
+      ~WordDropout.children
+      ~WordDropout.compile
+      ~WordDropout.cpu
+      ~WordDropout.cuda
+      ~WordDropout.double
+      ~WordDropout.eval
+      ~WordDropout.extra_repr
+      ~WordDropout.float
+      ~WordDropout.forward
+      ~WordDropout.get_buffer
+      ~WordDropout.get_extra_state
+      ~WordDropout.get_parameter
+      ~WordDropout.get_submodule
+      ~WordDropout.half
+      ~WordDropout.ipu
+      ~WordDropout.load_state_dict
+      ~WordDropout.modules
+      ~WordDropout.mtia
+      ~WordDropout.named_buffers
+      ~WordDropout.named_children
+      ~WordDropout.named_modules
+      ~WordDropout.named_parameters
+      ~WordDropout.parameters
+      ~WordDropout.register_backward_hook
+      ~WordDropout.register_buffer
+      ~WordDropout.register_forward_hook
+      ~WordDropout.register_forward_pre_hook
+      ~WordDropout.register_full_backward_hook
+      ~WordDropout.register_full_backward_pre_hook
+      ~WordDropout.register_load_state_dict_post_hook
+      ~WordDropout.register_load_state_dict_pre_hook
+      ~WordDropout.register_module
+      ~WordDropout.register_parameter
+      ~WordDropout.register_state_dict_post_hook
+      ~WordDropout.register_state_dict_pre_hook
+      ~WordDropout.requires_grad_
+      ~WordDropout.set_extra_state
+      ~WordDropout.set_submodule
+      ~WordDropout.share_memory
+      ~WordDropout.state_dict
+      ~WordDropout.to
+      ~WordDropout.to_empty
+      ~WordDropout.train
+      ~WordDropout.type
+      ~WordDropout.xpu
+      ~WordDropout.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WordDropout.T_destination
+      ~WordDropout.call_super_init
+      ~WordDropout.dump_patches
+      ~WordDropout.training
+   
+   

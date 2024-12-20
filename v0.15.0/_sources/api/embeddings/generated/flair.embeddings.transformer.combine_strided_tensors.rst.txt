@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.combine\_strided\_tensors
+======================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: combine_strided_tensors

@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.BIOSCOPE
+==========================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: BIOSCOPE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BIOSCOPE.__init__
+      ~BIOSCOPE.add_label_noise
+      ~BIOSCOPE.downsample
+      ~BIOSCOPE.filter_empty_sentences
+      ~BIOSCOPE.filter_long_sentences
+      ~BIOSCOPE.get_all_sentences
+      ~BIOSCOPE.get_label_distribution
+      ~BIOSCOPE.make_label_dictionary
+      ~BIOSCOPE.make_tag_dictionary
+      ~BIOSCOPE.make_vocab_dictionary
+      ~BIOSCOPE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BIOSCOPE.dev
+      ~BIOSCOPE.test
+      ~BIOSCOPE.train
+   
+   

@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.\_reconstruct\_word\_ids\_from\_subtokens
+======================================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: _reconstruct_word_ids_from_subtokens

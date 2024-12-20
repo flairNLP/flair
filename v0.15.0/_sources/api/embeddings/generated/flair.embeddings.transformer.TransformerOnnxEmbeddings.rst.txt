@@ -1,0 +1,100 @@
+﻿flair.embeddings.transformer.TransformerOnnxEmbeddings
+======================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autoclass:: TransformerOnnxEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TransformerOnnxEmbeddings.__init__
+      ~TransformerOnnxEmbeddings.add_module
+      ~TransformerOnnxEmbeddings.apply
+      ~TransformerOnnxEmbeddings.bfloat16
+      ~TransformerOnnxEmbeddings.buffers
+      ~TransformerOnnxEmbeddings.children
+      ~TransformerOnnxEmbeddings.collect_dynamic_axes
+      ~TransformerOnnxEmbeddings.compile
+      ~TransformerOnnxEmbeddings.cpu
+      ~TransformerOnnxEmbeddings.create_from_state
+      ~TransformerOnnxEmbeddings.create_session
+      ~TransformerOnnxEmbeddings.cuda
+      ~TransformerOnnxEmbeddings.double
+      ~TransformerOnnxEmbeddings.embed
+      ~TransformerOnnxEmbeddings.eval
+      ~TransformerOnnxEmbeddings.export_from_embedding
+      ~TransformerOnnxEmbeddings.extra_repr
+      ~TransformerOnnxEmbeddings.float
+      ~TransformerOnnxEmbeddings.forward
+      ~TransformerOnnxEmbeddings.from_params
+      ~TransformerOnnxEmbeddings.get_buffer
+      ~TransformerOnnxEmbeddings.get_extra_state
+      ~TransformerOnnxEmbeddings.get_instance_parameters
+      ~TransformerOnnxEmbeddings.get_names
+      ~TransformerOnnxEmbeddings.get_parameter
+      ~TransformerOnnxEmbeddings.get_submodule
+      ~TransformerOnnxEmbeddings.half
+      ~TransformerOnnxEmbeddings.ipu
+      ~TransformerOnnxEmbeddings.load_embedding
+      ~TransformerOnnxEmbeddings.load_state_dict
+      ~TransformerOnnxEmbeddings.modules
+      ~TransformerOnnxEmbeddings.mtia
+      ~TransformerOnnxEmbeddings.named_buffers
+      ~TransformerOnnxEmbeddings.named_children
+      ~TransformerOnnxEmbeddings.named_modules
+      ~TransformerOnnxEmbeddings.named_parameters
+      ~TransformerOnnxEmbeddings.optimize_model
+      ~TransformerOnnxEmbeddings.parameters
+      ~TransformerOnnxEmbeddings.prepare_tensors
+      ~TransformerOnnxEmbeddings.quantize_model
+      ~TransformerOnnxEmbeddings.register_backward_hook
+      ~TransformerOnnxEmbeddings.register_buffer
+      ~TransformerOnnxEmbeddings.register_forward_hook
+      ~TransformerOnnxEmbeddings.register_forward_pre_hook
+      ~TransformerOnnxEmbeddings.register_full_backward_hook
+      ~TransformerOnnxEmbeddings.register_full_backward_pre_hook
+      ~TransformerOnnxEmbeddings.register_load_state_dict_post_hook
+      ~TransformerOnnxEmbeddings.register_load_state_dict_pre_hook
+      ~TransformerOnnxEmbeddings.register_module
+      ~TransformerOnnxEmbeddings.register_parameter
+      ~TransformerOnnxEmbeddings.register_state_dict_post_hook
+      ~TransformerOnnxEmbeddings.register_state_dict_pre_hook
+      ~TransformerOnnxEmbeddings.remove_session
+      ~TransformerOnnxEmbeddings.requires_grad_
+      ~TransformerOnnxEmbeddings.save_embeddings
+      ~TransformerOnnxEmbeddings.set_extra_state
+      ~TransformerOnnxEmbeddings.set_submodule
+      ~TransformerOnnxEmbeddings.share_memory
+      ~TransformerOnnxEmbeddings.state_dict
+      ~TransformerOnnxEmbeddings.to
+      ~TransformerOnnxEmbeddings.to_args
+      ~TransformerOnnxEmbeddings.to_empty
+      ~TransformerOnnxEmbeddings.to_params
+      ~TransformerOnnxEmbeddings.train
+      ~TransformerOnnxEmbeddings.type
+      ~TransformerOnnxEmbeddings.xpu
+      ~TransformerOnnxEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TransformerOnnxEmbeddings.T_destination
+      ~TransformerOnnxEmbeddings.call_super_init
+      ~TransformerOnnxEmbeddings.dump_patches
+      ~TransformerOnnxEmbeddings.embedding_length
+      ~TransformerOnnxEmbeddings.embedding_type
+      ~TransformerOnnxEmbeddings.embeddings_name
+      ~TransformerOnnxEmbeddings.training
+   
+   

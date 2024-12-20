@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_CPI
+==========================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_CPI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_CPI.__init__
+      ~HUNER_GENE_CPI.add_label_noise
+      ~HUNER_GENE_CPI.bin_search_passage
+      ~HUNER_GENE_CPI.build_corpus_directory_name
+      ~HUNER_GENE_CPI.downsample
+      ~HUNER_GENE_CPI.filter_empty_sentences
+      ~HUNER_GENE_CPI.filter_long_sentences
+      ~HUNER_GENE_CPI.get_all_sentences
+      ~HUNER_GENE_CPI.get_entity_type_mapping
+      ~HUNER_GENE_CPI.get_label_distribution
+      ~HUNER_GENE_CPI.make_label_dictionary
+      ~HUNER_GENE_CPI.make_tag_dictionary
+      ~HUNER_GENE_CPI.make_vocab_dictionary
+      ~HUNER_GENE_CPI.obtain_statistics
+      ~HUNER_GENE_CPI.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_CPI.dev
+      ~HUNER_GENE_CPI.test
+      ~HUNER_GENE_CPI.train
+   
+   

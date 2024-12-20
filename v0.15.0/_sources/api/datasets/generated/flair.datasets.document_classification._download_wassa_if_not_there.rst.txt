@@ -1,0 +1,6 @@
+﻿flair.datasets.document\_classification.\_download\_wassa\_if\_not\_there
+=========================================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autofunction:: _download_wassa_if_not_there

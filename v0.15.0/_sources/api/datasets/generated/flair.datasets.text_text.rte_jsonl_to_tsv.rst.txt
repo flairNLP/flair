@@ -1,0 +1,6 @@
+﻿flair.datasets.text\_text.rte\_jsonl\_to\_tsv
+=============================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autofunction:: rte_jsonl_to_tsv

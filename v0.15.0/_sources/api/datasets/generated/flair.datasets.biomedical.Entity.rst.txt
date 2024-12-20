@@ -1,0 +1,25 @@
+﻿flair.datasets.biomedical.Entity
+================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: Entity
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Entity.__init__
+      ~Entity.contains
+      ~Entity.is_before
+      ~Entity.overlaps
+   
+   
+
+   
+   
+   

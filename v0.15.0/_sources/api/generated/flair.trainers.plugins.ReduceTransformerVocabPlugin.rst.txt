@@ -1,0 +1,39 @@
+﻿flair.trainers.plugins.ReduceTransformerVocabPlugin
+===================================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: ReduceTransformerVocabPlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ReduceTransformerVocabPlugin.__init__
+      ~ReduceTransformerVocabPlugin.attach_to
+      ~ReduceTransformerVocabPlugin.detach
+      ~ReduceTransformerVocabPlugin.get_state
+      ~ReduceTransformerVocabPlugin.hook
+      ~ReduceTransformerVocabPlugin.mark_func_as_hook
+      ~ReduceTransformerVocabPlugin.register_transformer_smaller_training_vocab
+      ~ReduceTransformerVocabPlugin.save_model_at_the_end
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ReduceTransformerVocabPlugin.attach_to_all_processes
+      ~ReduceTransformerVocabPlugin.corpus
+      ~ReduceTransformerVocabPlugin.model
+      ~ReduceTransformerVocabPlugin.pluggable
+      ~ReduceTransformerVocabPlugin.trainer
+   
+   

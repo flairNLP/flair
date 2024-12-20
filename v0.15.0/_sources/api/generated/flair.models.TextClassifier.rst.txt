@@ -1,0 +1,91 @@
+﻿flair.models.TextClassifier
+===========================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: TextClassifier
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TextClassifier.__init__
+      ~TextClassifier.add_module
+      ~TextClassifier.apply
+      ~TextClassifier.bfloat16
+      ~TextClassifier.buffers
+      ~TextClassifier.children
+      ~TextClassifier.compile
+      ~TextClassifier.cpu
+      ~TextClassifier.cuda
+      ~TextClassifier.double
+      ~TextClassifier.eval
+      ~TextClassifier.evaluate
+      ~TextClassifier.extra_repr
+      ~TextClassifier.float
+      ~TextClassifier.forward
+      ~TextClassifier.forward_loss
+      ~TextClassifier.get_buffer
+      ~TextClassifier.get_extra_state
+      ~TextClassifier.get_parameter
+      ~TextClassifier.get_submodule
+      ~TextClassifier.get_used_tokens
+      ~TextClassifier.half
+      ~TextClassifier.ipu
+      ~TextClassifier.load
+      ~TextClassifier.load_state_dict
+      ~TextClassifier.modules
+      ~TextClassifier.mtia
+      ~TextClassifier.named_buffers
+      ~TextClassifier.named_children
+      ~TextClassifier.named_modules
+      ~TextClassifier.named_parameters
+      ~TextClassifier.parameters
+      ~TextClassifier.predict
+      ~TextClassifier.print_model_card
+      ~TextClassifier.register_backward_hook
+      ~TextClassifier.register_buffer
+      ~TextClassifier.register_forward_hook
+      ~TextClassifier.register_forward_pre_hook
+      ~TextClassifier.register_full_backward_hook
+      ~TextClassifier.register_full_backward_pre_hook
+      ~TextClassifier.register_load_state_dict_post_hook
+      ~TextClassifier.register_load_state_dict_pre_hook
+      ~TextClassifier.register_module
+      ~TextClassifier.register_parameter
+      ~TextClassifier.register_state_dict_post_hook
+      ~TextClassifier.register_state_dict_pre_hook
+      ~TextClassifier.requires_grad_
+      ~TextClassifier.save
+      ~TextClassifier.set_extra_state
+      ~TextClassifier.set_submodule
+      ~TextClassifier.share_memory
+      ~TextClassifier.state_dict
+      ~TextClassifier.to
+      ~TextClassifier.to_empty
+      ~TextClassifier.train
+      ~TextClassifier.type
+      ~TextClassifier.xpu
+      ~TextClassifier.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TextClassifier.T_destination
+      ~TextClassifier.call_super_init
+      ~TextClassifier.dump_patches
+      ~TextClassifier.label_type
+      ~TextClassifier.model_card
+      ~TextClassifier.multi_label_threshold
+      ~TextClassifier.training
+   
+   

@@ -1,0 +1,96 @@
+﻿flair.embeddings.transformer.TransformerJitDocumentEmbeddings
+=============================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autoclass:: TransformerJitDocumentEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TransformerJitDocumentEmbeddings.__init__
+      ~TransformerJitDocumentEmbeddings.add_module
+      ~TransformerJitDocumentEmbeddings.apply
+      ~TransformerJitDocumentEmbeddings.bfloat16
+      ~TransformerJitDocumentEmbeddings.buffers
+      ~TransformerJitDocumentEmbeddings.children
+      ~TransformerJitDocumentEmbeddings.compile
+      ~TransformerJitDocumentEmbeddings.cpu
+      ~TransformerJitDocumentEmbeddings.create_from_embedding
+      ~TransformerJitDocumentEmbeddings.create_from_state
+      ~TransformerJitDocumentEmbeddings.cuda
+      ~TransformerJitDocumentEmbeddings.double
+      ~TransformerJitDocumentEmbeddings.embed
+      ~TransformerJitDocumentEmbeddings.eval
+      ~TransformerJitDocumentEmbeddings.extra_repr
+      ~TransformerJitDocumentEmbeddings.float
+      ~TransformerJitDocumentEmbeddings.forward
+      ~TransformerJitDocumentEmbeddings.from_params
+      ~TransformerJitDocumentEmbeddings.get_buffer
+      ~TransformerJitDocumentEmbeddings.get_extra_state
+      ~TransformerJitDocumentEmbeddings.get_instance_parameters
+      ~TransformerJitDocumentEmbeddings.get_names
+      ~TransformerJitDocumentEmbeddings.get_parameter
+      ~TransformerJitDocumentEmbeddings.get_submodule
+      ~TransformerJitDocumentEmbeddings.half
+      ~TransformerJitDocumentEmbeddings.ipu
+      ~TransformerJitDocumentEmbeddings.load_embedding
+      ~TransformerJitDocumentEmbeddings.load_state_dict
+      ~TransformerJitDocumentEmbeddings.modules
+      ~TransformerJitDocumentEmbeddings.mtia
+      ~TransformerJitDocumentEmbeddings.named_buffers
+      ~TransformerJitDocumentEmbeddings.named_children
+      ~TransformerJitDocumentEmbeddings.named_modules
+      ~TransformerJitDocumentEmbeddings.named_parameters
+      ~TransformerJitDocumentEmbeddings.parameter_to_list
+      ~TransformerJitDocumentEmbeddings.parameters
+      ~TransformerJitDocumentEmbeddings.prepare_tensors
+      ~TransformerJitDocumentEmbeddings.register_backward_hook
+      ~TransformerJitDocumentEmbeddings.register_buffer
+      ~TransformerJitDocumentEmbeddings.register_forward_hook
+      ~TransformerJitDocumentEmbeddings.register_forward_pre_hook
+      ~TransformerJitDocumentEmbeddings.register_full_backward_hook
+      ~TransformerJitDocumentEmbeddings.register_full_backward_pre_hook
+      ~TransformerJitDocumentEmbeddings.register_load_state_dict_post_hook
+      ~TransformerJitDocumentEmbeddings.register_load_state_dict_pre_hook
+      ~TransformerJitDocumentEmbeddings.register_module
+      ~TransformerJitDocumentEmbeddings.register_parameter
+      ~TransformerJitDocumentEmbeddings.register_state_dict_post_hook
+      ~TransformerJitDocumentEmbeddings.register_state_dict_pre_hook
+      ~TransformerJitDocumentEmbeddings.requires_grad_
+      ~TransformerJitDocumentEmbeddings.save_embeddings
+      ~TransformerJitDocumentEmbeddings.set_extra_state
+      ~TransformerJitDocumentEmbeddings.set_submodule
+      ~TransformerJitDocumentEmbeddings.share_memory
+      ~TransformerJitDocumentEmbeddings.state_dict
+      ~TransformerJitDocumentEmbeddings.to
+      ~TransformerJitDocumentEmbeddings.to_args
+      ~TransformerJitDocumentEmbeddings.to_empty
+      ~TransformerJitDocumentEmbeddings.to_params
+      ~TransformerJitDocumentEmbeddings.train
+      ~TransformerJitDocumentEmbeddings.type
+      ~TransformerJitDocumentEmbeddings.xpu
+      ~TransformerJitDocumentEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TransformerJitDocumentEmbeddings.T_destination
+      ~TransformerJitDocumentEmbeddings.call_super_init
+      ~TransformerJitDocumentEmbeddings.dump_patches
+      ~TransformerJitDocumentEmbeddings.embedding_length
+      ~TransformerJitDocumentEmbeddings.embedding_type
+      ~TransformerJitDocumentEmbeddings.embeddings_name
+      ~TransformerJitDocumentEmbeddings.training
+   
+   

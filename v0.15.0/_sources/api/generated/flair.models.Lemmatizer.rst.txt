@@ -1,0 +1,95 @@
+﻿flair.models.Lemmatizer
+=======================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: Lemmatizer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Lemmatizer.__init__
+      ~Lemmatizer.add_module
+      ~Lemmatizer.apply
+      ~Lemmatizer.bfloat16
+      ~Lemmatizer.buffers
+      ~Lemmatizer.children
+      ~Lemmatizer.compile
+      ~Lemmatizer.cpu
+      ~Lemmatizer.cuda
+      ~Lemmatizer.decode
+      ~Lemmatizer.double
+      ~Lemmatizer.encode
+      ~Lemmatizer.encode_token
+      ~Lemmatizer.eval
+      ~Lemmatizer.evaluate
+      ~Lemmatizer.extra_repr
+      ~Lemmatizer.float
+      ~Lemmatizer.forward
+      ~Lemmatizer.forward_loss
+      ~Lemmatizer.forward_pass
+      ~Lemmatizer.get_buffer
+      ~Lemmatizer.get_extra_state
+      ~Lemmatizer.get_parameter
+      ~Lemmatizer.get_submodule
+      ~Lemmatizer.get_used_tokens
+      ~Lemmatizer.half
+      ~Lemmatizer.ipu
+      ~Lemmatizer.load
+      ~Lemmatizer.load_state_dict
+      ~Lemmatizer.modules
+      ~Lemmatizer.mtia
+      ~Lemmatizer.named_buffers
+      ~Lemmatizer.named_children
+      ~Lemmatizer.named_modules
+      ~Lemmatizer.named_parameters
+      ~Lemmatizer.parameters
+      ~Lemmatizer.predict
+      ~Lemmatizer.print_model_card
+      ~Lemmatizer.register_backward_hook
+      ~Lemmatizer.register_buffer
+      ~Lemmatizer.register_forward_hook
+      ~Lemmatizer.register_forward_pre_hook
+      ~Lemmatizer.register_full_backward_hook
+      ~Lemmatizer.register_full_backward_pre_hook
+      ~Lemmatizer.register_load_state_dict_post_hook
+      ~Lemmatizer.register_load_state_dict_pre_hook
+      ~Lemmatizer.register_module
+      ~Lemmatizer.register_parameter
+      ~Lemmatizer.register_state_dict_post_hook
+      ~Lemmatizer.register_state_dict_pre_hook
+      ~Lemmatizer.requires_grad_
+      ~Lemmatizer.save
+      ~Lemmatizer.set_extra_state
+      ~Lemmatizer.set_submodule
+      ~Lemmatizer.share_memory
+      ~Lemmatizer.state_dict
+      ~Lemmatizer.to
+      ~Lemmatizer.to_empty
+      ~Lemmatizer.train
+      ~Lemmatizer.type
+      ~Lemmatizer.words_to_char_indices
+      ~Lemmatizer.xpu
+      ~Lemmatizer.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Lemmatizer.T_destination
+      ~Lemmatizer.call_super_init
+      ~Lemmatizer.dump_patches
+      ~Lemmatizer.label_type
+      ~Lemmatizer.model_card
+      ~Lemmatizer.training
+   
+   

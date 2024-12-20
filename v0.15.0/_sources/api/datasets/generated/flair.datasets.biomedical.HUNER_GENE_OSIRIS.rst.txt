@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_OSIRIS
+=============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_OSIRIS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_OSIRIS.__init__
+      ~HUNER_GENE_OSIRIS.add_label_noise
+      ~HUNER_GENE_OSIRIS.downsample
+      ~HUNER_GENE_OSIRIS.filter_empty_sentences
+      ~HUNER_GENE_OSIRIS.filter_long_sentences
+      ~HUNER_GENE_OSIRIS.get_all_sentences
+      ~HUNER_GENE_OSIRIS.get_corpus_sentence_splitter
+      ~HUNER_GENE_OSIRIS.get_entity_type_mapping
+      ~HUNER_GENE_OSIRIS.get_label_distribution
+      ~HUNER_GENE_OSIRIS.get_subset
+      ~HUNER_GENE_OSIRIS.make_label_dictionary
+      ~HUNER_GENE_OSIRIS.make_tag_dictionary
+      ~HUNER_GENE_OSIRIS.make_vocab_dictionary
+      ~HUNER_GENE_OSIRIS.obtain_statistics
+      ~HUNER_GENE_OSIRIS.split_url
+      ~HUNER_GENE_OSIRIS.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_OSIRIS.dev
+      ~HUNER_GENE_OSIRIS.test
+      ~HUNER_GENE_OSIRIS.train
+   
+   

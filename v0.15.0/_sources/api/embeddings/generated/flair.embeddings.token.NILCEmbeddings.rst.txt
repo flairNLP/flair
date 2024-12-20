@@ -1,0 +1,93 @@
+﻿flair.embeddings.token.NILCEmbeddings
+=====================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: NILCEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NILCEmbeddings.__init__
+      ~NILCEmbeddings.add_module
+      ~NILCEmbeddings.apply
+      ~NILCEmbeddings.bfloat16
+      ~NILCEmbeddings.buffers
+      ~NILCEmbeddings.children
+      ~NILCEmbeddings.compile
+      ~NILCEmbeddings.cpu
+      ~NILCEmbeddings.cuda
+      ~NILCEmbeddings.double
+      ~NILCEmbeddings.embed
+      ~NILCEmbeddings.eval
+      ~NILCEmbeddings.extra_repr
+      ~NILCEmbeddings.float
+      ~NILCEmbeddings.forward
+      ~NILCEmbeddings.from_params
+      ~NILCEmbeddings.get_buffer
+      ~NILCEmbeddings.get_cached_token_index
+      ~NILCEmbeddings.get_extra_state
+      ~NILCEmbeddings.get_instance_parameters
+      ~NILCEmbeddings.get_names
+      ~NILCEmbeddings.get_parameter
+      ~NILCEmbeddings.get_submodule
+      ~NILCEmbeddings.half
+      ~NILCEmbeddings.ipu
+      ~NILCEmbeddings.load_embedding
+      ~NILCEmbeddings.load_state_dict
+      ~NILCEmbeddings.modules
+      ~NILCEmbeddings.mtia
+      ~NILCEmbeddings.named_buffers
+      ~NILCEmbeddings.named_children
+      ~NILCEmbeddings.named_modules
+      ~NILCEmbeddings.named_parameters
+      ~NILCEmbeddings.parameters
+      ~NILCEmbeddings.register_backward_hook
+      ~NILCEmbeddings.register_buffer
+      ~NILCEmbeddings.register_forward_hook
+      ~NILCEmbeddings.register_forward_pre_hook
+      ~NILCEmbeddings.register_full_backward_hook
+      ~NILCEmbeddings.register_full_backward_pre_hook
+      ~NILCEmbeddings.register_load_state_dict_post_hook
+      ~NILCEmbeddings.register_load_state_dict_pre_hook
+      ~NILCEmbeddings.register_module
+      ~NILCEmbeddings.register_parameter
+      ~NILCEmbeddings.register_state_dict_post_hook
+      ~NILCEmbeddings.register_state_dict_pre_hook
+      ~NILCEmbeddings.requires_grad_
+      ~NILCEmbeddings.resolve_precomputed_path
+      ~NILCEmbeddings.save_embeddings
+      ~NILCEmbeddings.set_extra_state
+      ~NILCEmbeddings.set_submodule
+      ~NILCEmbeddings.share_memory
+      ~NILCEmbeddings.state_dict
+      ~NILCEmbeddings.to
+      ~NILCEmbeddings.to_empty
+      ~NILCEmbeddings.to_params
+      ~NILCEmbeddings.train
+      ~NILCEmbeddings.type
+      ~NILCEmbeddings.xpu
+      ~NILCEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NILCEmbeddings.T_destination
+      ~NILCEmbeddings.call_super_init
+      ~NILCEmbeddings.dump_patches
+      ~NILCEmbeddings.embedding_length
+      ~NILCEmbeddings.embedding_type
+      ~NILCEmbeddings.embeddings_name
+      ~NILCEmbeddings.training
+   
+   

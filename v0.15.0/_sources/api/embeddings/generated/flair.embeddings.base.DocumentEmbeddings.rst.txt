@@ -1,0 +1,91 @@
+﻿flair.embeddings.base.DocumentEmbeddings
+========================================
+
+.. currentmodule:: flair.embeddings.base
+
+.. autoclass:: DocumentEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DocumentEmbeddings.__init__
+      ~DocumentEmbeddings.add_module
+      ~DocumentEmbeddings.apply
+      ~DocumentEmbeddings.bfloat16
+      ~DocumentEmbeddings.buffers
+      ~DocumentEmbeddings.children
+      ~DocumentEmbeddings.compile
+      ~DocumentEmbeddings.cpu
+      ~DocumentEmbeddings.cuda
+      ~DocumentEmbeddings.double
+      ~DocumentEmbeddings.embed
+      ~DocumentEmbeddings.eval
+      ~DocumentEmbeddings.extra_repr
+      ~DocumentEmbeddings.float
+      ~DocumentEmbeddings.forward
+      ~DocumentEmbeddings.from_params
+      ~DocumentEmbeddings.get_buffer
+      ~DocumentEmbeddings.get_extra_state
+      ~DocumentEmbeddings.get_instance_parameters
+      ~DocumentEmbeddings.get_names
+      ~DocumentEmbeddings.get_parameter
+      ~DocumentEmbeddings.get_submodule
+      ~DocumentEmbeddings.half
+      ~DocumentEmbeddings.ipu
+      ~DocumentEmbeddings.load_embedding
+      ~DocumentEmbeddings.load_state_dict
+      ~DocumentEmbeddings.modules
+      ~DocumentEmbeddings.mtia
+      ~DocumentEmbeddings.named_buffers
+      ~DocumentEmbeddings.named_children
+      ~DocumentEmbeddings.named_modules
+      ~DocumentEmbeddings.named_parameters
+      ~DocumentEmbeddings.parameters
+      ~DocumentEmbeddings.register_backward_hook
+      ~DocumentEmbeddings.register_buffer
+      ~DocumentEmbeddings.register_forward_hook
+      ~DocumentEmbeddings.register_forward_pre_hook
+      ~DocumentEmbeddings.register_full_backward_hook
+      ~DocumentEmbeddings.register_full_backward_pre_hook
+      ~DocumentEmbeddings.register_load_state_dict_post_hook
+      ~DocumentEmbeddings.register_load_state_dict_pre_hook
+      ~DocumentEmbeddings.register_module
+      ~DocumentEmbeddings.register_parameter
+      ~DocumentEmbeddings.register_state_dict_post_hook
+      ~DocumentEmbeddings.register_state_dict_pre_hook
+      ~DocumentEmbeddings.requires_grad_
+      ~DocumentEmbeddings.save_embeddings
+      ~DocumentEmbeddings.set_extra_state
+      ~DocumentEmbeddings.set_submodule
+      ~DocumentEmbeddings.share_memory
+      ~DocumentEmbeddings.state_dict
+      ~DocumentEmbeddings.to
+      ~DocumentEmbeddings.to_empty
+      ~DocumentEmbeddings.to_params
+      ~DocumentEmbeddings.train
+      ~DocumentEmbeddings.type
+      ~DocumentEmbeddings.xpu
+      ~DocumentEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DocumentEmbeddings.T_destination
+      ~DocumentEmbeddings.call_super_init
+      ~DocumentEmbeddings.dump_patches
+      ~DocumentEmbeddings.embedding_length
+      ~DocumentEmbeddings.embedding_type
+      ~DocumentEmbeddings.embeddings_name
+      ~DocumentEmbeddings.training
+   
+   

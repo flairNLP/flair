@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.VARIOME
+=================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: VARIOME
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~VARIOME.__init__
+      ~VARIOME.add_label_noise
+      ~VARIOME.download_dataset
+      ~VARIOME.downsample
+      ~VARIOME.filter_empty_sentences
+      ~VARIOME.filter_long_sentences
+      ~VARIOME.get_all_sentences
+      ~VARIOME.get_label_distribution
+      ~VARIOME.make_label_dictionary
+      ~VARIOME.make_tag_dictionary
+      ~VARIOME.make_vocab_dictionary
+      ~VARIOME.obtain_statistics
+      ~VARIOME.parse_corpus
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~VARIOME.dev
+      ~VARIOME.test
+      ~VARIOME.train
+   
+   

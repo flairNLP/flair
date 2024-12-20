@@ -1,0 +1,40 @@
+﻿flair.data.MultiCorpus
+======================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: MultiCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MultiCorpus.__init__
+      ~MultiCorpus.add_label_noise
+      ~MultiCorpus.downsample
+      ~MultiCorpus.filter_empty_sentences
+      ~MultiCorpus.filter_long_sentences
+      ~MultiCorpus.get_all_sentences
+      ~MultiCorpus.get_label_distribution
+      ~MultiCorpus.make_label_dictionary
+      ~MultiCorpus.make_tag_dictionary
+      ~MultiCorpus.make_vocab_dictionary
+      ~MultiCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MultiCorpus.dev
+      ~MultiCorpus.test
+      ~MultiCorpus.train
+   
+   

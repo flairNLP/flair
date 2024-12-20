@@ -1,0 +1,40 @@
+﻿flair.datasets.ocr.SROIE
+========================
+
+.. currentmodule:: flair.datasets.ocr
+
+.. autoclass:: SROIE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SROIE.__init__
+      ~SROIE.add_label_noise
+      ~SROIE.downsample
+      ~SROIE.filter_empty_sentences
+      ~SROIE.filter_long_sentences
+      ~SROIE.get_all_sentences
+      ~SROIE.get_label_distribution
+      ~SROIE.make_label_dictionary
+      ~SROIE.make_tag_dictionary
+      ~SROIE.make_vocab_dictionary
+      ~SROIE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SROIE.dev
+      ~SROIE.test
+      ~SROIE.train
+   
+   

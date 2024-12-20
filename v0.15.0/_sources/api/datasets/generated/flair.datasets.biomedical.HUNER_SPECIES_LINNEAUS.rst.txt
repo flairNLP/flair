@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_SPECIES\_LINNEAUS
+==================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_SPECIES_LINNEAUS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES_LINNEAUS.__init__
+      ~HUNER_SPECIES_LINNEAUS.add_label_noise
+      ~HUNER_SPECIES_LINNEAUS.downsample
+      ~HUNER_SPECIES_LINNEAUS.filter_empty_sentences
+      ~HUNER_SPECIES_LINNEAUS.filter_long_sentences
+      ~HUNER_SPECIES_LINNEAUS.get_all_sentences
+      ~HUNER_SPECIES_LINNEAUS.get_corpus_sentence_splitter
+      ~HUNER_SPECIES_LINNEAUS.get_entity_type_mapping
+      ~HUNER_SPECIES_LINNEAUS.get_label_distribution
+      ~HUNER_SPECIES_LINNEAUS.get_subset
+      ~HUNER_SPECIES_LINNEAUS.make_label_dictionary
+      ~HUNER_SPECIES_LINNEAUS.make_tag_dictionary
+      ~HUNER_SPECIES_LINNEAUS.make_vocab_dictionary
+      ~HUNER_SPECIES_LINNEAUS.obtain_statistics
+      ~HUNER_SPECIES_LINNEAUS.split_url
+      ~HUNER_SPECIES_LINNEAUS.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES_LINNEAUS.dev
+      ~HUNER_SPECIES_LINNEAUS.test
+      ~HUNER_SPECIES_LINNEAUS.train
+   
+   

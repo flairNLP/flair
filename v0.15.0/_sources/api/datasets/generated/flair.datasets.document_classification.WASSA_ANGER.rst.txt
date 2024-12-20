@@ -1,0 +1,40 @@
+﻿flair.datasets.document\_classification.WASSA\_ANGER
+====================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: WASSA_ANGER
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WASSA_ANGER.__init__
+      ~WASSA_ANGER.add_label_noise
+      ~WASSA_ANGER.downsample
+      ~WASSA_ANGER.filter_empty_sentences
+      ~WASSA_ANGER.filter_long_sentences
+      ~WASSA_ANGER.get_all_sentences
+      ~WASSA_ANGER.get_label_distribution
+      ~WASSA_ANGER.make_label_dictionary
+      ~WASSA_ANGER.make_tag_dictionary
+      ~WASSA_ANGER.make_vocab_dictionary
+      ~WASSA_ANGER.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WASSA_ANGER.dev
+      ~WASSA_ANGER.test
+      ~WASSA_ANGER.train
+   
+   

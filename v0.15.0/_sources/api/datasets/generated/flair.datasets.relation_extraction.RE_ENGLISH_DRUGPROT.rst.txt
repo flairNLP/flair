@@ -1,0 +1,44 @@
+﻿flair.datasets.relation\_extraction.RE\_ENGLISH\_DRUGPROT
+=========================================================
+
+.. currentmodule:: flair.datasets.relation_extraction
+
+.. autoclass:: RE_ENGLISH_DRUGPROT
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RE_ENGLISH_DRUGPROT.__init__
+      ~RE_ENGLISH_DRUGPROT.add_label_noise
+      ~RE_ENGLISH_DRUGPROT.char_spans_to_token_spans
+      ~RE_ENGLISH_DRUGPROT.downsample
+      ~RE_ENGLISH_DRUGPROT.drugprot_document_to_tokenlists
+      ~RE_ENGLISH_DRUGPROT.extract_and_convert_to_conllu
+      ~RE_ENGLISH_DRUGPROT.filter_empty_sentences
+      ~RE_ENGLISH_DRUGPROT.filter_long_sentences
+      ~RE_ENGLISH_DRUGPROT.get_all_sentences
+      ~RE_ENGLISH_DRUGPROT.get_label_distribution
+      ~RE_ENGLISH_DRUGPROT.has_overlap
+      ~RE_ENGLISH_DRUGPROT.make_label_dictionary
+      ~RE_ENGLISH_DRUGPROT.make_tag_dictionary
+      ~RE_ENGLISH_DRUGPROT.make_vocab_dictionary
+      ~RE_ENGLISH_DRUGPROT.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RE_ENGLISH_DRUGPROT.dev
+      ~RE_ENGLISH_DRUGPROT.test
+      ~RE_ENGLISH_DRUGPROT.train
+   
+   

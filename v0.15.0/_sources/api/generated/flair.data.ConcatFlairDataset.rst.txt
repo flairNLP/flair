@@ -1,0 +1,31 @@
+﻿flair.data.ConcatFlairDataset
+=============================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: ConcatFlairDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ConcatFlairDataset.__init__
+      ~ConcatFlairDataset.cumsum
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ConcatFlairDataset.cummulative_sizes
+      ~ConcatFlairDataset.datasets
+      ~ConcatFlairDataset.cumulative_sizes
+   
+   

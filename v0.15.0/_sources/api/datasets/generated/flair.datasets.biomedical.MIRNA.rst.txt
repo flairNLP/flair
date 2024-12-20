@@ -1,0 +1,43 @@
+﻿flair.datasets.biomedical.MIRNA
+===============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: MIRNA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MIRNA.__init__
+      ~MIRNA.add_label_noise
+      ~MIRNA.download_and_prepare_test
+      ~MIRNA.download_and_prepare_train
+      ~MIRNA.downsample
+      ~MIRNA.filter_empty_sentences
+      ~MIRNA.filter_long_sentences
+      ~MIRNA.get_all_sentences
+      ~MIRNA.get_label_distribution
+      ~MIRNA.make_label_dictionary
+      ~MIRNA.make_tag_dictionary
+      ~MIRNA.make_vocab_dictionary
+      ~MIRNA.obtain_statistics
+      ~MIRNA.parse_file
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MIRNA.dev
+      ~MIRNA.test
+      ~MIRNA.train
+   
+   

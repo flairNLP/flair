@@ -1,0 +1,41 @@
+﻿flair.datasets.text\_text.GLUE\_MRPC
+====================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: GLUE_MRPC
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GLUE_MRPC.__init__
+      ~GLUE_MRPC.add_label_noise
+      ~GLUE_MRPC.downsample
+      ~GLUE_MRPC.filter_empty_sentences
+      ~GLUE_MRPC.filter_long_sentences
+      ~GLUE_MRPC.get_all_sentences
+      ~GLUE_MRPC.get_label_distribution
+      ~GLUE_MRPC.make_label_dictionary
+      ~GLUE_MRPC.make_tag_dictionary
+      ~GLUE_MRPC.make_vocab_dictionary
+      ~GLUE_MRPC.obtain_statistics
+      ~GLUE_MRPC.tsv_from_eval_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GLUE_MRPC.dev
+      ~GLUE_MRPC.test
+      ~GLUE_MRPC.train
+   
+   

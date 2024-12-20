@@ -1,0 +1,30 @@
+﻿flair.splitter.NewlineSentenceSplitter
+======================================
+
+.. currentmodule:: flair.splitter
+
+.. autoclass:: NewlineSentenceSplitter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NewlineSentenceSplitter.__init__
+      ~NewlineSentenceSplitter.split
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NewlineSentenceSplitter.name
+      ~NewlineSentenceSplitter.tokenizer
+   
+   

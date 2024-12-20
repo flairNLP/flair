@@ -1,0 +1,92 @@
+﻿flair.models.SequenceTagger
+===========================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: SequenceTagger
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SequenceTagger.RNN
+      ~SequenceTagger.__init__
+      ~SequenceTagger.add_module
+      ~SequenceTagger.apply
+      ~SequenceTagger.bfloat16
+      ~SequenceTagger.buffers
+      ~SequenceTagger.children
+      ~SequenceTagger.compile
+      ~SequenceTagger.cpu
+      ~SequenceTagger.cuda
+      ~SequenceTagger.double
+      ~SequenceTagger.eval
+      ~SequenceTagger.evaluate
+      ~SequenceTagger.extra_repr
+      ~SequenceTagger.float
+      ~SequenceTagger.forward
+      ~SequenceTagger.forward_loss
+      ~SequenceTagger.get_buffer
+      ~SequenceTagger.get_extra_state
+      ~SequenceTagger.get_parameter
+      ~SequenceTagger.get_submodule
+      ~SequenceTagger.get_used_tokens
+      ~SequenceTagger.half
+      ~SequenceTagger.ipu
+      ~SequenceTagger.load
+      ~SequenceTagger.load_state_dict
+      ~SequenceTagger.modules
+      ~SequenceTagger.mtia
+      ~SequenceTagger.named_buffers
+      ~SequenceTagger.named_children
+      ~SequenceTagger.named_modules
+      ~SequenceTagger.named_parameters
+      ~SequenceTagger.parameters
+      ~SequenceTagger.predict
+      ~SequenceTagger.print_model_card
+      ~SequenceTagger.push_to_hub
+      ~SequenceTagger.register_backward_hook
+      ~SequenceTagger.register_buffer
+      ~SequenceTagger.register_forward_hook
+      ~SequenceTagger.register_forward_pre_hook
+      ~SequenceTagger.register_full_backward_hook
+      ~SequenceTagger.register_full_backward_pre_hook
+      ~SequenceTagger.register_load_state_dict_post_hook
+      ~SequenceTagger.register_load_state_dict_pre_hook
+      ~SequenceTagger.register_module
+      ~SequenceTagger.register_parameter
+      ~SequenceTagger.register_state_dict_post_hook
+      ~SequenceTagger.register_state_dict_pre_hook
+      ~SequenceTagger.requires_grad_
+      ~SequenceTagger.save
+      ~SequenceTagger.set_extra_state
+      ~SequenceTagger.set_submodule
+      ~SequenceTagger.share_memory
+      ~SequenceTagger.state_dict
+      ~SequenceTagger.to
+      ~SequenceTagger.to_empty
+      ~SequenceTagger.train
+      ~SequenceTagger.type
+      ~SequenceTagger.xpu
+      ~SequenceTagger.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SequenceTagger.T_destination
+      ~SequenceTagger.call_super_init
+      ~SequenceTagger.dump_patches
+      ~SequenceTagger.label_type
+      ~SequenceTagger.model_card
+      ~SequenceTagger.training
+   
+   

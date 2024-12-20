@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_BIONLP2013\_CG
+===============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_BIONLP2013_CG
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_BIONLP2013_CG.__init__
+      ~HUNER_BIONLP2013_CG.add_label_noise
+      ~HUNER_BIONLP2013_CG.downsample
+      ~HUNER_BIONLP2013_CG.filter_empty_sentences
+      ~HUNER_BIONLP2013_CG.filter_long_sentences
+      ~HUNER_BIONLP2013_CG.get_all_sentences
+      ~HUNER_BIONLP2013_CG.get_corpus_sentence_splitter
+      ~HUNER_BIONLP2013_CG.get_entity_type_mapping
+      ~HUNER_BIONLP2013_CG.get_label_distribution
+      ~HUNER_BIONLP2013_CG.get_subset
+      ~HUNER_BIONLP2013_CG.make_label_dictionary
+      ~HUNER_BIONLP2013_CG.make_tag_dictionary
+      ~HUNER_BIONLP2013_CG.make_vocab_dictionary
+      ~HUNER_BIONLP2013_CG.obtain_statistics
+      ~HUNER_BIONLP2013_CG.split_url
+      ~HUNER_BIONLP2013_CG.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_BIONLP2013_CG.dev
+      ~HUNER_BIONLP2013_CG.test
+      ~HUNER_BIONLP2013_CG.train
+   
+   

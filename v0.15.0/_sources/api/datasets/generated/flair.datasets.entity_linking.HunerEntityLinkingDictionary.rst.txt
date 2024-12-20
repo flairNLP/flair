@@ -1,0 +1,31 @@
+﻿flair.datasets.entity\_linking.HunerEntityLinkingDictionary
+===========================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: HunerEntityLinkingDictionary
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HunerEntityLinkingDictionary.__init__
+      ~HunerEntityLinkingDictionary.to_in_memory_dictionary
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HunerEntityLinkingDictionary.candidates
+      ~HunerEntityLinkingDictionary.database_name
+      ~HunerEntityLinkingDictionary.text_to_index
+   
+   

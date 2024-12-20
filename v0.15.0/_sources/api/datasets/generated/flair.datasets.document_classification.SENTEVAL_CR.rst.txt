@@ -1,0 +1,40 @@
+﻿flair.datasets.document\_classification.SENTEVAL\_CR
+====================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: SENTEVAL_CR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SENTEVAL_CR.__init__
+      ~SENTEVAL_CR.add_label_noise
+      ~SENTEVAL_CR.downsample
+      ~SENTEVAL_CR.filter_empty_sentences
+      ~SENTEVAL_CR.filter_long_sentences
+      ~SENTEVAL_CR.get_all_sentences
+      ~SENTEVAL_CR.get_label_distribution
+      ~SENTEVAL_CR.make_label_dictionary
+      ~SENTEVAL_CR.make_tag_dictionary
+      ~SENTEVAL_CR.make_vocab_dictionary
+      ~SENTEVAL_CR.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SENTEVAL_CR.dev
+      ~SENTEVAL_CR.test
+      ~SENTEVAL_CR.train
+   
+   

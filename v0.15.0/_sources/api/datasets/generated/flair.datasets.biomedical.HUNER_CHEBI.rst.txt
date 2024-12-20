@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_CHEBI
+======================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_CHEBI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_CHEBI.__init__
+      ~HUNER_CHEBI.add_label_noise
+      ~HUNER_CHEBI.downsample
+      ~HUNER_CHEBI.filter_empty_sentences
+      ~HUNER_CHEBI.filter_long_sentences
+      ~HUNER_CHEBI.get_all_sentences
+      ~HUNER_CHEBI.get_corpus_sentence_splitter
+      ~HUNER_CHEBI.get_entity_type_mapping
+      ~HUNER_CHEBI.get_label_distribution
+      ~HUNER_CHEBI.get_subset
+      ~HUNER_CHEBI.make_label_dictionary
+      ~HUNER_CHEBI.make_tag_dictionary
+      ~HUNER_CHEBI.make_vocab_dictionary
+      ~HUNER_CHEBI.obtain_statistics
+      ~HUNER_CHEBI.split_url
+      ~HUNER_CHEBI.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_CHEBI.dev
+      ~HUNER_CHEBI.test
+      ~HUNER_CHEBI.train
+   
+   

@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.fill\_mean\_token\_embeddings
+==========================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: fill_mean_token_embeddings

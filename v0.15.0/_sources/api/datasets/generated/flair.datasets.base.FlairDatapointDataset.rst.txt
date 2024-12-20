@@ -1,0 +1,23 @@
+﻿flair.datasets.base.FlairDatapointDataset
+=========================================
+
+.. currentmodule:: flair.datasets.base
+
+.. autoclass:: FlairDatapointDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FlairDatapointDataset.__init__
+      ~FlairDatapointDataset.is_in_memory
+   
+   
+
+   
+   
+   

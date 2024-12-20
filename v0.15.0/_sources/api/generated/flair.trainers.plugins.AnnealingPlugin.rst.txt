@@ -1,0 +1,40 @@
+﻿flair.trainers.plugins.AnnealingPlugin
+======================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: AnnealingPlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AnnealingPlugin.__init__
+      ~AnnealingPlugin.after_evaluation
+      ~AnnealingPlugin.after_setup
+      ~AnnealingPlugin.attach_to
+      ~AnnealingPlugin.detach
+      ~AnnealingPlugin.get_state
+      ~AnnealingPlugin.hook
+      ~AnnealingPlugin.mark_func_as_hook
+      ~AnnealingPlugin.store_learning_rate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AnnealingPlugin.attach_to_all_processes
+      ~AnnealingPlugin.corpus
+      ~AnnealingPlugin.model
+      ~AnnealingPlugin.pluggable
+      ~AnnealingPlugin.trainer
+   
+   

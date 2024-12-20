@@ -1,0 +1,23 @@
+﻿flair.datasets.treebanks.UniversalDependenciesDataset
+=====================================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UniversalDependenciesDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UniversalDependenciesDataset.__init__
+      ~UniversalDependenciesDataset.is_in_memory
+   
+   
+
+   
+   
+   

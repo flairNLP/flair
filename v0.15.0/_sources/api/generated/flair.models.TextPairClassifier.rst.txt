@@ -1,0 +1,91 @@
+﻿flair.models.TextPairClassifier
+===============================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: TextPairClassifier
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TextPairClassifier.__init__
+      ~TextPairClassifier.add_module
+      ~TextPairClassifier.apply
+      ~TextPairClassifier.bfloat16
+      ~TextPairClassifier.buffers
+      ~TextPairClassifier.children
+      ~TextPairClassifier.compile
+      ~TextPairClassifier.cpu
+      ~TextPairClassifier.cuda
+      ~TextPairClassifier.double
+      ~TextPairClassifier.eval
+      ~TextPairClassifier.evaluate
+      ~TextPairClassifier.extra_repr
+      ~TextPairClassifier.float
+      ~TextPairClassifier.forward
+      ~TextPairClassifier.forward_loss
+      ~TextPairClassifier.get_buffer
+      ~TextPairClassifier.get_extra_state
+      ~TextPairClassifier.get_parameter
+      ~TextPairClassifier.get_submodule
+      ~TextPairClassifier.get_used_tokens
+      ~TextPairClassifier.half
+      ~TextPairClassifier.ipu
+      ~TextPairClassifier.load
+      ~TextPairClassifier.load_state_dict
+      ~TextPairClassifier.modules
+      ~TextPairClassifier.mtia
+      ~TextPairClassifier.named_buffers
+      ~TextPairClassifier.named_children
+      ~TextPairClassifier.named_modules
+      ~TextPairClassifier.named_parameters
+      ~TextPairClassifier.parameters
+      ~TextPairClassifier.predict
+      ~TextPairClassifier.print_model_card
+      ~TextPairClassifier.register_backward_hook
+      ~TextPairClassifier.register_buffer
+      ~TextPairClassifier.register_forward_hook
+      ~TextPairClassifier.register_forward_pre_hook
+      ~TextPairClassifier.register_full_backward_hook
+      ~TextPairClassifier.register_full_backward_pre_hook
+      ~TextPairClassifier.register_load_state_dict_post_hook
+      ~TextPairClassifier.register_load_state_dict_pre_hook
+      ~TextPairClassifier.register_module
+      ~TextPairClassifier.register_parameter
+      ~TextPairClassifier.register_state_dict_post_hook
+      ~TextPairClassifier.register_state_dict_pre_hook
+      ~TextPairClassifier.requires_grad_
+      ~TextPairClassifier.save
+      ~TextPairClassifier.set_extra_state
+      ~TextPairClassifier.set_submodule
+      ~TextPairClassifier.share_memory
+      ~TextPairClassifier.state_dict
+      ~TextPairClassifier.to
+      ~TextPairClassifier.to_empty
+      ~TextPairClassifier.train
+      ~TextPairClassifier.type
+      ~TextPairClassifier.xpu
+      ~TextPairClassifier.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TextPairClassifier.T_destination
+      ~TextPairClassifier.call_super_init
+      ~TextPairClassifier.dump_patches
+      ~TextPairClassifier.label_type
+      ~TextPairClassifier.model_card
+      ~TextPairClassifier.multi_label_threshold
+      ~TextPairClassifier.training
+   
+   

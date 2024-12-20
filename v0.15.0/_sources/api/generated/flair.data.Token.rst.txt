@@ -1,0 +1,54 @@
+﻿flair.data.Token
+================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: Token
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Token.__init__
+      ~Token.add_label
+      ~Token.add_metadata
+      ~Token.add_tags_proba_dist
+      ~Token.clear_embeddings
+      ~Token.get_each_embedding
+      ~Token.get_embedding
+      ~Token.get_head
+      ~Token.get_label
+      ~Token.get_labels
+      ~Token.get_metadata
+      ~Token.get_tags_proba_dist
+      ~Token.has_label
+      ~Token.has_metadata
+      ~Token.remove_labels
+      ~Token.set_embedding
+      ~Token.set_label
+      ~Token.to
+      ~Token.to_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Token.embedding
+      ~Token.end_position
+      ~Token.idx
+      ~Token.labels
+      ~Token.score
+      ~Token.start_position
+      ~Token.tag
+      ~Token.text
+      ~Token.unlabeled_identifier
+   
+   

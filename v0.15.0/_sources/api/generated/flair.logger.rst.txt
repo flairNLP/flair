@@ -1,0 +1,6 @@
+﻿flair.logger
+============
+
+.. currentmodule:: flair
+
+.. autodata:: logger

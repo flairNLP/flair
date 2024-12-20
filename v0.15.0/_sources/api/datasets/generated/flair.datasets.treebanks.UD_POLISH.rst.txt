@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_POLISH
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_POLISH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_POLISH.__init__
+      ~UD_POLISH.add_label_noise
+      ~UD_POLISH.downsample
+      ~UD_POLISH.filter_empty_sentences
+      ~UD_POLISH.filter_long_sentences
+      ~UD_POLISH.get_all_sentences
+      ~UD_POLISH.get_label_distribution
+      ~UD_POLISH.make_label_dictionary
+      ~UD_POLISH.make_tag_dictionary
+      ~UD_POLISH.make_vocab_dictionary
+      ~UD_POLISH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_POLISH.dev
+      ~UD_POLISH.test
+      ~UD_POLISH.train
+   
+   

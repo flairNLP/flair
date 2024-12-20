@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.ScaiCorpus
+====================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: ScaiCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ScaiCorpus.__init__
+      ~ScaiCorpus.add_label_noise
+      ~ScaiCorpus.download_corpus
+      ~ScaiCorpus.downsample
+      ~ScaiCorpus.filter_empty_sentences
+      ~ScaiCorpus.filter_long_sentences
+      ~ScaiCorpus.get_all_sentences
+      ~ScaiCorpus.get_label_distribution
+      ~ScaiCorpus.make_label_dictionary
+      ~ScaiCorpus.make_tag_dictionary
+      ~ScaiCorpus.make_vocab_dictionary
+      ~ScaiCorpus.obtain_statistics
+      ~ScaiCorpus.parse_input_file
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ScaiCorpus.dev
+      ~ScaiCorpus.test
+      ~ScaiCorpus.train
+   
+   

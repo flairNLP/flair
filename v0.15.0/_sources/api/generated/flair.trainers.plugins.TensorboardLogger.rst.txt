@@ -1,0 +1,38 @@
+﻿flair.trainers.plugins.TensorboardLogger
+========================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: TensorboardLogger
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TensorboardLogger.__init__
+      ~TensorboardLogger.attach_to
+      ~TensorboardLogger.detach
+      ~TensorboardLogger.get_state
+      ~TensorboardLogger.hook
+      ~TensorboardLogger.mark_func_as_hook
+      ~TensorboardLogger.metric_recorded
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TensorboardLogger.attach_to_all_processes
+      ~TensorboardLogger.corpus
+      ~TensorboardLogger.model
+      ~TensorboardLogger.pluggable
+      ~TensorboardLogger.trainer
+   
+   

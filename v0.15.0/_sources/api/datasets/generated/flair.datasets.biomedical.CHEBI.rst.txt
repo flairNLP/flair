@@ -1,0 +1,43 @@
+﻿flair.datasets.biomedical.CHEBI
+===============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: CHEBI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CHEBI.__init__
+      ~CHEBI.add_label_noise
+      ~CHEBI.download_dataset
+      ~CHEBI.downsample
+      ~CHEBI.filter_empty_sentences
+      ~CHEBI.filter_long_sentences
+      ~CHEBI.get_all_sentences
+      ~CHEBI.get_entities
+      ~CHEBI.get_label_distribution
+      ~CHEBI.make_label_dictionary
+      ~CHEBI.make_tag_dictionary
+      ~CHEBI.make_vocab_dictionary
+      ~CHEBI.obtain_statistics
+      ~CHEBI.parse_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CHEBI.dev
+      ~CHEBI.test
+      ~CHEBI.train
+   
+   

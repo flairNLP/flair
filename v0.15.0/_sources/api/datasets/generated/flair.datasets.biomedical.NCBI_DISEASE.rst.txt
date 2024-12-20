@@ -1,0 +1,43 @@
+﻿flair.datasets.biomedical.NCBI\_DISEASE
+=======================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: NCBI_DISEASE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NCBI_DISEASE.__init__
+      ~NCBI_DISEASE.add_label_noise
+      ~NCBI_DISEASE.download_corpus
+      ~NCBI_DISEASE.downsample
+      ~NCBI_DISEASE.filter_empty_sentences
+      ~NCBI_DISEASE.filter_long_sentences
+      ~NCBI_DISEASE.get_all_sentences
+      ~NCBI_DISEASE.get_label_distribution
+      ~NCBI_DISEASE.make_label_dictionary
+      ~NCBI_DISEASE.make_tag_dictionary
+      ~NCBI_DISEASE.make_vocab_dictionary
+      ~NCBI_DISEASE.obtain_statistics
+      ~NCBI_DISEASE.parse_input_file
+      ~NCBI_DISEASE.patch_training_file
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NCBI_DISEASE.dev
+      ~NCBI_DISEASE.test
+      ~NCBI_DISEASE.train
+   
+   

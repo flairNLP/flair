@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.WNUT\_17
+==========================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: WNUT_17
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WNUT_17.__init__
+      ~WNUT_17.add_label_noise
+      ~WNUT_17.downsample
+      ~WNUT_17.filter_empty_sentences
+      ~WNUT_17.filter_long_sentences
+      ~WNUT_17.get_all_sentences
+      ~WNUT_17.get_label_distribution
+      ~WNUT_17.make_label_dictionary
+      ~WNUT_17.make_tag_dictionary
+      ~WNUT_17.make_vocab_dictionary
+      ~WNUT_17.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WNUT_17.dev
+      ~WNUT_17.test
+      ~WNUT_17.train
+   
+   

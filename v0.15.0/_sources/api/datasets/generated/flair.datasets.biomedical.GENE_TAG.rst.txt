@@ -1,0 +1,6 @@
+﻿flair.datasets.biomedical.GENE\_TAG
+===================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autodata:: GENE_TAG

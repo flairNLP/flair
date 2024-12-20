@@ -1,0 +1,91 @@
+﻿flair.embeddings.document.DocumentPoolEmbeddings
+================================================
+
+.. currentmodule:: flair.embeddings.document
+
+.. autoclass:: DocumentPoolEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DocumentPoolEmbeddings.__init__
+      ~DocumentPoolEmbeddings.add_module
+      ~DocumentPoolEmbeddings.apply
+      ~DocumentPoolEmbeddings.bfloat16
+      ~DocumentPoolEmbeddings.buffers
+      ~DocumentPoolEmbeddings.children
+      ~DocumentPoolEmbeddings.compile
+      ~DocumentPoolEmbeddings.cpu
+      ~DocumentPoolEmbeddings.cuda
+      ~DocumentPoolEmbeddings.double
+      ~DocumentPoolEmbeddings.embed
+      ~DocumentPoolEmbeddings.eval
+      ~DocumentPoolEmbeddings.extra_repr
+      ~DocumentPoolEmbeddings.float
+      ~DocumentPoolEmbeddings.forward
+      ~DocumentPoolEmbeddings.from_params
+      ~DocumentPoolEmbeddings.get_buffer
+      ~DocumentPoolEmbeddings.get_extra_state
+      ~DocumentPoolEmbeddings.get_instance_parameters
+      ~DocumentPoolEmbeddings.get_names
+      ~DocumentPoolEmbeddings.get_parameter
+      ~DocumentPoolEmbeddings.get_submodule
+      ~DocumentPoolEmbeddings.half
+      ~DocumentPoolEmbeddings.ipu
+      ~DocumentPoolEmbeddings.load_embedding
+      ~DocumentPoolEmbeddings.load_state_dict
+      ~DocumentPoolEmbeddings.modules
+      ~DocumentPoolEmbeddings.mtia
+      ~DocumentPoolEmbeddings.named_buffers
+      ~DocumentPoolEmbeddings.named_children
+      ~DocumentPoolEmbeddings.named_modules
+      ~DocumentPoolEmbeddings.named_parameters
+      ~DocumentPoolEmbeddings.parameters
+      ~DocumentPoolEmbeddings.register_backward_hook
+      ~DocumentPoolEmbeddings.register_buffer
+      ~DocumentPoolEmbeddings.register_forward_hook
+      ~DocumentPoolEmbeddings.register_forward_pre_hook
+      ~DocumentPoolEmbeddings.register_full_backward_hook
+      ~DocumentPoolEmbeddings.register_full_backward_pre_hook
+      ~DocumentPoolEmbeddings.register_load_state_dict_post_hook
+      ~DocumentPoolEmbeddings.register_load_state_dict_pre_hook
+      ~DocumentPoolEmbeddings.register_module
+      ~DocumentPoolEmbeddings.register_parameter
+      ~DocumentPoolEmbeddings.register_state_dict_post_hook
+      ~DocumentPoolEmbeddings.register_state_dict_pre_hook
+      ~DocumentPoolEmbeddings.requires_grad_
+      ~DocumentPoolEmbeddings.save_embeddings
+      ~DocumentPoolEmbeddings.set_extra_state
+      ~DocumentPoolEmbeddings.set_submodule
+      ~DocumentPoolEmbeddings.share_memory
+      ~DocumentPoolEmbeddings.state_dict
+      ~DocumentPoolEmbeddings.to
+      ~DocumentPoolEmbeddings.to_empty
+      ~DocumentPoolEmbeddings.to_params
+      ~DocumentPoolEmbeddings.train
+      ~DocumentPoolEmbeddings.type
+      ~DocumentPoolEmbeddings.xpu
+      ~DocumentPoolEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DocumentPoolEmbeddings.T_destination
+      ~DocumentPoolEmbeddings.call_super_init
+      ~DocumentPoolEmbeddings.dump_patches
+      ~DocumentPoolEmbeddings.embedding_length
+      ~DocumentPoolEmbeddings.embedding_type
+      ~DocumentPoolEmbeddings.embeddings_name
+      ~DocumentPoolEmbeddings.training
+   
+   

@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.IEPA
+==============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: IEPA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~IEPA.__init__
+      ~IEPA.add_label_noise
+      ~IEPA.download_dataset
+      ~IEPA.downsample
+      ~IEPA.filter_empty_sentences
+      ~IEPA.filter_long_sentences
+      ~IEPA.get_all_sentences
+      ~IEPA.get_label_distribution
+      ~IEPA.make_label_dictionary
+      ~IEPA.make_tag_dictionary
+      ~IEPA.make_vocab_dictionary
+      ~IEPA.obtain_statistics
+      ~IEPA.parse_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~IEPA.dev
+      ~IEPA.test
+      ~IEPA.train
+   
+   

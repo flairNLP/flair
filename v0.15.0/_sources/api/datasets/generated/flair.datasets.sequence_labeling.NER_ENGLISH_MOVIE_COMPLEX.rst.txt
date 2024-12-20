@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_ENGLISH\_MOVIE\_COMPLEX
+==============================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_ENGLISH_MOVIE_COMPLEX
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_MOVIE_COMPLEX.__init__
+      ~NER_ENGLISH_MOVIE_COMPLEX.add_label_noise
+      ~NER_ENGLISH_MOVIE_COMPLEX.downsample
+      ~NER_ENGLISH_MOVIE_COMPLEX.filter_empty_sentences
+      ~NER_ENGLISH_MOVIE_COMPLEX.filter_long_sentences
+      ~NER_ENGLISH_MOVIE_COMPLEX.get_all_sentences
+      ~NER_ENGLISH_MOVIE_COMPLEX.get_label_distribution
+      ~NER_ENGLISH_MOVIE_COMPLEX.make_label_dictionary
+      ~NER_ENGLISH_MOVIE_COMPLEX.make_tag_dictionary
+      ~NER_ENGLISH_MOVIE_COMPLEX.make_vocab_dictionary
+      ~NER_ENGLISH_MOVIE_COMPLEX.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_MOVIE_COMPLEX.dev
+      ~NER_ENGLISH_MOVIE_COMPLEX.test
+      ~NER_ENGLISH_MOVIE_COMPLEX.train
+   
+   

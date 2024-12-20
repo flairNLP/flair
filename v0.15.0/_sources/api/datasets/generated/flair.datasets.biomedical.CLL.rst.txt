@@ -1,0 +1,40 @@
+﻿flair.datasets.biomedical.CLL
+=============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: CLL
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CLL.__init__
+      ~CLL.add_label_noise
+      ~CLL.downsample
+      ~CLL.filter_empty_sentences
+      ~CLL.filter_long_sentences
+      ~CLL.get_all_sentences
+      ~CLL.get_label_distribution
+      ~CLL.make_label_dictionary
+      ~CLL.make_tag_dictionary
+      ~CLL.make_vocab_dictionary
+      ~CLL.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CLL.dev
+      ~CLL.test
+      ~CLL.train
+   
+   

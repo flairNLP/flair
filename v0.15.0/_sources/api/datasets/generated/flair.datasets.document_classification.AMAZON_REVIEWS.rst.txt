@@ -1,0 +1,41 @@
+﻿flair.datasets.document\_classification.AMAZON\_REVIEWS
+=======================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: AMAZON_REVIEWS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AMAZON_REVIEWS.__init__
+      ~AMAZON_REVIEWS.add_label_noise
+      ~AMAZON_REVIEWS.download_and_prepare_amazon_product_file
+      ~AMAZON_REVIEWS.downsample
+      ~AMAZON_REVIEWS.filter_empty_sentences
+      ~AMAZON_REVIEWS.filter_long_sentences
+      ~AMAZON_REVIEWS.get_all_sentences
+      ~AMAZON_REVIEWS.get_label_distribution
+      ~AMAZON_REVIEWS.make_label_dictionary
+      ~AMAZON_REVIEWS.make_tag_dictionary
+      ~AMAZON_REVIEWS.make_vocab_dictionary
+      ~AMAZON_REVIEWS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AMAZON_REVIEWS.dev
+      ~AMAZON_REVIEWS.test
+      ~AMAZON_REVIEWS.train
+   
+   

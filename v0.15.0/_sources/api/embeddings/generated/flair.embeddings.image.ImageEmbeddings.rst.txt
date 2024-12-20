@@ -1,0 +1,91 @@
+﻿flair.embeddings.image.ImageEmbeddings
+======================================
+
+.. currentmodule:: flair.embeddings.image
+
+.. autoclass:: ImageEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ImageEmbeddings.__init__
+      ~ImageEmbeddings.add_module
+      ~ImageEmbeddings.apply
+      ~ImageEmbeddings.bfloat16
+      ~ImageEmbeddings.buffers
+      ~ImageEmbeddings.children
+      ~ImageEmbeddings.compile
+      ~ImageEmbeddings.cpu
+      ~ImageEmbeddings.cuda
+      ~ImageEmbeddings.double
+      ~ImageEmbeddings.embed
+      ~ImageEmbeddings.eval
+      ~ImageEmbeddings.extra_repr
+      ~ImageEmbeddings.float
+      ~ImageEmbeddings.forward
+      ~ImageEmbeddings.from_params
+      ~ImageEmbeddings.get_buffer
+      ~ImageEmbeddings.get_extra_state
+      ~ImageEmbeddings.get_instance_parameters
+      ~ImageEmbeddings.get_names
+      ~ImageEmbeddings.get_parameter
+      ~ImageEmbeddings.get_submodule
+      ~ImageEmbeddings.half
+      ~ImageEmbeddings.ipu
+      ~ImageEmbeddings.load_embedding
+      ~ImageEmbeddings.load_state_dict
+      ~ImageEmbeddings.modules
+      ~ImageEmbeddings.mtia
+      ~ImageEmbeddings.named_buffers
+      ~ImageEmbeddings.named_children
+      ~ImageEmbeddings.named_modules
+      ~ImageEmbeddings.named_parameters
+      ~ImageEmbeddings.parameters
+      ~ImageEmbeddings.register_backward_hook
+      ~ImageEmbeddings.register_buffer
+      ~ImageEmbeddings.register_forward_hook
+      ~ImageEmbeddings.register_forward_pre_hook
+      ~ImageEmbeddings.register_full_backward_hook
+      ~ImageEmbeddings.register_full_backward_pre_hook
+      ~ImageEmbeddings.register_load_state_dict_post_hook
+      ~ImageEmbeddings.register_load_state_dict_pre_hook
+      ~ImageEmbeddings.register_module
+      ~ImageEmbeddings.register_parameter
+      ~ImageEmbeddings.register_state_dict_post_hook
+      ~ImageEmbeddings.register_state_dict_pre_hook
+      ~ImageEmbeddings.requires_grad_
+      ~ImageEmbeddings.save_embeddings
+      ~ImageEmbeddings.set_extra_state
+      ~ImageEmbeddings.set_submodule
+      ~ImageEmbeddings.share_memory
+      ~ImageEmbeddings.state_dict
+      ~ImageEmbeddings.to
+      ~ImageEmbeddings.to_empty
+      ~ImageEmbeddings.to_params
+      ~ImageEmbeddings.train
+      ~ImageEmbeddings.type
+      ~ImageEmbeddings.xpu
+      ~ImageEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ImageEmbeddings.T_destination
+      ~ImageEmbeddings.call_super_init
+      ~ImageEmbeddings.dump_patches
+      ~ImageEmbeddings.embedding_length
+      ~ImageEmbeddings.embedding_type
+      ~ImageEmbeddings.embeddings_name
+      ~ImageEmbeddings.training
+   
+   

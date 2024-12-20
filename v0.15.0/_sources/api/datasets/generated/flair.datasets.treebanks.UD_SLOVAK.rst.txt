@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_SLOVAK
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_SLOVAK
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_SLOVAK.__init__
+      ~UD_SLOVAK.add_label_noise
+      ~UD_SLOVAK.downsample
+      ~UD_SLOVAK.filter_empty_sentences
+      ~UD_SLOVAK.filter_long_sentences
+      ~UD_SLOVAK.get_all_sentences
+      ~UD_SLOVAK.get_label_distribution
+      ~UD_SLOVAK.make_label_dictionary
+      ~UD_SLOVAK.make_tag_dictionary
+      ~UD_SLOVAK.make_vocab_dictionary
+      ~UD_SLOVAK.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_SLOVAK.dev
+      ~UD_SLOVAK.test
+      ~UD_SLOVAK.train
+   
+   

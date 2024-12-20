@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.BIONLP2013\_CG
+========================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: BIONLP2013_CG
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BIONLP2013_CG.__init__
+      ~BIONLP2013_CG.add_label_noise
+      ~BIONLP2013_CG.download_corpus
+      ~BIONLP2013_CG.downsample
+      ~BIONLP2013_CG.filter_empty_sentences
+      ~BIONLP2013_CG.filter_long_sentences
+      ~BIONLP2013_CG.get_all_sentences
+      ~BIONLP2013_CG.get_label_distribution
+      ~BIONLP2013_CG.make_label_dictionary
+      ~BIONLP2013_CG.make_tag_dictionary
+      ~BIONLP2013_CG.make_vocab_dictionary
+      ~BIONLP2013_CG.obtain_statistics
+      ~BIONLP2013_CG.parse_input_files
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BIONLP2013_CG.dev
+      ~BIONLP2013_CG.test
+      ~BIONLP2013_CG.train
+   
+   

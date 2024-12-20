@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.fill\_masked\_elements
+===================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: fill_masked_elements

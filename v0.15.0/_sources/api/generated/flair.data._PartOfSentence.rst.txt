@@ -1,0 +1,49 @@
+﻿flair.data.\_PartOfSentence
+===========================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: _PartOfSentence
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~_PartOfSentence.__init__
+      ~_PartOfSentence.add_label
+      ~_PartOfSentence.add_metadata
+      ~_PartOfSentence.clear_embeddings
+      ~_PartOfSentence.get_each_embedding
+      ~_PartOfSentence.get_embedding
+      ~_PartOfSentence.get_label
+      ~_PartOfSentence.get_labels
+      ~_PartOfSentence.get_metadata
+      ~_PartOfSentence.has_label
+      ~_PartOfSentence.has_metadata
+      ~_PartOfSentence.remove_labels
+      ~_PartOfSentence.set_embedding
+      ~_PartOfSentence.set_label
+      ~_PartOfSentence.to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~_PartOfSentence.embedding
+      ~_PartOfSentence.end_position
+      ~_PartOfSentence.labels
+      ~_PartOfSentence.score
+      ~_PartOfSentence.start_position
+      ~_PartOfSentence.tag
+      ~_PartOfSentence.text
+      ~_PartOfSentence.unlabeled_identifier
+   
+   

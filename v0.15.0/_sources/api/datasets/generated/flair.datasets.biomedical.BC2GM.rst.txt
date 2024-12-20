@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.BC2GM
+===============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: BC2GM
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BC2GM.__init__
+      ~BC2GM.add_label_noise
+      ~BC2GM.download_dataset
+      ~BC2GM.downsample
+      ~BC2GM.filter_empty_sentences
+      ~BC2GM.filter_long_sentences
+      ~BC2GM.get_all_sentences
+      ~BC2GM.get_label_distribution
+      ~BC2GM.make_label_dictionary
+      ~BC2GM.make_tag_dictionary
+      ~BC2GM.make_vocab_dictionary
+      ~BC2GM.obtain_statistics
+      ~BC2GM.parse_dataset
+      ~BC2GM.parse_test_dataset
+      ~BC2GM.parse_train_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BC2GM.dev
+      ~BC2GM.test
+      ~BC2GM.train
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_UKRAINIAN
+======================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_UKRAINIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_UKRAINIAN.__init__
+      ~UD_UKRAINIAN.add_label_noise
+      ~UD_UKRAINIAN.downsample
+      ~UD_UKRAINIAN.filter_empty_sentences
+      ~UD_UKRAINIAN.filter_long_sentences
+      ~UD_UKRAINIAN.get_all_sentences
+      ~UD_UKRAINIAN.get_label_distribution
+      ~UD_UKRAINIAN.make_label_dictionary
+      ~UD_UKRAINIAN.make_tag_dictionary
+      ~UD_UKRAINIAN.make_vocab_dictionary
+      ~UD_UKRAINIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_UKRAINIAN.dev
+      ~UD_UKRAINIAN.test
+      ~UD_UKRAINIAN.train
+   
+   

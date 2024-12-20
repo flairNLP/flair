@@ -1,0 +1,82 @@
+﻿flair.nn.PrototypicalDecoder
+============================
+
+.. currentmodule:: flair.nn
+
+.. autoclass:: PrototypicalDecoder
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PrototypicalDecoder.__init__
+      ~PrototypicalDecoder.add_module
+      ~PrototypicalDecoder.apply
+      ~PrototypicalDecoder.bfloat16
+      ~PrototypicalDecoder.buffers
+      ~PrototypicalDecoder.children
+      ~PrototypicalDecoder.compile
+      ~PrototypicalDecoder.cpu
+      ~PrototypicalDecoder.cuda
+      ~PrototypicalDecoder.double
+      ~PrototypicalDecoder.eval
+      ~PrototypicalDecoder.extra_repr
+      ~PrototypicalDecoder.float
+      ~PrototypicalDecoder.forward
+      ~PrototypicalDecoder.get_buffer
+      ~PrototypicalDecoder.get_extra_state
+      ~PrototypicalDecoder.get_parameter
+      ~PrototypicalDecoder.get_submodule
+      ~PrototypicalDecoder.half
+      ~PrototypicalDecoder.ipu
+      ~PrototypicalDecoder.load_state_dict
+      ~PrototypicalDecoder.modules
+      ~PrototypicalDecoder.mtia
+      ~PrototypicalDecoder.named_buffers
+      ~PrototypicalDecoder.named_children
+      ~PrototypicalDecoder.named_modules
+      ~PrototypicalDecoder.named_parameters
+      ~PrototypicalDecoder.parameters
+      ~PrototypicalDecoder.register_backward_hook
+      ~PrototypicalDecoder.register_buffer
+      ~PrototypicalDecoder.register_forward_hook
+      ~PrototypicalDecoder.register_forward_pre_hook
+      ~PrototypicalDecoder.register_full_backward_hook
+      ~PrototypicalDecoder.register_full_backward_pre_hook
+      ~PrototypicalDecoder.register_load_state_dict_post_hook
+      ~PrototypicalDecoder.register_load_state_dict_pre_hook
+      ~PrototypicalDecoder.register_module
+      ~PrototypicalDecoder.register_parameter
+      ~PrototypicalDecoder.register_state_dict_post_hook
+      ~PrototypicalDecoder.register_state_dict_pre_hook
+      ~PrototypicalDecoder.requires_grad_
+      ~PrototypicalDecoder.set_extra_state
+      ~PrototypicalDecoder.set_submodule
+      ~PrototypicalDecoder.share_memory
+      ~PrototypicalDecoder.state_dict
+      ~PrototypicalDecoder.to
+      ~PrototypicalDecoder.to_empty
+      ~PrototypicalDecoder.train
+      ~PrototypicalDecoder.type
+      ~PrototypicalDecoder.xpu
+      ~PrototypicalDecoder.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PrototypicalDecoder.T_destination
+      ~PrototypicalDecoder.call_super_init
+      ~PrototypicalDecoder.dump_patches
+      ~PrototypicalDecoder.num_prototypes
+      ~PrototypicalDecoder.training
+   
+   

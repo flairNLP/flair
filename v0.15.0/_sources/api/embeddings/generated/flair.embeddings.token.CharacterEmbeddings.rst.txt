@@ -1,0 +1,91 @@
+﻿flair.embeddings.token.CharacterEmbeddings
+==========================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: CharacterEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CharacterEmbeddings.__init__
+      ~CharacterEmbeddings.add_module
+      ~CharacterEmbeddings.apply
+      ~CharacterEmbeddings.bfloat16
+      ~CharacterEmbeddings.buffers
+      ~CharacterEmbeddings.children
+      ~CharacterEmbeddings.compile
+      ~CharacterEmbeddings.cpu
+      ~CharacterEmbeddings.cuda
+      ~CharacterEmbeddings.double
+      ~CharacterEmbeddings.embed
+      ~CharacterEmbeddings.eval
+      ~CharacterEmbeddings.extra_repr
+      ~CharacterEmbeddings.float
+      ~CharacterEmbeddings.forward
+      ~CharacterEmbeddings.from_params
+      ~CharacterEmbeddings.get_buffer
+      ~CharacterEmbeddings.get_extra_state
+      ~CharacterEmbeddings.get_instance_parameters
+      ~CharacterEmbeddings.get_names
+      ~CharacterEmbeddings.get_parameter
+      ~CharacterEmbeddings.get_submodule
+      ~CharacterEmbeddings.half
+      ~CharacterEmbeddings.ipu
+      ~CharacterEmbeddings.load_embedding
+      ~CharacterEmbeddings.load_state_dict
+      ~CharacterEmbeddings.modules
+      ~CharacterEmbeddings.mtia
+      ~CharacterEmbeddings.named_buffers
+      ~CharacterEmbeddings.named_children
+      ~CharacterEmbeddings.named_modules
+      ~CharacterEmbeddings.named_parameters
+      ~CharacterEmbeddings.parameters
+      ~CharacterEmbeddings.register_backward_hook
+      ~CharacterEmbeddings.register_buffer
+      ~CharacterEmbeddings.register_forward_hook
+      ~CharacterEmbeddings.register_forward_pre_hook
+      ~CharacterEmbeddings.register_full_backward_hook
+      ~CharacterEmbeddings.register_full_backward_pre_hook
+      ~CharacterEmbeddings.register_load_state_dict_post_hook
+      ~CharacterEmbeddings.register_load_state_dict_pre_hook
+      ~CharacterEmbeddings.register_module
+      ~CharacterEmbeddings.register_parameter
+      ~CharacterEmbeddings.register_state_dict_post_hook
+      ~CharacterEmbeddings.register_state_dict_pre_hook
+      ~CharacterEmbeddings.requires_grad_
+      ~CharacterEmbeddings.save_embeddings
+      ~CharacterEmbeddings.set_extra_state
+      ~CharacterEmbeddings.set_submodule
+      ~CharacterEmbeddings.share_memory
+      ~CharacterEmbeddings.state_dict
+      ~CharacterEmbeddings.to
+      ~CharacterEmbeddings.to_empty
+      ~CharacterEmbeddings.to_params
+      ~CharacterEmbeddings.train
+      ~CharacterEmbeddings.type
+      ~CharacterEmbeddings.xpu
+      ~CharacterEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CharacterEmbeddings.T_destination
+      ~CharacterEmbeddings.call_super_init
+      ~CharacterEmbeddings.dump_patches
+      ~CharacterEmbeddings.embedding_length
+      ~CharacterEmbeddings.embedding_type
+      ~CharacterEmbeddings.embeddings_name
+      ~CharacterEmbeddings.training
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_RUSSIAN
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_RUSSIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_RUSSIAN.__init__
+      ~UD_RUSSIAN.add_label_noise
+      ~UD_RUSSIAN.downsample
+      ~UD_RUSSIAN.filter_empty_sentences
+      ~UD_RUSSIAN.filter_long_sentences
+      ~UD_RUSSIAN.get_all_sentences
+      ~UD_RUSSIAN.get_label_distribution
+      ~UD_RUSSIAN.make_label_dictionary
+      ~UD_RUSSIAN.make_tag_dictionary
+      ~UD_RUSSIAN.make_vocab_dictionary
+      ~UD_RUSSIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_RUSSIAN.dev
+      ~UD_RUSSIAN.test
+      ~UD_RUSSIAN.train
+   
+   

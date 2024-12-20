@@ -1,0 +1,38 @@
+﻿flair.trainers.plugins.LogFilePlugin
+====================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: LogFilePlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LogFilePlugin.__init__
+      ~LogFilePlugin.attach_to
+      ~LogFilePlugin.close_file_handler
+      ~LogFilePlugin.detach
+      ~LogFilePlugin.get_state
+      ~LogFilePlugin.hook
+      ~LogFilePlugin.mark_func_as_hook
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LogFilePlugin.attach_to_all_processes
+      ~LogFilePlugin.corpus
+      ~LogFilePlugin.model
+      ~LogFilePlugin.pluggable
+      ~LogFilePlugin.trainer
+   
+   

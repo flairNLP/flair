@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_SWEDISH
+==============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_SWEDISH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_SWEDISH.__init__
+      ~NER_SWEDISH.add_label_noise
+      ~NER_SWEDISH.downsample
+      ~NER_SWEDISH.filter_empty_sentences
+      ~NER_SWEDISH.filter_long_sentences
+      ~NER_SWEDISH.get_all_sentences
+      ~NER_SWEDISH.get_label_distribution
+      ~NER_SWEDISH.make_label_dictionary
+      ~NER_SWEDISH.make_tag_dictionary
+      ~NER_SWEDISH.make_vocab_dictionary
+      ~NER_SWEDISH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_SWEDISH.dev
+      ~NER_SWEDISH.test
+      ~NER_SWEDISH.train
+   
+   

@@ -1,0 +1,38 @@
+﻿flair.trainers.plugins.CheckpointPlugin
+=======================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: CheckpointPlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CheckpointPlugin.__init__
+      ~CheckpointPlugin.after_training_epoch
+      ~CheckpointPlugin.attach_to
+      ~CheckpointPlugin.detach
+      ~CheckpointPlugin.get_state
+      ~CheckpointPlugin.hook
+      ~CheckpointPlugin.mark_func_as_hook
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CheckpointPlugin.attach_to_all_processes
+      ~CheckpointPlugin.corpus
+      ~CheckpointPlugin.model
+      ~CheckpointPlugin.pluggable
+      ~CheckpointPlugin.trainer
+   
+   

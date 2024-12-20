@@ -1,0 +1,6 @@
+﻿flair.datasets.biomedical.bioc\_to\_internal
+============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autofunction:: bioc_to_internal

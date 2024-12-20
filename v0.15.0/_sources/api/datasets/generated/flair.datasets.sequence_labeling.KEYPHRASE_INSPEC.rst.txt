@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.KEYPHRASE\_INSPEC
+===================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: KEYPHRASE_INSPEC
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~KEYPHRASE_INSPEC.__init__
+      ~KEYPHRASE_INSPEC.add_label_noise
+      ~KEYPHRASE_INSPEC.downsample
+      ~KEYPHRASE_INSPEC.filter_empty_sentences
+      ~KEYPHRASE_INSPEC.filter_long_sentences
+      ~KEYPHRASE_INSPEC.get_all_sentences
+      ~KEYPHRASE_INSPEC.get_label_distribution
+      ~KEYPHRASE_INSPEC.make_label_dictionary
+      ~KEYPHRASE_INSPEC.make_tag_dictionary
+      ~KEYPHRASE_INSPEC.make_vocab_dictionary
+      ~KEYPHRASE_INSPEC.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~KEYPHRASE_INSPEC.dev
+      ~KEYPHRASE_INSPEC.test
+      ~KEYPHRASE_INSPEC.train
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_ANCIENT\_GREEK
+===========================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_ANCIENT_GREEK
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_ANCIENT_GREEK.__init__
+      ~UD_ANCIENT_GREEK.add_label_noise
+      ~UD_ANCIENT_GREEK.downsample
+      ~UD_ANCIENT_GREEK.filter_empty_sentences
+      ~UD_ANCIENT_GREEK.filter_long_sentences
+      ~UD_ANCIENT_GREEK.get_all_sentences
+      ~UD_ANCIENT_GREEK.get_label_distribution
+      ~UD_ANCIENT_GREEK.make_label_dictionary
+      ~UD_ANCIENT_GREEK.make_tag_dictionary
+      ~UD_ANCIENT_GREEK.make_vocab_dictionary
+      ~UD_ANCIENT_GREEK.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_ANCIENT_GREEK.dev
+      ~UD_ANCIENT_GREEK.test
+      ~UD_ANCIENT_GREEK.train
+   
+   

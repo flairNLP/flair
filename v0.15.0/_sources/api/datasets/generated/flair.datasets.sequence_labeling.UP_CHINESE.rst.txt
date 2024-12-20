@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.UP\_CHINESE
+=============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: UP_CHINESE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UP_CHINESE.__init__
+      ~UP_CHINESE.add_label_noise
+      ~UP_CHINESE.downsample
+      ~UP_CHINESE.filter_empty_sentences
+      ~UP_CHINESE.filter_long_sentences
+      ~UP_CHINESE.get_all_sentences
+      ~UP_CHINESE.get_label_distribution
+      ~UP_CHINESE.make_label_dictionary
+      ~UP_CHINESE.make_tag_dictionary
+      ~UP_CHINESE.make_vocab_dictionary
+      ~UP_CHINESE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UP_CHINESE.dev
+      ~UP_CHINESE.test
+      ~UP_CHINESE.train
+   
+   

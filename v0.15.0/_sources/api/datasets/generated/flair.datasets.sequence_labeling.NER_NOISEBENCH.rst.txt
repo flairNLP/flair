@@ -1,0 +1,42 @@
+﻿flair.datasets.sequence\_labeling.NER\_NOISEBENCH
+=================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_NOISEBENCH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_NOISEBENCH.__init__
+      ~NER_NOISEBENCH.add_label_noise
+      ~NER_NOISEBENCH.downsample
+      ~NER_NOISEBENCH.filter_empty_sentences
+      ~NER_NOISEBENCH.filter_long_sentences
+      ~NER_NOISEBENCH.get_all_sentences
+      ~NER_NOISEBENCH.get_label_distribution
+      ~NER_NOISEBENCH.make_label_dictionary
+      ~NER_NOISEBENCH.make_tag_dictionary
+      ~NER_NOISEBENCH.make_vocab_dictionary
+      ~NER_NOISEBENCH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_NOISEBENCH.SAVE_TRAINDEV_FILE
+      ~NER_NOISEBENCH.dev
+      ~NER_NOISEBENCH.label_url
+      ~NER_NOISEBENCH.test
+      ~NER_NOISEBENCH.train
+   
+   

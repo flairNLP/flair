@@ -1,0 +1,93 @@
+﻿flair.embeddings.token.WordEmbeddings
+=====================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: WordEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WordEmbeddings.__init__
+      ~WordEmbeddings.add_module
+      ~WordEmbeddings.apply
+      ~WordEmbeddings.bfloat16
+      ~WordEmbeddings.buffers
+      ~WordEmbeddings.children
+      ~WordEmbeddings.compile
+      ~WordEmbeddings.cpu
+      ~WordEmbeddings.cuda
+      ~WordEmbeddings.double
+      ~WordEmbeddings.embed
+      ~WordEmbeddings.eval
+      ~WordEmbeddings.extra_repr
+      ~WordEmbeddings.float
+      ~WordEmbeddings.forward
+      ~WordEmbeddings.from_params
+      ~WordEmbeddings.get_buffer
+      ~WordEmbeddings.get_cached_token_index
+      ~WordEmbeddings.get_extra_state
+      ~WordEmbeddings.get_instance_parameters
+      ~WordEmbeddings.get_names
+      ~WordEmbeddings.get_parameter
+      ~WordEmbeddings.get_submodule
+      ~WordEmbeddings.half
+      ~WordEmbeddings.ipu
+      ~WordEmbeddings.load_embedding
+      ~WordEmbeddings.load_state_dict
+      ~WordEmbeddings.modules
+      ~WordEmbeddings.mtia
+      ~WordEmbeddings.named_buffers
+      ~WordEmbeddings.named_children
+      ~WordEmbeddings.named_modules
+      ~WordEmbeddings.named_parameters
+      ~WordEmbeddings.parameters
+      ~WordEmbeddings.register_backward_hook
+      ~WordEmbeddings.register_buffer
+      ~WordEmbeddings.register_forward_hook
+      ~WordEmbeddings.register_forward_pre_hook
+      ~WordEmbeddings.register_full_backward_hook
+      ~WordEmbeddings.register_full_backward_pre_hook
+      ~WordEmbeddings.register_load_state_dict_post_hook
+      ~WordEmbeddings.register_load_state_dict_pre_hook
+      ~WordEmbeddings.register_module
+      ~WordEmbeddings.register_parameter
+      ~WordEmbeddings.register_state_dict_post_hook
+      ~WordEmbeddings.register_state_dict_pre_hook
+      ~WordEmbeddings.requires_grad_
+      ~WordEmbeddings.resolve_precomputed_path
+      ~WordEmbeddings.save_embeddings
+      ~WordEmbeddings.set_extra_state
+      ~WordEmbeddings.set_submodule
+      ~WordEmbeddings.share_memory
+      ~WordEmbeddings.state_dict
+      ~WordEmbeddings.to
+      ~WordEmbeddings.to_empty
+      ~WordEmbeddings.to_params
+      ~WordEmbeddings.train
+      ~WordEmbeddings.type
+      ~WordEmbeddings.xpu
+      ~WordEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WordEmbeddings.T_destination
+      ~WordEmbeddings.call_super_init
+      ~WordEmbeddings.dump_patches
+      ~WordEmbeddings.embedding_length
+      ~WordEmbeddings.embedding_type
+      ~WordEmbeddings.embeddings_name
+      ~WordEmbeddings.training
+   
+   

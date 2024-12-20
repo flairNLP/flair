@@ -1,0 +1,96 @@
+﻿flair.models.RelationClassifier
+===============================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: RelationClassifier
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RelationClassifier.__init__
+      ~RelationClassifier.add_module
+      ~RelationClassifier.apply
+      ~RelationClassifier.bfloat16
+      ~RelationClassifier.buffers
+      ~RelationClassifier.children
+      ~RelationClassifier.compile
+      ~RelationClassifier.cpu
+      ~RelationClassifier.cuda
+      ~RelationClassifier.double
+      ~RelationClassifier.eval
+      ~RelationClassifier.evaluate
+      ~RelationClassifier.extra_repr
+      ~RelationClassifier.float
+      ~RelationClassifier.forward
+      ~RelationClassifier.forward_loss
+      ~RelationClassifier.get_buffer
+      ~RelationClassifier.get_extra_state
+      ~RelationClassifier.get_parameter
+      ~RelationClassifier.get_submodule
+      ~RelationClassifier.get_used_tokens
+      ~RelationClassifier.half
+      ~RelationClassifier.ipu
+      ~RelationClassifier.load
+      ~RelationClassifier.load_state_dict
+      ~RelationClassifier.modules
+      ~RelationClassifier.mtia
+      ~RelationClassifier.named_buffers
+      ~RelationClassifier.named_children
+      ~RelationClassifier.named_modules
+      ~RelationClassifier.named_parameters
+      ~RelationClassifier.parameters
+      ~RelationClassifier.predict
+      ~RelationClassifier.print_model_card
+      ~RelationClassifier.register_backward_hook
+      ~RelationClassifier.register_buffer
+      ~RelationClassifier.register_forward_hook
+      ~RelationClassifier.register_forward_pre_hook
+      ~RelationClassifier.register_full_backward_hook
+      ~RelationClassifier.register_full_backward_pre_hook
+      ~RelationClassifier.register_load_state_dict_post_hook
+      ~RelationClassifier.register_load_state_dict_pre_hook
+      ~RelationClassifier.register_module
+      ~RelationClassifier.register_parameter
+      ~RelationClassifier.register_state_dict_post_hook
+      ~RelationClassifier.register_state_dict_pre_hook
+      ~RelationClassifier.requires_grad_
+      ~RelationClassifier.save
+      ~RelationClassifier.set_extra_state
+      ~RelationClassifier.set_submodule
+      ~RelationClassifier.share_memory
+      ~RelationClassifier.state_dict
+      ~RelationClassifier.to
+      ~RelationClassifier.to_empty
+      ~RelationClassifier.train
+      ~RelationClassifier.transform_corpus
+      ~RelationClassifier.transform_dataset
+      ~RelationClassifier.transform_sentence
+      ~RelationClassifier.type
+      ~RelationClassifier.xpu
+      ~RelationClassifier.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RelationClassifier.T_destination
+      ~RelationClassifier.allow_unk_tag
+      ~RelationClassifier.call_super_init
+      ~RelationClassifier.dump_patches
+      ~RelationClassifier.label_type
+      ~RelationClassifier.model_card
+      ~RelationClassifier.multi_label_threshold
+      ~RelationClassifier.zero_tag_value
+      ~RelationClassifier.training
+   
+   

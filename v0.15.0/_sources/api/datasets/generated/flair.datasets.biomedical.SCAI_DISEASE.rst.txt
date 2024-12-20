@@ -1,0 +1,43 @@
+﻿flair.datasets.biomedical.SCAI\_DISEASE
+=======================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: SCAI_DISEASE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SCAI_DISEASE.__init__
+      ~SCAI_DISEASE.add_label_noise
+      ~SCAI_DISEASE.download_corpus
+      ~SCAI_DISEASE.downsample
+      ~SCAI_DISEASE.filter_empty_sentences
+      ~SCAI_DISEASE.filter_long_sentences
+      ~SCAI_DISEASE.get_all_sentences
+      ~SCAI_DISEASE.get_label_distribution
+      ~SCAI_DISEASE.make_label_dictionary
+      ~SCAI_DISEASE.make_tag_dictionary
+      ~SCAI_DISEASE.make_vocab_dictionary
+      ~SCAI_DISEASE.obtain_statistics
+      ~SCAI_DISEASE.parse_input_file
+      ~SCAI_DISEASE.perform_corpus_download
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SCAI_DISEASE.dev
+      ~SCAI_DISEASE.test
+      ~SCAI_DISEASE.train
+   
+   

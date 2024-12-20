@@ -1,0 +1,93 @@
+﻿flair.models.EntityMentionLinker
+================================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: EntityMentionLinker
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~EntityMentionLinker.__init__
+      ~EntityMentionLinker.add_module
+      ~EntityMentionLinker.apply
+      ~EntityMentionLinker.bfloat16
+      ~EntityMentionLinker.buffers
+      ~EntityMentionLinker.build
+      ~EntityMentionLinker.children
+      ~EntityMentionLinker.compile
+      ~EntityMentionLinker.cpu
+      ~EntityMentionLinker.cuda
+      ~EntityMentionLinker.double
+      ~EntityMentionLinker.eval
+      ~EntityMentionLinker.evaluate
+      ~EntityMentionLinker.extra_repr
+      ~EntityMentionLinker.extract_entities_mentions
+      ~EntityMentionLinker.float
+      ~EntityMentionLinker.forward
+      ~EntityMentionLinker.forward_loss
+      ~EntityMentionLinker.get_buffer
+      ~EntityMentionLinker.get_entity_label_types
+      ~EntityMentionLinker.get_extra_state
+      ~EntityMentionLinker.get_parameter
+      ~EntityMentionLinker.get_submodule
+      ~EntityMentionLinker.half
+      ~EntityMentionLinker.ipu
+      ~EntityMentionLinker.load
+      ~EntityMentionLinker.load_state_dict
+      ~EntityMentionLinker.modules
+      ~EntityMentionLinker.mtia
+      ~EntityMentionLinker.named_buffers
+      ~EntityMentionLinker.named_children
+      ~EntityMentionLinker.named_modules
+      ~EntityMentionLinker.named_parameters
+      ~EntityMentionLinker.parameters
+      ~EntityMentionLinker.predict
+      ~EntityMentionLinker.print_model_card
+      ~EntityMentionLinker.register_backward_hook
+      ~EntityMentionLinker.register_buffer
+      ~EntityMentionLinker.register_forward_hook
+      ~EntityMentionLinker.register_forward_pre_hook
+      ~EntityMentionLinker.register_full_backward_hook
+      ~EntityMentionLinker.register_full_backward_pre_hook
+      ~EntityMentionLinker.register_load_state_dict_post_hook
+      ~EntityMentionLinker.register_load_state_dict_pre_hook
+      ~EntityMentionLinker.register_module
+      ~EntityMentionLinker.register_parameter
+      ~EntityMentionLinker.register_state_dict_post_hook
+      ~EntityMentionLinker.register_state_dict_pre_hook
+      ~EntityMentionLinker.requires_grad_
+      ~EntityMentionLinker.save
+      ~EntityMentionLinker.set_extra_state
+      ~EntityMentionLinker.set_submodule
+      ~EntityMentionLinker.share_memory
+      ~EntityMentionLinker.state_dict
+      ~EntityMentionLinker.to
+      ~EntityMentionLinker.to_empty
+      ~EntityMentionLinker.train
+      ~EntityMentionLinker.type
+      ~EntityMentionLinker.xpu
+      ~EntityMentionLinker.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~EntityMentionLinker.T_destination
+      ~EntityMentionLinker.call_super_init
+      ~EntityMentionLinker.dictionary
+      ~EntityMentionLinker.dump_patches
+      ~EntityMentionLinker.label_type
+      ~EntityMentionLinker.model_card
+      ~EntityMentionLinker.training
+   
+   

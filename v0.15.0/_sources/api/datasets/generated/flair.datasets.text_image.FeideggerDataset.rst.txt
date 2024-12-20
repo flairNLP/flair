@@ -1,0 +1,23 @@
+﻿flair.datasets.text\_image.FeideggerDataset
+===========================================
+
+.. currentmodule:: flair.datasets.text_image
+
+.. autoclass:: FeideggerDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FeideggerDataset.__init__
+      ~FeideggerDataset.is_in_memory
+   
+   
+
+   
+   
+   

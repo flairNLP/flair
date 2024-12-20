@@ -1,0 +1,29 @@
+﻿flair.tokenization.SpacyTokenizer
+=================================
+
+.. currentmodule:: flair.tokenization
+
+.. autoclass:: SpacyTokenizer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SpacyTokenizer.__init__
+      ~SpacyTokenizer.tokenize
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SpacyTokenizer.name
+   
+   

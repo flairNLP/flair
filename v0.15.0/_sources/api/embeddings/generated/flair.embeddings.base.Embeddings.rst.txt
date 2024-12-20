@@ -1,0 +1,91 @@
+﻿flair.embeddings.base.Embeddings
+================================
+
+.. currentmodule:: flair.embeddings.base
+
+.. autoclass:: Embeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Embeddings.__init__
+      ~Embeddings.add_module
+      ~Embeddings.apply
+      ~Embeddings.bfloat16
+      ~Embeddings.buffers
+      ~Embeddings.children
+      ~Embeddings.compile
+      ~Embeddings.cpu
+      ~Embeddings.cuda
+      ~Embeddings.double
+      ~Embeddings.embed
+      ~Embeddings.eval
+      ~Embeddings.extra_repr
+      ~Embeddings.float
+      ~Embeddings.forward
+      ~Embeddings.from_params
+      ~Embeddings.get_buffer
+      ~Embeddings.get_extra_state
+      ~Embeddings.get_instance_parameters
+      ~Embeddings.get_names
+      ~Embeddings.get_parameter
+      ~Embeddings.get_submodule
+      ~Embeddings.half
+      ~Embeddings.ipu
+      ~Embeddings.load_embedding
+      ~Embeddings.load_state_dict
+      ~Embeddings.modules
+      ~Embeddings.mtia
+      ~Embeddings.named_buffers
+      ~Embeddings.named_children
+      ~Embeddings.named_modules
+      ~Embeddings.named_parameters
+      ~Embeddings.parameters
+      ~Embeddings.register_backward_hook
+      ~Embeddings.register_buffer
+      ~Embeddings.register_forward_hook
+      ~Embeddings.register_forward_pre_hook
+      ~Embeddings.register_full_backward_hook
+      ~Embeddings.register_full_backward_pre_hook
+      ~Embeddings.register_load_state_dict_post_hook
+      ~Embeddings.register_load_state_dict_pre_hook
+      ~Embeddings.register_module
+      ~Embeddings.register_parameter
+      ~Embeddings.register_state_dict_post_hook
+      ~Embeddings.register_state_dict_pre_hook
+      ~Embeddings.requires_grad_
+      ~Embeddings.save_embeddings
+      ~Embeddings.set_extra_state
+      ~Embeddings.set_submodule
+      ~Embeddings.share_memory
+      ~Embeddings.state_dict
+      ~Embeddings.to
+      ~Embeddings.to_empty
+      ~Embeddings.to_params
+      ~Embeddings.train
+      ~Embeddings.type
+      ~Embeddings.xpu
+      ~Embeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Embeddings.T_destination
+      ~Embeddings.call_super_init
+      ~Embeddings.dump_patches
+      ~Embeddings.embedding_length
+      ~Embeddings.embedding_type
+      ~Embeddings.embeddings_name
+      ~Embeddings.training
+   
+   

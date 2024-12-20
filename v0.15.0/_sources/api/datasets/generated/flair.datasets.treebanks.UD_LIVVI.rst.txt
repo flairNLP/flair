@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_LIVVI
+==================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_LIVVI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_LIVVI.__init__
+      ~UD_LIVVI.add_label_noise
+      ~UD_LIVVI.downsample
+      ~UD_LIVVI.filter_empty_sentences
+      ~UD_LIVVI.filter_long_sentences
+      ~UD_LIVVI.get_all_sentences
+      ~UD_LIVVI.get_label_distribution
+      ~UD_LIVVI.make_label_dictionary
+      ~UD_LIVVI.make_tag_dictionary
+      ~UD_LIVVI.make_vocab_dictionary
+      ~UD_LIVVI.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_LIVVI.dev
+      ~UD_LIVVI.test
+      ~UD_LIVVI.train
+   
+   

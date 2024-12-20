@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.remove\_special\_markup
+====================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: remove_special_markup

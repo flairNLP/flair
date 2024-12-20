@@ -1,0 +1,1253 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>flair.datasets &#8212; Flair Documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../_static/github_style.css?v=1093691d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/main.css?v=aa1137ec" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/header.css?v=b4ed79de" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/footer.css?v=6c87b456" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/version-switcher.css?v=0d4c8916" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/sidebar.css?v=c65ae207" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/tutorial.css?v=a09ac9ee" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/api.css?v=67816a88" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/legal-notice.css?v=d7312f38" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/search.css?v=4a9c00e7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script src="../_static/documentation_options.js?v=52d5597a"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/flair.datasets';</script>
+    <link rel="icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="flair.datasets.base" href="datasets/base.html" />
+    <link rel="prev" title="flair.data.randomly_split_into_two_datasets" href="generated/flair.data.randomly_split_into_two_datasets.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/flair_logo_white.svg" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../_static/flair_logo_white.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        API
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
+</script></div>
+      
+        <div class="navbar-item">
+<script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       v0.15.0  
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../master/api/flair.datasets.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        latest (dev)
+        
+        </span>
+          </a>
+      
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.14.0/api/flair.datasets.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.14.0
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.13.1/api/flair.datasets.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.13.0/api/flair.datasets.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
+    </div>
+  </div>
+`);
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../tutorial/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="index.html">
+                        API
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
+</script></div>
+        
+          <div class="navbar-item">
+<script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       v0.15.0  
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../master/api/flair.datasets.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        latest (dev)
+        
+        </span>
+          </a>
+      
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.14.0/api/flair.datasets.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.14.0
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.13.1/api/flair.datasets.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../v0.13.0/api/flair.datasets.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
+    </div>
+  </div>
+`);
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="flair.html">flair</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.data.html">flair.data</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">flair.datasets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="datasets/base.html">flair.datasets.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets/biomedical.html">flair.datasets.biomedical</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets/document_classification.html">flair.datasets.document_classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets/entity_linking.html">flair.datasets.entity_linking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets/ocr.html">flair.datasets.ocr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets/relation_extraction.html">flair.datasets.relation_extraction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets/sequence_labeling.html">flair.datasets.sequence_labeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets/text_image.html">flair.datasets.text_image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets/text_text.html">flair.datasets.text_text</a></li>
+<li class="toctree-l3"><a class="reference internal" href="datasets/treebanks.html">flair.datasets.treebanks</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="flair.embeddings.html">flair.embeddings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.models.html">flair.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.nn.html">flair.nn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.splitter.html">flair.splitter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.tokenization.html">flair.tokenization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.trainers.html">flair.trainers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flair.trainers.plugins.html">flair.trainers.plugins</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing/index.html">Contributing</a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">API Docs</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">flair.datasets</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="flair-datasets">
+<h1>flair.datasets<a class="headerlink" href="#flair-datasets" title="Link to this heading">#</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="datasets/base.html">flair.datasets.base</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.base.DataLoader.html">flair.datasets.base.DataLoader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.base.FlairDatapointDataset.html">flair.datasets.base.FlairDatapointDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.base.MongoDataset.html">flair.datasets.base.MongoDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.base.SentenceDataset.html">flair.datasets.base.SentenceDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.base.StringDataset.html">flair.datasets.base.StringDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.base.find_train_dev_test_files.html">flair.datasets.base.find_train_dev_test_files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/biomedical.html">flair.datasets.biomedical</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.ANAT_EM.html">flair.datasets.biomedical.ANAT_EM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.AZDZ.html">flair.datasets.biomedical.AZDZ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BC2GM.html">flair.datasets.biomedical.BC2GM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIGBIO_NER_CORPUS.html">flair.datasets.biomedical.BIGBIO_NER_CORPUS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIOBERT_CHEMICAL_BC4CHEMD.html">flair.datasets.biomedical.BIOBERT_CHEMICAL_BC4CHEMD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIOBERT_CHEMICAL_BC5CDR.html">flair.datasets.biomedical.BIOBERT_CHEMICAL_BC5CDR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIOBERT_DISEASE_BC5CDR.html">flair.datasets.biomedical.BIOBERT_DISEASE_BC5CDR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIOBERT_DISEASE_NCBI.html">flair.datasets.biomedical.BIOBERT_DISEASE_NCBI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIOBERT_GENE_BC2GM.html">flair.datasets.biomedical.BIOBERT_GENE_BC2GM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIOBERT_GENE_JNLPBA.html">flair.datasets.biomedical.BIOBERT_GENE_JNLPBA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIOBERT_SPECIES_LINNAEUS.html">flair.datasets.biomedical.BIOBERT_SPECIES_LINNAEUS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIOBERT_SPECIES_S800.html">flair.datasets.biomedical.BIOBERT_SPECIES_S800</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIONLP2013_CG.html">flair.datasets.biomedical.BIONLP2013_CG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIONLP2013_PC.html">flair.datasets.biomedical.BIONLP2013_PC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIOSEMANTICS.html">flair.datasets.biomedical.BIOSEMANTICS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BIO_INFER.html">flair.datasets.biomedical.BIO_INFER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BioBertHelper.html">flair.datasets.biomedical.BioBertHelper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.BioNLPCorpus.html">flair.datasets.biomedical.BioNLPCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CDR.html">flair.datasets.biomedical.CDR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CELL_FINDER.html">flair.datasets.biomedical.CELL_FINDER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CELL_LINE_TAG.html">flair.datasets.biomedical.CELL_LINE_TAG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CEMP.html">flair.datasets.biomedical.CEMP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CHEBI.html">flair.datasets.biomedical.CHEBI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CHEMDNER.html">flair.datasets.biomedical.CHEMDNER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CHEMICAL_TAG.html">flair.datasets.biomedical.CHEMICAL_TAG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CLL.html">flair.datasets.biomedical.CLL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CRAFT.html">flair.datasets.biomedical.CRAFT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CRAFT_V4.html">flair.datasets.biomedical.CRAFT_V4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.CoNLLWriter.html">flair.datasets.biomedical.CoNLLWriter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.DECA.html">flair.datasets.biomedical.DECA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.DISEASE_TAG.html">flair.datasets.biomedical.DISEASE_TAG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.DpEntry.html">flair.datasets.biomedical.DpEntry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.Entity.html">flair.datasets.biomedical.Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.FSU.html">flair.datasets.biomedical.FSU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.GELLUS.html">flair.datasets.biomedical.GELLUS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.GENE_TAG.html">flair.datasets.biomedical.GENE_TAG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.GPRO.html">flair.datasets.biomedical.GPRO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_BIOID.html">flair.datasets.biomedical.HUNER_ALL_BIOID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_BIONLP2013_CG.html">flair.datasets.biomedical.HUNER_ALL_BIONLP2013_CG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_BIONLP_ST_2011_ID.html">flair.datasets.biomedical.HUNER_ALL_BIONLP_ST_2011_ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_BIONLP_ST_2013_PC.html">flair.datasets.biomedical.HUNER_ALL_BIONLP_ST_2013_PC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_BIORED.html">flair.datasets.biomedical.HUNER_ALL_BIORED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_CDR.html">flair.datasets.biomedical.HUNER_ALL_CDR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_CELL_FINDER.html">flair.datasets.biomedical.HUNER_ALL_CELL_FINDER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_CHEBI.html">flair.datasets.biomedical.HUNER_ALL_CHEBI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_CPI.html">flair.datasets.biomedical.HUNER_ALL_CPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_CRAFT_V4.html">flair.datasets.biomedical.HUNER_ALL_CRAFT_V4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_DRUGPROT.html">flair.datasets.biomedical.HUNER_ALL_DRUGPROT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_JNLPBA.html">flair.datasets.biomedical.HUNER_ALL_JNLPBA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_LOCTEXT.html">flair.datasets.biomedical.HUNER_ALL_LOCTEXT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_MIRNA.html">flair.datasets.biomedical.HUNER_ALL_MIRNA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_SCAI.html">flair.datasets.biomedical.HUNER_ALL_SCAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_ALL_VARIOME.html">flair.datasets.biomedical.HUNER_ALL_VARIOME</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_BIONLP2013_CG.html">flair.datasets.biomedical.HUNER_BIONLP2013_CG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CELL_LINE.html">flair.datasets.biomedical.HUNER_CELL_LINE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CELL_LINE_BIOID.html">flair.datasets.biomedical.HUNER_CELL_LINE_BIOID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CELL_LINE_BIORED.html">flair.datasets.biomedical.HUNER_CELL_LINE_BIORED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CELL_LINE_CELL_FINDER.html">flair.datasets.biomedical.HUNER_CELL_LINE_CELL_FINDER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CELL_LINE_CLL.html">flair.datasets.biomedical.HUNER_CELL_LINE_CLL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CELL_LINE_GELLUS.html">flair.datasets.biomedical.HUNER_CELL_LINE_GELLUS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CELL_LINE_JNLPBA.html">flair.datasets.biomedical.HUNER_CELL_LINE_JNLPBA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEBI.html">flair.datasets.biomedical.HUNER_CHEBI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL.html">flair.datasets.biomedical.HUNER_CHEMICAL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_BIOID.html">flair.datasets.biomedical.HUNER_CHEMICAL_BIOID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_BIONLP2013_CG.html">flair.datasets.biomedical.HUNER_CHEMICAL_BIONLP2013_CG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_BIONLP_ST_2011_ID.html">flair.datasets.biomedical.HUNER_CHEMICAL_BIONLP_ST_2011_ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_BIONLP_ST_2013_PC.html">flair.datasets.biomedical.HUNER_CHEMICAL_BIONLP_ST_2013_PC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_BIORED.html">flair.datasets.biomedical.HUNER_CHEMICAL_BIORED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_CDR.html">flair.datasets.biomedical.HUNER_CHEMICAL_CDR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_CEMP.html">flair.datasets.biomedical.HUNER_CHEMICAL_CEMP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_CHEBI.html">flair.datasets.biomedical.HUNER_CHEMICAL_CHEBI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_CHEMDNER.html">flair.datasets.biomedical.HUNER_CHEMICAL_CHEMDNER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_CPI.html">flair.datasets.biomedical.HUNER_CHEMICAL_CPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_CRAFT_V4.html">flair.datasets.biomedical.HUNER_CHEMICAL_CRAFT_V4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_DRUGPROT.html">flair.datasets.biomedical.HUNER_CHEMICAL_DRUGPROT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_NLM_CHEM.html">flair.datasets.biomedical.HUNER_CHEMICAL_NLM_CHEM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CHEMICAL_SCAI.html">flair.datasets.biomedical.HUNER_CHEMICAL_SCAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_CRAFT_V4.html">flair.datasets.biomedical.HUNER_CRAFT_V4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_DISEASE.html">flair.datasets.biomedical.HUNER_DISEASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_DISEASE_BIONLP2013_CG.html">flair.datasets.biomedical.HUNER_DISEASE_BIONLP2013_CG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_DISEASE_BIORED.html">flair.datasets.biomedical.HUNER_DISEASE_BIORED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_DISEASE_CDR.html">flair.datasets.biomedical.HUNER_DISEASE_CDR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_DISEASE_MIRNA.html">flair.datasets.biomedical.HUNER_DISEASE_MIRNA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_DISEASE_NCBI.html">flair.datasets.biomedical.HUNER_DISEASE_NCBI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_DISEASE_PDR.html">flair.datasets.biomedical.HUNER_DISEASE_PDR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_DISEASE_SCAI.html">flair.datasets.biomedical.HUNER_DISEASE_SCAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_DISEASE_VARIOME.html">flair.datasets.biomedical.HUNER_DISEASE_VARIOME</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE.html">flair.datasets.biomedical.HUNER_GENE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BC2GM.html">flair.datasets.biomedical.HUNER_GENE_BC2GM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BIOID.html">flair.datasets.biomedical.HUNER_GENE_BIOID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BIONLP2013_CG.html">flair.datasets.biomedical.HUNER_GENE_BIONLP2013_CG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2011_EPI.html">flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2011_EPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2011_GE.html">flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2011_GE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2011_ID.html">flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2011_ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2011_REL.html">flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2011_REL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2013_GE.html">flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2013_GE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2013_PC.html">flair.datasets.biomedical.HUNER_GENE_BIONLP_ST_2013_PC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BIORED.html">flair.datasets.biomedical.HUNER_GENE_BIORED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_BIO_INFER.html">flair.datasets.biomedical.HUNER_GENE_BIO_INFER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_CELL_FINDER.html">flair.datasets.biomedical.HUNER_GENE_CELL_FINDER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_CHEBI.html">flair.datasets.biomedical.HUNER_GENE_CHEBI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_CPI.html">flair.datasets.biomedical.HUNER_GENE_CPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_CRAFT_V4.html">flair.datasets.biomedical.HUNER_GENE_CRAFT_V4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_DECA.html">flair.datasets.biomedical.HUNER_GENE_DECA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_DRUGPROT.html">flair.datasets.biomedical.HUNER_GENE_DRUGPROT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_FSU.html">flair.datasets.biomedical.HUNER_GENE_FSU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_GNORMPLUS.html">flair.datasets.biomedical.HUNER_GENE_GNORMPLUS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_GPRO.html">flair.datasets.biomedical.HUNER_GENE_GPRO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_IEPA.html">flair.datasets.biomedical.HUNER_GENE_IEPA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_JNLPBA.html">flair.datasets.biomedical.HUNER_GENE_JNLPBA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_LOCTEXT.html">flair.datasets.biomedical.HUNER_GENE_LOCTEXT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_MIRNA.html">flair.datasets.biomedical.HUNER_GENE_MIRNA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_NLM_GENE.html">flair.datasets.biomedical.HUNER_GENE_NLM_GENE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_OSIRIS.html">flair.datasets.biomedical.HUNER_GENE_OSIRIS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_PROGENE.html">flair.datasets.biomedical.HUNER_GENE_PROGENE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_SETH_CORPUS.html">flair.datasets.biomedical.HUNER_GENE_SETH_CORPUS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_TMVAR_V3.html">flair.datasets.biomedical.HUNER_GENE_TMVAR_V3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_GENE_VARIOME.html">flair.datasets.biomedical.HUNER_GENE_VARIOME</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_JNLPBA.html">flair.datasets.biomedical.HUNER_JNLPBA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_LOCTEXT.html">flair.datasets.biomedical.HUNER_LOCTEXT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_MIRNA.html">flair.datasets.biomedical.HUNER_MIRNA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES.html">flair.datasets.biomedical.HUNER_SPECIES</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_BIOID.html">flair.datasets.biomedical.HUNER_SPECIES_BIOID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_BIONLP2013_CG.html">flair.datasets.biomedical.HUNER_SPECIES_BIONLP2013_CG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_BIONLP_ST_2011_ID.html">flair.datasets.biomedical.HUNER_SPECIES_BIONLP_ST_2011_ID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_BIONLP_ST_2019_BB.html">flair.datasets.biomedical.HUNER_SPECIES_BIONLP_ST_2019_BB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_BIORED.html">flair.datasets.biomedical.HUNER_SPECIES_BIORED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_CELL_FINDER.html">flair.datasets.biomedical.HUNER_SPECIES_CELL_FINDER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_CHEBI.html">flair.datasets.biomedical.HUNER_SPECIES_CHEBI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_CRAFT_V4.html">flair.datasets.biomedical.HUNER_SPECIES_CRAFT_V4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_LINNEAUS.html">flair.datasets.biomedical.HUNER_SPECIES_LINNEAUS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_LOCTEXT.html">flair.datasets.biomedical.HUNER_SPECIES_LOCTEXT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_MIRNA.html">flair.datasets.biomedical.HUNER_SPECIES_MIRNA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_S800.html">flair.datasets.biomedical.HUNER_SPECIES_S800</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HUNER_SPECIES_VARIOME.html">flair.datasets.biomedical.HUNER_SPECIES_VARIOME</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HunerDataset.html">flair.datasets.biomedical.HunerDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HunerJNLPBA.html">flair.datasets.biomedical.HunerJNLPBA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HunerMiRNAHelper.html">flair.datasets.biomedical.HunerMiRNAHelper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.HunerMultiCorpus.html">flair.datasets.biomedical.HunerMultiCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.IEPA.html">flair.datasets.biomedical.IEPA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.InternalBioNerDataset.html">flair.datasets.biomedical.InternalBioNerDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.JNLPBA.html">flair.datasets.biomedical.JNLPBA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.KaewphanCorpusHelper.html">flair.datasets.biomedical.KaewphanCorpusHelper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.LINNEAUS.html">flair.datasets.biomedical.LINNEAUS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.LOCTEXT.html">flair.datasets.biomedical.LOCTEXT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.MIRNA.html">flair.datasets.biomedical.MIRNA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.NCBI_DISEASE.html">flair.datasets.biomedical.NCBI_DISEASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.OSIRIS.html">flair.datasets.biomedical.OSIRIS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.PDR.html">flair.datasets.biomedical.PDR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.S800.html">flair.datasets.biomedical.S800</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.SCAI_CHEMICALS.html">flair.datasets.biomedical.SCAI_CHEMICALS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.SCAI_DISEASE.html">flair.datasets.biomedical.SCAI_DISEASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.SENTENCE_TAG.html">flair.datasets.biomedical.SENTENCE_TAG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.SPECIES_TAG.html">flair.datasets.biomedical.SPECIES_TAG</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.ScaiCorpus.html">flair.datasets.biomedical.ScaiCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.VARIOME.html">flair.datasets.biomedical.VARIOME</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.bioc_to_internal.html">flair.datasets.biomedical.bioc_to_internal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.brat_to_internal.html">flair.datasets.biomedical.brat_to_internal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.filter_and_map_entities.html">flair.datasets.biomedical.filter_and_map_entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.filter_nested_entities.html">flair.datasets.biomedical.filter_nested_entities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.biomedical.merge_datasets.html">flair.datasets.biomedical.merge_datasets</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/document_classification.html">flair.datasets.document_classification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.AGNEWS.html">flair.datasets.document_classification.AGNEWS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.AMAZON_REVIEWS.html">flair.datasets.document_classification.AMAZON_REVIEWS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.COMMUNICATIVE_FUNCTIONS.html">flair.datasets.document_classification.COMMUNICATIVE_FUNCTIONS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.CSVClassificationCorpus.html">flair.datasets.document_classification.CSVClassificationCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.CSVClassificationDataset.html">flair.datasets.document_classification.CSVClassificationDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.ClassificationCorpus.html">flair.datasets.document_classification.ClassificationCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.ClassificationDataset.html">flair.datasets.document_classification.ClassificationDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.GERMEVAL_2018_OFFENSIVE_LANGUAGE.html">flair.datasets.document_classification.GERMEVAL_2018_OFFENSIVE_LANGUAGE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.GLUE_COLA.html">flair.datasets.document_classification.GLUE_COLA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.GLUE_SST2.html">flair.datasets.document_classification.GLUE_SST2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.GO_EMOTIONS.html">flair.datasets.document_classification.GO_EMOTIONS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.IMDB.html">flair.datasets.document_classification.IMDB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.NEWSGROUPS.html">flair.datasets.document_classification.NEWSGROUPS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.SENTEVAL_CR.html">flair.datasets.document_classification.SENTEVAL_CR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.SENTEVAL_MPQA.html">flair.datasets.document_classification.SENTEVAL_MPQA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.SENTEVAL_MR.html">flair.datasets.document_classification.SENTEVAL_MR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.SENTEVAL_SST_BINARY.html">flair.datasets.document_classification.SENTEVAL_SST_BINARY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.SENTEVAL_SST_GRANULAR.html">flair.datasets.document_classification.SENTEVAL_SST_GRANULAR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.SENTEVAL_SUBJ.html">flair.datasets.document_classification.SENTEVAL_SUBJ</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.SENTIMENT_140.html">flair.datasets.document_classification.SENTIMENT_140</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.STACKOVERFLOW.html">flair.datasets.document_classification.STACKOVERFLOW</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.TREC_50.html">flair.datasets.document_classification.TREC_50</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.TREC_6.html">flair.datasets.document_classification.TREC_6</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.WASSA_ANGER.html">flair.datasets.document_classification.WASSA_ANGER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.WASSA_FEAR.html">flair.datasets.document_classification.WASSA_FEAR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.WASSA_JOY.html">flair.datasets.document_classification.WASSA_JOY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.WASSA_SADNESS.html">flair.datasets.document_classification.WASSA_SADNESS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification.YAHOO_ANSWERS.html">flair.datasets.document_classification.YAHOO_ANSWERS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.document_classification._download_wassa_if_not_there.html">flair.datasets.document_classification._download_wassa_if_not_there</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/entity_linking.html">flair.datasets.entity_linking</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.BIGBIO_EL_BC5CDR_CHEMICAL.html">flair.datasets.entity_linking.BIGBIO_EL_BC5CDR_CHEMICAL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.BIGBIO_EL_GNORMPLUS.html">flair.datasets.entity_linking.BIGBIO_EL_GNORMPLUS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.BIGBIO_EL_NCBI_DISEASE.html">flair.datasets.entity_linking.BIGBIO_EL_NCBI_DISEASE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.BigBioEntityLinkingCorpus.html">flair.datasets.entity_linking.BigBioEntityLinkingCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.CTD_CHEMICALS_DICTIONARY.html">flair.datasets.entity_linking.CTD_CHEMICALS_DICTIONARY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.CTD_DISEASES_DICTIONARY.html">flair.datasets.entity_linking.CTD_DISEASES_DICTIONARY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.EntityLinkingDictionary.html">flair.datasets.entity_linking.EntityLinkingDictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.HunerEntityLinkingDictionary.html">flair.datasets.entity_linking.HunerEntityLinkingDictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.InMemoryEntityLinkingDictionary.html">flair.datasets.entity_linking.InMemoryEntityLinkingDictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.NCBI_GENE_HUMAN_DICTIONARY.html">flair.datasets.entity_linking.NCBI_GENE_HUMAN_DICTIONARY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.NCBI_TAXONOMY_DICTIONARY.html">flair.datasets.entity_linking.NCBI_TAXONOMY_DICTIONARY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.NEL_ENGLISH_AIDA.html">flair.datasets.entity_linking.NEL_ENGLISH_AIDA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.NEL_ENGLISH_AQUAINT.html">flair.datasets.entity_linking.NEL_ENGLISH_AQUAINT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.NEL_ENGLISH_IITB.html">flair.datasets.entity_linking.NEL_ENGLISH_IITB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.NEL_ENGLISH_REDDIT.html">flair.datasets.entity_linking.NEL_ENGLISH_REDDIT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.NEL_ENGLISH_TWEEKI.html">flair.datasets.entity_linking.NEL_ENGLISH_TWEEKI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.NEL_GERMAN_HIPE.html">flair.datasets.entity_linking.NEL_GERMAN_HIPE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.WSD_MASC.html">flair.datasets.entity_linking.WSD_MASC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.WSD_OMSTI.html">flair.datasets.entity_linking.WSD_OMSTI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.WSD_RAGANATO_ALL.html">flair.datasets.entity_linking.WSD_RAGANATO_ALL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.WSD_SEMCOR.html">flair.datasets.entity_linking.WSD_SEMCOR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.WSD_TRAINOMATIC.html">flair.datasets.entity_linking.WSD_TRAINOMATIC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.WSD_UFSAC.html">flair.datasets.entity_linking.WSD_UFSAC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.WSD_WORDNET_GLOSS_TAGGED.html">flair.datasets.entity_linking.WSD_WORDNET_GLOSS_TAGGED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.ZELDA.html">flair.datasets.entity_linking.ZELDA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.determine_tsv_file.html">flair.datasets.entity_linking.determine_tsv_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.entity_linking.from_ufsac_to_tsv.html">flair.datasets.entity_linking.from_ufsac_to_tsv</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/ocr.html">flair.datasets.ocr</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.ocr.OcrCorpus.html">flair.datasets.ocr.OcrCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.ocr.OcrJsonDataset.html">flair.datasets.ocr.OcrJsonDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.ocr.SROIE.html">flair.datasets.ocr.SROIE</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/relation_extraction.html">flair.datasets.relation_extraction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.relation_extraction.RE_ENGLISH_CONLL04.html">flair.datasets.relation_extraction.RE_ENGLISH_CONLL04</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT.html">flair.datasets.relation_extraction.RE_ENGLISH_DRUGPROT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.relation_extraction.RE_ENGLISH_SEMEVAL2010.html">flair.datasets.relation_extraction.RE_ENGLISH_SEMEVAL2010</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.relation_extraction.RE_ENGLISH_TACRED.html">flair.datasets.relation_extraction.RE_ENGLISH_TACRED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.relation_extraction.convert_ptb_token.html">flair.datasets.relation_extraction.convert_ptb_token</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/sequence_labeling.html">flair.datasets.sequence_labeling</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.BIOSCOPE.html">flair.datasets.sequence_labeling.BIOSCOPE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.CLEANCONLL.html">flair.datasets.sequence_labeling.CLEANCONLL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.CONLL_03.html">flair.datasets.sequence_labeling.CONLL_03</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.CONLL_03_DUTCH.html">flair.datasets.sequence_labeling.CONLL_03_DUTCH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.CONLL_03_GERMAN.html">flair.datasets.sequence_labeling.CONLL_03_GERMAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.CONLL_03_SPANISH.html">flair.datasets.sequence_labeling.CONLL_03_SPANISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.CONLL_2000.html">flair.datasets.sequence_labeling.CONLL_2000</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.ColumnCorpus.html">flair.datasets.sequence_labeling.ColumnCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.ColumnDataset.html">flair.datasets.sequence_labeling.ColumnDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.FEWNERD.html">flair.datasets.sequence_labeling.FEWNERD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.JsonlCorpus.html">flair.datasets.sequence_labeling.JsonlCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.JsonlDataset.html">flair.datasets.sequence_labeling.JsonlDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.KEYPHRASE_INSPEC.html">flair.datasets.sequence_labeling.KEYPHRASE_INSPEC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.KEYPHRASE_SEMEVAL2010.html">flair.datasets.sequence_labeling.KEYPHRASE_SEMEVAL2010</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.KEYPHRASE_SEMEVAL2017.html">flair.datasets.sequence_labeling.KEYPHRASE_SEMEVAL2017</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.MASAKHA_POS.html">flair.datasets.sequence_labeling.MASAKHA_POS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.MultiFileColumnCorpus.html">flair.datasets.sequence_labeling.MultiFileColumnCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.MultiFileJsonlCorpus.html">flair.datasets.sequence_labeling.MultiFileJsonlCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ARABIC_ANER.html">flair.datasets.sequence_labeling.NER_ARABIC_ANER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ARABIC_AQMAR.html">flair.datasets.sequence_labeling.NER_ARABIC_AQMAR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_BASQUE.html">flair.datasets.sequence_labeling.NER_BASQUE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_CHINESE_WEIBO.html">flair.datasets.sequence_labeling.NER_CHINESE_WEIBO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_DANISH_DANE.html">flair.datasets.sequence_labeling.NER_DANISH_DANE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ENGLISH_MOVIE_COMPLEX.html">flair.datasets.sequence_labeling.NER_ENGLISH_MOVIE_COMPLEX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ENGLISH_MOVIE_SIMPLE.html">flair.datasets.sequence_labeling.NER_ENGLISH_MOVIE_SIMPLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ENGLISH_PERSON.html">flair.datasets.sequence_labeling.NER_ENGLISH_PERSON</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ENGLISH_RESTAURANT.html">flair.datasets.sequence_labeling.NER_ENGLISH_RESTAURANT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ENGLISH_SEC_FILLINGS.html">flair.datasets.sequence_labeling.NER_ENGLISH_SEC_FILLINGS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ENGLISH_STACKOVERFLOW.html">flair.datasets.sequence_labeling.NER_ENGLISH_STACKOVERFLOW</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ENGLISH_TWITTER.html">flair.datasets.sequence_labeling.NER_ENGLISH_TWITTER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ENGLISH_WEBPAGES.html">flair.datasets.sequence_labeling.NER_ENGLISH_WEBPAGES</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ENGLISH_WIKIGOLD.html">flair.datasets.sequence_labeling.NER_ENGLISH_WIKIGOLD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ENGLISH_WNUT_2020.html">flair.datasets.sequence_labeling.NER_ENGLISH_WNUT_2020</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ESTONIAN_NOISY.html">flair.datasets.sequence_labeling.NER_ESTONIAN_NOISY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_FINNISH.html">flair.datasets.sequence_labeling.NER_FINNISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_GERMAN_BIOFID.html">flair.datasets.sequence_labeling.NER_GERMAN_BIOFID</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_GERMAN_EUROPARL.html">flair.datasets.sequence_labeling.NER_GERMAN_EUROPARL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_GERMAN_GERMEVAL.html">flair.datasets.sequence_labeling.NER_GERMAN_GERMEVAL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_GERMAN_LEGAL.html">flair.datasets.sequence_labeling.NER_GERMAN_LEGAL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_GERMAN_MOBIE.html">flair.datasets.sequence_labeling.NER_GERMAN_MOBIE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_GERMAN_POLITICS.html">flair.datasets.sequence_labeling.NER_GERMAN_POLITICS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_HIPE_2022.html">flair.datasets.sequence_labeling.NER_HIPE_2022</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_HUNGARIAN.html">flair.datasets.sequence_labeling.NER_HUNGARIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ICDAR_EUROPEANA.html">flair.datasets.sequence_labeling.NER_ICDAR_EUROPEANA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_ICELANDIC.html">flair.datasets.sequence_labeling.NER_ICELANDIC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_JAPANESE.html">flair.datasets.sequence_labeling.NER_JAPANESE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_MASAKHANE.html">flair.datasets.sequence_labeling.NER_MASAKHANE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_MULTI_CONER.html">flair.datasets.sequence_labeling.NER_MULTI_CONER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_MULTI_CONER_V2.html">flair.datasets.sequence_labeling.NER_MULTI_CONER_V2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_MULTI_WIKIANN.html">flair.datasets.sequence_labeling.NER_MULTI_WIKIANN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_MULTI_WIKINER.html">flair.datasets.sequence_labeling.NER_MULTI_WIKINER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_MULTI_XTREME.html">flair.datasets.sequence_labeling.NER_MULTI_XTREME</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_NERMUD.html">flair.datasets.sequence_labeling.NER_NERMUD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_NOISEBENCH.html">flair.datasets.sequence_labeling.NER_NOISEBENCH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_SWEDISH.html">flair.datasets.sequence_labeling.NER_SWEDISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_TURKU.html">flair.datasets.sequence_labeling.NER_TURKU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.NER_UKRAINIAN.html">flair.datasets.sequence_labeling.NER_UKRAINIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.ONTONOTES.html">flair.datasets.sequence_labeling.ONTONOTES</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.UP_CHINESE.html">flair.datasets.sequence_labeling.UP_CHINESE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.UP_ENGLISH.html">flair.datasets.sequence_labeling.UP_ENGLISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.UP_FINNISH.html">flair.datasets.sequence_labeling.UP_FINNISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.UP_FRENCH.html">flair.datasets.sequence_labeling.UP_FRENCH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.UP_GERMAN.html">flair.datasets.sequence_labeling.UP_GERMAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.UP_ITALIAN.html">flair.datasets.sequence_labeling.UP_ITALIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.UP_SPANISH.html">flair.datasets.sequence_labeling.UP_SPANISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.UP_SPANISH_ANCORA.html">flair.datasets.sequence_labeling.UP_SPANISH_ANCORA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.sequence_labeling.WNUT_17.html">flair.datasets.sequence_labeling.WNUT_17</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/text_image.html">flair.datasets.text_image</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_image.FeideggerCorpus.html">flair.datasets.text_image.FeideggerCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_image.FeideggerDataset.html">flair.datasets.text_image.FeideggerDataset</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/text_text.html">flair.datasets.text_text</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.DataPairCorpus.html">flair.datasets.text_text.DataPairCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.DataPairDataset.html">flair.datasets.text_text.DataPairDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.DataTripleCorpus.html">flair.datasets.text_text.DataTripleCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.DataTripleDataset.html">flair.datasets.text_text.DataTripleDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.GLUE_MNLI.html">flair.datasets.text_text.GLUE_MNLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.GLUE_MRPC.html">flair.datasets.text_text.GLUE_MRPC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.GLUE_QNLI.html">flair.datasets.text_text.GLUE_QNLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.GLUE_QQP.html">flair.datasets.text_text.GLUE_QQP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.GLUE_RTE.html">flair.datasets.text_text.GLUE_RTE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.GLUE_STSB.html">flair.datasets.text_text.GLUE_STSB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.GLUE_WNLI.html">flair.datasets.text_text.GLUE_WNLI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.OpusParallelCorpus.html">flair.datasets.text_text.OpusParallelCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.ParallelTextCorpus.html">flair.datasets.text_text.ParallelTextCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.ParallelTextDataset.html">flair.datasets.text_text.ParallelTextDataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.SUPERGLUE_RTE.html">flair.datasets.text_text.SUPERGLUE_RTE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.text_text.rte_jsonl_to_tsv.html">flair.datasets.text_text.rte_jsonl_to_tsv</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="datasets/treebanks.html">flair.datasets.treebanks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_AFRIKAANS.html">flair.datasets.treebanks.UD_AFRIKAANS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_ANCIENT_GREEK.html">flair.datasets.treebanks.UD_ANCIENT_GREEK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_ARABIC.html">flair.datasets.treebanks.UD_ARABIC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_ARMENIAN.html">flair.datasets.treebanks.UD_ARMENIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_BASQUE.html">flair.datasets.treebanks.UD_BASQUE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_BAVARIAN_MAIBAAM.html">flair.datasets.treebanks.UD_BAVARIAN_MAIBAAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_BELARUSIAN.html">flair.datasets.treebanks.UD_BELARUSIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_BULGARIAN.html">flair.datasets.treebanks.UD_BULGARIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_BURYAT.html">flair.datasets.treebanks.UD_BURYAT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_CATALAN.html">flair.datasets.treebanks.UD_CATALAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_CHINESE.html">flair.datasets.treebanks.UD_CHINESE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_CHINESE_KYOTO.html">flair.datasets.treebanks.UD_CHINESE_KYOTO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_COPTIC.html">flair.datasets.treebanks.UD_COPTIC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_CROATIAN.html">flair.datasets.treebanks.UD_CROATIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_CZECH.html">flair.datasets.treebanks.UD_CZECH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_DANISH.html">flair.datasets.treebanks.UD_DANISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_DUTCH.html">flair.datasets.treebanks.UD_DUTCH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_ENGLISH.html">flair.datasets.treebanks.UD_ENGLISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_ESTONIAN.html">flair.datasets.treebanks.UD_ESTONIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_FAROESE.html">flair.datasets.treebanks.UD_FAROESE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_FINNISH.html">flair.datasets.treebanks.UD_FINNISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_FRENCH.html">flair.datasets.treebanks.UD_FRENCH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_GALICIAN.html">flair.datasets.treebanks.UD_GALICIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_GERMAN.html">flair.datasets.treebanks.UD_GERMAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_GERMAN_HDT.html">flair.datasets.treebanks.UD_GERMAN_HDT</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_GOTHIC.html">flair.datasets.treebanks.UD_GOTHIC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_GREEK.html">flair.datasets.treebanks.UD_GREEK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_HEBREW.html">flair.datasets.treebanks.UD_HEBREW</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_HINDI.html">flair.datasets.treebanks.UD_HINDI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_INDONESIAN.html">flair.datasets.treebanks.UD_INDONESIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_IRISH.html">flair.datasets.treebanks.UD_IRISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_ITALIAN.html">flair.datasets.treebanks.UD_ITALIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_JAPANESE.html">flair.datasets.treebanks.UD_JAPANESE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_KAZAKH.html">flair.datasets.treebanks.UD_KAZAKH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_KOREAN.html">flair.datasets.treebanks.UD_KOREAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_LATIN.html">flair.datasets.treebanks.UD_LATIN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_LATVIAN.html">flair.datasets.treebanks.UD_LATVIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_LITHUANIAN.html">flair.datasets.treebanks.UD_LITHUANIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_LIVVI.html">flair.datasets.treebanks.UD_LIVVI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_MALTESE.html">flair.datasets.treebanks.UD_MALTESE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_MARATHI.html">flair.datasets.treebanks.UD_MARATHI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_NAIJA.html">flair.datasets.treebanks.UD_NAIJA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_NORTH_SAMI.html">flair.datasets.treebanks.UD_NORTH_SAMI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_NORWEGIAN.html">flair.datasets.treebanks.UD_NORWEGIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_OLD_CHURCH_SLAVONIC.html">flair.datasets.treebanks.UD_OLD_CHURCH_SLAVONIC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_OLD_FRENCH.html">flair.datasets.treebanks.UD_OLD_FRENCH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_PERSIAN.html">flair.datasets.treebanks.UD_PERSIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_POLISH.html">flair.datasets.treebanks.UD_POLISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_PORTUGUESE.html">flair.datasets.treebanks.UD_PORTUGUESE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_ROMANIAN.html">flair.datasets.treebanks.UD_ROMANIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_RUSSIAN.html">flair.datasets.treebanks.UD_RUSSIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_SERBIAN.html">flair.datasets.treebanks.UD_SERBIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_SLOVAK.html">flair.datasets.treebanks.UD_SLOVAK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_SLOVENIAN.html">flair.datasets.treebanks.UD_SLOVENIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_SPANISH.html">flair.datasets.treebanks.UD_SPANISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_SWEDISH.html">flair.datasets.treebanks.UD_SWEDISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_TURKISH.html">flair.datasets.treebanks.UD_TURKISH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_UKRAINIAN.html">flair.datasets.treebanks.UD_UKRAINIAN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UD_WOLOF.html">flair.datasets.treebanks.UD_WOLOF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UniversalDependenciesCorpus.html">flair.datasets.treebanks.UniversalDependenciesCorpus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets/generated/flair.datasets.treebanks.UniversalDependenciesDataset.html">flair.datasets.treebanks.UniversalDependenciesDataset</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+
+                </article>
+              
+              
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><a href="../legal-notice/index.html">Legal notice</a></div>
+      
+        <div class="footer-item"><a href="https://twitter.com/alan_akbik" target="_blank">Twitter/X</a></div>
+      
+        <div class="footer-item"><a href="https://www.linkedin.com/in/alan-akbik-9859b1122/" target="_blank">LinkedIn</a></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

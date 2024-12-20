@@ -1,0 +1,40 @@
+﻿flair.datasets.ocr.OcrCorpus
+============================
+
+.. currentmodule:: flair.datasets.ocr
+
+.. autoclass:: OcrCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OcrCorpus.__init__
+      ~OcrCorpus.add_label_noise
+      ~OcrCorpus.downsample
+      ~OcrCorpus.filter_empty_sentences
+      ~OcrCorpus.filter_long_sentences
+      ~OcrCorpus.get_all_sentences
+      ~OcrCorpus.get_label_distribution
+      ~OcrCorpus.make_label_dictionary
+      ~OcrCorpus.make_tag_dictionary
+      ~OcrCorpus.make_vocab_dictionary
+      ~OcrCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OcrCorpus.dev
+      ~OcrCorpus.test
+      ~OcrCorpus.train
+   
+   
