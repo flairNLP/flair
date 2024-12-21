@@ -12,9 +12,10 @@ flair.models
    :members:
    :exclude-members: Module
 
+.. autoclass:: flair.models.TokenClassifier
+   :members:
+   :exclude-members: Module
+
 .. autoclass:: flair.models.SpanClassifier
    :members:
    :exclude-members: torch.nn.Module
-
-.. autoclass:: flair.models.TokenClassifier
-   :members:
