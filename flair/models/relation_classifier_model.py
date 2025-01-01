@@ -678,7 +678,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
             # if the gold label is O and is correctly predicted as no label, do not print out as this clutters
             # the output file with trivial predictions
-            if not (len(datapoint.get_labels(gold_label_type)) == 1 and datapoint.get_label(gold_label_type).value == "O" and len(datapoint.get_labels("predicted")) == 0):
+            if not (
+                len(datapoint.get_labels(gold_label_type)) == 1
+                and datapoint.get_label(gold_label_type).value == "O"
+                and len(datapoint.get_labels("predicted")) == 0
+            ):
                 correct_string = " -> MISMATCH!\n" if g != p else ""
                 eval_line = (
                     f"{datapoint.text}\n"
