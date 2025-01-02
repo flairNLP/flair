@@ -282,15 +282,6 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         self._zero_tag_value = zero_tag_value
         self._allow_unk_tag = allow_unk_tag
 
-        if max_surrounding_context_length - 2 < max_allowed_tokens_between_entities:
-            logger.warning(
-                "You set 'max_encoded_sentence_length' to be potentially smaller than 'max_allowed_tokens_between_entities'."
-                "To ensure that each encoded sentence at least contains the entities in a relation, "
-                "'max_encoded_sentence_length' should be at least 2 tokens larger than 'max_allowed_tokens_between_entities'."
-                "I am automatically changing 'max_encoded_sentence_length' to 'max_allowed_tokens_between_entities' + 2"
-            )
-            max_surrounding_context_length = max_allowed_tokens_between_entities + 2
-
         self._max_allowed_tokens_between_entities = max_allowed_tokens_between_entities
         self._max_surrounding_context_length = max_surrounding_context_length
 
@@ -478,20 +469,17 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         return encoded_sentence
 
     def _slice_encoded_sentence_to_max_allowed_length(self, encoded_sentence_tokens, head_idx, tail_idx):
-        if len(encoded_sentence_tokens) > self._max_surrounding_context_length:
-            begin_slice = head_idx if head_idx < tail_idx else tail_idx
-            end_slice = tail_idx if head_idx < tail_idx else head_idx
-            distance = end_slice - begin_slice
-            padding_amount = self._max_surrounding_context_length
-            padding_per_side = padding_amount // 2
-            begin_slice = begin_slice - padding_per_side if begin_slice - padding_per_side > 0 else 0
-            end_slice = (
-                end_slice + padding_per_side
-                if end_slice + padding_per_side < len(encoded_sentence_tokens)
-                else len(encoded_sentence_tokens)
-            )
+        begin_slice = head_idx if head_idx < tail_idx else tail_idx
+        end_slice = tail_idx if head_idx < tail_idx else head_idx
+        padding_amount = self._max_surrounding_context_length
+        begin_slice = begin_slice - padding_amount if begin_slice - padding_amount > 0 else 0
+        end_slice = (
+            end_slice + padding_amount
+            if end_slice + padding_amount < len(encoded_sentence_tokens)
+            else len(encoded_sentence_tokens)
+        )
 
-            encoded_sentence_tokens = encoded_sentence_tokens[begin_slice:end_slice]
+        encoded_sentence_tokens = encoded_sentence_tokens[begin_slice:end_slice]
         return encoded_sentence_tokens
 
     def _encode_sentence_for_inference(
