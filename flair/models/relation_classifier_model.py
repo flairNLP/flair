@@ -421,6 +421,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         original_sentence: Sentence = head.span.sentence
         assert original_sentence is tail.span.sentence, "The head and tail need to come from the same sentence."
 
+        # Sanity check: Do not create a labeled span if one entity contains the other
+        if head.span[0].idx <= tail.span[0].idx and head.span[-1].idx >= tail.span[-1].idx:
+            return None
+        if head.span[0].idx >= tail.span[0].idx and head.span[-1].idx <= tail.span[-1].idx:
+            return None
+
         # Pre-compute non-leading head and tail tokens for entity masking
         non_leading_head_tokens: list[Token] = head.span.tokens[1:]
         non_leading_tail_tokens: list[Token] = tail.span.tokens[1:]
@@ -683,6 +689,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                 )
             )
 
+            sentences_with_relation_reference = [item for item in sentences_with_relation_reference if item[0] is not None]
+
             encoded_sentences = [x[0] for x in sentences_with_relation_reference]
             loss = super().predict(
                 encoded_sentences,
@@ -744,7 +752,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             "zero_tag_value": self.zero_tag_value,
             "allow_unk_tag": self.allow_unk_tag,
             "max_allowed_tokens_between_entities": self._max_allowed_tokens_between_entities,
-            "max_encoded_sentence_length": self._max_surrounding_context_length,
+            "max_surrounding_context_length": self._max_surrounding_context_length,
         }
         return model_state
 
@@ -763,7 +771,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             zero_tag_value=state["zero_tag_value"],
             allow_unk_tag=state["allow_unk_tag"],
             max_allowed_tokens_between_entities=state.get("max_allowed_tokens_between_entities", 25),
-            max_encoded_sentence_length=state.get("max_encoded_sentence_length", 50),
+            max_surrounding_context_length=state.get("max_surrounding_context_length", 50),
             **kwargs,
         )
 
