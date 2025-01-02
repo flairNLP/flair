@@ -1,4 +1,5 @@
 import logging
+import re
 import sys
 from abc import ABC, abstractmethod
 from typing import Callable
@@ -79,10 +80,37 @@ class SegtokTokenizer(Tokenizer):
     For further details see: https://github.com/fnl/segtok
     """
 
-    def __init__(self) -> None:
+    def __init__(self, additional_split_characters: list[str] = None) -> None:
+        """Initializes the SegtokTokenizer with an optional parameter for additional characters that should always
+        be split.
+
+        The default behavior uses simple rules to split text into tokens. If you want to ensure that certain characters
+        always become their own token, you can change default behavior by setting the ``additional_split_characters``
+        parameter.
+
+        Args:
+            additional_split_characters: An optional list of characters that should always be split. For instance, if
+                you want to make sure that paragraph symbols always become their own token, instantiate with
+                additional_split_characters = ['§']
+        """
+        self.additional_split_characters = additional_split_characters
         super().__init__()
 
+    def _add_whitespace_around_symbols(self, text, symbols):
+        # Build the regular expression pattern dynamically based on the provided symbols
+        # This will match any character from the symbols list that doesn't have spaces around it
+        symbol_pattern = f"[{re.escape(''.join(symbols))}]"
+
+        # Add space before and after symbols, where necessary
+        # Ensure that we are adding a space only if there isn't one already
+        text = re.sub(r"(\S)(" + symbol_pattern + r")", r"\1 \2", text)  # Space before symbol
+        text = re.sub(r"(" + symbol_pattern + r")(\S)", r"\1 \2", text)  # Space after symbol
+
+        return text
+
     def tokenize(self, text: str) -> list[str]:
+        if self.additional_split_characters:
+            text = self._add_whitespace_around_symbols(text, self.additional_split_characters)
         return SegtokTokenizer.run_tokenize(text)
 
     @staticmethod
