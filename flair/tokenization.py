@@ -2,7 +2,7 @@ import logging
 import re
 import sys
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Callable, Optional
 
 from segtok.segmenter import split_single
 from segtok.tokenizer import split_contractions, word_tokenizer
@@ -80,7 +80,7 @@ class SegtokTokenizer(Tokenizer):
     For further details see: https://github.com/fnl/segtok
     """
 
-    def __init__(self, additional_split_characters: list[str] = None) -> None:
+    def __init__(self, additional_split_characters: Optional[list[str]] = None) -> None:
         """Initializes the SegtokTokenizer with an optional parameter for additional characters that should always
         be split.
 
