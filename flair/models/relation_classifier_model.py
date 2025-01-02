@@ -686,9 +686,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             # Deal with the case where all sentences are standard (non-encoded) sentences
             Sentence.set_context_for_sentences(cast(list[Sentence], sentences))
             sentences_with_relation_reference: list[tuple[EncodedSentence, Relation]] = list(
-                itertools.chain.from_iterable(
-                    self._encode_sentence_for_inference(sentence) for sentence in sentences if sentence is not None
-                )
+                itertools.chain.from_iterable(self._encode_sentence_for_inference(sentence) for sentence in sentences)
             )
 
             encoded_sentences = [x[0] for x in sentences_with_relation_reference]
