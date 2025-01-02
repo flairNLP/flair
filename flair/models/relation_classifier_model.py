@@ -755,6 +755,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             "encoding_strategy": self.encoding_strategy,
             "zero_tag_value": self.zero_tag_value,
             "allow_unk_tag": self.allow_unk_tag,
+            "max_allowed_tokens_between_entities": self._max_allowed_tokens_between_entities,
+            "max_encoded_sentence_length": self._max_encoded_sentence_length,
         }
         return model_state
 
@@ -772,6 +774,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             encoding_strategy=state["encoding_strategy"],
             zero_tag_value=state["zero_tag_value"],
             allow_unk_tag=state["allow_unk_tag"],
+            max_allowed_tokens_between_entities=state.get("max_allowed_tokens_between_entities", 25),
+            max_encoded_sentence_length=state.get("max_encoded_sentence_length", 50),
             **kwargs,
         )
 
