@@ -257,7 +257,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         zero_tag_value: str = "O",
         allow_unk_tag: bool = True,
         max_allowed_tokens_between_entities: int = 50,
-        max_encoded_sentence_length: int = 100,
+        max_surrounding_context_length: int = 10,
         **classifierargs,
     ) -> None:
         """Initializes a `RelationClassifier`.
@@ -274,7 +274,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             zero_tag_value: The label to use for out-of-class relations
             allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
             max_allowed_tokens_between_entities: The maximum allowed number of allowed tokens between entities. All other entity pairs are filtered from consideration.
-            max_encoded_sentence_length: The maximum length of encoded sentences. Smaller values speed up processing but potentially remove important context.
+            max_surrounding_context_length: The maximum length of context around entity pairs that will be considered.
             classifierargs: The remaining parameters passed to the underlying :class:`flair.models.DefaultClassifier`
         """
         # Set label type and prepare label dictionary
@@ -282,17 +282,17 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         self._zero_tag_value = zero_tag_value
         self._allow_unk_tag = allow_unk_tag
 
-        if max_encoded_sentence_length - 2 < max_allowed_tokens_between_entities:
+        if max_surrounding_context_length - 2 < max_allowed_tokens_between_entities:
             logger.warning(
                 "You set 'max_encoded_sentence_length' to be potentially smaller than 'max_allowed_tokens_between_entities'."
                 "To ensure that each encoded sentence at least contains the entities in a relation, "
                 "'max_encoded_sentence_length' should be at least 2 tokens larger than 'max_allowed_tokens_between_entities'."
                 "I am automatically changing 'max_encoded_sentence_length' to 'max_allowed_tokens_between_entities' + 2"
             )
-            max_encoded_sentence_length = max_allowed_tokens_between_entities + 2
+            max_surrounding_context_length = max_allowed_tokens_between_entities + 2
 
         self._max_allowed_tokens_between_entities = max_allowed_tokens_between_entities
-        self._max_encoded_sentence_length = max_encoded_sentence_length
+        self._max_surrounding_context_length = max_surrounding_context_length
 
         modified_label_dictionary: Dictionary = Dictionary(add_unk=self._allow_unk_tag)
         modified_label_dictionary.add_item(self._zero_tag_value)
@@ -478,11 +478,11 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         return encoded_sentence
 
     def _slice_encoded_sentence_to_max_allowed_length(self, encoded_sentence_tokens, head_idx, tail_idx):
-        if len(encoded_sentence_tokens) > self._max_encoded_sentence_length:
+        if len(encoded_sentence_tokens) > self._max_surrounding_context_length:
             begin_slice = head_idx if head_idx < tail_idx else tail_idx
             end_slice = tail_idx if head_idx < tail_idx else head_idx
             distance = end_slice - begin_slice
-            padding_amount = self._max_encoded_sentence_length - distance
+            padding_amount = self._max_surrounding_context_length
             padding_per_side = padding_amount // 2
             begin_slice = begin_slice - padding_per_side if begin_slice - padding_per_side > 0 else 0
             end_slice = (
@@ -756,7 +756,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             "zero_tag_value": self.zero_tag_value,
             "allow_unk_tag": self.allow_unk_tag,
             "max_allowed_tokens_between_entities": self._max_allowed_tokens_between_entities,
-            "max_encoded_sentence_length": self._max_encoded_sentence_length,
+            "max_encoded_sentence_length": self._max_surrounding_context_length,
         }
         return model_state
 
