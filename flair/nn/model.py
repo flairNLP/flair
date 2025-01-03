@@ -817,7 +817,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         label_name: Optional[str] = None,
         return_loss: bool = False,
         embedding_storage_mode: EmbeddingStorageMode = "none",
-    ) -> Optional[Union[list[DT], tuple[float, int]]]:
+    ):
         """Predicts the class labels for the given sentences. The labels are directly added to the sentences.
 
         Args:
