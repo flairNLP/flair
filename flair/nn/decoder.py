@@ -163,7 +163,6 @@ class DeepNCMDecoder(torch.nn.Module):
                 decay - after every batch,
             multi_label: Whether to predict multiple labels per sentence (default is False, and performs multi-class clsasification).
         """
-
         super().__init__()
 
         self.label_dictionary = label_dictionary
