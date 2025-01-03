@@ -5,9 +5,10 @@ import importlib_metadata
 
 # -- Project information -----------------------------------------------------
 from sphinx_github_style import get_linkcode_resolve
+from torch.nn import Module
 
-version = "0.14.0"
-release = "0.14.0"
+version = "0.15.0"
+release = "0.15.0"
 project = "flair"
 author = importlib_metadata.metadata(project)["Author"]
 copyright = f"2023 {author}"
@@ -100,7 +101,7 @@ html_logo = "_static/flair_logo_white.svg"
 html_show_sphinx = False
 
 # Napoleon settings
-napoleon_include_init_with_doc = True
+napoleon_include_init_with_doc = False
 napoleon_include_private_with_doc = False
 
 autodoc_default_options = {
