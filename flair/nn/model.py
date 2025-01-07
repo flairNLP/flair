@@ -778,8 +778,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         # pass data points through network to get encoded data point tensor
         data_point_tensor = self._encode_data_points(sentences, data_points)
 
-        # decode
-        scores = self.decoder(data_point_tensor)
+        # decode, passing label tensor if needed, such as for prototype updates
+        if "label_tensor" in inspect.signature(self.decoder.forward).parameters:
+            scores = self.decoder(data_point_tensor, label_tensor=label_tensor)
+        else:
+            scores = self.decoder(data_point_tensor)
 
         # an optional masking step (no masking in most cases)
         scores = self._mask_scores(scores, data_points)

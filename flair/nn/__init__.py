@@ -1,4 +1,4 @@
-from .decoder import LabelVerbalizerDecoder, PrototypicalDecoder
+from .decoder import DeepNCMDecoder, LabelVerbalizerDecoder, PrototypicalDecoder
 from .dropout import LockedDropout, WordDropout
 from .model import Classifier, DefaultClassifier, Model
 
@@ -9,5 +9,6 @@ __all__ = [
     "DefaultClassifier",
     "Model",
     "PrototypicalDecoder",
+    "DeepNCMDecoder",
     "LabelVerbalizerDecoder",
 ]
