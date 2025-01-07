@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -790,9 +790,9 @@ require to see a vocabulary (<code class="docutils literal notranslate"><span cl
 during class initialization or constructed directly from a corpus with a <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.token.OneHotEmbeddings.html#flair.embeddings.token.OneHotEmbeddings.from_corpus" title="flair.embeddings.token.OneHotEmbeddings.from_corpus"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">OneHotEmbeddings.from_corpus</span></code></span></a> method. The dictionary consists
 of all unique tokens contained in the corpus plus an UNK token for all rare words.</p>
 <p>You initialize these embeddings like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">OneHotEmbeddings</span>
-<span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span>
-<span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">OneHotEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">UD_ENGLISH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
 
 <span class="c1"># load a corpus</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span>
@@ -832,8 +832,8 @@ higher <code class="docutils literal notranslate"><span class="pre">min_freq</sp
 named entity annotation available that we might want to use. If this field exists in your corpus, you can embed
 it by passing the field variable. For instance, the UD corpora have a universal part-of-speech tag for each
 token (‘upos’). Embed it like so:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">OneHotEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">UD_ENGLISH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">OneHotEmbeddings</span>
 
 <span class="c1"># load corpus</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span>
@@ -854,7 +854,7 @@ of the model size. So they are a great choice if you want to train small models.
 <p>You initialize with a language code (275 languages supported), a number of ‘syllables’ (one of ) and
 a number of dimensions (one of 50, 100, 200 or 300). The following initializes and uses byte pair embeddings
 for English:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">BytePairEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytePairEmbeddings</span>
 
 <span class="c1"># init embedding</span>
 <span class="n">embedding</span> <span class="o">=</span> <span class="n">BytePairEmbeddings</span><span class="p">(</span><span class="s1">&#39;en&#39;</span><span class="p">)</span>
@@ -889,7 +889,7 @@ The resulting embedding is taken as document embedding.</p>
 Afterwards, initiate the <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.DocumentPoolEmbeddings.html#flair.embeddings.document.DocumentPoolEmbeddings" title="flair.embeddings.document.DocumentPoolEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentPoolEmbeddings</span></code></span></a> with this list of <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.base.TokenEmbeddings.html#flair.embeddings.base.TokenEmbeddings" title="flair.embeddings.base.TokenEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TokenEmbeddings</span></code></span></a>.
 So, if you want to create a document embedding using GloVe embeddings together with <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.token.FlairEmbeddings.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>,
 use the following code:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">DocumentPoolEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">DocumentPoolEmbeddings</span>
 
 <span class="c1"># initialize the word embeddings</span>
 <span class="n">glove_embedding</span> <span class="o">=</span> <span class="n">WordEmbeddings</span><span class="p">(</span><span class="s1">&#39;glove&#39;</span><span class="p">)</span>
@@ -966,7 +966,7 @@ are often better off doing no transformation at all. Do this by passing ‘none�
 The RNN takes the word embeddings of every token in the document as input and provides its last output state as document
 embedding. You can choose which type of RNN you wish to use.</p>
 <p>In order to use the <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.DocumentRNNEmbeddings.html#flair.embeddings.document.DocumentRNNEmbeddings" title="flair.embeddings.document.DocumentRNNEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">DocumentRNNEmbeddings</span></code></span></a> you need to initialize them by passing a list of token embeddings to it:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">DocumentRNNEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">DocumentRNNEmbeddings</span>
 
 <span class="n">glove_embedding</span> <span class="o">=</span> <span class="n">WordEmbeddings</span><span class="p">(</span><span class="s1">&#39;glove&#39;</span><span class="p">)</span>
 
@@ -990,7 +990,7 @@ hidden states you are using and whether the RNN is bidirectional or not.</p>
 <h3>RNN type<a class="headerlink" href="#rnn-type" title="Link to this heading">#</a></h3>
 <p>If you want to use a different type of RNN, you need to set the <code class="docutils literal notranslate"><span class="pre">rnn_type</span></code> parameter in the constructor. So,
 to initialize a document RNN embedding with an LSTM, do:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">DocumentRNNEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">DocumentRNNEmbeddings</span>
 
 <span class="n">glove_embedding</span> <span class="o">=</span> <span class="n">WordEmbeddings</span><span class="p">(</span><span class="s1">&#39;glove&#39;</span><span class="p">)</span>
 

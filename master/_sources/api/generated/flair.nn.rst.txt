@@ -14,5 +14,6 @@
       DefaultClassifier
       Model
       PrototypicalDecoder
+      DeepNCMDecoder
       LabelVerbalizerDecoder
    

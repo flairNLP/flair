@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -812,8 +812,8 @@ one level of linguistic annotation. See for instance this sentence:</p>
 </div>
 <p>The first column is the word itself, the second coarse PoS tags, and the third BIO-annotated NER tags. Empty line separates sentences. To read such a
 dataset, define the column structure as a dictionary and instantiate a <a class="reference internal" href="../../api/datasets/sequence_labeling.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></span></a>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Corpus</span>
-<span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">ColumnCorpus</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Corpus</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">ColumnCorpus</span>
 
 <span class="c1"># define columns</span>
 <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s1">&#39;pos&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s1">&#39;ner&#39;</span><span class="p">}</span>
@@ -862,8 +862,8 @@ if you use custom delimiters or quote characters.</p>
 <p>Note: You will need to save your split CSV data files in the <code class="docutils literal notranslate"><span class="pre">data_folder</span></code> path with each file titled appropriately i.e.
 <code class="docutils literal notranslate"><span class="pre">train.csv</span></code> <code class="docutils literal notranslate"><span class="pre">test.csv</span></code> <code class="docutils literal notranslate"><span class="pre">dev.csv</span></code>.   This is because the corpus initializers will automatically search for the train,
 dev, test splits in a folder.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Corpus</span>
-<span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">CSVClassificationCorpus</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Corpus</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSVClassificationCorpus</span>
 
 <span class="c1"># this is the folder in which train, test and dev files reside</span>
 <span class="n">data_folder</span> <span class="o">=</span> <span class="s1">&#39;/path/to/data&#39;</span>
@@ -900,8 +900,8 @@ Thereby, each line in a file is converted to a <a class="reference internal" hre
 <p class="admonition-title">Important</p>
 <p>A text in a line can have multiple sentences. Thus, a <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> object can actually consist of multiple sentences.</p>
 </div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Corpus</span>
-<span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">ClassificationCorpus</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Corpus</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassificationCorpus</span>
 
 <span class="c1"># this is the folder in which train, test and dev files reside</span>
 <span class="n">data_folder</span> <span class="o">=</span> <span class="s1">&#39;/path/to/data/folder&#39;</span>

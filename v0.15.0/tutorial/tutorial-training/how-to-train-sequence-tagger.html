@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -785,10 +785,10 @@ part-of-speech (PoS) tagging.</p>
 <p>For a state-of-the-art NER system you should fine-tune transformer embeddings, and use full document context
 (see our <a class="reference external" href="https://arxiv.org/abs/2011.06993">FLERT</a> paper for details).</p>
 <p>Use the following script:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">CONLL_03</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">SequenceTagger</span>
-<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">CONLL_03</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceTagger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
 
 <span class="c1"># 1. get the corpus</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">CONLL_03</span><span class="p">()</span>
@@ -842,10 +842,10 @@ in <a class="reference external" href="https://arxiv.org/abs/2011.06993">Schwete
 <p>Alternatively to fine-tuning a very large transformer, you can use a classic training setup without fine-tuning.
 In the classic setup, you learn a LSTM-CRF on top of frozen embeddings. We typically use a ‘stack’ that combines
 Flair and GloVe embeddings:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">CONLL_03</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">FlairEmbeddings</span><span class="p">,</span> <span class="n">StackedEmbeddings</span>
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">SequenceTagger</span>
-<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">CONLL_03</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">FlairEmbeddings</span><span class="p">,</span> <span class="n">StackedEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceTagger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
 
 <span class="c1"># 1. get the corpus</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">CONLL_03</span><span class="p">()</span>
@@ -890,10 +890,10 @@ setup may run faster in the end.</p>
 <section id="training-a-part-of-speech-tagger">
 <h2>Training a part-of-speech tagger<a class="headerlink" href="#training-a-part-of-speech-tagger" title="Link to this heading">#</a></h2>
 <p>If you want to train a part-of-speech model instead of NER, simply exchange the corpus and the label type:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">StackedEmbeddings</span><span class="p">,</span> <span class="n">FlairEmbeddings</span>
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">SequenceTagger</span>
-<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">UD_ENGLISH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">StackedEmbeddings</span><span class="p">,</span> <span class="n">FlairEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceTagger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
 
 <span class="c1"># 1. get the corpus</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span>
@@ -938,11 +938,11 @@ setup may run faster in the end.</p>
 <p>Now, let us train a single model that can PoS tag text in both English and German. To do this, we load both the English
 and German UD corpora and create a <a class="reference internal" href="../../api/generated/flair.data.MultiCorpus.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">MultiCorpus</span></code></span></a> object. We also use the new multilingual Flair embeddings for this task.</p>
 <p>All the rest is same as before, e.g.:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">MultiCorpus</span>
-<span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span><span class="p">,</span> <span class="n">UD_GERMAN</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">FlairEmbeddings</span><span class="p">,</span> <span class="n">StackedEmbeddings</span>
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">SequenceTagger</span>
-<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiCorpus</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">UD_ENGLISH</span><span class="p">,</span> <span class="n">UD_GERMAN</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlairEmbeddings</span><span class="p">,</span> <span class="n">StackedEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceTagger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
 
 <span class="c1"># 1. get the corpora - English and German UD</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">MultiCorpus</span><span class="p">([</span><span class="n">UD_ENGLISH</span><span class="p">(),</span> <span class="n">UD_GERMAN</span><span class="p">()])</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>

@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -800,8 +800,8 @@ NER tools on unseen corpora.</p>
 <h3>Example 1: Biomedical NER<a class="headerlink" href="#example-1-biomedical-ner" title="Link to this heading">#</a></h3>
 <p>Let’s run named entity recognition (NER) over an example sentence. All you need to do is
 make a Sentence, load a pre-trained model and use it to predict tags for the sentence:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
-<span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Classifier</span>
 
 <span class="c1"># make a sentence </span>
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s2">&quot;Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome&quot;</span><span class="p">)</span>
@@ -831,9 +831,9 @@ make a Sentence, load a pre-trained model and use it to predict tags for the sen
 <p>For improved integration and aggregation from multiple different documents linking / normalizing the entities to
 standardized ontologies or knowledge bases is required. Let’s perform entity normalization by using
 specialized models per entity type:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">EntityMentionLinker</span>
-<span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">EntityMentionLinker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Classifier</span>
 
 <span class="c1"># make a sentence</span>
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s2">&quot;Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome&quot;</span><span class="p">)</span>

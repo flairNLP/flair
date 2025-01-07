@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -799,11 +799,11 @@ could train your own sentiment analysis model, or offensive language detection m
 <p>For text classification, you reach state-of-the-art scores by fine-tuning a transformer.</p>
 <p>Training a model is easy: load the appropriate corpus, make a label dictionary, then fine-tune a <a class="reference internal" href="../../api/flair.models.html#flair.models.TextClassifier" title="flair.models.TextClassifier"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TextClassifier</span></code></span></a>
 model using the <a class="reference internal" href="../../api/flair.trainers.html#flair.trainers.ModelTrainer.fine_tune" title="flair.trainers.ModelTrainer.fine_tune"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">ModelTrainer.fine_tune()</span></code></span></a> method. See the example script below:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Corpus</span>
-<span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">TREC_6</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerDocumentEmbeddings</span>
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">TextClassifier</span>
-<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Corpus</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">TREC_6</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerDocumentEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">TextClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
 
 <span class="c1"># 1. get the corpus</span>
 <span class="n">corpus</span><span class="p">:</span> <span class="n">Corpus</span> <span class="o">=</span> <span class="n">TREC_6</span><span class="p">()</span>

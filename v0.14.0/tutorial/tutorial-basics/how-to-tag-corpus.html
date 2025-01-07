@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -797,8 +797,8 @@ button.search-button {
 <p>Often, you may want to tag an entire text corpus. In this case, you need to split the corpus into sentences and pass a
 list of <a class="reference internal" href="../../api/flair.data.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> objects to the <a class="reference internal" href="../../api/flair.nn.html#flair.nn.Classifier.predict" title="flair.nn.Classifier.predict"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Classifier.predict()</span></code></span></a> method.</p>
 <p>For instance, you can use a <a class="reference internal" href="../../api/flair.splitter.html#flair.splitter.SentenceSplitter" title="flair.splitter.SentenceSplitter"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">SentenceSplitter</span></code></span></a> to split your text:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
-<span class="kn">from</span> <span class="nn">flair.splitter</span> <span class="kn">import</span> <span class="n">SegtokSentenceSplitter</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Classifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.splitter</span><span class="w"> </span><span class="kn">import</span> <span class="n">SegtokSentenceSplitter</span>
 
 <span class="c1"># example text with many sentences</span>
 <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;This is a sentence. This is another sentence. I love Berlin.&quot;</span>

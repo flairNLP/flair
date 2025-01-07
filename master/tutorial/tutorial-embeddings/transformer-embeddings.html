@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -782,7 +782,7 @@ with two classes <a class="reference internal" href="../../api/embeddings/genera
 <section id="embeddings-words">
 <h2>Embeddings words<a class="headerlink" href="#embeddings-words" title="Link to this heading">#</a></h2>
 <p>For instance, to load a standard BERT transformer model, do:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
 
 <span class="c1"># init embedding</span>
 <span class="n">embedding</span> <span class="o">=</span> <span class="n">TransformerWordEmbeddings</span><span class="p">(</span><span class="s1">&#39;bert-base-uncased&#39;</span><span class="p">)</span>
@@ -795,7 +795,7 @@ with two classes <a class="reference internal" href="../../api/embeddings/genera
 </pre></div>
 </div>
 <p>If instead you want to use RoBERTa, do:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
 
 <span class="c1"># init embedding</span>
 <span class="n">embedding</span> <span class="o">=</span> <span class="n">TransformerWordEmbeddings</span><span class="p">(</span><span class="s1">&#39;roberta-base&#39;</span><span class="p">)</span>
@@ -813,7 +813,7 @@ with two classes <a class="reference internal" href="../../api/embeddings/genera
 <h2>Embeddings sentences<a class="headerlink" href="#embeddings-sentences" title="Link to this heading">#</a></h2>
 <p>To embed a whole sentence as one (instead of each word in the sentence), simply use the <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.document.TransformerDocumentEmbeddings.html#flair.embeddings.document.TransformerDocumentEmbeddings" title="flair.embeddings.document.TransformerDocumentEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentEmbeddings</span></code></span></a>
 instead:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerDocumentEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerDocumentEmbeddings</span>
 
 <span class="c1"># init embedding</span>
 <span class="n">embedding</span> <span class="o">=</span> <span class="n">TransformerDocumentEmbeddings</span><span class="p">(</span><span class="s1">&#39;roberta-base&#39;</span><span class="p">)</span>
@@ -872,8 +872,8 @@ and <a class="reference internal" href="../../api/embeddings/generated/flair.emb
 <h3>Layers<a class="headerlink" href="#layers" title="Link to this heading">#</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">layers</span></code> argument controls which transformer layers are used for the embedding. If you set this value to ‘-1,-2,-3,-4’, the top 4 layers are used to make an embedding. If you set it to ‘-1’, only the last layer is used. If you set it to “all”, then all layers are used.</p>
 <p>This affects the length of an embedding, since layers are just concatenated.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
 
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;The grass is green.&#39;</span><span class="p">)</span>
 
@@ -929,7 +929,7 @@ token <code class="docutils literal notranslate"><span class="pre">puppeteer</sp
 <p>The Transformer-based models have a certain number of layers. By default, all layers you select are
 concatenated as explained above. Alternatively, you can set layer_mean=True to do a mean over all
 selected layers. The resulting vector will then always have the same dimensionality as a single layer:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
 
 <span class="c1"># init embedding</span>
 <span class="n">embedding</span> <span class="o">=</span> <span class="n">TransformerWordEmbeddings</span><span class="p">(</span><span class="s2">&quot;roberta-base&quot;</span><span class="p">,</span> <span class="n">layers</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">layer_mean</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

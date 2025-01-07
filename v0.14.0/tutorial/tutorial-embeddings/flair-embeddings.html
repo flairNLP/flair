@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -798,7 +798,7 @@ standard word embeddings. Key differences are:</p>
 <li><p>they are <strong>contextualized</strong> by their surrounding text, meaning that the <em>same word will have different embeddings depending on its contextual use</em>.</p></li>
 </ol>
 <p>With Flair, you can use these embeddings simply by instantiating the appropriate embedding class, same as standard word embeddings:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">FlairEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlairEmbeddings</span>
 
 <span class="c1"># init embedding</span>
 <span class="n">flair_embedding_forward</span> <span class="o">=</span> <span class="n">FlairEmbeddings</span><span class="p">(</span><span class="s1">&#39;news-forward&#39;</span><span class="p">)</span>
@@ -1013,7 +1013,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 <section id="recommended-flair-usage">
 <h2>Recommended Flair usage<a class="headerlink" href="#recommended-flair-usage" title="Link to this heading">#</a></h2>
 <p>We recommend combining both forward and backward Flair embeddings. Depending on the task, we also recommend adding standard <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.WordEmbeddings" title="flair.embeddings.token.WordEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></span></a> into the mix. So, our recommended <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.StackedEmbeddings" title="flair.embeddings.token.StackedEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">StackedEmbeddings</span></code></span></a> for most English tasks is:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">FlairEmbeddings</span><span class="p">,</span> <span class="n">StackedEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">FlairEmbeddings</span><span class="p">,</span> <span class="n">StackedEmbeddings</span>
 
 <span class="c1"># create a StackedEmbedding object that combines glove and forward/backward flair embeddings</span>
 <span class="n">stacked_embeddings</span> <span class="o">=</span> <span class="n">StackedEmbeddings</span><span class="p">([</span>
@@ -1042,7 +1042,7 @@ Currently, the following contextual string embeddings are provided (note: replac
 <p>We also developed a pooled variant of the <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>. These embeddings differ in that they <em>constantly evolve over time</em>, even at prediction time (i.e. after training is complete). This means that the same words in the same sentence at two different points in time may have different embeddings.</p>
 <p><a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings" title="flair.embeddings.token.PooledFlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></span></a> manage a ‘global’ representation of each distinct word by using a pooling operation of all past occurences. More details on how this works may be found in <a class="reference external" href="https://www.aclweb.org/anthology/N19-1078/">Akbik et al. (2019)</a>.</p>
 <p>You can instantiate and use <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.PooledFlairEmbeddings" title="flair.embeddings.token.PooledFlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></span></a> like <a class="reference internal" href="../../api/embeddings/token.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></span></a>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">PooledFlairEmbeddings</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">PooledFlairEmbeddings</span>
 
 <span class="c1"># init embedding</span>
 <span class="n">flair_embedding_forward</span> <span class="o">=</span> <span class="n">PooledFlairEmbeddings</span><span class="p">(</span><span class="s1">&#39;news-forward&#39;</span><span class="p">)</span>

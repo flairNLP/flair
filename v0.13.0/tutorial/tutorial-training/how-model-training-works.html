@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -800,10 +800,10 @@ button.search-button {
 <li><p>we use only simple classic word embeddings (gloVe)</p></li>
 </ul>
 <p>Here is the full training code:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span>
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">SequenceTagger</span>
-<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">UD_ENGLISH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">WordEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceTagger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
 
 <span class="c1"># 1. load the corpus</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
@@ -909,7 +909,7 @@ button.search-button {
 <p>Splitting your data into three splits is standard procedure in machine learning: the <code class="docutils literal notranslate"><span class="pre">train</span></code> split is used to train the model while the <code class="docutils literal notranslate"><span class="pre">dev</span></code> split is used for model selection and early stopping. The <code class="docutils literal notranslate"><span class="pre">test</span></code> split is used only for the final evaluation.</p>
 </div>
 <p>In this example, we use the <a class="reference external" href="https://universaldependencies.org/treebanks/en_ewt/index.html">English Universal Dependencies</a> dataset to train on. It contains many sentences fully annotated with both universal and language-specific part-of-speech tags. Running these lines will load and print the corpus:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">UD_ENGLISH</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">UD_ENGLISH</span>
 
 <span class="c1"># 1. load the corpus</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>

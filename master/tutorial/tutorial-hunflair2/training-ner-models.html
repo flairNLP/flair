@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -786,7 +786,7 @@ You should also know how to <a class="reference internal" href="../tutorial-trai
 <h2>Train a biomedical NER model from scratch: single entity type<a class="headerlink" href="#train-a-biomedical-ner-model-from-scratch-single-entity-type" title="Link to this heading">#</a></h2>
 <p>Here is example code for a biomedical NER model trained on the <a class="reference internal" href="../../api/datasets/generated/flair.datasets.biomedical.NCBI_DISEASE.html#flair.datasets.biomedical.NCBI_DISEASE" title="flair.datasets.biomedical.NCBI_DISEASE"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">NCBI_DISEASE</span></code></span></a> corpus using Transformer word embeddings.
 This will result in a tagger specialized for a single entity type, i.e. “Disease”.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">NCBI_DISEASE</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">NCBI_DISEASE</span>
 
 <span class="c1"># 1. get the corpus</span>
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">NCBI_DISEASE</span><span class="p">()</span>
@@ -796,7 +796,7 @@ This will result in a tagger specialized for a single entity type, i.e. “Disea
 <span class="n">tag_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="c1"># 3. initialize embeddings</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
 
 <span class="n">embeddings</span><span class="p">:</span> <span class="n">TransformerWordEmbeddings</span> <span class="o">=</span> <span class="n">TransformerWordEmbeddings</span><span class="p">(</span>
     <span class="s2">&quot;michiyasunaga/BioLinkBERT-base&quot;</span><span class="p">,</span>
@@ -808,7 +808,7 @@ This will result in a tagger specialized for a single entity type, i.e. “Disea
 <span class="p">)</span>
 
 <span class="c1"># 4. initialize sequence tagger</span>
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">SequenceTagger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceTagger</span>
 
 <span class="n">tagger</span><span class="p">:</span> <span class="n">SequenceTagger</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="p">(</span>
     <span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
@@ -822,7 +822,7 @@ This will result in a tagger specialized for a single entity type, i.e. “Disea
 <span class="p">)</span>
 
 <span class="c1"># 5. initialize trainer</span>
-<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
 
 <span class="n">trainer</span><span class="p">:</span> <span class="n">ModelTrainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">tagger</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 
@@ -842,7 +842,7 @@ Just call the predict method of the model.</p>
 <span class="n">model</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s2">&quot;taggers/ncbi-disease/best-model.pt&quot;</span><span class="p">)</span>
 
 <span class="c1"># create example sentence</span>
-<span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s2">&quot;Women who smoke 20 cigarettes a day are four times more likely to develop breast cancer.&quot;</span><span class="p">)</span>
 
 <span class="c1"># predict tags and print</span>
@@ -865,14 +865,14 @@ This model uses prompting, i.e. it adds a prefix (hence the name) string in fron
 entity types requested for tagging: <code class="docutils literal notranslate"><span class="pre">[Tag</span> <span class="pre">&lt;entity-type-0&gt;,</span> <span class="pre">&lt;entity-type-1&gt;,</span> <span class="pre">...]</span></code>.
 This is especially useful for training, as it allows to combine multiple corpora even if they cover different subsets of entity types.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1. get the corpora</span>
-<span class="kn">from</span> <span class="nn">flair.datasets.biomedical</span> <span class="kn">import</span> <span class="n">HUNER_ALL_CDR</span><span class="p">,</span> <span class="n">HUNER_CHEMICAL_NLM_CHEM</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets.biomedical</span><span class="w"> </span><span class="kn">import</span> <span class="n">HUNER_ALL_CDR</span><span class="p">,</span> <span class="n">HUNER_CHEMICAL_NLM_CHEM</span>
 <span class="n">corpora</span> <span class="o">=</span> <span class="p">(</span><span class="n">HUNER_ALL_CDR</span><span class="p">(),</span> <span class="n">HUNER_CHEMICAL_NLM_CHEM</span><span class="p">())</span>
 
 <span class="c1"># 2. add prefixed strings to each corpus by prepending its tagged entity</span>
 <span class="c1">#    types &quot;[Tag &lt;entity-type-0&gt;, &lt;entity-type-1&gt;, ...]&quot;</span>
-<span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">MultiCorpus</span>
-<span class="kn">from</span> <span class="nn">flair.models.prefixed_tagger</span> <span class="kn">import</span> <span class="n">EntityTypeTaskPromptAugmentationStrategy</span>
-<span class="kn">from</span> <span class="nn">flair.datasets.biomedical</span> <span class="kn">import</span> <span class="p">(</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiCorpus</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models.prefixed_tagger</span><span class="w"> </span><span class="kn">import</span> <span class="n">EntityTypeTaskPromptAugmentationStrategy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets.biomedical</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BIGBIO_NER_CORPUS</span><span class="p">,</span>
     <span class="n">CELL_LINE_TAG</span><span class="p">,</span>
     <span class="n">CHEMICAL_TAG</span><span class="p">,</span>
@@ -924,7 +924,7 @@ This is especially useful for training, as it allows to combine multiple corpora
 <span class="p">)</span>
 
 <span class="c1"># 5. initialize embeddings</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
 
 <span class="n">embeddings</span><span class="p">:</span> <span class="n">TransformerWordEmbeddings</span> <span class="o">=</span> <span class="n">TransformerWordEmbeddings</span><span class="p">(</span>
     <span class="s2">&quot;michiyasunaga/BioLinkBERT-base&quot;</span><span class="p">,</span>
@@ -936,7 +936,7 @@ This is especially useful for training, as it allows to combine multiple corpora
 <span class="p">)</span>
 
 <span class="c1"># 4. initialize sequence tagger</span>
-<span class="kn">from</span> <span class="nn">flair.models.prefixed_tagger</span> <span class="kn">import</span> <span class="n">PrefixedSequenceTagger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models.prefixed_tagger</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrefixedSequenceTagger</span>
 
 <span class="n">tagger</span><span class="p">:</span> <span class="n">SequenceTagger</span> <span class="o">=</span> <span class="n">PrefixedSequenceTagger</span><span class="p">(</span>
     <span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
@@ -951,7 +951,7 @@ This is especially useful for training, as it allows to combine multiple corpora
 <span class="p">)</span>
 
 <span class="c1"># 5. initialize trainer</span>
-<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
 
 <span class="n">trainer</span><span class="p">:</span> <span class="n">ModelTrainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">tagger</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
 
@@ -969,7 +969,7 @@ This is especially useful for training, as it allows to combine multiple corpora
 <section id="training-hunflair2-from-scratch">
 <h2>Training HunFlair2 from scratch<a class="headerlink" href="#training-hunflair2-from-scratch" title="Link to this heading">#</a></h2>
 <p><em>HunFlair2</em> uses the <code class="docutils literal notranslate"><span class="pre">PrefixedSequenceTagger()</span></code> class as defined above but adds the following corpora to the training set instead:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets.biomedical</span> <span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets.biomedical</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">HUNER_ALL_BIORED</span><span class="p">,</span> <span class="n">HUNER_GENE_NLM_GENE</span><span class="p">,</span>
     <span class="n">HUNER_GENE_GNORMPLUS</span><span class="p">,</span> <span class="n">HUNER_ALL_SCAI</span><span class="p">,</span>
     <span class="n">HUNER_CHEMICAL_NLM_CHEM</span><span class="p">,</span> <span class="n">HUNER_SPECIES_LINNEAUS</span><span class="p">,</span>

@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../_static/css/main.css?v=aa1137ec" />
@@ -786,8 +786,8 @@ button.search-button {
 <p>Let’s run <strong>named entity recognition</strong>  (NER) over the following example sentence: “<em>I love Berlin and New York.</em>”</p>
 <p>Our goal is to identify names in this sentence, and their types.</p>
 <p>To do this, all you need is to make a <a class="reference internal" href="../api/generated/flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">Sentence</span></code></span></a> for this text, load a pre-trained model and use it to predict tags for the sentence:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
-<span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Classifier</span>
 
 <span class="c1"># make a sentence</span>
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;I love Berlin and New York.&#39;</span><span class="p">)</span>
@@ -812,8 +812,8 @@ button.search-button {
 <h2>Example 2: Detect Sentiment<a class="headerlink" href="#example-2-detect-sentiment" title="Link to this heading">#</a></h2>
 <p>Let’s run <strong>sentiment analysis</strong> over the same sentence to determine whether it is POSITIVE or NEGATIVE.</p>
 <p>You can do this with essentially the same code as above. Just instead of loading the ‘ner’ model, you now load the ‘sentiment’ model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
-<span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Classifier</span>
 
 <span class="c1"># make a sentence</span>
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s1">&#39;I love Berlin and New York.&#39;</span><span class="p">)</span>

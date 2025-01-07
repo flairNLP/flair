@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -784,8 +784,8 @@ tag entities, but also attempts to link each entity to the corresponding Wikiped
 <section id="example-1-entity-linking-on-a-single-sentence">
 <h2>Example 1: Entity linking on a single sentence​<a class="headerlink" href="#example-1-entity-linking-on-a-single-sentence" title="Link to this heading">#</a></h2>
 <p>To illustrate, let’s use the example sentence “<em>Kirk and Spock met on the Enterprise.</em>”:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
-<span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Classifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
 
 <span class="c1"># load the model</span>
 <span class="n">tagger</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s1">&#39;linker&#39;</span><span class="p">)</span>
@@ -820,8 +820,8 @@ tag entities, but also attempts to link each entity to the corresponding Wikiped
 <p>Entity linking typically works best when applied to a whole document instead of only a single sentence.</p>
 <p>To illustrate how this works, let’s use the following short text: “<em>Bayern played against Barcelona. The match took place in Barcelona.</em>”</p>
 <p>In this case, split the text into sentences and pass a list of Sentence objects to the <a class="reference internal" href="../../api/generated/flair.nn.Classifier.html#flair.nn.Classifier.predict" title="flair.nn.Classifier.predict"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Classifier.predict()</span></code></span></a> method:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
-<span class="kn">from</span> <span class="nn">flair.splitter</span> <span class="kn">import</span> <span class="n">SegtokSentenceSplitter</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Classifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.splitter</span><span class="w"> </span><span class="kn">import</span> <span class="n">SegtokSentenceSplitter</span>
 
 <span class="c1"># example text with many sentences</span>
 <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Bayern played against Barcelona. The match took place in Barcelona.&quot;</span>

@@ -27,7 +27,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="_static/css/main.css?v=aa1137ec" />
@@ -1636,6 +1636,8 @@ button.search-button {
 </li>
         <li><a href="api/generated/flair.nn.Classifier.html#flair.nn.Classifier.__init__">(flair.nn.Classifier method)</a>
 </li>
+        <li><a href="api/generated/flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder.__init__">(flair.nn.DeepNCMDecoder method)</a>
+</li>
         <li><a href="api/generated/flair.nn.DefaultClassifier.html#flair.nn.DefaultClassifier.__init__">(flair.nn.DefaultClassifier method)</a>
 </li>
         <li><a href="api/generated/flair.nn.LabelVerbalizerDecoder.html#flair.nn.LabelVerbalizerDecoder.__init__">(flair.nn.LabelVerbalizerDecoder method)</a>
@@ -1687,6 +1689,8 @@ button.search-button {
         <li><a href="api/generated/flair.trainers.plugins.CheckpointPlugin.html#flair.trainers.plugins.CheckpointPlugin.__init__">(flair.trainers.plugins.CheckpointPlugin method)</a>
 </li>
         <li><a href="api/generated/flair.trainers.plugins.ClearmlLoggerPlugin.html#flair.trainers.plugins.ClearmlLoggerPlugin.__init__">(flair.trainers.plugins.ClearmlLoggerPlugin method)</a>
+</li>
+        <li><a href="api/generated/flair.trainers.plugins.DeepNCMPlugin.html#flair.trainers.plugins.DeepNCMPlugin.__init__">(flair.trainers.plugins.DeepNCMPlugin method)</a>
 </li>
         <li><a href="api/generated/flair.trainers.plugins.LinearSchedulerPlugin.html#flair.trainers.plugins.LinearSchedulerPlugin.__init__">(flair.trainers.plugins.LinearSchedulerPlugin method)</a>
 </li>
@@ -1769,14 +1773,20 @@ button.search-button {
       </ul></li>
       <li><a href="api/generated/flair.trainers.plugins.MetricHistoryPlugin.html#flair.trainers.plugins.MetricHistoryPlugin.after_training">after_training() (flair.trainers.plugins.MetricHistoryPlugin method)</a>
 </li>
-      <li><a href="api/generated/flair.trainers.plugins.LinearSchedulerPlugin.html#flair.trainers.plugins.LinearSchedulerPlugin.after_training_batch">after_training_batch() (flair.trainers.plugins.LinearSchedulerPlugin method)</a>
+      <li><a href="api/generated/flair.trainers.plugins.DeepNCMPlugin.html#flair.trainers.plugins.DeepNCMPlugin.after_training_batch">after_training_batch() (flair.trainers.plugins.DeepNCMPlugin method)</a>
 
       <ul>
+        <li><a href="api/generated/flair.trainers.plugins.LinearSchedulerPlugin.html#flair.trainers.plugins.LinearSchedulerPlugin.after_training_batch">(flair.trainers.plugins.LinearSchedulerPlugin method)</a>
+</li>
         <li><a href="api/generated/flair.trainers.plugins.WeightExtractorPlugin.html#flair.trainers.plugins.WeightExtractorPlugin.after_training_batch">(flair.trainers.plugins.WeightExtractorPlugin method)</a>
 </li>
       </ul></li>
       <li><a href="api/generated/flair.trainers.plugins.CheckpointPlugin.html#flair.trainers.plugins.CheckpointPlugin.after_training_epoch">after_training_epoch() (flair.trainers.plugins.CheckpointPlugin method)</a>
+
+      <ul>
+        <li><a href="api/generated/flair.trainers.plugins.DeepNCMPlugin.html#flair.trainers.plugins.DeepNCMPlugin.after_training_epoch">(flair.trainers.plugins.DeepNCMPlugin method)</a>
 </li>
+      </ul></li>
       <li><a href="api/generated/flair.datasets.html#flair.datasets.AGNEWS">AGNEWS (class in flair.datasets)</a>
 
       <ul>
@@ -1785,14 +1795,14 @@ button.search-button {
       </ul></li>
       <li><a href="api/generated/flair.models.RelationClassifier.html#flair.models.RelationClassifier.allow_unk_tag">allow_unk_tag (flair.models.RelationClassifier property)</a>, <a href="api/generated/flair.models.html#flair.models.RelationClassifier.allow_unk_tag">[1]</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/generated/flair.datasets.html#flair.datasets.AMAZON_REVIEWS">AMAZON_REVIEWS (class in flair.datasets)</a>
 
       <ul>
         <li><a href="api/datasets/generated/flair.datasets.document_classification.AMAZON_REVIEWS.html#flair.datasets.document_classification.AMAZON_REVIEWS">(class in flair.datasets.document_classification)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/generated/flair.datasets.html#flair.datasets.ANAT_EM">ANAT_EM (class in flair.datasets)</a>
 
       <ul>
@@ -2352,6 +2362,12 @@ button.search-button {
 </li>
       </ul></li>
       <li><a href="api/generated/flair.models.Lemmatizer.html#flair.models.Lemmatizer.decode">decode() (flair.models.Lemmatizer method)</a>, <a href="api/generated/flair.models.html#flair.models.Lemmatizer.decode">[1]</a>
+</li>
+      <li><a href="api/generated/flair.trainers.plugins.DeepNCMPlugin.html#flair.trainers.plugins.DeepNCMPlugin.decoders">decoders (flair.trainers.plugins.DeepNCMPlugin property)</a>
+</li>
+      <li><a href="api/generated/flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder">DeepNCMDecoder (class in flair.nn)</a>, <a href="api/generated/flair.nn.html#flair.nn.DeepNCMDecoder">[1]</a>
+</li>
+      <li><a href="api/generated/flair.trainers.plugins.DeepNCMPlugin.html#flair.trainers.plugins.DeepNCMPlugin">DeepNCMPlugin (class in flair.trainers.plugins)</a>
 </li>
       <li><a href="api/generated/flair.nn.DefaultClassifier.html#flair.nn.DefaultClassifier">DefaultClassifier (class in flair.nn)</a>, <a href="api/generated/flair.nn.html#flair.nn.DefaultClassifier">[1]</a>
 </li>
@@ -3002,6 +3018,8 @@ button.search-button {
 </li>
         <li><a href="api/generated/flair.models.TextRegressor.html#flair.models.TextRegressor.forward">(flair.models.TextRegressor method)</a>, <a href="api/generated/flair.models.html#flair.models.TextRegressor.forward">[1]</a>
 </li>
+        <li><a href="api/generated/flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder.forward">(flair.nn.DeepNCMDecoder method)</a>, <a href="api/generated/flair.nn.html#flair.nn.DeepNCMDecoder.forward">[1]</a>
+</li>
         <li><a href="api/generated/flair.nn.LabelVerbalizerDecoder.html#flair.nn.LabelVerbalizerDecoder.forward">(flair.nn.LabelVerbalizerDecoder method)</a>, <a href="api/generated/flair.nn.html#flair.nn.LabelVerbalizerDecoder.forward">[1]</a>
 </li>
         <li><a href="api/generated/flair.nn.LockedDropout.html#flair.nn.LockedDropout.forward">(flair.nn.LockedDropout method)</a>, <a href="api/generated/flair.nn.html#flair.nn.LockedDropout.forward">[1]</a>
@@ -3139,6 +3157,8 @@ button.search-button {
         <li><a href="api/embeddings/generated/flair.embeddings.token.MuseCrosslingualEmbeddings.html#flair.embeddings.token.MuseCrosslingualEmbeddings.get_cached_vec">(flair.embeddings.token.MuseCrosslingualEmbeddings method)</a>
 </li>
       </ul></li>
+      <li><a href="api/generated/flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder.get_closest_prototypes">get_closest_prototypes() (flair.nn.DeepNCMDecoder method)</a>, <a href="api/generated/flair.nn.html#flair.nn.DeepNCMDecoder.get_closest_prototypes">[1]</a>
+</li>
       <li><a href="api/datasets/generated/flair.datasets.biomedical.HUNER_CELL_LINE_CLL.html#flair.datasets.biomedical.HUNER_CELL_LINE_CLL.get_corpus_sentence_splitter">get_corpus_sentence_splitter() (flair.datasets.biomedical.HUNER_CELL_LINE_CLL method)</a>
 
       <ul>
@@ -3374,6 +3394,8 @@ button.search-button {
 </li>
       </ul></li>
       <li><a href="api/generated/flair.models.LanguageModel.html#flair.models.LanguageModel.get_output">get_output() (flair.models.LanguageModel method)</a>, <a href="api/generated/flair.models.html#flair.models.LanguageModel.get_output">[1]</a>
+</li>
+      <li><a href="api/generated/flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder.get_prototype">get_prototype() (flair.nn.DeepNCMDecoder method)</a>, <a href="api/generated/flair.nn.html#flair.nn.DeepNCMDecoder.get_prototype">[1]</a>
 </li>
       <li><a href="api/generated/flair.data.Sentence.html#flair.data.Sentence.get_relations">get_relations() (flair.data.Sentence method)</a>, <a href="api/generated/flair.data.html#flair.data.Sentence.get_relations">[1]</a>
 </li>
@@ -4700,8 +4722,12 @@ button.search-button {
 </li>
       <li><a href="api/embeddings/generated/flair.embeddings.token.HashEmbeddings.html#flair.embeddings.token.HashEmbeddings.num_embeddings">num_embeddings (flair.embeddings.token.HashEmbeddings property)</a>
 </li>
-      <li><a href="api/generated/flair.nn.PrototypicalDecoder.html#flair.nn.PrototypicalDecoder.num_prototypes">num_prototypes (flair.nn.PrototypicalDecoder property)</a>, <a href="api/generated/flair.nn.html#flair.nn.PrototypicalDecoder.num_prototypes">[1]</a>
+      <li><a href="api/generated/flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder.num_prototypes">num_prototypes (flair.nn.DeepNCMDecoder property)</a>, <a href="api/generated/flair.nn.html#flair.nn.DeepNCMDecoder.num_prototypes">[1]</a>
+
+      <ul>
+        <li><a href="api/generated/flair.nn.PrototypicalDecoder.html#flair.nn.PrototypicalDecoder.num_prototypes">(flair.nn.PrototypicalDecoder property)</a>, <a href="api/generated/flair.nn.html#flair.nn.PrototypicalDecoder.num_prototypes">[1]</a>
 </li>
+      </ul></li>
       <li><a href="api/generated/flair.datasets.html#flair.datasets.DataLoader.num_workers">num_workers (flair.datasets.DataLoader attribute)</a>
 </li>
   </ul></td>
@@ -6386,6 +6412,8 @@ button.search-button {
         <li><a href="api/datasets/generated/flair.datasets.sequence_labeling.UP_SPANISH_ANCORA.html#flair.datasets.sequence_labeling.UP_SPANISH_ANCORA">(class in flair.datasets.sequence_labeling)</a>
 </li>
       </ul></li>
+      <li><a href="api/generated/flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder.update_prototypes">update_prototypes() (flair.nn.DeepNCMDecoder method)</a>, <a href="api/generated/flair.nn.html#flair.nn.DeepNCMDecoder.update_prototypes">[1]</a>
+</li>
       <li><a href="api/embeddings/generated/flair.embeddings.legacy.ELMoEmbeddings.html#flair.embeddings.legacy.ELMoEmbeddings.use_layers_all">use_layers_all() (flair.embeddings.legacy.ELMoEmbeddings method)</a>
 </li>
       <li><a href="api/embeddings/generated/flair.embeddings.legacy.ELMoEmbeddings.html#flair.embeddings.legacy.ELMoEmbeddings.use_layers_average">use_layers_average() (flair.embeddings.legacy.ELMoEmbeddings method)</a>

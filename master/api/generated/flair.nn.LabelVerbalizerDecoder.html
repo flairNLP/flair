@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -54,7 +54,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="flair.splitter" href="../flair.splitter.html" />
-    <link rel="prev" title="flair.nn.PrototypicalDecoder" href="flair.nn.PrototypicalDecoder.html" />
+    <link rel="prev" title="flair.nn.DeepNCMDecoder" href="flair.nn.DeepNCMDecoder.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -711,6 +711,7 @@ button.search-button {
 <li class="toctree-l3"><a class="reference internal" href="flair.nn.DefaultClassifier.html">flair.nn.DefaultClassifier</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flair.nn.Model.html">flair.nn.Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flair.nn.PrototypicalDecoder.html">flair.nn.PrototypicalDecoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flair.nn.DeepNCMDecoder.html">flair.nn.DeepNCMDecoder</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">flair.nn.LabelVerbalizerDecoder</a></li>
 </ul>
 </li>
@@ -786,7 +787,7 @@ button.search-button {
 <h1>flair.nn.LabelVerbalizerDecoder<a class="headerlink" href="#flair-nn-labelverbalizerdecoder" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">LabelVerbalizerDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L126-L217"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">LabelVerbalizerDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L340-L431"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
 <p>A class for decoding labels using the idea of siamese networks / bi-encoders. This can be used for all classification tasks in flair.</p>
 <dl class="field-list simple">
@@ -832,7 +833,7 @@ label_encoder = TransformerWordEmbeddings(‘bert-base-ucnased’)
 label_verbalizer_decoder = LabelVerbalizerDecoder(label_encoder, label_dictionary)</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L151-L155"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L365-L369"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
 </dd></dl>
 
@@ -1016,7 +1017,7 @@ label_verbalizer_decoder = LabelVerbalizerDecoder(label_encoder, label_dictionar
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.verbalize_labels">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">verbalize_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L157-L193"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.verbalize_labels" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">verbalize_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L371-L407"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.verbalize_labels" title="Link to this definition">#</a></dt>
 <dd><p>Takes a label dictionary and returns a list of sentences with verbalized labels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1038,7 +1039,7 @@ print(verbalized_labels)
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L195-L217"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.forward" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L409-L431"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.forward" title="Link to this definition">#</a></dt>
 <dd><p>Forward pass of the label verbalizer decoder.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

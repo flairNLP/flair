@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -800,8 +800,8 @@ You can change the dictionary to which mentions are linked by following the step
 We’ll be using the <a class="reference external" href="https://hpo.jax.org/app/">Human Phenotype Ontology</a> in our example
 (Download the <code class="docutils literal notranslate"><span class="pre">hp.json</span></code> file you find <a class="reference external" href="https://hpo.jax.org/app/data/ontology">here</a> if you want to follow along).</p>
 <p>First we load from the original data a python dictionary mapping names to concept identifiers</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;hp.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
 
@@ -815,7 +815,7 @@ We’ll be using the <a class="reference external" href="https://hpo.jax.org/app
 </pre></div>
 </div>
 <p>Then we can convert this mapping into a <a class="reference internal" href="../../api/datasets/entity_linking.html#flair.datasets.entity_linking.InMemoryEntityLinkingDictionary" title="flair.datasets.entity_linking.InMemoryEntityLinkingDictionary"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">InMemoryEntityLinkingDictionary</span></code></span></a> that can be used by our linking model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets.entity_linking</span> <span class="kn">import</span> <span class="p">(</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets.entity_linking</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">InMemoryEntityLinkingDictionary</span><span class="p">,</span>
     <span class="n">EntityCandidate</span><span class="p">,</span>
 <span class="p">)</span>
@@ -843,7 +843,7 @@ See the section below for that.</p>
 <section id="custom-pre-trained-model">
 <h2>Custom pre-trained model<a class="headerlink" href="#custom-pre-trained-model" title="Link to this heading">#</a></h2>
 <p>You can initialize a new <a class="reference internal" href="../../api/flair.models.html#flair.models.EntityMentionLinker" title="flair.models.EntityMentionLinker"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">EntityMentionLinker</span></code></span></a> with both a custom model and custom dictionary (see section above) like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">EntityMentionLinker</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">EntityMentionLinker</span>
 <span class="n">pretrained_model</span><span class="o">=</span><span class="s2">&quot;cambridgeltl/SapBERT-from-PubMedBERT-fulltext&quot;</span>
 <span class="n">linker</span> <span class="o">=</span> <span class="n">EntityMentionLinker</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
                 <span class="n">pretrained_model</span><span class="p">,</span>
@@ -900,7 +900,7 @@ of the respective entity type:</p>
     <span class="s2">&quot;levels of mercury in mouse populations.&quot;</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">SequenceTagger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceTagger</span>
 
 <span class="c1"># Use disease ner tagger from HunFlair v1</span>
 <span class="n">hunflair1_tagger</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s2">&quot;hunflair-disease&quot;</span><span class="p">)</span>

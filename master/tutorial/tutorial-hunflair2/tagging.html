@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -783,7 +783,7 @@ button.search-button {
 <p>Let’s use the pre-trained <em>HunFlair2</em> model for biomedical named entity recognition (NER).
 This model was trained over multiple biomedical NER data sets and can recognize 5 different entity types,
 i.e. cell lines, chemicals, disease, gene / proteins and species.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Classifier</span>
 
 <span class="n">tagger</span> <span class="o">=</span> <span class="n">Classifier</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s2">&quot;hunflair2&quot;</span><span class="p">)</span>
 </pre></div>
@@ -791,7 +791,7 @@ i.e. cell lines, chemicals, disease, gene / proteins and species.</p>
 <p>All you need to do is use the predict() method of the tagger on a sentence.
 This will add predicted tags to the tokens in the sentence.
 Lets use a sentence with four named entities:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
 
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s2">&quot;Behavioral abnormalities in the Fmr1 KO2 Mouse Model of Fragile X Syndrome&quot;</span><span class="p">)</span>
 
@@ -845,7 +845,7 @@ To use the library we first have to install it and download one of its models:</
 </pre></div>
 </div>
 <p>Then we can use the <a class="reference internal" href="../../api/generated/flair.tokenization.SciSpacyTokenizer.html#flair.tokenization.SciSpacyTokenizer" title="flair.tokenization.SciSpacyTokenizer"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code></span></a>, we just have to pass it as parameter to when instancing a sentence:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.tokenization</span> <span class="kn">import</span> <span class="n">SciSpacyTokenizer</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.tokenization</span><span class="w"> </span><span class="kn">import</span> <span class="n">SciSpacyTokenizer</span>
 
 <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">SciSpacyTokenizer</span><span class="p">()</span>
 
@@ -866,7 +866,7 @@ To use the library we first have to install it and download one of its models:</
 </div>
 <p>To work with complete abstracts or full-text, we first have to split them into separate sentences.
 We can apply the <a class="reference internal" href="../../api/generated/flair.splitter.SciSpacySentenceSplitter.html#flair.splitter.SciSpacySentenceSplitter" title="flair.splitter.SciSpacySentenceSplitter"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">SciSpacySentenceSplitter</span></code></span></a>, an integration of the <a class="reference external" href="https://allenai.github.io/scispacy/">SciSpaCy</a> library:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.splitter</span> <span class="kn">import</span> <span class="n">SciSpacySentenceSplitter</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.splitter</span><span class="w"> </span><span class="kn">import</span> <span class="n">SciSpacySentenceSplitter</span>
 
 <span class="c1"># initialize the sentence splitter</span>
 <span class="n">splitter</span> <span class="o">=</span> <span class="n">SciSpacySentenceSplitter</span><span class="p">()</span>

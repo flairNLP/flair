@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -785,12 +785,12 @@ relevant spans within the <code class="docutils literal notranslate"><span class
 <p>For a state-of-the-art NER sytem you should fine-tune transformer embeddings, and use full document context
 (see our <a class="reference external" href="https://arxiv.org/abs/2011.06993">FLERT</a> paper for details).</p>
 <p>Use the following script:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">ZELDA</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">SpanClassifier</span>
-<span class="kn">from</span> <span class="nn">flair.models.entity_linker_model</span> <span class="kn">import</span> <span class="n">CandidateGenerator</span>
-<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
-<span class="kn">from</span> <span class="nn">flair.nn.decoder</span> <span class="kn">import</span> <span class="n">PrototypicalDecoder</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">ZELDA</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpanClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models.entity_linker_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">CandidateGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn.decoder</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrototypicalDecoder</span>
 
 
 <span class="c1"># 1. get the corpus</span>
@@ -862,8 +862,8 @@ one level of linguistic annotation. See for instance this sentence:</p>
 </div>
 <p>The first column is the word itself, the second BIO-annotated tags used to specify the spans that will be classified. To read such a
 dataset, define the column structure as a dictionary and instantiate a <a class="reference internal" href="../../api/datasets/generated/flair.datasets.sequence_labeling.ColumnCorpus.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">ColumnCorpus</span></code></span></a>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Corpus</span>
-<span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">ColumnCorpus</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Corpus</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">ColumnCorpus</span>
 
 <span class="c1"># define columns</span>
 <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;nel&quot;</span><span class="p">}</span>
@@ -881,9 +881,9 @@ dataset, define the column structure as a dictionary and instantiate a <a class=
 <p>If you have a pipeline where you need to construct your dataset from a different data source,
 you can always construct a <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><span class="xref myst py py-class">Corpus</span></a> with <a class="reference internal" href="../../api/datasets/generated/flair.datasets.base.FlairDatapointDataset.html#flair.datasets.base.FlairDatapointDataset" title="flair.datasets.base.FlairDatapointDataset"><span class="xref myst py py-class">FlairDatapointDataset</span></a> by hand.
 Let’s assume you create a function <code class="docutils literal notranslate"><span class="pre">create_datapoint(datapoint)</span> <span class="pre">-&gt;</span> <span class="pre">Sentence</span></code> that looks somewhat like this:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
 
-<span class="k">def</span> <span class="nf">create_sentence</span><span class="p">(</span><span class="n">datapoint</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sentence</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_sentence</span><span class="p">(</span><span class="n">datapoint</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sentence</span><span class="p">:</span>
     <span class="n">tokens</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># calculate the tokens from your internal data structure (e.g. pandas dataframe or json dictionary)</span>
     <span class="n">spans</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># create a list of tuples (start_token, end_token, label) from your data structure</span>
     <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
@@ -892,10 +892,10 @@ Let’s assume you create a function <code class="docutils literal notranslate">
 </pre></div>
 </div>
 <p>Then you can use this function to create a full dataset:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Corpus</span>
-<span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">FlairDatapointDataset</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Corpus</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">FlairDatapointDataset</span>
 
-<span class="k">def</span> <span class="nf">construct_corpus</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">construct_corpus</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">Corpus</span><span class="p">(</span>
         <span class="kp">train</span><span class="o">=</span><span class="n">FlairDatapointDataset</span><span class="p">([</span><span class="n">create_sentence</span><span class="p">(</span><span class="n">datapoint</span> <span class="k">for</span> <span class="n">datapoint</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">])]),</span>
         <span class="n">dev</span><span class="o">=</span><span class="n">FlairDatapointDataset</span><span class="p">([</span><span class="n">create_sentence</span><span class="p">(</span><span class="n">datapoint</span> <span class="k">for</span> <span class="n">datapoint</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;dev&quot;</span><span class="p">])]),</span>
@@ -909,13 +909,13 @@ Let’s assume you create a function <code class="docutils literal notranslate">
 <h2>Combining NEL with Mention Detection<a class="headerlink" href="#combining-nel-with-mention-detection" title="Link to this heading">#</a></h2>
 <p>often, you don’t just want to use a Named Entity Linking model alone, but combine it with a Mention Detection or Named Entity Recognition model.
 For this, you can use a <a class="reference internal" href="../../api/generated/flair.models.MultitaskModel.html#flair.models.MultitaskModel" title="flair.models.MultitaskModel"><span class="xref myst py py-class">Multitask Model</span></a> to combine a <a class="reference internal" href="../../api/generated/flair.models.SequenceTagger.html#flair.models.SequenceTagger" title="flair.models.SequenceTagger"><span class="xref myst py py-class">SequenceTagger</span></a> and a <a class="reference internal" href="../../api/generated/flair.models.SpanClassifier.html#flair.models.SpanClassifier" title="flair.models.SpanClassifier"><span class="xref myst py py-class">Span Classifier</span></a>.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">NER_MULTI_WIKINER</span><span class="p">,</span> <span class="n">ZELDA</span>
-<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
-<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">SequenceTagger</span><span class="p">,</span> <span class="n">SpanClassifier</span>
-<span class="kn">from</span> <span class="nn">flair.models.entity_linker_model</span> <span class="kn">import</span> <span class="n">CandidateGenerator</span>
-<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
-<span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">PrototypicalDecoder</span>
-<span class="kn">from</span> <span class="nn">flair.nn.multitask</span> <span class="kn">import</span> <span class="n">make_multitask_model_and_corpus</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">NER_MULTI_WIKINER</span><span class="p">,</span> <span class="n">ZELDA</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceTagger</span><span class="p">,</span> <span class="n">SpanClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models.entity_linker_model</span><span class="w"> </span><span class="kn">import</span> <span class="n">CandidateGenerator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">PrototypicalDecoder</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn.multitask</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_multitask_model_and_corpus</span>
 
 <span class="c1"># 1. get the corpus</span>
 <span class="n">ner_corpus</span> <span class="o">=</span> <span class="n">NER_MULTI_WIKINER</span><span class="p">()</span>
@@ -970,9 +970,9 @@ For this, you can use a <a class="reference internal" href="../../api/generated/
 <h3>Multitask with aligned training data<a class="headerlink" href="#multitask-with-aligned-training-data" title="Link to this heading">#</a></h3>
 <p>If you have sentences with both annotations for ner and for nel, you might want to use a single corpus for both models.</p>
 <p>This means, that you need to manually the <code class="docutils literal notranslate"><span class="pre">multitask_id</span></code> to the sentences:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
 
-<span class="k">def</span> <span class="nf">create_sentence</span><span class="p">(</span><span class="n">datapoint</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sentence</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_sentence</span><span class="p">(</span><span class="n">datapoint</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sentence</span><span class="p">:</span>
     <span class="n">tokens</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># calculate the tokens from your internal data structure (e.g. pandas dataframe or json dictionary)</span>
     <span class="n">spans</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># create a list of tuples (start_token, end_token, label) from your data structure</span>
     <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>

@@ -1,0 +1,85 @@
+﻿flair.nn.DeepNCMDecoder
+=======================
+
+.. currentmodule:: flair.nn
+
+.. autoclass:: DeepNCMDecoder
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DeepNCMDecoder.__init__
+      ~DeepNCMDecoder.add_module
+      ~DeepNCMDecoder.apply
+      ~DeepNCMDecoder.bfloat16
+      ~DeepNCMDecoder.buffers
+      ~DeepNCMDecoder.children
+      ~DeepNCMDecoder.compile
+      ~DeepNCMDecoder.cpu
+      ~DeepNCMDecoder.cuda
+      ~DeepNCMDecoder.double
+      ~DeepNCMDecoder.eval
+      ~DeepNCMDecoder.extra_repr
+      ~DeepNCMDecoder.float
+      ~DeepNCMDecoder.forward
+      ~DeepNCMDecoder.get_buffer
+      ~DeepNCMDecoder.get_closest_prototypes
+      ~DeepNCMDecoder.get_extra_state
+      ~DeepNCMDecoder.get_parameter
+      ~DeepNCMDecoder.get_prototype
+      ~DeepNCMDecoder.get_submodule
+      ~DeepNCMDecoder.half
+      ~DeepNCMDecoder.ipu
+      ~DeepNCMDecoder.load_state_dict
+      ~DeepNCMDecoder.modules
+      ~DeepNCMDecoder.mtia
+      ~DeepNCMDecoder.named_buffers
+      ~DeepNCMDecoder.named_children
+      ~DeepNCMDecoder.named_modules
+      ~DeepNCMDecoder.named_parameters
+      ~DeepNCMDecoder.parameters
+      ~DeepNCMDecoder.register_backward_hook
+      ~DeepNCMDecoder.register_buffer
+      ~DeepNCMDecoder.register_forward_hook
+      ~DeepNCMDecoder.register_forward_pre_hook
+      ~DeepNCMDecoder.register_full_backward_hook
+      ~DeepNCMDecoder.register_full_backward_pre_hook
+      ~DeepNCMDecoder.register_load_state_dict_post_hook
+      ~DeepNCMDecoder.register_load_state_dict_pre_hook
+      ~DeepNCMDecoder.register_module
+      ~DeepNCMDecoder.register_parameter
+      ~DeepNCMDecoder.register_state_dict_post_hook
+      ~DeepNCMDecoder.register_state_dict_pre_hook
+      ~DeepNCMDecoder.requires_grad_
+      ~DeepNCMDecoder.set_extra_state
+      ~DeepNCMDecoder.set_submodule
+      ~DeepNCMDecoder.share_memory
+      ~DeepNCMDecoder.state_dict
+      ~DeepNCMDecoder.to
+      ~DeepNCMDecoder.to_empty
+      ~DeepNCMDecoder.train
+      ~DeepNCMDecoder.type
+      ~DeepNCMDecoder.update_prototypes
+      ~DeepNCMDecoder.xpu
+      ~DeepNCMDecoder.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DeepNCMDecoder.T_destination
+      ~DeepNCMDecoder.call_super_init
+      ~DeepNCMDecoder.dump_patches
+      ~DeepNCMDecoder.num_prototypes
+      ~DeepNCMDecoder.training
+   
+   

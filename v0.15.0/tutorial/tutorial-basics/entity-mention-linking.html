@@ -28,7 +28,7 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=9bcfa72d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
     <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
     <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
@@ -784,10 +784,10 @@ You can read more at the <a class="reference internal" href="../tutorial-hunflai
 <section id="example-1-printing-entity-linking-outputs-to-console">
 <h2>Example 1: Printing Entity linking outputs to console<a class="headerlink" href="#example-1-printing-entity-linking-outputs-to-console" title="Link to this heading">#</a></h2>
 <p>To illustrate, let’s use the example the hunflair models on a biomedical sentence:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">EntityMentionLinker</span>
-<span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
-<span class="kn">from</span> <span class="nn">flair.tokenization</span> <span class="kn">import</span> <span class="n">SciSpacyTokenizer</span>
-<span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">EntityMentionLinker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Classifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.tokenization</span><span class="w"> </span><span class="kn">import</span> <span class="n">SciSpacyTokenizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
 
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span>
     <span class="s2">&quot;The mutation in the ABCD1 gene causes X-linked adrenoleukodystrophy, &quot;</span>
@@ -838,10 +838,10 @@ all work with the <code class="docutils literal notranslate"><span class="pre">{
 <li><p>The NEL labels are ordered by their score. Depending on the exact implementation, it is possible that the order is ascending or descending, however the first one is always the best.</p></li>
 </ul>
 <p>Therefore, an example to extract the information to a dictionary that could be used for further processing is the following:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">EntityMentionLinker</span>
-<span class="kn">from</span> <span class="nn">flair.nn</span> <span class="kn">import</span> <span class="n">Classifier</span>
-<span class="kn">from</span> <span class="nn">flair.tokenization</span> <span class="kn">import</span> <span class="n">SciSpacyTokenizer</span>
-<span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">EntityMentionLinker</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">Classifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.tokenization</span><span class="w"> </span><span class="kn">import</span> <span class="n">SciSpacyTokenizer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
 
 <span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span>
     <span class="s2">&quot;The mutation in the ABCD1 gene causes X-linked adrenoleukodystrophy, &quot;</span>
