@@ -326,6 +326,8 @@ class MultiFileColumnCorpus(Corpus):
         label_name_map: Optional[dict[str, str]] = None,
         banned_sentences: Optional[list[str]] = None,
         default_whitespace_after: int = 1,
+        every_sentence_is_independent: bool = False,
+        documents_as_sentences: bool = False,
         **corpusargs,
     ) -> None:
         r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -361,6 +363,8 @@ class MultiFileColumnCorpus(Corpus):
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
+                        every_sentence_is_independent=every_sentence_is_independent,
+                        documents_as_sentences=documents_as_sentences,
                     )
                     for train_file in train_files
                 ]
@@ -385,6 +389,8 @@ class MultiFileColumnCorpus(Corpus):
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
+                        every_sentence_is_independent=every_sentence_is_independent,
+                        documents_as_sentences=documents_as_sentences,
                     )
                     for test_file in test_files
                 ]
@@ -409,6 +415,8 @@ class MultiFileColumnCorpus(Corpus):
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
+                        every_sentence_is_independent=every_sentence_is_independent,
+                        documents_as_sentences=documents_as_sentences,
                     )
                     for dev_file in dev_files
                 ]
@@ -481,10 +489,12 @@ class ColumnDataset(FlairDataset):
         banned_sentences: Optional[list[str]] = None,
         in_memory: bool = True,
         document_separator_token: Optional[str] = None,
+        every_sentence_is_independent: bool = False,
         encoding: str = "utf-8",
         skip_first_line: bool = False,
         label_name_map: Optional[dict[str, str]] = None,
         default_whitespace_after: int = 1,
+        documents_as_sentences: bool = False,
     ) -> None:
         r"""Instantiates a column dataset.
 
@@ -505,9 +515,11 @@ class ColumnDataset(FlairDataset):
         self.column_delimiter = re.compile(column_delimiter)
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
+        self.every_sentence_is_independent = every_sentence_is_independent
         self.label_name_map = label_name_map
         self.banned_sentences = banned_sentences
         self.default_whitespace_after = default_whitespace_after
+        self.documents_as_sentences = documents_as_sentences
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -702,6 +714,9 @@ class ColumnDataset(FlairDataset):
         if sentence.to_original_text() == self.document_separator_token:
             sentence.is_document_boundary = True
 
+        if self.every_sentence_is_independent or self.documents_as_sentences:
+            sentence.is_document_boundary = True
+
         # add span labels
         if span_level_tag_columns:
             for span_column in span_level_tag_columns:
@@ -818,6 +833,13 @@ class ColumnDataset(FlairDataset):
         return tag
 
     def __line_completes_sentence(self, line: str) -> bool:
+
+        if self.documents_as_sentences:
+            if line.startswith(self.document_separator_token):
+                return True
+            else:
+                return False
+
         sentence_completed = line.isspace() or line == ""
         return sentence_completed
 
@@ -5035,7 +5057,8 @@ class NER_NERMUD(MultiCorpus):
                 test_file=None,
                 column_format=columns,
                 in_memory=in_memory,
-                sample_missing_splits=False,  # No test data is available, so do not shrink dev data for shared task preparation!
+                sample_missing_splits=False,
+                # No test data is available, so do not shrink dev data for shared task preparation!
                 **corpusargs,
             )
             corpora.append(corpus)
