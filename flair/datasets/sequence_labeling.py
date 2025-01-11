@@ -521,6 +521,12 @@ class ColumnDataset(FlairDataset):
         self.default_whitespace_after = default_whitespace_after
         self.documents_as_sentences = documents_as_sentences
 
+        if documents_as_sentences and not document_separator_token:
+            log.error(
+                "document_as_sentences was set to True, but no document_separator_token was provided. Please set"
+                "a value for document_separator_token in order to enable the document_as_sentence functionality."
+            )
+
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
 
@@ -834,7 +840,7 @@ class ColumnDataset(FlairDataset):
 
     def __line_completes_sentence(self, line: str) -> bool:
 
-        if self.documents_as_sentences:
+        if self.documents_as_sentences and self.document_separator_token:
             if line.startswith(self.document_separator_token):
                 return True
             else:
