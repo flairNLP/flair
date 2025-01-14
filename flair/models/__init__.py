@@ -15,6 +15,7 @@ from .text_classification_model import TextClassifier
 from .text_regression_model import TextRegressor
 from .triple_classification_model import TextTripleClassifier
 from .word_tagger_model import TokenClassifier, WordTagger
+from .encoder_decoder_model import CausalLanguageModelDecoder, EncoderDecoderLanguageModel
 
 __all__ = [
     "EntityMentionLinker",
@@ -37,4 +38,6 @@ __all__ = [
     "TextClassifier",
     "TextRegressor",
     "MultitaskModel",
+    "CausalLanguageModelDecoder",
+    "EncoderDecoderLanguageModel"
 ]
