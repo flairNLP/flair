@@ -1,9 +1,9 @@
+import ast
+import inspect
 import logging
 import math
 from pathlib import Path
-from typing import List, Dict, Tuple, Union, Optional, Any, Callable
-import inspect
-import ast
+from typing import Any, Callable, Optional, Union
 
 import torch
 from torch import nn
@@ -11,20 +11,18 @@ from torch.nn.utils.rnn import pad_sequence
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    EncoderDecoderModel,
     EncoderDecoderConfig,
+    EncoderDecoderModel,
     GenerationMixin,
     PreTrainedModel,
 )
-from transformers.modeling_outputs import Seq2SeqLMOutput
 
 import flair
 from flair.data import DataPoint
 from flair.datasets import FlairDatapointDataset
+from flair.embeddings.base import load_embeddings
 from flair.nn import Model
 from flair.training_utils import Result
-from flair.embeddings.base import load_embeddings
-
 
 logger = logging.getLogger("flair")
 
@@ -35,8 +33,8 @@ logger = logging.getLogger("flair")
 def _tie_encoder_decoder_weights(
     encoder: nn.Module, decoder: nn.Module, base_model_prefix: str, base_encoder_name: str
 ):
-    uninitialized_encoder_weights: List[str] = []
-    tied_weights: List[str] = []
+    uninitialized_encoder_weights: list[str] = []
+    tied_weights: list[str] = []
     if decoder.__class__ != encoder.__class__:
         logger.info(
             f"{decoder.__class__} and {encoder.__class__} are not equal. In this case make sure that all encoder"
@@ -48,7 +46,7 @@ def _tie_encoder_decoder_weights(
         encoder_pointer: nn.Module,
         module_name: str,
         base_encoder_name: str,
-        uninitialized_encoder_weights: List[str],
+        uninitialized_encoder_weights: list[str],
         depth=0,
         total_decoder_name="",
         total_encoder_name="",
@@ -78,7 +76,7 @@ def _tie_encoder_decoder_weights(
                 len(encoder_modules) > 0
             ), f"Encoder module {encoder_pointer} does not match decoder module {decoder_pointer}"
 
-            all_encoder_weights = {module_name + "/" + sub_name for sub_name in encoder_modules.keys()}
+            all_encoder_weights = {module_name + "/" + sub_name for sub_name in encoder_modules}
             encoder_layer_pos = 0
             for name, module in decoder_modules.items():
                 if name.isdigit():
@@ -132,8 +130,7 @@ PreTrainedModel._tie_encoder_decoder_weights = _tie_encoder_decoder_weights
 
 
 def retrieve_function_from_definition(func_definition: str) -> Callable:
-    """
-    Creates a function object from the definition of a function.
+    """Creates a function object from the definition of a function.
 
     Args:
         func_definition (str): the definition of a single function
@@ -146,18 +143,17 @@ def retrieve_function_from_definition(func_definition: str) -> Callable:
 
 
 class CausalLanguageModelDecoder(nn.Module):
-    """
-    A decoder module based on HuggingFace's Causal Language Models (e.g., GPT-2).
+    """A decoder module based on HuggingFace's Causal Language Models (e.g., GPT-2).
+
     This module is responsible for generating tokens based on the encoder's outputs.
     """
 
     def __init__(
         self,
         model_name: str,
-        additional_special_tokens: Optional[Dict[str, str]] = None,
+        additional_special_tokens: Optional[dict[str, str]] = None,
     ) -> None:
-        """
-        Initializes the decoder with a pre-trained causal language model.
+        """Initializes the decoder with a pre-trained causal language model.
 
         Args:
             model_name (str): The name or path of the pre-trained model.
@@ -171,10 +167,9 @@ class CausalLanguageModelDecoder(nn.Module):
         self.tokenizer = self._initialize_tokenizer(model_name, additional_special_tokens)
 
     def _initialize_tokenizer(
-        self, model_name: str, additional_special_tokens: Optional[Dict[str, str]] = None
+        self, model_name: str, additional_special_tokens: Optional[dict[str, str]] = None
     ) -> AutoTokenizer:
-        """
-        Initializes the tokenizer for the decoder model.
+        """Initializes the tokenizer for the decoder model.
 
         Args:
             model_name (str): The name or path of the pre-trained model.
@@ -189,10 +184,9 @@ class CausalLanguageModelDecoder(nn.Module):
     def _ensure_special_tokens(
         self,
         tokenizer: AutoTokenizer,
-        additional_special_tokens: Optional[Dict[str, str]] = None,
+        additional_special_tokens: Optional[dict[str, str]] = None,
     ) -> AutoTokenizer:
-        """
-        Ensures that the tokenizer has necessary special tokens.
+        """Ensures that the tokenizer has necessary special tokens.
 
         Args:
             tokenizer (AutoTokenizer): The tokenizer to check.
@@ -242,9 +236,7 @@ class CausalLanguageModelDecoder(nn.Module):
 
 
 class EncoderDecoderLanguageModel(Model, GenerationMixin):
-    """
-    A language model based on an encoder-decoder architecture using HuggingFace's Transformers.
-    """
+    """A language model based on an encoder-decoder architecture using HuggingFace's Transformers."""
 
     label_pad_token_id: int = -100  # The index to ignore when calculating cross_entropy loss
 
@@ -259,8 +251,7 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
         generate_output_text_fn_definition: Optional[str] = None,
         tie_encoder_decoder: bool = False,
     ) -> None:
-        """
-        Initializes the EncoderDecoderLanguageModel.
+        """Initializes the EncoderDecoderLanguageModel.
 
         Args:
             encoder_embeddings (Any): The embedding object (e.g., TransformerWordEmbeddings) containing the encoder.
@@ -318,17 +309,16 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
         """Returns the type of labels the model predicts."""
         return self._label_type
 
-    def _pad_ids(self, input_ids_in_a_batch: List[List[int]], padding_value: int):
-        """Pads sequences in input_ids_in_a_batch to the longest length with padding_value"""
+    def _pad_ids(self, input_ids_in_a_batch: list[list[int]], padding_value: int):
+        """Pads sequences in input_ids_in_a_batch to the longest length with padding_value."""
         unpadded_input_ids = [
             torch.tensor(input_ids_in_a_sentence, dtype=torch.long).to(flair.device)
             for input_ids_in_a_sentence in input_ids_in_a_batch
         ]
         return pad_sequence(unpadded_input_ids, batch_first=True, padding_value=padding_value)
 
-    def forward_loss(self, datapoints: List[DataPoint]) -> Tuple[torch.Tensor, int]:
-        """
-        Computes the forward loss for a batch of datapoints.
+    def forward_loss(self, datapoints: list[DataPoint]) -> tuple[torch.Tensor, int]:
+        """Computes the forward loss for a batch of datapoints.
 
         Args:
             datapoints (List[DataPoint]): A batch of Flair DataPoints.
@@ -368,12 +358,11 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
 
     def evaluate(
         self,
-        data_points: Union[List[DataPoint], torch.utils.data.dataset.Dataset],
+        data_points: Union[list[DataPoint], torch.utils.data.dataset.Dataset],
         mini_batch_size: int = 4,
         **kwargs,
     ) -> Result:
-        """
-        Evaluates the model on a given dataset using cross-entropy loss and perplexity.
+        """Evaluates the model on a given dataset using cross-entropy loss and perplexity.
 
         Args:
             data_points (Union[List[DataPoint], torch.utils.data.dataset.Dataset]): Evaluation dataset.
@@ -385,7 +374,7 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
         """
         if not isinstance(data_points, torch.utils.data.dataset.Dataset):
             # If it's just a list, wrap it in a FlairDatapointDataset
-            if isinstance(data_points, List):
+            if isinstance(data_points, list):
                 data_points = FlairDatapointDataset(data_points)
             else:
                 raise ValueError("Invalid data_points type for evaluation.")
@@ -441,15 +430,15 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
 
     def predict(
         self,
-        datapoints: List[DataPoint],
-        decoder_input_texts: Optional[List[str]] = None,
+        datapoints: list[DataPoint],
+        decoder_input_texts: Optional[list[str]] = None,
         max_length: int = 50,
         num_beams: int = 5,
         early_stopping: bool = True,
         **kwargs,
-    ) -> List[str]:
-        """
-        Generates predictions for a list of datapoints using the encoder-decoder model.
+    ) -> list[str]:
+        """Generates predictions for a list of datapoints using the encoder-decoder model.
+
         Optionally allows passing initial inputs to the decoder.
 
         Args:
