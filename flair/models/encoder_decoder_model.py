@@ -14,7 +14,7 @@ from transformers import (
     EncoderDecoderModel,
     EncoderDecoderConfig,
     GenerationMixin,
-    PreTrainedModel
+    PreTrainedModel,
 )
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
@@ -24,7 +24,6 @@ from flair.datasets import FlairDatapointDataset
 from flair.nn import Model
 from flair.training_utils import Result
 from flair.embeddings.base import load_embeddings
-
 
 
 logger = logging.getLogger("flair")
@@ -122,13 +121,12 @@ def _tie_encoder_decoder_weights(
     )
 
     if len(uninitialized_encoder_weights) > 0:
-        logger.warning(
-            f"The following encoder weights were not tied to the decoder {uninitialized_encoder_weights}"
-        )
+        logger.warning(f"The following encoder weights were not tied to the decoder {uninitialized_encoder_weights}")
     # added codes start here
     logger.warning(f"The following encoder weights were tied to the decoder {tied_weights}")
     # added codes end here
     return tied_weights
+
 
 PreTrainedModel._tie_encoder_decoder_weights = _tie_encoder_decoder_weights
 
@@ -169,14 +167,9 @@ class CausalLanguageModelDecoder(nn.Module):
         super().__init__()
         self.model_name = model_name
         self.additional_special_tokens = additional_special_tokens
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            add_cross_attention=True,
-            is_decoder=True
-        )
+        self.model = AutoModelForCausalLM.from_pretrained(model_name, add_cross_attention=True, is_decoder=True)
         self.tokenizer = self._initialize_tokenizer(model_name, additional_special_tokens)
 
-    
     def _initialize_tokenizer(
         self, model_name: str, additional_special_tokens: Optional[Dict[str, str]] = None
     ) -> AutoTokenizer:
@@ -193,7 +186,6 @@ class CausalLanguageModelDecoder(nn.Module):
         tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
         return self._ensure_special_tokens(tokenizer, additional_special_tokens)
 
-    
     def _ensure_special_tokens(
         self,
         tokenizer: AutoTokenizer,
@@ -211,7 +203,7 @@ class CausalLanguageModelDecoder(nn.Module):
         """
         tokens_to_check = {
             "bos_token": "[BOS]",
-            "eos_token": "[EOS]",            
+            "eos_token": "[EOS]",
             "pad_token": "[PAD]",
         }
         if additional_special_tokens:
@@ -227,33 +219,26 @@ class CausalLanguageModelDecoder(nn.Module):
         if special_tokens:
             tokenizer.add_special_tokens(special_tokens)
             self.model.resize_token_embeddings(len(tokenizer))
-            logger.debug(
-                f"Added special tokens {list(special_tokens.keys())} and resized decoder embeddings."
-            )
+            logger.debug(f"Added special tokens {list(special_tokens.keys())} and resized decoder embeddings.")
         else:
             logger.debug("All special tokens are already present in the tokenizer.")
 
         return tokenizer
-    
+
     def _get_state_dict(self) -> dict:
         state = {
             "model_name": self.model_name,
             "additional_special_tokens": self.additional_special_tokens,
-            "model.state_dict": self.model.state_dict()
+            "model.state_dict": self.model.state_dict(),
         }
         return state
 
-
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
-        decoder = cls(
-            model_name = state["model_name"],
-            additional_special_tokens = state["additional_special_tokens"]
-        )
+        decoder = cls(model_name=state["model_name"], additional_special_tokens=state["additional_special_tokens"])
         decoder.model.load_state_dict(state["model.state_dict"])
         logger.info("Load decoder.model from state_dict")
         return decoder
-
 
 
 class EncoderDecoderLanguageModel(Model, GenerationMixin):
@@ -261,7 +246,7 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
     A language model based on an encoder-decoder architecture using HuggingFace's Transformers.
     """
 
-    label_pad_token_id: int = -100 # The index to ignore when calculating cross_entropy loss
+    label_pad_token_id: int = -100  # The index to ignore when calculating cross_entropy loss
 
     def __init__(
         self,
@@ -288,7 +273,7 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
             tie_encoder_decoder (bool, optional): Whether to tie encoder and decoder weights. Defaults to False.
         """
         super().__init__()
-        
+
         self.encoder_embeddings = encoder_embeddings
         self.decoder = decoder
 
@@ -297,8 +282,16 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
         # Store the callables
         self.generate_input_text_fn = generate_input_text_fn
         self.generate_output_text_fn = generate_output_text_fn
-        self.generate_input_text_fn_definition = generate_input_text_fn_definition if generate_input_text_fn_definition else inspect.getsource(generate_input_text_fn)
-        self.generate_output_text_fn_definition = generate_output_text_fn_definition if generate_output_text_fn_definition else inspect.getsource(generate_output_text_fn)
+        self.generate_input_text_fn_definition = (
+            generate_input_text_fn_definition
+            if generate_input_text_fn_definition
+            else inspect.getsource(generate_input_text_fn)
+        )
+        self.generate_output_text_fn_definition = (
+            generate_output_text_fn_definition
+            if generate_output_text_fn_definition
+            else inspect.getsource(generate_output_text_fn)
+        )
 
         self.tie_encoder_decoder = tie_encoder_decoder
 
@@ -315,11 +308,10 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
         # Initialize tokenizers
         self.encoder_tokenizer = self.encoder_embeddings.tokenizer
         self.decoder_tokenizer = self.decoder.tokenizer
-        
+
         # Update key IDs in config
         self.encoder_decoder_model.config.decoder_start_token_id = self.decoder_tokenizer.bos_token_id
         self.encoder_decoder_model.config.pad_token_id = self.decoder_tokenizer.pad_token_id
-
 
     @property
     def label_type(self) -> str:
@@ -334,7 +326,6 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
         ]
         return pad_sequence(unpadded_input_ids, batch_first=True, padding_value=padding_value)
 
-    
     def forward_loss(self, datapoints: List[DataPoint]) -> Tuple[torch.Tensor, int]:
         """
         Computes the forward loss for a batch of datapoints.
@@ -358,7 +349,7 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
             truncation=True,
             return_tensors="pt",
         ).to(flair.device)
-        
+
         decoder_inputs = self.decoder_tokenizer(
             text_target=target_texts,
             padding=False,
@@ -372,7 +363,7 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
             labels=labels,
             return_dict=True,
         )
-        
+
         return outputs.loss * len(datapoints), len(datapoints)
 
     def evaluate(
@@ -409,7 +400,6 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
                 input_texts_batch = [self.generate_input_text_fn(dp) for dp in batch]
                 target_texts_batch = [self.generate_output_text_fn(dp) for dp in batch]
 
-
                 encoder_inputs_batch = self.encoder_tokenizer(
                     input_texts_batch,
                     padding="longest",
@@ -423,7 +413,7 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
                     truncation=True,
                 )
                 labels_batch = self._pad_ids(decoder_inputs_batch["input_ids"], self.label_pad_token_id)
-        
+
                 outputs = self.encoder_decoder_model(
                     input_ids=encoder_inputs_batch["input_ids"],
                     attention_mask=encoder_inputs_batch["attention_mask"],
@@ -495,14 +485,9 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
             if not isinstance(decoder_input_texts, list):
                 decoder_input_texts = [decoder_input_texts]
             if len(decoder_input_texts) != len(datapoints):
-                raise ValueError(
-                    "Length of `decoder_input_texts` must match the number of `datapoints`."
-                )
+                raise ValueError("Length of `decoder_input_texts` must match the number of `datapoints`.")
             decoder_inputs = self.decoder_tokenizer(
-                decoder_input_texts,
-                padding="longest",
-                truncation=True,
-                return_tensors="pt"
+                decoder_input_texts, padding="longest", truncation=True, return_tensors="pt"
             ).to(flair.device)
             generation_kwargs = {
                 "decoder_input_ids": decoder_inputs["input_ids"],
@@ -525,19 +510,14 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
         # Include additional user kwargs
         generation_kwargs.update(kwargs)
 
-        
         generated_ids = self.encoder_decoder_model.generate(**generation_kwargs)
-        predictions = self.decoder_tokenizer.batch_decode(
-            generated_ids,
-            skip_special_tokens=True
-        )
+        predictions = self.decoder_tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
 
         # Attach predictions as labels
         for dp, pred in zip(datapoints, predictions):
             dp.add_label(self.label_type, pred)
 
         return predictions
-
 
     def _get_state_dict(self) -> dict:
         state = {
@@ -548,10 +528,9 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
             "generate_input_text_fn": self.generate_input_text_fn_definition,
             "generate_output_text_fn": self.generate_output_text_fn_definition,
             "tie_encoder_decoder": self.tie_encoder_decoder,
-            "encoder_decoder_model.state_dict": self.encoder_decoder_model.state_dict()
+            "encoder_decoder_model.state_dict": self.encoder_decoder_model.state_dict(),
         }
         return state
-    
 
     @classmethod
     def _init_model_with_state_dict(cls, state: dict, **kwargs) -> "EncoderDecoderLanguageModel":
@@ -560,31 +539,29 @@ class EncoderDecoderLanguageModel(Model, GenerationMixin):
             encoder_embeddings = load_embeddings(encoder_embeddings)
         else:
             raise NotImplementedError("Not implemented when encoder_embeddings is not a dict")
-  
+
         decoder = CausalLanguageModelDecoder._init_model_with_state_dict(state["decoder"])
 
         generate_input_text_fn = retrieve_function_from_definition(state["generate_input_text_fn"])
         generate_output_text_fn = retrieve_function_from_definition(state["generate_output_text_fn"])
 
         model = cls(
-            encoder_embeddings = encoder_embeddings,
-            decoder = decoder,
-            label_type = state["label_type"],
-            generate_input_text_fn = generate_input_text_fn,
-            generate_output_text_fn = generate_output_text_fn,
-            generate_input_text_fn_definition = state["generate_input_text_fn"],
-            generate_output_text_fn_definition = state["generate_output_text_fn"],
-            tie_encoder_decoder = state["tie_encoder_decoder"],
+            encoder_embeddings=encoder_embeddings,
+            decoder=decoder,
+            label_type=state["label_type"],
+            generate_input_text_fn=generate_input_text_fn,
+            generate_output_text_fn=generate_output_text_fn,
+            generate_input_text_fn_definition=state["generate_input_text_fn"],
+            generate_output_text_fn_definition=state["generate_output_text_fn"],
+            tie_encoder_decoder=state["tie_encoder_decoder"],
         )
 
         model.encoder_decoder_model.load_state_dict(state["encoder_decoder_model.state_dict"])
 
         return model
 
-
-
     @classmethod
     def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "EncoderDecoderLanguageModel":
         from typing import cast
-    
+
         return cast("EncoderDecoderLanguageModel", super().load(model_path=model_path))
