@@ -60,7 +60,7 @@ class RegexpTagger:
         Args:
             mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
         """
-        self._regexp_mapping: list[str, typing.Pattern, int] = []
+        self._regexp_mapping: list = []
         self.register_labels(mapping=mapping)
 
     def label_type(self):
@@ -71,7 +71,7 @@ class RegexpTagger:
     def registered_labels(self):
         return self._regexp_mapping
 
-    def register_labels(self, mapping: Union[list[tuple[str, str, int]], tuple[str, str, int]]):
+    def register_labels(self, mapping):
         """Register a regexp -> label mapping.
 
         Args:
