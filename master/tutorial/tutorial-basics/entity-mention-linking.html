@@ -862,7 +862,7 @@ all work with the <code class="docutils literal notranslate"><span class="pre">{
 
 <span class="n">result_mentions</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="k">for</span> <span class="n">span</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_spans</span><span class="p">(</span><span class="n">ner_tagger</span><span class="o">.</span><span class="n">label_type</span><span class="p">):</span>
+<span class="k">for</span> <span class="n">span</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_spans</span><span class="p">(</span><span class="n">ner_tagger</span><span class="o">.</span><span class="kp">label_type</span><span class="p">):</span>
     
     <span class="c1"># basic information about the span that is tagged.</span>
     <span class="n">span_data</span> <span class="o">=</span> <span class="p">{</span>
@@ -872,12 +872,12 @@ all work with the <code class="docutils literal notranslate"><span class="pre">{
     <span class="p">}</span>
     
     <span class="c1"># add the ner label. We always have only one, so we can use `span.get_label(...)`</span>
-    <span class="n">span_data</span><span class="p">[</span><span class="s2">&quot;ner_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="kp">get_label</span><span class="p">(</span><span class="n">ner_tagger</span><span class="o">.</span><span class="n">label_type</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">span_data</span><span class="p">[</span><span class="s2">&quot;ner_label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="kp">get_label</span><span class="p">(</span><span class="n">ner_tagger</span><span class="o">.</span><span class="kp">label_type</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
     
     <span class="n">mentions_found</span> <span class="o">=</span> <span class="p">[]</span>
     
     <span class="c1"># since `top_k` is larger than 1, we need to handle multiple nen labels. Therefore we use `span.get_labels(...)`</span>
-    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">span</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="n">nen_tagger</span><span class="o">.</span><span class="n">label_type</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">span</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="n">nen_tagger</span><span class="o">.</span><span class="kp">label_type</span><span class="p">):</span>
         <span class="n">mentions_found</span><span class="o">.</span><span class="kp">append</span><span class="p">({</span>
             <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">label</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
             <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="n">label</span><span class="o">.</span><span class="n">score</span><span class="p">,</span>

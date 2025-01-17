@@ -793,7 +793,7 @@ This will result in a tagger specialized for a single entity type, i.e. “Disea
 <span class="nb">print</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 
 <span class="c1"># 2. make the tag dictionary from the corpus</span>
-<span class="n">tag_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">tag_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="c1"># 3. initialize embeddings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
@@ -915,7 +915,7 @@ This is especially useful for training, as it allows to combine multiple corpora
 <span class="n">all_entity_types</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_entity_types</span><span class="p">)</span>
 
 <span class="c1"># 3. make the tag dictionary from the corpus</span>
-<span class="n">tag_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">)</span>
+<span class="n">tag_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">)</span>
 
 <span class="c1"># 4. the final model will on default predict all the entity types seen</span>
 <span class="c1">#    in the training corpora, e.g., disease and chemicals here</span>

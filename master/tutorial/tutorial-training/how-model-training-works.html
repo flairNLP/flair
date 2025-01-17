@@ -799,10 +799,10 @@ button.search-button {
 <span class="nb">print</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 
 <span class="c1"># 2. what label do we want to predict?</span>
-<span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
+<span class="kp">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
 
 <span class="c1"># 3. make the label dictionary from the corpus</span>
-<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">label_dict</span><span class="p">)</span>
 
 <span class="c1"># 4. initialize embeddings</span>
@@ -812,7 +812,7 @@ button.search-button {
 <span class="n">model</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="p">(</span><span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
                         <span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
                         <span class="n">tag_dictionary</span><span class="o">=</span><span class="n">label_dict</span><span class="p">,</span>
-                        <span class="n">tag_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+                        <span class="n">tag_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">)</span>
 
 <span class="c1"># 6. initialize trainer</span>
 <span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
@@ -920,7 +920,7 @@ button.search-button {
 <p>After you load the corpus, you need to decide which label type to predict.</p>
 <p>We choose the label type <strong>‘upos’</strong>, since we want to predict universal part-of-speech tags in this example.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 2. what label do we want to predict?</span>
-<span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
+<span class="kp">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -934,7 +934,7 @@ button.search-button {
 <p>Our model needs to predict a set of labels. To determine the label set, run <a class="reference internal" href="../../api/generated/flair.data.Corpus.html#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><span class="xref myst py py-meth"><code class="docutils literal notranslate"><span class="pre">Corpus.make_label_dictionary()</span></code></span></a> on the corpus and pass the label type you want to predict. In this example, we pass <strong>‘upos’</strong> since we want to predict universal part-of-speech tags.</p>
 <p>Running these lines will compute and print the label dictionary from the corpus:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 3. make the label dictionary from the corpus</span>
-<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">label_dict</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -962,7 +962,7 @@ button.search-button {
 <span class="n">model</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="p">(</span><span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
                        <span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
                        <span class="n">tag_dictionary</span><span class="o">=</span><span class="n">label_dict</span><span class="p">,</span>
-                       <span class="n">tag_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+                       <span class="n">tag_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Printing it will give you the PyTorch model that is initialized.</p>

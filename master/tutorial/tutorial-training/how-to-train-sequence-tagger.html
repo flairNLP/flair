@@ -797,10 +797,10 @@ part-of-speech (PoS) tagging.</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 
 <span class="c1"># 2. what label do we want to predict?</span>
-<span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;ner&#39;</span>
+<span class="kp">label_type</span> <span class="o">=</span> <span class="s1">&#39;ner&#39;</span>
 
 <span class="c1"># 3. make the label dictionary from the corpus</span>
-<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">label_dict</span><span class="p">)</span>
 
 <span class="c1"># 4. initialize fine-tuneable transformer embeddings WITH document context</span>
@@ -854,10 +854,10 @@ Flair and GloVe embeddings:</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 
 <span class="c1"># 2. what label do we want to predict?</span>
-<span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;ner&#39;</span>
+<span class="kp">label_type</span> <span class="o">=</span> <span class="s1">&#39;ner&#39;</span>
 
 <span class="c1"># 3. make the label dictionary from the corpus</span>
-<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">label_dict</span><span class="p">)</span>
 
 <span class="c1"># 4. initialize embedding stack with Flair and GloVe</span>
@@ -873,7 +873,7 @@ Flair and GloVe embeddings:</p>
 <span class="n">tagger</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="p">(</span><span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
                         <span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
                         <span class="n">tag_dictionary</span><span class="o">=</span><span class="n">label_dict</span><span class="p">,</span>
-                        <span class="n">tag_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+                        <span class="n">tag_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">)</span>
 
 <span class="c1"># 6. initialize trainer</span>
 <span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">tagger</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
@@ -902,10 +902,10 @@ setup may run faster in the end.</p>
 <span class="nb">print</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 
 <span class="c1"># 2. what label do we want to predict?</span>
-<span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
+<span class="kp">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
 
 <span class="c1"># 3. make the label dictionary from the corpus</span>
-<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">label_dict</span><span class="p">)</span>
 
 <span class="c1"># 4. initialize embeddings</span>
@@ -921,7 +921,7 @@ setup may run faster in the end.</p>
 <span class="n">tagger</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="p">(</span><span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
                         <span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
                         <span class="n">tag_dictionary</span><span class="o">=</span><span class="n">label_dict</span><span class="p">,</span>
-                        <span class="n">tag_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">,</span>
+                        <span class="n">tag_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">,</span>
                         <span class="n">use_crf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># 6. initialize trainer</span>
@@ -950,10 +950,10 @@ and German UD corpora and create a <a class="reference internal" href="../../api
 <span class="n">corpus</span> <span class="o">=</span> <span class="n">MultiCorpus</span><span class="p">([</span><span class="n">UD_ENGLISH</span><span class="p">(),</span> <span class="n">UD_GERMAN</span><span class="p">()])</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
 
 <span class="c1"># 2. what label do we want to predict?</span>
-<span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
+<span class="kp">label_type</span> <span class="o">=</span> <span class="s1">&#39;upos&#39;</span>
 
 <span class="c1"># 3. make the label dictionary from the corpus</span>
-<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">label_dict</span><span class="p">)</span>
 
 <span class="c1"># 4. initialize embeddings</span>
@@ -970,7 +970,7 @@ and German UD corpora and create a <a class="reference internal" href="../../api
 <span class="n">tagger</span> <span class="o">=</span> <span class="n">SequenceTagger</span><span class="p">(</span><span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
                         <span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
                         <span class="n">tag_dictionary</span><span class="o">=</span><span class="n">label_dict</span><span class="p">,</span>
-                        <span class="n">tag_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">,</span>
+                        <span class="n">tag_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">,</span>
                         <span class="n">use_crf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># 6. initialize trainer</span>

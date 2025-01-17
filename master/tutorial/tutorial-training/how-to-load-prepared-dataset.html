@@ -861,7 +861,7 @@ and passing the desired <code class="docutils literal notranslate"><span class="
 POS tags (‘pos’), universal POS tags (‘upos’), morphological tags (‘tense’, ‘number’..) and so on.
 Create label dictionaries for universal POS tags by passing <code class="docutils literal notranslate"><span class="pre">label_type='upos'</span></code> like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create label dictionary for a Universal Part-of-Speech tagging task</span>
-<span class="n">upos_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="s1">&#39;upos&#39;</span><span class="p">)</span>
+<span class="n">upos_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="s1">&#39;upos&#39;</span><span class="p">)</span>
 
 <span class="c1"># print dictionary</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">upos_dictionary</span><span class="p">)</span>
@@ -883,10 +883,10 @@ out statistics on all label types in the corpus:</p>
 <p>This means that you can create dictionaries for any of these label types for the <a class="reference internal" href="../../api/datasets/generated/flair.datasets.treebanks.UD_ENGLISH.html#flair.datasets.treebanks.UD_ENGLISH" title="flair.datasets.treebanks.UD_ENGLISH"><span class="xref myst py py-class"><code class="docutils literal notranslate"><span class="pre">UD_ENGLISH</span></code></span></a> corpus. Let’s create dictionaries for regular part of speech tags
 and a morphological number tagging task:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create label dictionary for a regular POS tagging task</span>
-<span class="n">pos_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="s1">&#39;pos&#39;</span><span class="p">)</span>
+<span class="n">pos_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="s1">&#39;pos&#39;</span><span class="p">)</span>
 
 <span class="c1"># create label dictionary for a morphological number tagging task</span>
-<span class="n">tense_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span>
+<span class="n">tense_dictionary</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="s1">&#39;number&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>If you print these dictionaries, you will find that the POS dictionary contains 50 tags and the number dictionary only 2 for this corpus (singular and plural).</p>

@@ -796,16 +796,16 @@ model using the <a class="reference internal" href="../../api/generated/flair.tr
 <span class="n">corpus</span><span class="p">:</span> <span class="n">Corpus</span> <span class="o">=</span> <span class="n">TREC_6</span><span class="p">()</span>
 
 <span class="c1"># 2. what label do we want to predict?</span>
-<span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;question_class&#39;</span>
+<span class="kp">label_type</span> <span class="o">=</span> <span class="s1">&#39;question_class&#39;</span>
 
 <span class="c1"># 3. create the label dictionary</span>
-<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">)</span>
 
 <span class="c1"># 4. initialize transformer document embeddings (many models are available)</span>
 <span class="n">document_embeddings</span> <span class="o">=</span> <span class="n">TransformerDocumentEmbeddings</span><span class="p">(</span><span class="s1">&#39;distilbert-base-uncased&#39;</span><span class="p">,</span> <span class="kp">fine_tune</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># 5. create the text classifier</span>
-<span class="n">classifier</span> <span class="o">=</span> <span class="n">TextClassifier</span><span class="p">(</span><span class="n">document_embeddings</span><span class="p">,</span> <span class="n">label_dictionary</span><span class="o">=</span><span class="n">label_dict</span><span class="p">,</span> <span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">)</span>
+<span class="n">classifier</span> <span class="o">=</span> <span class="n">TextClassifier</span><span class="p">(</span><span class="n">document_embeddings</span><span class="p">,</span> <span class="n">label_dictionary</span><span class="o">=</span><span class="n">label_dict</span><span class="p">,</span> <span class="kp">label_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">)</span>
 
 <span class="c1"># 6. initialize trainer</span>
 <span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">classifier</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>

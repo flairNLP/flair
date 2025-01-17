@@ -800,10 +800,10 @@ relevant spans within the <code class="docutils literal notranslate"><span class
 <span class="nb">print</span><span class="p">(</span><span class="n">corpus</span><span class="p">)</span>
 
 <span class="c1"># 2. what label do we want to predict?</span>
-<span class="n">label_type</span> <span class="o">=</span> <span class="s1">&#39;nel&#39;</span>
+<span class="kp">label_type</span> <span class="o">=</span> <span class="s1">&#39;nel&#39;</span>
 
 <span class="c1"># 3. make the label dictionary from the corpus</span>
-<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">label_dict</span> <span class="o">=</span> <span class="n">corpus</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="kp">label_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">,</span> <span class="n">add_unk</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">label_dict</span><span class="p">)</span>
 
 <span class="c1"># 4. initialize fine-tuneable transformer embeddings WITH document context</span>
@@ -819,7 +819,7 @@ relevant spans within the <code class="docutils literal notranslate"><span class
 <span class="n">tagger</span> <span class="o">=</span> <span class="n">SpanClassifier</span><span class="p">(</span>
     <span class="n">embeddings</span><span class="o">=</span><span class="n">embeddings</span><span class="p">,</span>
     <span class="n">label_dictionary</span><span class="o">=</span><span class="n">label_dict</span><span class="p">,</span>
-    <span class="n">label_type</span><span class="o">=</span><span class="n">label_type</span><span class="p">,</span>
+    <span class="kp">label_type</span><span class="o">=</span><span class="kp">label_type</span><span class="p">,</span>
     <span class="n">decoder</span><span class="o">=</span><span class="n">PrototypicalDecoder</span><span class="p">(</span>
         <span class="n">num_prototypes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">label_dict</span><span class="p">),</span>
         <span class="n">embeddings_size</span><span class="o">=</span><span class="n">embeddings</span><span class="o">.</span><span class="n">embedding_length</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="c1"># we use &quot;first_last&quot; encoding for spans</span>
@@ -943,7 +943,7 @@ For this, you can use a <a class="reference internal" href="../../api/generated/
 <span class="n">nel_model</span> <span class="o">=</span> <span class="n">SpanClassifier</span><span class="p">(</span>
     <span class="n">embeddings</span><span class="o">=</span><span class="n">shared_embeddings</span><span class="p">,</span>
     <span class="n">label_dictionary</span><span class="o">=</span><span class="n">nel_label_dict</span><span class="p">,</span>
-    <span class="n">label_type</span><span class="o">=</span><span class="s2">&quot;nel&quot;</span><span class="p">,</span>
+    <span class="kp">label_type</span><span class="o">=</span><span class="s2">&quot;nel&quot;</span><span class="p">,</span>
     <span class="n">span_label_type</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">,</span>
     <span class="n">decoder</span><span class="o">=</span><span class="n">PrototypicalDecoder</span><span class="p">(</span>
         <span class="n">num_prototypes</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">nel_label_dict</span><span class="p">),</span>
