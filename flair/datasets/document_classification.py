@@ -798,7 +798,7 @@ class IMDB(ClassificationCorpus):
                         if not rebalance_corpus and dataset == "test":
                             data_file = test_data_file
 
-                        with open(data_file, "at") as f_p:
+                        with open(data_file, "a") as f_p:
                             current_path = data_path / "aclImdb" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file() and file_name.name.endswith(".txt"):
@@ -891,7 +891,7 @@ class NEWSGROUPS(ClassificationCorpus):
                             data_path / "original",
                             members=[m for m in f_in.getmembers() if f"{dataset}/{label}" in m.name],
                         )
-                        with open(f"{data_path}/{dataset}.txt", "at", encoding="utf-8") as f_p:
+                        with open(f"{data_path}/{dataset}.txt", "a", encoding="utf-8") as f_p:
                             current_path = data_path / "original" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file():
