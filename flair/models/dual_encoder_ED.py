@@ -871,7 +871,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             l = labels[i]
             sentence_object = self._label_dict.sentence_object_for(l)
             if not sentence_object:
-                sentence_object = flair.data.Sentence(self.label_map.get(l,l.replace("_", " ")))
+                sentence_object = flair.data.Sentence(self.label_map.get(l,l.replace("_", " ")).replace("ʼ", "'")) # see issue https://github.com/flairNLP/flair/issues/3594
                 sentence_object.set_label("last title token", len(sentence_object)-1) # default is last token of whole verbalization
                 for token in sentence_object:
                     if token.text == ";":
