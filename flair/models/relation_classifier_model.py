@@ -256,8 +256,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         encoding_strategy: EncodingStrategy = TypedEntityMarker(),
         zero_tag_value: str = "O",
         allow_unk_tag: bool = True,
-        max_allowed_tokens_between_entities: int = 20,
-        max_surrounding_context_length: int = 10,
+        max_allowed_tokens_between_entities: Optional[int] = 20,
+        max_surrounding_context_length: Optional[int] = 10,
         **classifierargs: Any,
     ) -> None:
         """Initializes a `RelationClassifier`.
@@ -273,8 +273,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             encoding_strategy: An instance of a class conforming the :class:`EncodingStrategy` protocol
             zero_tag_value: The label to use for out-of-class relations
             allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
-            max_allowed_tokens_between_entities: The maximum allowed number of allowed tokens between entities. All other entity pairs are filtered from consideration.
-            max_surrounding_context_length: The maximum length of context around entity pairs that will be considered.
+            max_allowed_tokens_between_entities: The maximum allowed number of allowed tokens between entities. All other entity pairs are filtered from consideration. If `None`, the filter will be disabled.
+            max_surrounding_context_length: The maximum length of context around entity pairs that will be considered. The context, in between the entity pairs will always be included. If `None`, the filter will be disabled.
             classifierargs: The remaining parameters passed to the underlying :class:`flair.models.DefaultClassifier`
         """
         # Set label type and prepare label dictionary
@@ -489,13 +489,17 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             raise AssertionError(msg)
 
         # Filter cases in which the distance between the two entities is too large
-        if abs(head_idx - tail_idx) > self._max_allowed_tokens_between_entities:
+        if (
+            self._max_allowed_tokens_between_entities is not None
+            and abs(head_idx - tail_idx) > self._max_allowed_tokens_between_entities
+        ):
             return None
 
         # Remove excess tokens left and right of entity pair to make encoded sentence shorter
-        encoded_sentence_tokens = self._truncate_context_around_entities(
-            encoded_sentence_tokens, head_idx, tail_idx, self._max_surrounding_context_length
-        )
+        if self._max_surrounding_context_length is not None:
+            encoded_sentence_tokens = self._truncate_context_around_entities(
+                encoded_sentence_tokens, head_idx, tail_idx, self._max_surrounding_context_length
+            )
 
         # Create masked sentence
         encoded_sentence: EncodedSentence = EncodedSentence(
@@ -532,7 +536,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         Returns: Encoded sentences annotated with their gold relation and the corresponding relation in the original sentence
         """
         for head, tail, gold_label in self._entity_pair_permutations(sentence):
-            masked_sentence = self._encode_sentence(
+            masked_sentence: Optional[EncodedSentence] = self._encode_sentence(
                 head=head,
                 tail=tail,
                 gold_label=gold_label if gold_label is not None else self.zero_tag_value,
@@ -557,7 +561,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                 else:
                     continue  # Skip generated data points that do not express an originally annotated relation
 
-            masked_sentence = self._encode_sentence(
+            masked_sentence: Optional[EncodedSentence] = self._encode_sentence(
                 head=head,
                 tail=tail,
                 gold_label=gold_label,
@@ -791,8 +795,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             encoding_strategy=state["encoding_strategy"],
             zero_tag_value=state["zero_tag_value"],
             allow_unk_tag=state["allow_unk_tag"],
-            max_allowed_tokens_between_entities=state.get("max_allowed_tokens_between_entities", 25),
-            max_surrounding_context_length=state.get("max_surrounding_context_length", 50),
+            max_allowed_tokens_between_entities=state.get("max_allowed_tokens_between_entities"),
+            max_surrounding_context_length=state.get("max_surrounding_context_length"),
             **kwargs,
         )
 
