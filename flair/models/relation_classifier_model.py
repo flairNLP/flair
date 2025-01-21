@@ -400,6 +400,34 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
             yield head, tail, gold_label
 
+    @staticmethod
+    def _truncate_context_around_entities(
+        encoded_sentence_tokens: list[str],
+        head_idx: int,
+        tail_idx: int,
+        context_length: int,
+    ) -> list[str]:
+        """Truncates the encoded sentence to include the head and tail entity and their surrounding context.
+        The context, in between the entity pairs will always be included.
+
+        Args:
+            encoded_sentence_tokens: The list of tokens corresponding to the encoded sentence.
+            head_idx: The index of the head entity in the token list.
+            tail_idx: The index of the tail entity in the token list.
+            context_length: The maximum number of tokens to include as surrounding context around the head and tail entities.
+
+        Returns:
+            The tokens of the truncated sentence.
+        """
+        begin_slice: int = min(head_idx, tail_idx)
+        end_slice: int = max(head_idx, tail_idx)
+
+        # Preserve context around the entities. Always include their in-between context.
+        begin_slice = max(begin_slice - context_length, 0)
+        end_slice = min(end_slice + context_length + 1, len(encoded_sentence_tokens))
+
+        return encoded_sentence_tokens[begin_slice:end_slice]
+
     def _encode_sentence(
         self,
         head: _Entity,
@@ -465,8 +493,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             return None
 
         # Remove excess tokens left and right of entity pair to make encoded sentence shorter
-        encoded_sentence_tokens = self._slice_encoded_sentence_to_max_allowed_length(
-            encoded_sentence_tokens, head_idx, tail_idx
+        encoded_sentence_tokens = self._truncate_context_around_entities(
+            encoded_sentence_tokens, head_idx, tail_idx, self._max_surrounding_context_length
         )
 
         # Create masked sentence
@@ -479,22 +507,9 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             # Using the sentence label instead of annotating a separate `Relation` object is easier to manage since,
             # during prediction, the forward pass does not need any knowledge about the entities in the sentence.
             encoded_sentence.add_label(typename=self.label_type, value=gold_label, score=1.0)
+
         encoded_sentence.copy_context_from_sentence(original_sentence)
         return encoded_sentence
-
-    def _slice_encoded_sentence_to_max_allowed_length(self, encoded_sentence_tokens, head_idx, tail_idx):
-        begin_slice = head_idx if head_idx < tail_idx else tail_idx
-        end_slice = tail_idx if head_idx < tail_idx else head_idx
-        padding_amount = self._max_surrounding_context_length
-        begin_slice = begin_slice - padding_amount if begin_slice - padding_amount > 0 else 0
-        end_slice = (
-            end_slice + padding_amount + 1
-            if end_slice + padding_amount + 1 < len(encoded_sentence_tokens)
-            else len(encoded_sentence_tokens)
-        )
-
-        encoded_sentence_tokens = encoded_sentence_tokens[begin_slice:end_slice]
-        return encoded_sentence_tokens
 
     def _encode_sentence_for_inference(
         self,
