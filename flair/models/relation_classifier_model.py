@@ -252,12 +252,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         entity_label_types: Union[str, Sequence[str], dict[str, Optional[set[str]]]],
         entity_pair_labels: Optional[set[tuple[str, str]]] = None,
         entity_threshold: Optional[float] = None,
+        max_allowed_tokens_between_entities: Optional[int] = 20,
+        max_surrounding_context_length: Optional[int] = 10,
         cross_augmentation: bool = True,
         encoding_strategy: EncodingStrategy = TypedEntityMarker(),
         zero_tag_value: str = "O",
         allow_unk_tag: bool = True,
-        max_allowed_tokens_between_entities: Optional[int] = 20,
-        max_surrounding_context_length: Optional[int] = 10,
         **classifierargs: Any,
     ) -> None:
         """Initializes a `RelationClassifier`.
@@ -269,21 +269,18 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             entity_label_types: A label type or sequence of label types of the required relation entities. You can also specify a label filter in a dictionary with the label type as key and the valid entity labels as values in a set. E.g. to use only 'PER' and 'ORG' labels from a NER-tagger: `{'ner': {'PER', 'ORG'}}`. To use all labels from 'ner', pass 'ner'.
             entity_pair_labels: A set of valid relation entity pair combinations, used as relation candidates. Specify valid entity pairs in a set of tuples of labels (<HEAD>, <TAIL>). E.g. for the `born_in` relation, only relations from 'PER' to 'LOC' make sense. Here, relations from 'PER' to 'PER' are not meaningful, so it is advised to specify the `entity_pair_labels` as `{('PER', 'ORG')}`. This setting may help to reduce the number of relation candidates. Leaving this parameter as `None` (default) disables the relation-candidate-filter, i.e. the model classifies the relation for each entity pair in the cross product of *all* entity pairs (inefficient).
             entity_threshold: Only pre-labelled entities above this threshold are taken into account by the model.
+            max_allowed_tokens_between_entities: The maximum allowed number of allowed tokens between entities. All other entity pairs are filtered from consideration. If `None`, the filter will be disabled.
+            max_surrounding_context_length: The maximum length of context around entity pairs that will be considered. The context, in between the entity pairs will always be included. If `None`, the filter will be disabled.
             cross_augmentation: If `True`, use cross augmentation to transform `Sentence`s into `EncodedSentenece`s. When cross augmentation is enabled, the transformation functions, e.g. `transform_corpus`, generate an encoded sentence for each entity pair in the cross product of all entities in the original sentence. When disabling cross augmentation, the transform functions only generate  encoded sentences for each gold relation annotation in the original sentence.
             encoding_strategy: An instance of a class conforming the :class:`EncodingStrategy` protocol
             zero_tag_value: The label to use for out-of-class relations
             allow_unk_tag: If `False`, removes `<unk>` from the passed label dictionary, otherwise do nothing.
-            max_allowed_tokens_between_entities: The maximum allowed number of allowed tokens between entities. All other entity pairs are filtered from consideration. If `None`, the filter will be disabled.
-            max_surrounding_context_length: The maximum length of context around entity pairs that will be considered. The context, in between the entity pairs will always be included. If `None`, the filter will be disabled.
             classifierargs: The remaining parameters passed to the underlying :class:`flair.models.DefaultClassifier`
         """
         # Set label type and prepare label dictionary
         self._label_type = label_type
         self._zero_tag_value = zero_tag_value
         self._allow_unk_tag = allow_unk_tag
-
-        self._max_allowed_tokens_between_entities = max_allowed_tokens_between_entities
-        self._max_surrounding_context_length = max_surrounding_context_length
 
         modified_label_dictionary: Dictionary = Dictionary(add_unk=self._allow_unk_tag)
         modified_label_dictionary.add_item(self._zero_tag_value)
@@ -309,6 +306,8 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         self.entity_pair_labels = entity_pair_labels
 
         self.entity_threshold = entity_threshold
+        self.max_allowed_tokens_between_entities = max_allowed_tokens_between_entities
+        self.max_surrounding_context_length = max_surrounding_context_length
         self.cross_augmentation = cross_augmentation
         self.encoding_strategy = encoding_strategy
 
@@ -408,6 +407,7 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
         context_length: int,
     ) -> list[str]:
         """Truncates the encoded sentence to include the head and tail entity and their surrounding context.
+
         The context, in between the entity pairs will always be included.
 
         Args:
@@ -490,15 +490,15 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
 
         # Filter cases in which the distance between the two entities is too large
         if (
-            self._max_allowed_tokens_between_entities is not None
-            and abs(head_idx - tail_idx) > self._max_allowed_tokens_between_entities
+            self.max_allowed_tokens_between_entities is not None
+            and abs(head_idx - tail_idx) > self.max_allowed_tokens_between_entities
         ):
             return None
 
         # Remove excess tokens left and right of entity pair to make encoded sentence shorter
-        if self._max_surrounding_context_length is not None:
+        if self.max_surrounding_context_length is not None:
             encoded_sentence_tokens = self._truncate_context_around_entities(
-                encoded_sentence_tokens, head_idx, tail_idx, self._max_surrounding_context_length
+                encoded_sentence_tokens, head_idx, tail_idx, self.max_surrounding_context_length
             )
 
         # Create masked sentence
@@ -772,12 +772,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             "entity_label_types": self.entity_label_types,
             "entity_pair_labels": self.entity_pair_labels,
             "entity_threshold": self.entity_threshold,
+            "max_allowed_tokens_between_entities": self.max_allowed_tokens_between_entities,
+            "max_surrounding_context_length": self.max_surrounding_context_length,
             "cross_augmentation": self.cross_augmentation,
             "encoding_strategy": self.encoding_strategy,
             "zero_tag_value": self.zero_tag_value,
             "allow_unk_tag": self.allow_unk_tag,
-            "max_allowed_tokens_between_entities": self._max_allowed_tokens_between_entities,
-            "max_surrounding_context_length": self._max_surrounding_context_length,
         }
         return model_state
 
@@ -791,12 +791,12 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
             entity_label_types=state["entity_label_types"],
             entity_pair_labels=state["entity_pair_labels"],
             entity_threshold=state["entity_threshold"],
+            max_allowed_tokens_between_entities=state.get("max_allowed_tokens_between_entities"),
+            max_surrounding_context_length=state.get("max_surrounding_context_length"),
             cross_augmentation=state["cross_augmentation"],
             encoding_strategy=state["encoding_strategy"],
             zero_tag_value=state["zero_tag_value"],
             allow_unk_tag=state["allow_unk_tag"],
-            max_allowed_tokens_between_entities=state.get("max_allowed_tokens_between_entities"),
-            max_surrounding_context_length=state.get("max_surrounding_context_length"),
             **kwargs,
         )
 
