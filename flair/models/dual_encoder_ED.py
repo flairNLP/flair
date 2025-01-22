@@ -365,6 +365,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             self._create_label_dict()
 
         self._label_embeddings = None # delete the old ones, for memory reasons
+        gc.collect()
+        torch.cuda.empty_cache()
 
         with torch.no_grad():
             print(f"After iteration {self._iteration_count} / {self._seen_spans} spans, updating label embeddings...")
@@ -466,7 +468,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
     def _prepare_sentences(self, sentences: List[Sentence],
                            max_characters_sentence = 2800,
-                           max_spans_per_sentence = 100, #100, #75,
+                           max_spans_per_sentence = 50, #100, #75,
                            max_spans_per_batch = 100, #150,
                            max_characters_per_batch_with_context: Union[int, None] = 8000,
                            respect_full_stops = True,
@@ -919,7 +921,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         else:
             if negative_sampling_factor_before == "dyn":
                 # after some steps, set the negative_sampling_factor dynamically, depending on the nr of spans in the batch:
-                self._negative_sampling_factor = min(10, int(200/nr_spans))
+                self._negative_sampling_factor = min(10, int(100/nr_spans))
             #delete_where_gold_already_nearest = True
 
         negative_labels, indices_where_gold_already_nearest = self._negative_sampling_fn(span_embeddings, labels)
@@ -941,7 +943,17 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         together = labels + negative_labels
 
         #print("Now embedding nr labels:", len(together))
-        together_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = together, use_tqdm=False, fixed_batch_size=32)
+        try:
+            together_label_embeddings = self._embed_labels_batchwise_return_stacked_embeddings(labels = together, use_tqdm=False, fixed_batch_size=32)
+        except Exception as e:
+            print("Nr Spans", len(spans))
+            print("Nr Labels", len(labels))
+            print("Nr negative Labels", len(negative_labels))
+            print("Nr sentences", len(sentences))
+            print("Sentence lengths:")
+            for s in sentences:
+                print(len(s.text))
+            raise e
 
         # divide into (gold) label and negative embeddings (negatives must be shaped as negative_factor x num_spans x embedding_size)
         label_embeddings = together_label_embeddings[:len(labels)]
