@@ -1,8 +1,6 @@
 import logging
 from typing import Any
 
-import torch
-
 from flair.trainers.plugins.base import TrainerPlugin
 
 log = logging.getLogger("flair")

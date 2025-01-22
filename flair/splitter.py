@@ -28,8 +28,7 @@ class SentenceSplitter(ABC):
     """
 
     def split(self, text: str, link_sentences: bool = True) -> list[Sentence]:
-        """
-        Takes as input a text as a plain string and outputs a list of :class:`flair.data.Sentence` objects.
+        """Takes as input a text as a plain string and outputs a list of :class:`flair.data.Sentence` objects.
 
         If link_sentences is set (by default, it is). The :class:`flair.data.Sentence` objects will include pointers
         to the preceding and following sentences in the original text. This way, the original sequence information will

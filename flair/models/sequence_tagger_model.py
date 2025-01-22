@@ -286,7 +286,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             A tuple consisting of the loss tensor and the number of tokens in the batch.
 
         """
-
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
