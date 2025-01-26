@@ -5,11 +5,13 @@ import typing
 from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
+from time import time
 from typing import Any, Optional, Union
 
 import torch.nn
 from torch import Tensor
 from torch.nn.modules.loss import _Loss
+from torch.utils.data import DistributedSampler
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
@@ -17,7 +19,8 @@ import flair
 from flair.class_utils import get_non_abstract_subclasses
 from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.distributed_utils import is_main_process
+from flair.distributed_utils import aggregate, aggregate_tensor_sum, broadcast_value, flatten_dicts, is_main_process, \
+    merge_sets
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
 from flair.file_utils import Tqdm, load_torch_state
@@ -92,7 +95,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         Returns:
             The evaluation results.
         """
-        exclude_labels = exclude_labels if exclude_labels is not None else []
         raise NotImplementedError
 
     def _get_state_dict(self) -> dict:
@@ -362,8 +364,11 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         exclude_labels: Optional[list[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
+        multi_gpu: bool = False,
         **kwargs,
     ) -> Result:
+        t0 = time()
+        print('running custom evaluate..')
         exclude_labels = exclude_labels if exclude_labels is not None else []
 
         import numpy as np
@@ -390,9 +395,25 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             all_true_values = {}
             all_predicted_values = {}
 
-            loader = DataLoader(data_points, batch_size=mini_batch_size)
+            if multi_gpu:
+                distributed_sampler: DistributedSampler = DistributedSampler(
+                    data_points, shuffle=False
+                )
+                loader = DataLoader(
+                    data_points,
+                    batch_size=mini_batch_size,
+                    shuffle=False,
+                    sampler=distributed_sampler,
+                )
+                rank = torch.distributed.get_rank()
+                print('rank =', rank)
+            else:
+                loader = DataLoader(data_points, batch_size=mini_batch_size)
+                rank = 0
 
             sentence_id = 0
+            t1 = time()
+            print('time1', t1 - t0)
             for batch in Tqdm.tqdm(loader, disable=not is_main_process()):
                 # remove any previously predicted labels
                 for datapoint in batch:
@@ -417,6 +438,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 # get the gold labels
                 for datapoint in batch:
                     for gold_label in datapoint.get_labels(gold_label_type):
+                        #representation = f"{rank}-{sentence_id}: {gold_label.unlabeled_identifier}"
                         representation = str(sentence_id) + ": " + gold_label.unlabeled_identifier
 
                         value = gold_label.value
@@ -432,6 +454,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                             all_spans.add(representation)
 
                     for predicted_span in datapoint.get_labels("predicted"):
+                        #representation = f"{rank}-{sentence_id}: {predicted_span.unlabeled_identifier}"
                         representation = str(sentence_id) + ": " + predicted_span.unlabeled_identifier
 
                         # add to all_predicted_values
@@ -450,6 +473,21 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 # make printout lines
                 if out_path:
                     lines.extend(self._print_predictions(batch, gold_label_type))
+
+        t2 = time()
+        print('time2', t2 - t1)
+        print('eval losssss', type(eval_loss), eval_loss)
+        if multi_gpu:
+            all_spans = aggregate(all_spans, merge_sets)
+            all_true_values = aggregate(all_true_values, flatten_dicts)
+            all_predicted_values = aggregate(all_predicted_values, flatten_dicts)
+            average_over = aggregate(average_over, sum)
+            eval_loss = aggregate(eval_loss, aggregate_tensor_sum)
+            print('eval loss =', eval_loss)
+        print('len all', len(all_spans), len(all_true_values), len(all_predicted_values), sep='\t')
+
+        result = Result(0., "", {}, {'loss': 0.0})
+        if is_main_process():
 
             # convert true and predicted values to two span-aligned lists
             true_values_span_aligned = []
@@ -481,137 +519,154 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 for label in predicted_values:
                     evaluation_label_dictionary.add_item(label)
 
-        # check if this is a multi-label problem
-        multi_label = False
-        for true_instance, predicted_instance in zip(true_values_span_aligned, predicted_values_span_aligned):
-            if len(true_instance) > 1 or len(predicted_instance) > 1:
-                multi_label = True
-                break
+            # check if this is a multi-label problem
+            multi_label = False
+            for true_instance, predicted_instance in zip(true_values_span_aligned, predicted_values_span_aligned):
+                if len(true_instance) > 1 or len(predicted_instance) > 1:
+                    multi_label = True
+                    break
 
-        log.debug(f"Evaluating as a multi-label problem: {multi_label}")
+            log.debug(f"Evaluating as a multi-label problem: {multi_label}")
 
-        # compute numbers by formatting true and predicted such that Scikit-Learn can use them
-        y_true = []
-        y_pred = []
-        if multi_label:
-            # multi-label problems require a multi-hot vector for each true and predicted label
-            for true_instance in true_values_span_aligned:
-                y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
-                for true_value in true_instance:
-                    y_true_instance[evaluation_label_dictionary.get_idx_for_item(true_value)] = 1
-                y_true.append(y_true_instance.tolist())
+            # compute numbers by formatting true and predicted such that Scikit-Learn can use them
+            y_true = []
+            y_pred = []
+            if multi_label:
+                # multi-label problems require a multi-hot vector for each true and predicted label
+                for true_instance in true_values_span_aligned:
+                    y_true_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
+                    for true_value in true_instance:
+                        y_true_instance[evaluation_label_dictionary.get_idx_for_item(true_value)] = 1
+                    y_true.append(y_true_instance.tolist())
 
-            for predicted_values in predicted_values_span_aligned:
-                y_pred_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
-                for predicted_value in predicted_values:
-                    y_pred_instance[evaluation_label_dictionary.get_idx_for_item(predicted_value)] = 1
-                y_pred.append(y_pred_instance.tolist())
-        else:
-            # single-label problems can do with a single index for each true and predicted label
-            y_true = [
-                evaluation_label_dictionary.get_idx_for_item(true_instance[0])
-                for true_instance in true_values_span_aligned
-            ]
-            y_pred = [
-                evaluation_label_dictionary.get_idx_for_item(predicted_instance[0])
-                for predicted_instance in predicted_values_span_aligned
-            ]
+                for predicted_values in predicted_values_span_aligned:
+                    y_pred_instance = np.zeros(len(evaluation_label_dictionary), dtype=int)
+                    for predicted_value in predicted_values:
+                        y_pred_instance[evaluation_label_dictionary.get_idx_for_item(predicted_value)] = 1
+                    y_pred.append(y_pred_instance.tolist())
+            else:
+                # single-label problems can do with a single index for each true and predicted label
+                y_true = [
+                    evaluation_label_dictionary.get_idx_for_item(true_instance[0])
+                    for true_instance in true_values_span_aligned
+                ]
+                y_pred = [
+                    evaluation_label_dictionary.get_idx_for_item(predicted_instance[0])
+                    for predicted_instance in predicted_values_span_aligned
+                ]
 
-        # now, calculate evaluation numbers
-        target_names = []
-        labels = []
+            # now, calculate evaluation numbers
+            target_names = []
+            labels = []
 
-        counter = Counter(itertools.chain.from_iterable(all_true_values.values()))
-        counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
+            counter = Counter(itertools.chain.from_iterable(all_true_values.values()))
+            counter.update(list(itertools.chain.from_iterable(all_predicted_values.values())))
 
-        for label_name, _count in counter.most_common():
-            if label_name == "O":
-                continue
-            target_names.append(label_name)
-            labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
+            for label_name, _count in counter.most_common():
+                if label_name == "O":
+                    continue
+                target_names.append(label_name)
+                labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
 
-        # there is at least one gold label or one prediction (default)
-        if len(all_true_values) + len(all_predicted_values) > 1:
-            classification_report = sklearn.metrics.classification_report(
-                y_true,
-                y_pred,
-                digits=4,
-                target_names=target_names,
-                zero_division=0,
-                labels=labels,
-            )
+            #print(f"{len(data_points)}\t{len(y_true_save)}\n{len(y_true)}\t{len(y_pred)}\t{len(target_names)}\t{len(labels)}")
 
-            classification_report_dict = sklearn.metrics.classification_report(
-                y_true,
-                y_pred,
-                target_names=target_names,
-                zero_division=0,
-                output_dict=True,
-                labels=labels,
-            )
+            # there is at least one gold label or one prediction (default)
+            if len(all_true_values) + len(all_predicted_values) > 1:
+                classification_report = sklearn.metrics.classification_report(
+                    y_true,
+                    y_pred,
+                    digits=4,
+                    target_names=target_names,
+                    zero_division=0,
+                    labels=labels,
+                )
 
-            # compute accuracy separately as it is not always in classification_report (e.g. when micro avg exists)
-            accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
+                classification_report_dict = sklearn.metrics.classification_report(
+                    y_true,
+                    y_pred,
+                    target_names=target_names,
+                    zero_division=0,
+                    output_dict=True,
+                    labels=labels,
+                )
 
-            # if there is only one label, then "micro avg" = "macro avg"
-            if len(target_names) == 1:
-                classification_report_dict["micro avg"] = classification_report_dict["macro avg"]
+                # compute accuracy separately as it is not always in classification_report (e.g. when micro avg exists)
+                accuracy_score = round(sklearn.metrics.accuracy_score(y_true, y_pred), 4)
 
-            # The "micro avg" appears only in the classification report if no prediction is possible.
-            # Otherwise, it is identical to the "macro avg". In this case, we add it to the report.
-            if "micro avg" not in classification_report_dict:
-                classification_report_dict["micro avg"] = {}
-                for metric_key in classification_report_dict["macro avg"]:
-                    if metric_key != "support":
-                        classification_report_dict["micro avg"][metric_key] = classification_report_dict["accuracy"]
-                    else:
-                        classification_report_dict["micro avg"][metric_key] = classification_report_dict["macro avg"][
-                            "support"
-                        ]
+                # if there is only one label, then "micro avg" = "macro avg"
+                if len(target_names) == 1:
+                    classification_report_dict["micro avg"] = classification_report_dict["macro avg"]
 
-            detailed_result = (
-                "\nResults:"
-                f"\n- F-score (micro) {round(classification_report_dict['micro avg']['f1-score'], 4)}"
-                f"\n- F-score (macro) {round(classification_report_dict['macro avg']['f1-score'], 4)}"
-                f"\n- Accuracy {accuracy_score}"
-                "\n\nBy class:\n" + classification_report
-            )
+                # The "micro avg" appears only in the classification report if no prediction is possible.
+                # Otherwise, it is identical to the "macro avg". In this case, we add it to the report.
+                if "micro avg" not in classification_report_dict:
+                    classification_report_dict["micro avg"] = {}
+                    for metric_key in classification_report_dict["macro avg"]:
+                        if metric_key != "support":
+                            classification_report_dict["micro avg"][metric_key] = classification_report_dict["accuracy"]
+                        else:
+                            classification_report_dict["micro avg"][metric_key] = classification_report_dict["macro avg"][
+                                "support"
+                            ]
 
-            # Create and populate score object for logging with all evaluation values, plus the loss
-            scores: dict[Union[tuple[str, ...], str], Any] = {}
+                detailed_result = (
+                    "\nResults:"
+                    f"\n- F-score (micro) {round(classification_report_dict['micro avg']['f1-score'], 4)}"
+                    f"\n- F-score (macro) {round(classification_report_dict['macro avg']['f1-score'], 4)}"
+                    f"\n- Accuracy {accuracy_score}"
+                    "\n\nBy class:\n" + classification_report
+                )
 
-            for avg_type in ("micro avg", "macro avg"):
-                for metric_type in ("f1-score", "precision", "recall"):
-                    scores[(avg_type, metric_type)] = classification_report_dict[avg_type][metric_type]
+                # Create and populate score object for logging with all evaluation values, plus the loss
+                scores: dict[Union[tuple[str, ...], str], Any] = {}
 
-            scores["accuracy"] = accuracy_score
+                for avg_type in ("micro avg", "macro avg"):
+                    for metric_type in ("f1-score", "precision", "recall"):
+                        scores[(avg_type, metric_type)] = classification_report_dict[avg_type][metric_type]
 
-            if average_over > 0:
-                eval_loss /= average_over
-            scores["loss"] = eval_loss.item()
+                scores["accuracy"] = accuracy_score
 
-            return Result(
-                main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
-                detailed_results=detailed_result,
-                classification_report=classification_report_dict,
-                scores=scores,
-            )
+                if average_over > 0:
+                    eval_loss /= average_over
+                scores["loss"] = eval_loss.item()
+                print('scores', scores)
 
-        else:
-            # issue error and default all evaluation numbers to 0.
-            error_text = (
-                f"It was not possible to compute evaluation values because: \n"
-                f"- The evaluation data has no gold labels for label_type='{gold_label_type}'!\n"
-                f"- And no predictions were made!\n"
-                "Double check your corpus (if the test split has labels), and how you initialize the ModelTrainer!"
-            )
+                print('classification report')
+                print(classification_report_dict['micro avg'])
 
-            return Result(
-                main_score=0.0,
-                detailed_results=error_text,
-                classification_report={},
-                scores={"loss": 0.0},
-            )
+                t3 = time()
+                print('time3', t3 - t2)
+                print('total time', t3 - t0)
+                result = Result(
+                    main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
+                    detailed_results=detailed_result,
+                    classification_report=classification_report_dict,
+                    scores=scores,
+                )
+
+            else:
+                # issue error and default all evaluation numbers to 0.
+                error_text = (
+                    f"It was not possible to compute evaluation values because: \n"
+                    f"- The evaluation data has no gold labels for label_type='{gold_label_type}'!\n"
+                    f"- And no predictions were made!\n"
+                    "Double check your corpus (if the test split has labels), and how you initialize the ModelTrainer!"
+                )
+    
+                result = Result(
+                    main_score=0.0,
+                    detailed_results=error_text,
+                    classification_report={},
+                    scores={"loss": 0.0},
+                )
+
+        if multi_gpu:
+            result = broadcast_value(result, src=0)
+
+        return result
+
+        # final_value
+        # return final_value
 
     @abstractmethod
     def predict(
