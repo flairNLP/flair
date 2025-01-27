@@ -5530,3 +5530,94 @@ class MASAKHA_POS(MultiCorpus):
             corpora,
             name="masakha-pos-" + "-".join(languages),
         )
+
+
+class NER_BAVARIAN_WIKI(ColumnCorpus):
+    def __init__(
+        self,
+        fine_grained: bool = False,
+        revision: str = "main",
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ) -> None:
+        """Initialize the Bavarian NER Bavarian NER Dataset (BarNER).
+
+        The dataset was proposed in the 2024 LREC-COLING paper
+        "Sebastian, Basti, Wastl?! Recognizing Named Entities in Bavarian Dialectal Data" paper by Peng et al.
+        :param fine_grained: Defines if the fine-grained or coarse-grained (default) should be used.
+        :param revision: Defines the revision/commit of BarNER dataset, by default dataset from 'main' branch is used.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
+        dataset_name = self.__class__.__name__.lower()
+        data_folder = base_path / dataset_name
+        data_path = flair.cache_root / "datasets" / dataset_name
+
+        document_boundary_marker = "-DOCSTART-"
+
+        for split in ["train", "dev", "test"]:
+            # Get original version
+            original_split_filename = data_path / "original" / f"bar-wiki-{split}.tsv"
+            if not original_split_filename.is_file():
+                original_split_url = (
+                    f"https://raw.githubusercontent.com/mainlp/BarNER/{revision}/data/BarNER-final/bar-wiki-{split}.tsv"
+                )
+                cached_path(original_split_url, data_path / "original")
+
+            # Add sentence boundary marker
+            modified_split_filename = data_path / f"bar-wiki-{split}.tsv"
+            if not modified_split_filename.is_file():
+                f_out = open(modified_split_filename, "w")
+
+                with open(original_split_filename) as f_p:
+                    for line in f_p:
+                        line = line.strip()
+                        if line.startswith("# newdoc id = "):
+                            f_out.write(f"{document_boundary_marker}\tO\n\n")
+                            continue
+                        if line.startswith("# "):
+                            continue
+                        f_out.write(f"{line}\n")
+                f_out.close()
+
+        columns = {0: "text", 1: "ner"}
+
+        label_name_map = None
+
+        if not fine_grained:
+            # Only allowed classes in course setting are: PER, LOC, ORG and MISC.
+            # All other NEs are normalized to O, except EVENT and WOA are normalized to MISC (cf. Table 3 of paper).
+            label_name_map = {
+                "EVENT": "MISC",
+                "EVENTderiv": "O",
+                "EVENTpart": "O",
+                "LANG": "O",
+                "LANGderiv": "O",
+                "LANGpart": "O",
+                "LOCderiv": "O",
+                "LOCpart": "O",
+                "MISCderiv": "O",
+                "MISCpart": "O",
+                "ORGderiv": "O",
+                "ORGpart": "O",
+                "PERderiv": "O",
+                "PERpart": "O",
+                "RELIGION": "O",
+                "RELIGIONderiv": "O",
+                "WOA": "MISC",
+                "WOAderiv": "O",
+                "WOApart": "O",
+            }
+
+        super().__init__(
+            data_folder,
+            columns,
+            in_memory=in_memory,
+            comment_symbol="# ",
+            document_separator_token="-DOCSTART-",
+            label_name_map=label_name_map,
+            **corpusargs,
+        )
