@@ -208,8 +208,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         return model
 
     def print_model_card(self):
-        """
-        This method produces a log message that includes all recorded parameters the model was trained with.
+        """This method produces a log message that includes all recorded parameters the model was trained with.
 
         The model card includes information such as the Flair, PyTorch and Transformers versions used during training,
         and the training parameters.
@@ -900,7 +899,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
 
                         if has_unknown_label:
                             has_any_unknown_label = True
-                            scores = torch.index_select(scores, 0, torch.tensor(filtered_indices, device=flair.device))
+                            scores = torch.index_select(
+                                scores, 0, torch.tensor(filtered_indices, device=flair.device, dtype=torch.int32)
+                            )
 
                         gold_labels = self._prepare_label_tensor([data_points[index] for index in filtered_indices])
                         overall_loss += self._calculate_loss(scores, gold_labels)[0]

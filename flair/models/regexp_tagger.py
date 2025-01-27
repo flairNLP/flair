@@ -45,7 +45,9 @@ class TokenCollection:
 
 
 class RegexpTagger:
-    def __init__(self, mapping: Union[list[tuple[str, str]], tuple[str, str]]) -> None:
+    def __init__(
+        self, mapping: Union[list[Union[tuple[str, str], tuple[str, str, int]]], tuple[str, str], tuple[str, str, int]]
+    ) -> None:
         r"""This tagger is capable of tagging sentence objects with given regexp -> label mappings.
 
         I.e: The tuple (r'(["\'])(?:(?=(\\?))\2.)*?\1', 'QUOTE') maps every match of the regexp to
@@ -58,14 +60,18 @@ class RegexpTagger:
         Args:
             mapping: A list of tuples or a single tuple representing a mapping as regexp -> label
         """
-        self._regexp_mapping: dict[str, typing.Pattern] = {}
+        self._regexp_mapping: list = []
         self.register_labels(mapping=mapping)
+
+    def label_type(self):
+        for regexp, label, group in self._regexp_mapping:
+            return label
 
     @property
     def registered_labels(self):
         return self._regexp_mapping
 
-    def register_labels(self, mapping: Union[list[tuple[str, str]], tuple[str, str]]):
+    def register_labels(self, mapping):
         """Register a regexp -> label mapping.
 
         Args:
@@ -73,9 +79,14 @@ class RegexpTagger:
         """
         mapping = self._listify(mapping)
 
-        for regexp, label in mapping:
+        for entry in mapping:
+            regexp = entry[0]
+            label = entry[1]
+            group = entry[2] if len(entry) > 2 else 0
             try:
-                self._regexp_mapping[label] = re.compile(regexp)
+                pattern = re.compile(regexp)
+                self._regexp_mapping.append((pattern, label, group))
+
             except re.error as err:
                 raise re.error(
                     f"Couldn't compile regexp '{regexp}' for label '{label}'. Aborted with error: '{err.msg}'"
@@ -89,10 +100,7 @@ class RegexpTagger:
         """
         labels = self._listify(labels)
 
-        for label in labels:
-            if not self._regexp_mapping.get(label):
-                continue
-            self._regexp_mapping.pop(label)
+        self._regexp_mapping = [mapping for mapping in self._regexp_mapping if mapping[1] not in labels]
 
     @staticmethod
     def _listify(element: object) -> list:
@@ -120,9 +128,11 @@ class RegexpTagger:
         """
         collection = TokenCollection(sentence)
 
-        for label, pattern in self._regexp_mapping.items():
+        for pattern, label, group in self._regexp_mapping:
             for match in pattern.finditer(sentence.to_original_text()):
-                span: tuple[int, int] = match.span()
+                # print(match)
+                span: tuple[int, int] = match.span(group)
+                # print(span)
                 try:
                     token_span = collection.get_token_span(span)
                 except ValueError:

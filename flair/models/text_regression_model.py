@@ -137,7 +137,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
         out_path: Optional[Union[str, Path]] = None,
         embedding_storage_mode: EmbeddingStorageMode = "none",
         mini_batch_size: int = 32,
-        main_evaluation_metric: tuple[str, str] = ("micro avg", "f1-score"),
+        main_evaluation_metric: tuple[str, str] = ("correlation", "pearson"),
         exclude_labels: Optional[list[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
@@ -195,16 +195,23 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
                 f"spearman: {metric.spearmanr():.4f}"
             )
 
-            result: Result = Result(
-                main_score=metric.pearsonr(),
+            eval_metrics = {
+                "loss": eval_loss.item(),
+                "mse": metric.mean_squared_error(),
+                "mae": metric.mean_absolute_error(),
+                "pearson": metric.pearsonr(),
+                "spearman": metric.spearmanr(),
+            }
+
+            if main_evaluation_metric[0] in ("correlation", "other"):
+                main_score = eval_metrics[main_evaluation_metric[1]]
+            else:
+                main_score = eval_metrics["spearman"]
+
+            result = Result(
+                main_score=main_score,
                 detailed_results=detailed_result,
-                scores={
-                    "loss": eval_loss.item(),
-                    "mse": metric.mean_squared_error(),
-                    "mae": metric.mean_absolute_error(),
-                    "pearson": metric.pearsonr(),
-                    "spearman": metric.spearmanr(),
-                },
+                scores=eval_metrics,
             )
 
             return result
