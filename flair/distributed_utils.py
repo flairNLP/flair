@@ -12,6 +12,7 @@ from torch.utils.data import Dataset
 
 import flair
 from flair.data import Corpus, _len_dataset
+from flair.training_utils import print_execution_time
 
 log = logging.getLogger("flair")
 
@@ -63,6 +64,7 @@ def is_main_process() -> bool:
         return True
 
 
+@print_execution_time
 def validate_corpus_same_each_process(corpus: Corpus) -> None:
     """Catches most cases in which a corpus is not the same on each process. However, there is no guarantee for two
     reasons: 1) It uses a sample for speed 2) It compares strings to avoid requiring the datasets to be serializable

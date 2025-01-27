@@ -1,11 +1,13 @@
+import functools
 import logging
 import random
+import time
 from collections import defaultdict
 from enum import Enum
 from functools import reduce
 from math import inf
 from pathlib import Path
-from typing import Literal, Optional, Union
+from typing import Callable, Literal, Optional, Union
 
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -411,3 +413,23 @@ def identify_dynamic_embeddings(data_points: list[DT]) -> Optional[list[str]]:
     if not all_embeddings:
         return None
     return list(set(dynamic_embeddings))
+
+
+def print_execution_time(func: Callable) -> Callable:
+    """
+    Decorator that prints the execution time of the decorated function.
+
+    :param func: The function to be decorated.
+    :return: The wrapped function with execution time printing.
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()  # Start the timer
+        result = func(*args, **kwargs)  # Execute the function
+        end_time = time.perf_counter()  # End the timer
+        elapsed_time = end_time - start_time
+        print(f"Function '{func.__name__}' executed in {elapsed_time:.4f} seconds.")
+        return result
+
+    return wrapper
