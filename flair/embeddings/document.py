@@ -691,10 +691,9 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
 
         lengths: list[int] = [len(sentence.tokens) for sentence in sentences]
         padding_length: int = max(max(lengths), self.min_sequence_length)
-
         pre_allocated_zero_tensor = torch.zeros(
             self.embeddings.embedding_length * padding_length,
-            dtype=self.convs[0].weight.dtype,
+            dtype=cast(torch.nn.Conv1d, self.convs[0]).weight.dtype,
             device=flair.device,
         )
 
