@@ -6,3 +6,4 @@ flair.models
 .. autosummary::
     :toctree: generated
     :nosignatures:
+    :exclude-members: apply
