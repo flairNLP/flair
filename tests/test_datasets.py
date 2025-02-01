@@ -376,9 +376,9 @@ def test_load_conllu_plus_corpus(tasks_base_path):
         in_memory=False,
     )
 
-    assert len(corpus.train) == 4
-    assert len(corpus.dev) == 4
-    assert len(corpus.test) == 4
+    assert len(corpus.train) == 5
+    assert len(corpus.dev) == 5
+    assert len(corpus.test) == 5
 
     _assert_conllu_dataset(corpus.train)
 
@@ -393,9 +393,9 @@ def test_load_conllu_corpus_plus_in_memory(tasks_base_path):
         in_memory=True,
     )
 
-    assert len(corpus.train) == 4
-    assert len(corpus.dev) == 4
-    assert len(corpus.test) == 4
+    assert len(corpus.train) == 5
+    assert len(corpus.dev) == 5
+    assert len(corpus.test) == 5
 
     _assert_conllu_dataset(corpus.train)
 
