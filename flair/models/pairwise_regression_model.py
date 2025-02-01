@@ -345,7 +345,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
                 f"spearman: {metric.spearmanr():.4f}"
             )
 
-            scores = {
+            eval_metrics = {
                 "loss": eval_loss.item(),
                 "mse": metric.mean_squared_error(),
                 "mae": metric.mean_absolute_error(),
@@ -354,12 +354,12 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
             }
 
             if main_evaluation_metric[0] in ("correlation", "other"):
-                main_score = scores[main_evaluation_metric[1]]
+                main_score = eval_metrics[main_evaluation_metric[1]]
             else:
-                main_score = scores["spearman"]
+                main_score = eval_metrics["spearman"]
 
             return Result(
                 main_score=main_score,
                 detailed_results=detailed_result,
-                scores=scores,
+                scores=eval_metrics,
             )
