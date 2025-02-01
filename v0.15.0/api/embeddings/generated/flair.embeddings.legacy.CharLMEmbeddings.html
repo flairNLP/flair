@@ -855,7 +855,7 @@ is written to the provided directory.</p></li>
 <td><p>Set the module in evaluation mode.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">extra_repr</span></code>()</p></td>
-<td><p>Set the extra representation of the module.</p></td>
+<td><p>Return the extra representation of the module.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>()</p></td>
 <td><p>Casts all floating point parameters and buffers to <code class="docutils literal notranslate"><span class="pre">float</span></code> datatype.</p></td>
@@ -1024,9 +1024,9 @@ is written to the provided directory.</p></li>
 <dt class="sig sig-object py" id="flair.embeddings.legacy.CharLMEmbeddings.train">
 <span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/v0.15.0/flair/embeddings/legacy.py#L381-L382"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.embeddings.legacy.CharLMEmbeddings.train" title="Link to this definition">#</a></dt>
 <dd><p>Set the module in training mode.</p>
-<p>This has any effect only on certain modules. See documentations of
+<p>This has an effect only on certain modules. See the documentation of
 particular modules for details of their behaviors in training/evaluation
-mode, if they are affected, e.g. <code class="xref py py-class docutils literal notranslate"><span class="pre">Dropout</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNorm</span></code>,
+mode, i.e., whether they are affected, e.g. <code class="xref py py-class docutils literal notranslate"><span class="pre">Dropout</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNorm</span></code>,
 etc.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
