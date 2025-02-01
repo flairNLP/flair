@@ -862,8 +862,8 @@ for entity in sentence.get_spans('ner'):
             self.save(local_model_path)
 
             # Determine if model card already exists
-            info = model_info(repo_id, use_auth_token=token)
-            write_readme = all(f.rfilename != "README.md" for f in info.siblings)
+            info = model_info(repo_id, token=token)
+            write_readme = info.siblings is None or all(f.rfilename != "README.md" for f in info.siblings)
 
             # Generate and save model card
             if write_readme:
