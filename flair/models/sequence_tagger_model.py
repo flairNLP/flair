@@ -1375,6 +1375,9 @@ class EarlyExitSequenceTagger(SequenceTagger):
         #TODO: add check for different variants of loss
         self.metrics_list.append('pd')
         self.metrics_list.append('fl')
+        self.metrics_list.append('tac')
+        self.metrics_list.append('tal')
+        self.metrics_list.append('le')
 
         self.to(flair.device)
 
@@ -1511,14 +1514,24 @@ class EarlyExitSequenceTagger(SequenceTagger):
         # calculate and set pd metric here
         pd = []
         fl = []
+        total_last =[]
+        total_correct = []
+        layer_entropy = []
+
 
         for i in range(softmax.size()[1]):
             layer_metrics = self._calculate_layer_metrics(softmax[:, i, :].cpu(), gold_labels[i].item())
             pd.append(layer_metrics['prediction_depth'])
             fl.append(layer_metrics['first_layer']) # todo: pass pred as an argument, since it's already calculated
+            total_last.append(layer_metrics['total_agree_w_last'])
+            total_correct.append(layer_metrics['total_agree_w_correct'])
+            layer_entropy.append(layer_metrics['layer_entropy'])
 
         metrics_dict["pd"] = torch.tensor(pd, device=torch.device("cpu"))
         metrics_dict["fl"] = torch.tensor(fl, device=torch.device("cpu"))
+        metrics_dict["tac"] = torch.tensor(total_correct, device=torch.device("cpu"))
+        metrics_dict["tal"] = torch.tensor(total_last, device=torch.device("cpu"))
+        metrics_dict["le"] = torch.tensor(layer_entropy, device=torch.device("cpu"))
 
         return pred, metrics_dict, updated_history_metrics_dict
 
@@ -1722,19 +1735,28 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         fl = self.n_layers
 
+        total_agree_w_last = 0
+        total_agree_w_correct = 0
+
         pred_labels = torch.argmax(scores, dim=-1)
+        frequencies = torch.bincount(pred_labels, minlength=len(self.label_dictionary))
+        frequencies = frequencies / frequencies.sum()   # normalize frequencies
+        
+        layer_entropy = -torch.sum(torch.mul(frequencies, torch.nan_to_num(torch.log(frequencies)))) #which dimension?
 
         for i in range(self.n_layers - 1, -1, -1):  # iterate over the layers starting from the penultimate one
-
             if pred_labels[i] == gold_label:
                 fl = i  # pd will have the ID of the lowest layer predicting the training label
+                total_agree_w_correct += 1
             
-            if pred_labels[i] == pred_labels[-1] and not final_pd:
-                pd -= 1
-            else:
+            if pred_labels[i] == pred_labels[-1]:
+                if not final_pd: # if prediction is the same as the last layer
+                    pd -= 1
+                total_agree_w_last += 1
+            else: # if prediction is not the same as the last layer, then pd sequence is broken and final pd is set
                 final_pd = True
 
-        return {'prediction_depth': pd,'first_layer':fl}       
+        return {'prediction_depth': pd,'first_layer':fl,'layer_entropy':layer_entropy,'total_agree_w_last':total_agree_w_last,'total_agree_w_correct':total_agree_w_correct}       
 
     def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
         """
