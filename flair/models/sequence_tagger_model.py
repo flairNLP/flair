@@ -65,6 +65,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         allow_unk_predictions: bool = False,
         calculate_sample_metrics: bool = False,
         metrics_mode: str = "epoch_end",
+        metrics_save_list: List[str] = []
     ) -> None:
         """Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
 
@@ -228,6 +229,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness_sum','last_iteration','hist_prediction', 'hist_MILD','total_epochs']
             self.max_certainty = -np.log(1.0 / float(self.tagset_size))
             self.mode = metrics_mode
+            self.metrics_save_list = metrics_save_list
 
         self.print_out_path = None
 
@@ -397,6 +399,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     token.set_metric("hist_prediction", updated_history_metrics_dict["hist_prediction"][i])
                     token.set_metric("hist_MILD", updated_history_metrics_dict["hist_MILD"][i])
                     # new dp properties: last_iter; last_pred; last_conf, last_sq_sum   
+
+                    for metric in self.metrics_save_list:
+                        token.set_metric(metric, metrics_dict[metric][i].item())
                     i+=1 
                 outfile.write('\n')
 
