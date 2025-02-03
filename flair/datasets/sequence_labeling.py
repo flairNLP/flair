@@ -5570,9 +5570,9 @@ class NER_BAVARIAN_WIKI(ColumnCorpus):
             # Add sentence boundary marker
             modified_split_filename = data_path / f"bar-wiki-{split}.tsv"
             if not modified_split_filename.is_file():
-                f_out = open(modified_split_filename, "w")
+                f_out = open(modified_split_filename, "w", encoding="utf-8")
 
-                with open(original_split_filename) as f_p:
+                with open(original_split_filename, encoding="utf-8") as f_p:
                     for line in f_p:
                         line = line.strip()
                         if line.startswith("# newdoc id = "):
