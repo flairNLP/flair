@@ -164,6 +164,7 @@ class MultitaskModel(flair.nn.Classifier):
         main_score = 0.0
         all_detailed_results = ""
         all_classification_report: dict[str, dict[str, Any]] = {}
+        scores: dict[Any, float] = {}
 
         for task_id, split in batch_split.items():
             result = self.tasks[task_id].evaluate(
@@ -194,7 +195,12 @@ class MultitaskModel(flair.nn.Classifier):
             )
             all_classification_report[task_id] = result.classification_report
 
-        scores = {"loss": loss.item() / len(batch_split)}
+            # Add metrics so they will be available to _publish_eval_result.
+            for avg_type in ("micro avg", "macro avg"):
+                for metric_type in ("f1-score", "precision", "recall"):
+                    scores[(task_id, avg_type, metric_type)] = result.classification_report[avg_type][metric_type]
+
+        scores["loss"] = loss.item() / len(batch_split)
 
         return Result(
             main_score=main_score / len(batch_split),
