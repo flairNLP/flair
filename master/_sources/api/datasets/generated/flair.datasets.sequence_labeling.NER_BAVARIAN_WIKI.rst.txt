@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_BAVARIAN\_WIKI
+=====================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_BAVARIAN_WIKI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_BAVARIAN_WIKI.__init__
+      ~NER_BAVARIAN_WIKI.add_label_noise
+      ~NER_BAVARIAN_WIKI.downsample
+      ~NER_BAVARIAN_WIKI.filter_empty_sentences
+      ~NER_BAVARIAN_WIKI.filter_long_sentences
+      ~NER_BAVARIAN_WIKI.get_all_sentences
+      ~NER_BAVARIAN_WIKI.get_label_distribution
+      ~NER_BAVARIAN_WIKI.make_label_dictionary
+      ~NER_BAVARIAN_WIKI.make_tag_dictionary
+      ~NER_BAVARIAN_WIKI.make_vocab_dictionary
+      ~NER_BAVARIAN_WIKI.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_BAVARIAN_WIKI.dev
+      ~NER_BAVARIAN_WIKI.test
+      ~NER_BAVARIAN_WIKI.train
+   
+   
