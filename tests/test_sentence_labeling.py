@@ -3,7 +3,7 @@ from typing import cast
 import pytest
 
 from flair.data import Sentence
-from flair.training_utils import CharEntity, TokenEntity, create_labeled_sentence
+from flair.training_utils import CharEntity, TokenEntity, create_labeled_sentence_from_entity_offsets
 
 
 @pytest.fixture(params=["resume1.txt"])
@@ -63,7 +63,7 @@ def small_token_limit_response() -> list[Sentence]:
 
 class TestChunking:
     def test_empty_string(self):
-        sentences = create_labeled_sentence("", [])
+        sentences = create_labeled_sentence_from_entity_offsets("", [])
         assert len(sentences) == 0
 
     def check_tokens(self, sentence: Sentence, expected_tokens: list[str]):
@@ -101,11 +101,11 @@ class TestChunking:
     )
     def test_short_text(self, test_text: str, expected_text: str):
         """Short texts that should fit nicely into a single chunk."""
-        chunks = create_labeled_sentence(test_text, [])
+        chunks = create_labeled_sentence_from_entity_offsets(test_text, [])
         assert chunks.text == expected_text
 
     def test_create_labeled_sentence(self, parsed_resume_dict: dict):
-        create_labeled_sentence(parsed_resume_dict["raw_text"], parsed_resume_dict["entities"])
+        create_labeled_sentence_from_entity_offsets(parsed_resume_dict["raw_text"], parsed_resume_dict["entities"])
 
     @pytest.mark.parametrize(
         "test_text, entities, expected_tokens, expected_labels",
@@ -161,7 +161,7 @@ class TestChunking:
     def test_contractions_and_hyphens(
         self, test_text: str, entities: list[CharEntity], expected_tokens: list[str], expected_labels: list[TokenEntity]
     ):
-        sentence = create_labeled_sentence(test_text, entities)
+        sentence = create_labeled_sentence_from_entity_offsets(test_text, entities)
         self.check_tokens(sentence, expected_tokens)
         self.check_token_entities(sentence, expected_labels)
 
@@ -176,7 +176,7 @@ class TestChunking:
     )
     def test_long_text(self, test_text: str, entities: list[CharEntity]):
         """Test for handling long texts that should be split into multiple chunks."""
-        create_labeled_sentence(test_text, entities)
+        create_labeled_sentence_from_entity_offsets(test_text, entities)
 
     @pytest.mark.parametrize(
         "test_text, entities, expected_labels",
@@ -201,5 +201,5 @@ class TestChunking:
     def test_text_with_punctuation(
         self, test_text: str, entities: list[CharEntity], expected_labels: list[TokenEntity]
     ):
-        sentence = create_labeled_sentence(test_text, entities)
+        sentence = create_labeled_sentence_from_entity_offsets(test_text, entities)
         self.check_token_entities(sentence, expected_labels)

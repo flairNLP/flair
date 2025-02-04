@@ -463,24 +463,25 @@ def create_labeled_sentence_from_tokens(
     return sentence
 
 
-def create_labeled_sentence(
+def create_labeled_sentence_from_entity_offsets(
     text: str,
     entities: list[CharEntity],
     token_limit: float = inf,
 ) -> Sentence:
-    """Chunks and labels a text from a list of entity annotations.
+    """Creates a labeled sentence from a text and a list of entity annotations.
 
     The function explicitly tokenizes the text and labels separately, ensuring entity labels are
-    not partially split across tokens.
+    not partially split across tokens. The sentence is truncated if a token limit is set.
 
     Args:
         text (str): The full text to be tokenized and labeled.
         entities (list of tuples): Ordered non-overlapping entity annotations with each tuple in the
             format (start_char_index, end_char_index, entity_class, entity_text).
-        token_limit: numerical value that determines the maximum size of a chunk. use inf to not perform chunking
+        token_limit: numerical value that determines the maximum token length of the sentence.
+            use inf to not perform chunking
 
     Returns:
-        A list of labeled Sentence objects representing the chunks of the original text
+        A labeled Sentence objects representing the text and entity annotations.
     """
     tokens: list[Token] = []
     current_index = 0
