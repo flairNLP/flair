@@ -4,6 +4,7 @@ from typing import Any, Optional, Union
 
 import torch
 from torch import nn
+from torch.utils.data import DistributedSampler
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
@@ -11,6 +12,7 @@ import flair.embeddings
 import flair.nn
 from flair.data import Corpus, Dictionary, Sentence, TextPair, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
+from flair.distributed_utils import aggregate, aggregate_tensor_sum, broadcast_value, flatten, is_main_process
 from flair.nn.model import ReduceTransformerVocabMixin
 from flair.training_utils import EmbeddingStorageMode, MetricRegression, Result, store_embeddings
 
@@ -288,13 +290,21 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         exclude_labels: Optional[list[str]] = None,
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
+        multi_gpu: bool = False,
         **kwargs,
     ) -> Result:
         exclude_labels = exclude_labels if exclude_labels is not None else []
+
         # read Dataset into data loader, if list of sentences passed, make Dataset first
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
-        data_loader = DataLoader(data_points, batch_size=mini_batch_size)
+
+        data_loader = DataLoader(
+            data_points,
+            batch_size=mini_batch_size,
+            shuffle=False,
+            sampler=DistributedSampler(data_points, shuffle=False) if multi_gpu else None,
+        )
 
         with torch.no_grad():
             eval_loss = torch.zeros(1, device=flair.device)
@@ -311,7 +321,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
                     if isinstance(batch, Sentence):
                         batch = [batch]
 
-                    loss, num, scores = self._forward_loss_and_scores(batch, return_scores=True)
+                    loss, num, scores_forward = self._forward_loss_and_scores(batch, return_scores=True)
 
                     true_values = []
                     for sentence in batch:
@@ -319,7 +329,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
                         for label in sentence.get_labels(gold_label_type):
                             true_values.append(float(label.value))
 
-                    results = scores.cpu().tolist()
+                    results = scores_forward.cpu().tolist()
 
                     eval_loss += loss
 
@@ -336,30 +346,46 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
                 if out_path is not None:
                     out_file.close()
 
+            if multi_gpu:
+                metric.true = aggregate(metric.true, flatten)
+                metric.pred = aggregate(metric.pred, flatten)
+                eval_loss = aggregate(eval_loss, aggregate_tensor_sum)
+                total_count = aggregate(total_count, sum)
+
             eval_loss /= total_count
 
-            detailed_result = (
-                f"AVG: mse: {metric.mean_squared_error():.4f} - "
-                f"mae: {metric.mean_absolute_error():.4f} - "
-                f"pearson: {metric.pearsonr():.4f} - "
-                f"spearman: {metric.spearmanr():.4f}"
-            )
+            if is_main_process():  # only calculate metrics in main process
 
-            eval_metrics = {
-                "loss": eval_loss.item(),
-                "mse": metric.mean_squared_error(),
-                "mae": metric.mean_absolute_error(),
-                "pearson": metric.pearsonr(),
-                "spearman": metric.spearmanr(),
-            }
+                detailed_result = (
+                    f"AVG: mse: {metric.mean_squared_error():.4f} - "
+                    f"mae: {metric.mean_absolute_error():.4f} - "
+                    f"pearson: {metric.pearsonr():.4f} - "
+                    f"spearman: {metric.spearmanr():.4f}"
+                )
 
-            if main_evaluation_metric[0] in ("correlation", "other"):
-                main_score = eval_metrics[main_evaluation_metric[1]]
-            else:
-                main_score = eval_metrics["spearman"]
+                scores = {
+                    "loss": eval_loss.item(),
+                    "mse": metric.mean_squared_error(),
+                    "mae": metric.mean_absolute_error(),
+                    "pearson": metric.pearsonr(),
+                    "spearman": metric.spearmanr(),
+                }
 
-            return Result(
-                main_score=main_score,
-                detailed_results=detailed_result,
-                scores=eval_metrics,
-            )
+                if main_evaluation_metric[0] in ("correlation", "other"):
+                    main_score = scores[main_evaluation_metric[1]]
+                else:
+                    main_score = scores["spearman"]
+
+                result = Result(
+                    main_score=main_score,
+                    detailed_results=detailed_result,
+                    scores=scores,
+                )
+
+            else:  # if it's not the main process, just set a dummy Result
+                result = Result(0.0, "", {}, {"loss": 0.0})
+
+            if multi_gpu:
+                result = broadcast_value(result, src=0)
+
+            return result
