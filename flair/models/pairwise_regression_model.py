@@ -299,18 +299,12 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
         if not isinstance(data_points, Dataset):
             data_points = FlairDatapointDataset(data_points)
 
-        if multi_gpu:
-            distributed_sampler: DistributedSampler = DistributedSampler(
-                data_points, shuffle=False
-            )
-            data_loader = DataLoader(
-                data_points,
-                batch_size=mini_batch_size,
-                shuffle=False,
-                sampler=distributed_sampler,
-            )
-        else:
-            data_loader = DataLoader(data_points, batch_size=mini_batch_size)
+        data_loader = DataLoader(
+            data_points,
+            batch_size=mini_batch_size,
+            shuffle=False,
+            sampler=DistributedSampler(data_points, shuffle=False) if multi_gpu else None,
+        )
 
         with torch.no_grad():
             eval_loss = torch.zeros(1, device=flair.device)
@@ -327,7 +321,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
                     if isinstance(batch, Sentence):
                         batch = [batch]
 
-                    loss, num, scores = self._forward_loss_and_scores(batch, return_scores=True)
+                    loss, num, scores_forward = self._forward_loss_and_scores(batch, return_scores=True)
 
                     true_values = []
                     for sentence in batch:
@@ -335,7 +329,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
                         for label in sentence.get_labels(gold_label_type):
                             true_values.append(float(label.value))
 
-                    results = scores.cpu().tolist()
+                    results = scores_forward.cpu().tolist()
 
                     eval_loss += loss
 
@@ -389,7 +383,7 @@ class TextPairRegressor(flair.nn.Model[TextPair], ReduceTransformerVocabMixin):
                 )
 
             else:  # if it's not the main process, just set a dummy Result
-                result = Result(0., "", {}, {'loss': 0.0})
+                result = Result(0.0, "", {}, {"loss": 0.0})
 
             if multi_gpu:
                 result = broadcast_value(result, src=0)

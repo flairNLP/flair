@@ -5,7 +5,6 @@ import typing
 from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
-from time import time
 from typing import Any, Optional, Union
 
 import torch.nn
@@ -19,8 +18,14 @@ import flair
 from flair.class_utils import get_non_abstract_subclasses
 from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
-from flair.distributed_utils import aggregate, aggregate_tensor_sum, broadcast_value, flatten_dicts, is_main_process, \
-    merge_sets
+from flair.distributed_utils import (
+    aggregate,
+    aggregate_tensor_sum,
+    broadcast_value,
+    flatten_dicts,
+    is_main_process,
+    merge_sets,
+)
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
 from flair.file_utils import Tqdm, load_torch_state
@@ -274,8 +279,6 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         multi_gpu: bool = False,
         **kwargs,
     ) -> Result:
-        t0 = time()
-        print('running custom evaluate..')
         exclude_labels = exclude_labels if exclude_labels is not None else []
 
         import numpy as np
@@ -302,25 +305,15 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             all_true_values = {}
             all_predicted_values = {}
 
-            if multi_gpu:
-                distributed_sampler: DistributedSampler = DistributedSampler(
-                    data_points, shuffle=False
-                )
-                loader = DataLoader(
-                    data_points,
-                    batch_size=mini_batch_size,
-                    shuffle=False,
-                    sampler=distributed_sampler,
-                )
-                rank = torch.distributed.get_rank()
-                print('rank =', rank)
-            else:
-                loader = DataLoader(data_points, batch_size=mini_batch_size)
-                rank = 0
+            loader = DataLoader(
+                data_points,
+                batch_size=mini_batch_size,
+                shuffle=False,
+                sampler=DistributedSampler(data_points, shuffle=False) if multi_gpu else None,
+            )
+            rank = torch.distributed.get_rank() if multi_gpu else 0
 
             sentence_id = 0
-            t1 = time()
-            print('time1', t1 - t0)
             for batch in Tqdm.tqdm(loader, disable=not is_main_process()):
                 # remove any previously predicted labels
                 for datapoint in batch:
@@ -381,19 +374,14 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 if out_path:
                     lines.extend(self._print_predictions(batch, gold_label_type))
 
-        t2 = time()
-        print('time2', t2 - t1)
-        print('eval losssss', type(eval_loss), eval_loss)
         if multi_gpu:
             all_spans = aggregate(all_spans, merge_sets)
             all_true_values = aggregate(all_true_values, flatten_dicts)
             all_predicted_values = aggregate(all_predicted_values, flatten_dicts)
             average_over = aggregate(average_over, sum)
             eval_loss = aggregate(eval_loss, aggregate_tensor_sum)
-            print('eval loss =', eval_loss)
-        print('len all', len(all_spans), len(all_true_values), len(all_predicted_values), sep='\t')
 
-        result = Result(0., "", {}, {'loss': 0.0})
+        result = Result(0.0, "", {}, {"loss": 0.0})
         if is_main_process():
 
             # convert true and predicted values to two span-aligned lists
@@ -475,10 +463,8 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 target_names.append(label_name)
                 labels.append(evaluation_label_dictionary.get_idx_for_item(label_name))
 
-            #print(f"{len(data_points)}\t{len(y_true_save)}\n{len(y_true)}\t{len(y_pred)}\t{len(target_names)}\t{len(labels)}")
-
             # there is at least one gold label or one prediction (default)
-            if len(all_true_values) + len(all_predicted_values) > 1:
+            if is_main_process() and len(all_true_values) + len(all_predicted_values) > 1:
                 classification_report = sklearn.metrics.classification_report(
                     y_true,
                     y_pred,
@@ -512,9 +498,9 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                         if metric_key != "support":
                             classification_report_dict["micro avg"][metric_key] = classification_report_dict["accuracy"]
                         else:
-                            classification_report_dict["micro avg"][metric_key] = classification_report_dict["macro avg"][
-                                "support"
-                            ]
+                            classification_report_dict["micro avg"][metric_key] = classification_report_dict[
+                                "macro avg"
+                            ]["support"]
 
                 detailed_result = (
                     "\nResults:"
@@ -536,14 +522,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 if average_over > 0:
                     eval_loss /= average_over
                 scores["loss"] = eval_loss.item()
-                print('scores', scores)
 
-                print('classification report')
-                print(classification_report_dict['micro avg'])
-
-                t3 = time()
-                print('time3', t3 - t2)
-                print('total time', t3 - t0)
                 result = Result(
                     main_score=classification_report_dict[main_evaluation_metric[0]][main_evaluation_metric[1]],
                     detailed_results=detailed_result,
@@ -559,7 +538,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                     f"- And no predictions were made!\n"
                     "Double check your corpus (if the test split has labels), and how you initialize the ModelTrainer!"
                 )
-    
+
                 result = Result(
                     main_score=0.0,
                     detailed_results=error_text,
@@ -571,9 +550,6 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             result = broadcast_value(result, src=0)
 
         return result
-
-        # final_value
-        # return final_value
 
     @abstractmethod
     def predict(

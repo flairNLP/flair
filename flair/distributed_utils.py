@@ -2,9 +2,8 @@ import logging
 import os
 import random
 from multiprocessing.connection import Connection
-from typing import Any, Callable, Collection, Iterable, TypeVar
+from typing import Callable, Collection, Iterable, TypeVar
 
-import numpy as np
 import torch
 import torch.multiprocessing as mp
 from torch.distributed import destroy_process_group, init_process_group
@@ -12,7 +11,6 @@ from torch.utils.data import Dataset
 
 import flair
 from flair.data import Corpus, _len_dataset
-from flair.training_utils import print_execution_time
 
 log = logging.getLogger("flair")
 
@@ -64,7 +62,6 @@ def is_main_process() -> bool:
         return True
 
 
-@print_execution_time
 def validate_corpus_same_each_process(corpus: Corpus) -> None:
     """Catches most cases in which a corpus is not the same on each process. However, there is no guarantee for two
     reasons: 1) It uses a sample for speed 2) It compares strings to avoid requiring the datasets to be serializable
