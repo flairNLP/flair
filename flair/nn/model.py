@@ -431,8 +431,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                 # get the gold labels
                 for datapoint in batch:
                     for gold_label in datapoint.get_labels(gold_label_type):
-                        #representation = f"{rank}-{sentence_id}: {gold_label.unlabeled_identifier}"
-                        representation = str(sentence_id) + ": " + gold_label.unlabeled_identifier
+                        representation = f"{rank}-{sentence_id}: {gold_label.unlabeled_identifier}"
 
                         value = gold_label.value
                         if gold_label_dictionary and gold_label_dictionary.get_idx_for_item(value) == 0:
@@ -447,8 +446,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                             all_spans.add(representation)
 
                     for predicted_span in datapoint.get_labels("predicted"):
-                        #representation = f"{rank}-{sentence_id}: {predicted_span.unlabeled_identifier}"
-                        representation = str(sentence_id) + ": " + predicted_span.unlabeled_identifier
+                        representation = f"{rank}-{sentence_id}: {predicted_span.unlabeled_identifier}"
 
                         # add to all_predicted_values
                         if representation not in all_predicted_values:
