@@ -1,8 +1,4 @@
-from operator import itemgetter
-from typing import Optional
-
 import pytest
-from torch.utils.data import Dataset
 
 from flair.data import Relation, Sentence
 from flair.datasets import ColumnCorpus, DataLoader
@@ -21,7 +17,7 @@ from flair.models.relation_classifier_model import (
 from tests.model_test_utils import BaseModelTest
 
 encoding_strategies: dict[EncodingStrategy, list[tuple[str, str]]] = {
-    EntityMask(): [("[HEAD]", "[TAIL]") for _ in range(7)],
+    EntityMask(): [("[HEAD]", "[TAIL]") for _ in range(8)],
     TypedEntityMask(): [
         ("[HEAD-ORG]", "[TAIL-PER]"),
         ("[HEAD-ORG]", "[TAIL-PER]"),
@@ -30,6 +26,7 @@ encoding_strategies: dict[EncodingStrategy, list[tuple[str, str]]] = {
         ("[HEAD-LOC]", "[TAIL-PER]"),
         ("[HEAD-LOC]", "[TAIL-PER]"),
         ("[HEAD-ORG]", "[TAIL-PER]"),
+        ("[HEAD-LOC]", "[TAIL-PER]"),
     ],
     EntityMarker(): [
         ("[HEAD] Google [/HEAD]", "[TAIL] Larry Page [/TAIL]"),
@@ -39,6 +36,7 @@ encoding_strategies: dict[EncodingStrategy, list[tuple[str, str]]] = {
         ("[HEAD] Berlin [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
         ("[HEAD] Germany [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
         ("[HEAD] MIT [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
+        ("[HEAD] Berlin [/HEAD]", "[TAIL] Joseph Weizenbaum [/TAIL]"),
     ],
     TypedEntityMarker(): [
         ("[HEAD-ORG] Google [/HEAD-ORG]", "[TAIL-PER] Larry Page [/TAIL-PER]"),
@@ -48,6 +46,7 @@ encoding_strategies: dict[EncodingStrategy, list[tuple[str, str]]] = {
         ("[HEAD-LOC] Berlin [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
         ("[HEAD-LOC] Germany [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
         ("[HEAD-ORG] MIT [/HEAD-ORG]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
+        ("[HEAD-LOC] Berlin [/HEAD-LOC]", "[TAIL-PER] Joseph Weizenbaum [/TAIL-PER]"),
     ],
     EntityMarkerPunct(): [
         ("@ Google @", "# Larry Page #"),
@@ -57,6 +56,7 @@ encoding_strategies: dict[EncodingStrategy, list[tuple[str, str]]] = {
         ("@ Berlin @", "# Joseph Weizenbaum #"),
         ("@ Germany @", "# Joseph Weizenbaum #"),
         ("@ MIT @", "# Joseph Weizenbaum #"),
+        ("@ Berlin @", "# Joseph Weizenbaum #"),
     ],
     TypedEntityMarkerPunct(): [
         ("@ * ORG * Google @", "# ^ PER ^ Larry Page #"),
@@ -66,6 +66,7 @@ encoding_strategies: dict[EncodingStrategy, list[tuple[str, str]]] = {
         ("@ * LOC * Berlin @", "# ^ PER ^ Joseph Weizenbaum #"),
         ("@ * LOC * Germany @", "# ^ PER ^ Joseph Weizenbaum #"),
         ("@ * ORG * MIT @", "# ^ PER ^ Joseph Weizenbaum #"),
+        ("@ * LOC * Berlin @", "# ^ PER ^ Joseph Weizenbaum #"),
     ],
 }
 
@@ -104,7 +105,7 @@ class TestRelationClassifier(BaseModelTest):
 
     @pytest.fixture()
     def example_sentence(self):
-        sentence = Sentence(["Microsoft", "was", "found", "by", "Bill", "Gates"])
+        sentence = Sentence(["Microsoft", "was", "founded", "by", "Bill", "Gates"])
         sentence[:1].add_label(typename="ner", value="ORG", score=1.0)
         sentence[4:].add_label(typename="ner", value="PER", score=1.0)
         return sentence
@@ -163,17 +164,14 @@ class TestRelationClassifier(BaseModelTest):
 
     @staticmethod
     def check_transformation_correctness(
-        split: Optional[Dataset],
+        encoded_sentences: list[EncodedSentence],
         ground_truth: set[tuple[str, tuple[str, ...]]],
     ) -> None:
         # Ground truth is a set of tuples of (<Sentence Text>, <Relation Label Values>)
-        assert split is not None
-
-        data_loader = DataLoader(split, batch_size=1)
-        assert all(isinstance(sentence, EncodedSentence) for sentence in map(itemgetter(0), data_loader))
+        assert all(isinstance(sentence, EncodedSentence) for sentence in encoded_sentences)
         assert {
             (sentence.to_tokenized_string(), tuple(label.value for label in sentence.get_labels("relation")))
-            for sentence in map(itemgetter(0), data_loader)
+            for sentence in encoded_sentences
         } == ground_truth
 
     @pytest.mark.parametrize(
@@ -194,7 +192,12 @@ class TestRelationClassifier(BaseModelTest):
     ) -> None:
         label_dictionary = corpus.make_label_dictionary("relation")
         model: RelationClassifier = self.build_model(
-            embeddings, label_dictionary, cross_augmentation=cross_augmentation, encoding_strategy=encoding_strategy
+            embeddings,
+            label_dictionary,
+            cross_augmentation=cross_augmentation,
+            encoding_strategy=encoding_strategy,
+            max_allowed_tokens_between_entities=None,
+            max_surrounding_context_length=None,
         )
         transformed_corpus = model.transform_corpus(corpus)
 
@@ -211,7 +214,7 @@ class TestRelationClassifier(BaseModelTest):
                 f"{encoded_entity_pairs[3][1]} was born in {encoded_entity_pairs[3][0]} on 22 June 1910 .",
                 ("place_of_birth",),
             ),
-            # Entity pair permutations of: "Joseph Weizenbaum , a professor at MIT , was born in Berlin , Germany."
+            # Entity pair permutations of: "Joseph Weizenbaum , a professor at MIT , was born in Berlin , Germany ."
             (
                 f"{encoded_entity_pairs[4][1]} , a professor at MIT , "
                 f"was born in {encoded_entity_pairs[4][0]} , Germany .",
@@ -220,6 +223,12 @@ class TestRelationClassifier(BaseModelTest):
             (
                 f"{encoded_entity_pairs[5][1]} , a professor at MIT , "
                 f"was born in Berlin , {encoded_entity_pairs[5][0]} .",
+                ("place_of_birth",),
+            ),
+            # Entity pair permutations of: "The German - American computer scientist Joseph Weizenbaum ( 8 January 1923 - 5 March 2008 ) was born in Berlin ."
+            (
+                f"The German - American computer scientist {encoded_entity_pairs[7][1]} "
+                f"( 8 January 1923 - 5 March 2008 ) was born in {encoded_entity_pairs[7][0]} .",
                 ("place_of_birth",),
             ),
         }
@@ -235,4 +244,50 @@ class TestRelationClassifier(BaseModelTest):
             )
 
         for split in (transformed_corpus.train, transformed_corpus.dev, transformed_corpus.test):
-            self.check_transformation_correctness(split, ground_truth)
+            self.check_transformation_correctness(
+                encoded_sentences=[batch[0] for batch in DataLoader(split, batch_size=1)], ground_truth=ground_truth
+            )
+
+    def test_transform_max_allowed_tokens_between_entities(
+        self,
+        corpus: ColumnCorpus,
+        embeddings: TransformerDocumentEmbeddings,
+    ) -> None:
+        assert corpus.train is not None
+
+        label_dictionary = corpus.make_label_dictionary("relation")
+        model: RelationClassifier = self.build_model(
+            embeddings, label_dictionary, max_allowed_tokens_between_entities=12, max_surrounding_context_length=None
+        )
+
+        # "The German - American computer scientist Joseph Weizenbaum ( 8 January 1923 - 5 March 2008 ) was born in Berlin ."
+        sentence: Sentence = corpus.train[-1]
+        self.check_transformation_correctness(encoded_sentences=model.transform_sentence(sentence), ground_truth=set())
+
+    def test_transform_max_surrounding_context_length(
+        self,
+        corpus: ColumnCorpus,
+        embeddings: TransformerDocumentEmbeddings,
+    ) -> None:
+        assert corpus.train is not None
+
+        label_dictionary = corpus.make_label_dictionary("relation")
+        model: RelationClassifier = self.build_model(
+            embeddings,
+            label_dictionary,
+            encoding_strategy=EntityMask(),
+            max_allowed_tokens_between_entities=None,
+            max_surrounding_context_length=2,
+        )
+
+        # "The German - American computer scientist Joseph Weizenbaum ( 8 January 1923 - 5 March 2008 ) was born in Berlin ."
+        sentence: Sentence = corpus.train[-1]
+        self.check_transformation_correctness(
+            encoded_sentences=model.transform_sentence(sentence),
+            ground_truth={
+                (
+                    "computer scientist [TAIL] ( 8 January 1923 - 5 March 2008 ) was born in [HEAD] .",
+                    ("place_of_birth",),
+                ),
+            },
+        )

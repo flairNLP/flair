@@ -966,14 +966,18 @@ class ModelTrainer(Pluggable):
         except ImportError:
             pass
 
-        # remember all parameters used in train() call
-        model_card["training_parameters"] = {
-            k: str(v) if isinstance(v, Path) else v for k, v in training_parameters.items()
-        }
+        # remember the training parameters
+        model_card["training_parameters"] = {}
+        for k, v in training_parameters.items():
 
-        model_card["training_parameters"] = {
-            k: f"{v.__module__}.{v.__name__}" if inspect.isclass(v) else v for k, v in training_parameters.items()
-        }
+            # special rule for Path variables to make sure models can be deserialized on other OS
+            if isinstance(v, Path):
+                v = str(v)
+            # classes are only serialized as names
+            if inspect.isclass(v):
+                v = f"{v.__module__}.{v.__name__}"
+
+            model_card["training_parameters"][k] = v
 
         plugins = [plugin.get_state() for plugin in model_card["training_parameters"]["plugins"]]
         model_card["training_parameters"]["plugins"] = plugins
