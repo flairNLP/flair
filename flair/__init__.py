@@ -34,7 +34,7 @@ else:
     device = torch.device("cpu")
 
 # global variable: version
-__version__ = "0.15.0"
+__version__ = "0.15.1"
 """The current version of the flair library installed."""
 
 # global variable: arrow symbol
