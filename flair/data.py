@@ -565,7 +565,7 @@ class Token(_PartOfSentence):
         head_id: Optional[int] = None,
         whitespace_after: int = 1,
         start_position: int = 0,
-        sentence=None,
+        sentence: Optional["Sentence"] = None,
     ) -> None:
         super().__init__(sentence=sentence)
 
@@ -1419,8 +1419,7 @@ class Corpus(typing.Generic[T_co]):
         sample_missing_splits: Union[bool, str] = True,
         random_seed: Optional[int] = None,
     ) -> None:
-        """
-        Constructor method to initialize a :class:`Corpus`. You can define the train, dev and test split
+        """Constructor method to initialize a :class:`Corpus`. You can define the train, dev and test split
         by passing the corresponding Dataset object to the constructor. At least one split should be defined.
         If the option `sample_missing_splits` is set to True, missing splits will be randomly sampled from the
         train split.
@@ -1514,7 +1513,6 @@ class Corpus(typing.Generic[T_co]):
         Returns:
             A pointer to itself for optional use in method chaining.
         """
-
         if downsample_train and self._train is not None:
             self._train = self._downsample_to_proportion(self._train, percentage, random_seed)
 
@@ -1541,8 +1539,7 @@ class Corpus(typing.Generic[T_co]):
         log.info(self)
 
     def filter_long_sentences(self, max_charlength: int):
-        """
-        A method that filters all sentences for which the plain text is longer than a specified number of characters.
+        """A method that filters all sentences for which the plain text is longer than a specified number of characters.
 
         This is an in-place operation that directly modifies the Corpus object itself by removing these sentences.
 

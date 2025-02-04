@@ -323,6 +323,8 @@ class MultiFileColumnCorpus(Corpus):
         label_name_map: Optional[dict[str, str]] = None,
         banned_sentences: Optional[list[str]] = None,
         default_whitespace_after: int = 1,
+        every_sentence_is_independent: bool = False,
+        documents_as_sentences: bool = False,
         **corpusargs,
     ) -> None:
         r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -358,6 +360,8 @@ class MultiFileColumnCorpus(Corpus):
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
+                        every_sentence_is_independent=every_sentence_is_independent,
+                        documents_as_sentences=documents_as_sentences,
                     )
                     for train_file in train_files
                 ]
@@ -382,6 +386,8 @@ class MultiFileColumnCorpus(Corpus):
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
+                        every_sentence_is_independent=every_sentence_is_independent,
+                        documents_as_sentences=documents_as_sentences,
                     )
                     for test_file in test_files
                 ]
@@ -406,6 +412,8 @@ class MultiFileColumnCorpus(Corpus):
                         skip_first_line=skip_first_line,
                         label_name_map=label_name_map,
                         default_whitespace_after=default_whitespace_after,
+                        every_sentence_is_independent=every_sentence_is_independent,
+                        documents_as_sentences=documents_as_sentences,
                     )
                     for dev_file in dev_files
                 ]
@@ -621,10 +629,12 @@ class ColumnDataset(FlairDataset):
         banned_sentences: Optional[list[str]] = None,
         in_memory: bool = True,
         document_separator_token: Optional[str] = None,
+        every_sentence_is_independent: bool = False,
         encoding: str = "utf-8",
         skip_first_line: bool = False,
         label_name_map: Optional[dict[str, str]] = None,
         default_whitespace_after: int = 1,
+        documents_as_sentences: bool = False,
     ) -> None:
         r"""Instantiates a column dataset.
 
@@ -645,9 +655,17 @@ class ColumnDataset(FlairDataset):
         self.column_delimiter = re.compile(column_delimiter)
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
+        self.every_sentence_is_independent = every_sentence_is_independent
         self.label_name_map = label_name_map
         self.banned_sentences = banned_sentences
         self.default_whitespace_after = default_whitespace_after
+        self.documents_as_sentences = documents_as_sentences
+
+        if documents_as_sentences and not document_separator_token:
+            log.error(
+                "document_as_sentences was set to True, but no document_separator_token was provided. Please set"
+                "a value for document_separator_token in order to enable the document_as_sentence functionality."
+            )
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -842,6 +860,9 @@ class ColumnDataset(FlairDataset):
         if sentence.to_original_text() == self.document_separator_token:
             sentence.is_document_boundary = True
 
+        if self.every_sentence_is_independent or self.documents_as_sentences:
+            sentence.is_document_boundary = True
+
         # add span labels
         if span_level_tag_columns:
             for span_column in span_level_tag_columns:
@@ -978,6 +999,13 @@ class ColumnDataset(FlairDataset):
         ColumnCorpus._write_dataset_to_file(self, label_types, file_path, column_delimiter)
 
     def __line_completes_sentence(self, line: str) -> bool:
+
+        if self.documents_as_sentences and self.document_separator_token:
+            if line.startswith(self.document_separator_token):
+                return True
+            else:
+                return False
+
         sentence_completed = line.isspace() or line == ""
         return sentence_completed
 
@@ -5195,7 +5223,8 @@ class NER_NERMUD(MultiCorpus):
                 test_file=None,
                 column_format=columns,
                 in_memory=in_memory,
-                sample_missing_splits=False,  # No test data is available, so do not shrink dev data for shared task preparation!
+                sample_missing_splits=False,
+                # No test data is available, so do not shrink dev data for shared task preparation!
                 **corpusargs,
             )
             corpora.append(corpus)
@@ -5660,4 +5689,95 @@ class MASAKHA_POS(MultiCorpus):
         super().__init__(
             corpora,
             name="masakha-pos-" + "-".join(languages),
+        )
+
+
+class NER_BAVARIAN_WIKI(ColumnCorpus):
+    def __init__(
+        self,
+        fine_grained: bool = False,
+        revision: str = "main",
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ) -> None:
+        """Initialize the Bavarian NER Bavarian NER Dataset (BarNER).
+
+        The dataset was proposed in the 2024 LREC-COLING paper
+        "Sebastian, Basti, Wastl?! Recognizing Named Entities in Bavarian Dialectal Data" paper by Peng et al.
+        :param fine_grained: Defines if the fine-grained or coarse-grained (default) should be used.
+        :param revision: Defines the revision/commit of BarNER dataset, by default dataset from 'main' branch is used.
+        :param base_path: Default is None, meaning that corpus gets auto-downloaded and loaded. You can override this
+        to point to a different folder but typically this should not be necessary.
+        :param in_memory: If True, keeps dataset in memory giving speedups in training.
+        """
+        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
+        dataset_name = self.__class__.__name__.lower()
+        data_folder = base_path / dataset_name
+        data_path = flair.cache_root / "datasets" / dataset_name
+
+        document_boundary_marker = "-DOCSTART-"
+
+        for split in ["train", "dev", "test"]:
+            # Get original version
+            original_split_filename = data_path / "original" / f"bar-wiki-{split}.tsv"
+            if not original_split_filename.is_file():
+                original_split_url = (
+                    f"https://raw.githubusercontent.com/mainlp/BarNER/{revision}/data/BarNER-final/bar-wiki-{split}.tsv"
+                )
+                cached_path(original_split_url, data_path / "original")
+
+            # Add sentence boundary marker
+            modified_split_filename = data_path / f"bar-wiki-{split}.tsv"
+            if not modified_split_filename.is_file():
+                f_out = open(modified_split_filename, "w", encoding="utf-8")
+
+                with open(original_split_filename, encoding="utf-8") as f_p:
+                    for line in f_p:
+                        line = line.strip()
+                        if line.startswith("# newdoc id = "):
+                            f_out.write(f"{document_boundary_marker}\tO\n\n")
+                            continue
+                        if line.startswith("# "):
+                            continue
+                        f_out.write(f"{line}\n")
+                f_out.close()
+
+        columns = {0: "text", 1: "ner"}
+
+        label_name_map = None
+
+        if not fine_grained:
+            # Only allowed classes in course setting are: PER, LOC, ORG and MISC.
+            # All other NEs are normalized to O, except EVENT and WOA are normalized to MISC (cf. Table 3 of paper).
+            label_name_map = {
+                "EVENT": "MISC",
+                "EVENTderiv": "O",
+                "EVENTpart": "O",
+                "LANG": "O",
+                "LANGderiv": "O",
+                "LANGpart": "O",
+                "LOCderiv": "O",
+                "LOCpart": "O",
+                "MISCderiv": "O",
+                "MISCpart": "O",
+                "ORGderiv": "O",
+                "ORGpart": "O",
+                "PERderiv": "O",
+                "PERpart": "O",
+                "RELIGION": "O",
+                "RELIGIONderiv": "O",
+                "WOA": "MISC",
+                "WOAderiv": "O",
+                "WOApart": "O",
+            }
+
+        super().__init__(
+            data_folder,
+            columns,
+            in_memory=in_memory,
+            comment_symbol="# ",
+            document_separator_token="-DOCSTART-",
+            label_name_map=label_name_map,
+            **corpusargs,
         )

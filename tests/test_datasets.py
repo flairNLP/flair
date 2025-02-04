@@ -75,6 +75,54 @@ def test_load_sequence_labeling_data(tasks_base_path):
     assert len(corpus.test) == 1
 
 
+def test_load_sequence_labeling_data_with_boundaries(tasks_base_path):
+    # get training, test and dev data
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "trivial" / "trivial_bioes_with_boundaries", column_format={0: "text", 1: "ner"}
+    )
+
+    assert len(corpus.train) == 14
+    assert len(corpus.dev) == 9
+    assert len(corpus.test) == 10
+
+    # now exclude -DOCSTART- sentences
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "trivial" / "trivial_bioes_with_boundaries",
+        column_format={0: "text", 1: "ner"},
+        banned_sentences=["-DOCSTART-"],
+    )
+
+    assert len(corpus.train) == 12
+    assert len(corpus.dev) == 8
+    assert len(corpus.test) == 8
+
+    assert len(corpus.train[0].right_context(5)) == 5
+
+    # now load whole documents as sentences
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "trivial" / "trivial_bioes_with_boundaries",
+        column_format={0: "text", 1: "ner"},
+        document_separator_token="-DOCSTART-",
+        documents_as_sentences=True,
+    )
+
+    assert len(corpus.train) == 3
+    assert len(corpus.dev) == 2
+    assert len(corpus.test) == 2
+
+    assert len(corpus.train[0].right_context(5)) == 0
+
+    # ban each boundary but set each sentence to be independent
+    corpus = flair.datasets.ColumnCorpus(
+        tasks_base_path / "trivial" / "trivial_bioes_with_boundaries",
+        column_format={0: "text", 1: "ner"},
+        banned_sentences=["-DOCSTART-"],
+        every_sentence_is_independent=True,
+    )
+
+    assert len(corpus.train[0].right_context(5)) == 0
+
+
 def test_load_sequence_labeling_whitespace_after(tasks_base_path):
     # get training, test and dev data
     corpus = flair.datasets.ColumnCorpus(
@@ -328,9 +376,9 @@ def test_load_conllu_plus_corpus(tasks_base_path):
         in_memory=False,
     )
 
-    assert len(corpus.train) == 4
-    assert len(corpus.dev) == 4
-    assert len(corpus.test) == 4
+    assert len(corpus.train) == 5
+    assert len(corpus.dev) == 5
+    assert len(corpus.test) == 5
 
     _assert_conllu_dataset(corpus.train)
 
@@ -345,9 +393,9 @@ def test_load_conllu_corpus_plus_in_memory(tasks_base_path):
         in_memory=True,
     )
 
-    assert len(corpus.train) == 4
-    assert len(corpus.dev) == 4
-    assert len(corpus.test) == 4
+    assert len(corpus.train) == 5
+    assert len(corpus.dev) == 5
+    assert len(corpus.test) == 5
 
     _assert_conllu_dataset(corpus.train)
 
@@ -907,6 +955,29 @@ def test_german_mobie(tasks_base_path):
     # See MobIE paper (https://aclanthology.org/2021.konvens-1.22/), table 2
     ref_sentences = 7_077
     ref_tokens = 90_971
+
+    actual_sentences = sum(
+        [1 for sentence in corpus.train + corpus.dev + corpus.test if sentence[0].text != "-DOCSTART-"]
+    )
+    actual_tokens = sum(
+        [len(sentence) for sentence in corpus.train + corpus.dev + corpus.test if sentence[0].text != "-DOCSTART-"]
+    )
+
+    assert ref_sentences == actual_sentences, (
+        f"Number of parsed sentences ({actual_sentences}) does not match with "
+        f"reported number of sentences ({ref_sentences})!"
+    )
+    assert (
+        ref_tokens == actual_tokens
+    ), f"Number of parsed tokens ({actual_tokens}) does not match with reported number of tokens ({ref_tokens})!"
+
+
+@pytest.mark.skip()
+def test_bavarian_wiki(tasks_base_path):
+    corpus = flair.datasets.NER_BAVARIAN_WIKI()
+
+    ref_sentences = 3_577
+    ref_tokens = 75_690
 
     actual_sentences = sum(
         [1 for sentence in corpus.train + corpus.dev + corpus.test if sentence[0].text != "-DOCSTART-"]

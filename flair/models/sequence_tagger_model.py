@@ -286,7 +286,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             A tuple consisting of the loss tensor and the number of tokens in the batch.
 
         """
-
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
@@ -863,8 +862,8 @@ for entity in sentence.get_spans('ner'):
             self.save(local_model_path)
 
             # Determine if model card already exists
-            info = model_info(repo_id, use_auth_token=token)
-            write_readme = all(f.rfilename != "README.md" for f in info.siblings)
+            info = model_info(repo_id, token=token)
+            write_readme = info.siblings is None or all(f.rfilename != "README.md" for f in info.siblings)
 
             # Generate and save model card
             if write_readme:
