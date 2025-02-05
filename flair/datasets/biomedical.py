@@ -4144,7 +4144,10 @@ class BIONLP2013_CG(BioNLPCorpus):
         return train_folder, dev_folder, test_folder
 
 
-@deprecated(version="0.13", reason="Please use data set implementation from BigBio instead (see BIGBIO_NER_CORPUS)")
+@deprecated(
+    version="0.13",
+    reason='Please use BIGBIO_NER_CORPUS implementation by calling ´corpus = BIGBIO_NER_CORPUS("bigbio/anat_em", trust_remote_code=True)´',
+)
 class ANAT_EM(ColumnCorpus):
     """Corpus for anatomical named entity mention recognition.
 
@@ -4154,122 +4157,7 @@ class ANAT_EM(ColumnCorpus):
     http://nactem.ac.uk/anatomytagger/#AnatEM
     """
 
-    def __init__(
-        self,
-        base_path: Optional[Union[str, Path]] = None,
-        in_memory: bool = True,
-        tokenizer: Optional[Tokenizer] = None,
-    ) -> None:
-        """Initialize the anatomical named entity mention recognition Corpus.
-
-        :param base_path: Path to the corpus on your machine
-        :param in_memory: If True, keeps dataset in memory giving speedups in training.
-        :param sentence_splitter: Implementation of :class:`Tokenizer` which segments
-             sentences into tokens (default :class:`SciSpacyTokenizer`)
-        """
-        base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
-
-        # column format
-        columns = {0: "text", 1: "ner", 2: ColumnDataset.SPACE_AFTER_KEY}
-
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower()
-
-        data_folder = base_path / dataset_name
-
-        if tokenizer is None:
-            tokenizer = SciSpacyTokenizer()
-
-        sentence_splitter = TagSentenceSplitter(tag=SENTENCE_TAG, tokenizer=tokenizer)
-
-        train_file = data_folder / f"{sentence_splitter.name}_train.conll"
-        dev_file = data_folder / f"{sentence_splitter.name}_dev.conll"
-        test_file = data_folder / f"{sentence_splitter.name}_test.conll"
-
-        if not (train_file.exists() and dev_file.exists() and test_file.exists()):
-            corpus_folder = self.download_corpus(data_folder)
-
-            train_data = self.parse_input_files(corpus_folder / "nersuite" / "train", SENTENCE_TAG)
-            dev_data = self.parse_input_files(corpus_folder / "nersuite" / "devel", SENTENCE_TAG)
-            test_data = self.parse_input_files(corpus_folder / "nersuite" / "test", SENTENCE_TAG)
-
-            conll_writer = CoNLLWriter(sentence_splitter=sentence_splitter)
-            conll_writer.write_to_conll(train_data, train_file)
-            conll_writer.write_to_conll(dev_data, dev_file)
-            conll_writer.write_to_conll(test_data, test_file)
-
-        super().__init__(data_folder, columns, in_memory=in_memory)
-
-    @staticmethod
-    @abstractmethod
-    def download_corpus(data_folder: Path):
-        corpus_url = "http://nactem.ac.uk/anatomytagger/AnatEM-1.0.2.tar.gz"
-        corpus_archive = cached_path(corpus_url, data_folder)
-
-        unpack_file(
-            corpus_archive,
-            data_folder,
-            keep=True,
-            mode="targz",
-        )
-
-        return data_folder / "AnatEM-1.0.2"
-
-    @staticmethod
-    def parse_input_files(input_dir: Path, sentence_separator: str) -> InternalBioNerDataset:
-        documents = {}
-        entities_per_document = {}
-
-        input_files = [
-            file for file in os.listdir(str(input_dir)) if file.endswith(".nersuite") and not file.startswith("._")
-        ]
-
-        for input_file in input_files:
-            document_id = input_file.replace(".nersuite", "")
-            document_text = ""
-
-            entities = []
-            entity_type = None
-            entity_start = None
-
-            sent_offset = 0
-            last_offset = 0
-
-            with open(input_dir / input_file, encoding="utf8") as f:
-                for line in f.readlines():
-                    line = line.strip()
-                    if not line:
-                        document_text += sentence_separator
-                        sent_offset += len(sentence_separator)
-                        last_offset += len(sentence_separator)
-                        continue
-                    tag, _start, _end, word, _, _, _ = line.split("\t")
-
-                    start = int(_start) + sent_offset
-                    end = int(_end) + sent_offset
-
-                    document_text += " " * (start - last_offset)
-                    document_text += word
-
-                    if tag.startswith("B-"):
-                        if entity_type is not None:
-                            entities.append(Entity((entity_start, last_offset), entity_type))
-
-                        entity_start = start
-                        entity_type = tag[2:]
-
-                    elif tag == "O" and entity_type is not None and entity_start is not None:
-                        entities.append(Entity((entity_start, last_offset), entity_type))
-                        entity_type = None
-
-                    last_offset = end
-
-                    assert word == document_text[start:end]
-
-            documents[document_id] = document_text
-            entities_per_document[document_id] = entities
-
-        return InternalBioNerDataset(documents=documents, entities_per_document=entities_per_document)
+    pass
 
 
 class BioBertHelper(ColumnCorpus):
@@ -5141,6 +5029,7 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         train_split_name: Optional[str] = None,
         dev_split_name: Optional[str] = None,
         test_split_name: Optional[str] = None,
+        trust_remote_code=False,
     ) -> None:
         """Initialize the BigBio Corpus.
 
@@ -5183,7 +5072,9 @@ class BIGBIO_NER_CORPUS(ColumnCorpus):
         if not train_file.exists():
             from datasets import load_dataset
 
-            dataset = load_dataset(full_dataset_name, name=dataset_name + "_bigbio_kb")
+            dataset = load_dataset(
+                full_dataset_name, name=dataset_name + "_bigbio_kb", trust_remote_code=trust_remote_code
+            )
 
             if "train" in dataset:
                 train_split_name = "train"
