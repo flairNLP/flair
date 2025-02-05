@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_OLD\_FRENCH
+========================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_OLD_FRENCH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_OLD_FRENCH.__init__
+      ~UD_OLD_FRENCH.add_label_noise
+      ~UD_OLD_FRENCH.downsample
+      ~UD_OLD_FRENCH.filter_empty_sentences
+      ~UD_OLD_FRENCH.filter_long_sentences
+      ~UD_OLD_FRENCH.get_all_sentences
+      ~UD_OLD_FRENCH.get_label_distribution
+      ~UD_OLD_FRENCH.make_label_dictionary
+      ~UD_OLD_FRENCH.make_tag_dictionary
+      ~UD_OLD_FRENCH.make_vocab_dictionary
+      ~UD_OLD_FRENCH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_OLD_FRENCH.dev
+      ~UD_OLD_FRENCH.test
+      ~UD_OLD_FRENCH.train
+   
+   

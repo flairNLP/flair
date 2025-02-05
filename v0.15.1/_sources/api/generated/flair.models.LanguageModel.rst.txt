@@ -1,0 +1,94 @@
+﻿flair.models.LanguageModel
+==========================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: LanguageModel
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LanguageModel.__init__
+      ~LanguageModel.add_module
+      ~LanguageModel.apply
+      ~LanguageModel.bfloat16
+      ~LanguageModel.buffers
+      ~LanguageModel.calculate_perplexity
+      ~LanguageModel.children
+      ~LanguageModel.compile
+      ~LanguageModel.cpu
+      ~LanguageModel.cuda
+      ~LanguageModel.double
+      ~LanguageModel.eval
+      ~LanguageModel.extra_repr
+      ~LanguageModel.float
+      ~LanguageModel.forward
+      ~LanguageModel.generate_text
+      ~LanguageModel.get_buffer
+      ~LanguageModel.get_extra_state
+      ~LanguageModel.get_output
+      ~LanguageModel.get_parameter
+      ~LanguageModel.get_representation
+      ~LanguageModel.get_submodule
+      ~LanguageModel.half
+      ~LanguageModel.init_hidden
+      ~LanguageModel.init_weights
+      ~LanguageModel.initialize
+      ~LanguageModel.ipu
+      ~LanguageModel.load_checkpoint
+      ~LanguageModel.load_language_model
+      ~LanguageModel.load_state_dict
+      ~LanguageModel.modules
+      ~LanguageModel.mtia
+      ~LanguageModel.named_buffers
+      ~LanguageModel.named_children
+      ~LanguageModel.named_modules
+      ~LanguageModel.named_parameters
+      ~LanguageModel.parameters
+      ~LanguageModel.register_backward_hook
+      ~LanguageModel.register_buffer
+      ~LanguageModel.register_forward_hook
+      ~LanguageModel.register_forward_pre_hook
+      ~LanguageModel.register_full_backward_hook
+      ~LanguageModel.register_full_backward_pre_hook
+      ~LanguageModel.register_load_state_dict_post_hook
+      ~LanguageModel.register_load_state_dict_pre_hook
+      ~LanguageModel.register_module
+      ~LanguageModel.register_parameter
+      ~LanguageModel.register_state_dict_post_hook
+      ~LanguageModel.register_state_dict_pre_hook
+      ~LanguageModel.repackage_hidden
+      ~LanguageModel.requires_grad_
+      ~LanguageModel.save
+      ~LanguageModel.save_checkpoint
+      ~LanguageModel.set_extra_state
+      ~LanguageModel.set_hidden
+      ~LanguageModel.set_submodule
+      ~LanguageModel.share_memory
+      ~LanguageModel.state_dict
+      ~LanguageModel.to
+      ~LanguageModel.to_empty
+      ~LanguageModel.train
+      ~LanguageModel.type
+      ~LanguageModel.xpu
+      ~LanguageModel.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LanguageModel.T_destination
+      ~LanguageModel.call_super_init
+      ~LanguageModel.dump_patches
+      ~LanguageModel.training
+   
+   

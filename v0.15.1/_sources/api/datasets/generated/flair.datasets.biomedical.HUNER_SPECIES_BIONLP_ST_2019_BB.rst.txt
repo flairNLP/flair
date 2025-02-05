@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_SPECIES\_BIONLP\_ST\_2019\_BB
+==============================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_SPECIES_BIONLP_ST_2019_BB
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.__init__
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.add_label_noise
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.bin_search_passage
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.build_corpus_directory_name
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.downsample
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.filter_empty_sentences
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.filter_long_sentences
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.get_all_sentences
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.get_entity_type_mapping
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.get_label_distribution
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.make_label_dictionary
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.make_tag_dictionary
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.make_vocab_dictionary
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.obtain_statistics
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.dev
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.test
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.train
+   
+   

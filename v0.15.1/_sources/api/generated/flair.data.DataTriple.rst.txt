@@ -1,0 +1,49 @@
+﻿flair.data.DataTriple
+=====================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: DataTriple
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DataTriple.__init__
+      ~DataTriple.add_label
+      ~DataTriple.add_metadata
+      ~DataTriple.clear_embeddings
+      ~DataTriple.get_each_embedding
+      ~DataTriple.get_embedding
+      ~DataTriple.get_label
+      ~DataTriple.get_labels
+      ~DataTriple.get_metadata
+      ~DataTriple.has_label
+      ~DataTriple.has_metadata
+      ~DataTriple.remove_labels
+      ~DataTriple.set_embedding
+      ~DataTriple.set_label
+      ~DataTriple.to
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DataTriple.embedding
+      ~DataTriple.end_position
+      ~DataTriple.labels
+      ~DataTriple.score
+      ~DataTriple.start_position
+      ~DataTriple.tag
+      ~DataTriple.text
+      ~DataTriple.unlabeled_identifier
+   
+   

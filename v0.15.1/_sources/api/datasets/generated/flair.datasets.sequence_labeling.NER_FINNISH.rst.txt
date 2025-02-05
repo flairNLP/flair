@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_FINNISH
+==============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_FINNISH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_FINNISH.__init__
+      ~NER_FINNISH.add_label_noise
+      ~NER_FINNISH.downsample
+      ~NER_FINNISH.filter_empty_sentences
+      ~NER_FINNISH.filter_long_sentences
+      ~NER_FINNISH.get_all_sentences
+      ~NER_FINNISH.get_label_distribution
+      ~NER_FINNISH.make_label_dictionary
+      ~NER_FINNISH.make_tag_dictionary
+      ~NER_FINNISH.make_vocab_dictionary
+      ~NER_FINNISH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_FINNISH.dev
+      ~NER_FINNISH.test
+      ~NER_FINNISH.train
+   
+   

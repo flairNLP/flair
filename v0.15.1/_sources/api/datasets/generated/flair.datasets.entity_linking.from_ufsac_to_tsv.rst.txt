@@ -1,0 +1,6 @@
+﻿flair.datasets.entity\_linking.from\_ufsac\_to\_tsv
+===================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autofunction:: from_ufsac_to_tsv

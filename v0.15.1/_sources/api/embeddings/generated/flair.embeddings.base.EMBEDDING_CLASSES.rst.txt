@@ -1,0 +1,6 @@
+﻿flair.embeddings.base.EMBEDDING\_CLASSES
+========================================
+
+.. currentmodule:: flair.embeddings.base
+
+.. autodata:: EMBEDDING_CLASSES

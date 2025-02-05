@@ -1,0 +1,23 @@
+﻿flair.datasets.biomedical.HunerMiRNAHelper
+==========================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HunerMiRNAHelper
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HunerMiRNAHelper.__init__
+      ~HunerMiRNAHelper.get_mirna_subset
+   
+   
+
+   
+   
+   

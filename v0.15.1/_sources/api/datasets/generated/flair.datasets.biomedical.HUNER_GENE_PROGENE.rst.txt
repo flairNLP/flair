@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_PROGENE
+==============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_PROGENE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_PROGENE.__init__
+      ~HUNER_GENE_PROGENE.add_label_noise
+      ~HUNER_GENE_PROGENE.bin_search_passage
+      ~HUNER_GENE_PROGENE.build_corpus_directory_name
+      ~HUNER_GENE_PROGENE.downsample
+      ~HUNER_GENE_PROGENE.filter_empty_sentences
+      ~HUNER_GENE_PROGENE.filter_long_sentences
+      ~HUNER_GENE_PROGENE.get_all_sentences
+      ~HUNER_GENE_PROGENE.get_entity_type_mapping
+      ~HUNER_GENE_PROGENE.get_label_distribution
+      ~HUNER_GENE_PROGENE.make_label_dictionary
+      ~HUNER_GENE_PROGENE.make_tag_dictionary
+      ~HUNER_GENE_PROGENE.make_vocab_dictionary
+      ~HUNER_GENE_PROGENE.obtain_statistics
+      ~HUNER_GENE_PROGENE.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_PROGENE.dev
+      ~HUNER_GENE_PROGENE.test
+      ~HUNER_GENE_PROGENE.train
+   
+   

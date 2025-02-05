@@ -1,0 +1,23 @@
+﻿flair.datasets.sequence\_labeling.JsonlDataset
+==============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: JsonlDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~JsonlDataset.__init__
+      ~JsonlDataset.is_in_memory
+   
+   
+
+   
+   
+   

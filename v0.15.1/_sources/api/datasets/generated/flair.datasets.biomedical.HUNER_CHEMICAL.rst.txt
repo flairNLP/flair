@@ -1,0 +1,40 @@
+﻿flair.datasets.biomedical.HUNER\_CHEMICAL
+=========================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_CHEMICAL
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_CHEMICAL.__init__
+      ~HUNER_CHEMICAL.add_label_noise
+      ~HUNER_CHEMICAL.downsample
+      ~HUNER_CHEMICAL.filter_empty_sentences
+      ~HUNER_CHEMICAL.filter_long_sentences
+      ~HUNER_CHEMICAL.get_all_sentences
+      ~HUNER_CHEMICAL.get_label_distribution
+      ~HUNER_CHEMICAL.make_label_dictionary
+      ~HUNER_CHEMICAL.make_tag_dictionary
+      ~HUNER_CHEMICAL.make_vocab_dictionary
+      ~HUNER_CHEMICAL.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_CHEMICAL.dev
+      ~HUNER_CHEMICAL.test
+      ~HUNER_CHEMICAL.train
+   
+   

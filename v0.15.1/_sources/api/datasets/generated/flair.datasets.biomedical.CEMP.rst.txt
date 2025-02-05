@@ -1,0 +1,43 @@
+﻿flair.datasets.biomedical.CEMP
+==============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: CEMP
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CEMP.__init__
+      ~CEMP.add_label_noise
+      ~CEMP.download_dev_corpus
+      ~CEMP.download_train_corpus
+      ~CEMP.downsample
+      ~CEMP.filter_empty_sentences
+      ~CEMP.filter_long_sentences
+      ~CEMP.get_all_sentences
+      ~CEMP.get_label_distribution
+      ~CEMP.make_label_dictionary
+      ~CEMP.make_tag_dictionary
+      ~CEMP.make_vocab_dictionary
+      ~CEMP.obtain_statistics
+      ~CEMP.parse_input_file
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CEMP.dev
+      ~CEMP.test
+      ~CEMP.train
+   
+   

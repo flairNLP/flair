@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_SPECIES\_MIRNA
+===============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_SPECIES_MIRNA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES_MIRNA.__init__
+      ~HUNER_SPECIES_MIRNA.add_label_noise
+      ~HUNER_SPECIES_MIRNA.downsample
+      ~HUNER_SPECIES_MIRNA.filter_empty_sentences
+      ~HUNER_SPECIES_MIRNA.filter_long_sentences
+      ~HUNER_SPECIES_MIRNA.get_all_sentences
+      ~HUNER_SPECIES_MIRNA.get_corpus_sentence_splitter
+      ~HUNER_SPECIES_MIRNA.get_entity_type_mapping
+      ~HUNER_SPECIES_MIRNA.get_label_distribution
+      ~HUNER_SPECIES_MIRNA.get_subset
+      ~HUNER_SPECIES_MIRNA.make_label_dictionary
+      ~HUNER_SPECIES_MIRNA.make_tag_dictionary
+      ~HUNER_SPECIES_MIRNA.make_vocab_dictionary
+      ~HUNER_SPECIES_MIRNA.obtain_statistics
+      ~HUNER_SPECIES_MIRNA.split_url
+      ~HUNER_SPECIES_MIRNA.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES_MIRNA.dev
+      ~HUNER_SPECIES_MIRNA.test
+      ~HUNER_SPECIES_MIRNA.train
+   
+   

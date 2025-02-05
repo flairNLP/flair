@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_IEPA
+===========================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_IEPA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_IEPA.__init__
+      ~HUNER_GENE_IEPA.add_label_noise
+      ~HUNER_GENE_IEPA.downsample
+      ~HUNER_GENE_IEPA.filter_empty_sentences
+      ~HUNER_GENE_IEPA.filter_long_sentences
+      ~HUNER_GENE_IEPA.get_all_sentences
+      ~HUNER_GENE_IEPA.get_corpus_sentence_splitter
+      ~HUNER_GENE_IEPA.get_label_distribution
+      ~HUNER_GENE_IEPA.get_subset
+      ~HUNER_GENE_IEPA.make_label_dictionary
+      ~HUNER_GENE_IEPA.make_tag_dictionary
+      ~HUNER_GENE_IEPA.make_vocab_dictionary
+      ~HUNER_GENE_IEPA.obtain_statistics
+      ~HUNER_GENE_IEPA.split_url
+      ~HUNER_GENE_IEPA.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_IEPA.dev
+      ~HUNER_GENE_IEPA.test
+      ~HUNER_GENE_IEPA.train
+   
+   

@@ -1,0 +1,101 @@
+﻿flair.models.TARSClassifier
+===========================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: TARSClassifier
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TARSClassifier.__init__
+      ~TARSClassifier.add_and_switch_to_new_task
+      ~TARSClassifier.add_module
+      ~TARSClassifier.apply
+      ~TARSClassifier.bfloat16
+      ~TARSClassifier.buffers
+      ~TARSClassifier.children
+      ~TARSClassifier.compile
+      ~TARSClassifier.cpu
+      ~TARSClassifier.cuda
+      ~TARSClassifier.double
+      ~TARSClassifier.eval
+      ~TARSClassifier.evaluate
+      ~TARSClassifier.extra_repr
+      ~TARSClassifier.float
+      ~TARSClassifier.forward
+      ~TARSClassifier.forward_loss
+      ~TARSClassifier.get_buffer
+      ~TARSClassifier.get_current_label_dictionary
+      ~TARSClassifier.get_current_label_type
+      ~TARSClassifier.get_extra_state
+      ~TARSClassifier.get_parameter
+      ~TARSClassifier.get_submodule
+      ~TARSClassifier.get_used_tokens
+      ~TARSClassifier.half
+      ~TARSClassifier.ipu
+      ~TARSClassifier.is_current_task_multi_label
+      ~TARSClassifier.list_existing_tasks
+      ~TARSClassifier.load
+      ~TARSClassifier.load_state_dict
+      ~TARSClassifier.modules
+      ~TARSClassifier.mtia
+      ~TARSClassifier.named_buffers
+      ~TARSClassifier.named_children
+      ~TARSClassifier.named_modules
+      ~TARSClassifier.named_parameters
+      ~TARSClassifier.parameters
+      ~TARSClassifier.predict
+      ~TARSClassifier.predict_zero_shot
+      ~TARSClassifier.print_model_card
+      ~TARSClassifier.register_backward_hook
+      ~TARSClassifier.register_buffer
+      ~TARSClassifier.register_forward_hook
+      ~TARSClassifier.register_forward_pre_hook
+      ~TARSClassifier.register_full_backward_hook
+      ~TARSClassifier.register_full_backward_pre_hook
+      ~TARSClassifier.register_load_state_dict_post_hook
+      ~TARSClassifier.register_load_state_dict_pre_hook
+      ~TARSClassifier.register_module
+      ~TARSClassifier.register_parameter
+      ~TARSClassifier.register_state_dict_post_hook
+      ~TARSClassifier.register_state_dict_pre_hook
+      ~TARSClassifier.requires_grad_
+      ~TARSClassifier.save
+      ~TARSClassifier.set_extra_state
+      ~TARSClassifier.set_submodule
+      ~TARSClassifier.share_memory
+      ~TARSClassifier.state_dict
+      ~TARSClassifier.switch_to_task
+      ~TARSClassifier.to
+      ~TARSClassifier.to_empty
+      ~TARSClassifier.train
+      ~TARSClassifier.type
+      ~TARSClassifier.xpu
+      ~TARSClassifier.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TARSClassifier.LABEL_MATCH
+      ~TARSClassifier.LABEL_NO_MATCH
+      ~TARSClassifier.T_destination
+      ~TARSClassifier.call_super_init
+      ~TARSClassifier.dump_patches
+      ~TARSClassifier.label_type
+      ~TARSClassifier.model_card
+      ~TARSClassifier.static_label_type
+      ~TARSClassifier.tars_embeddings
+      ~TARSClassifier.training
+   
+   

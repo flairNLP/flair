@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_MARATHI
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_MARATHI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_MARATHI.__init__
+      ~UD_MARATHI.add_label_noise
+      ~UD_MARATHI.downsample
+      ~UD_MARATHI.filter_empty_sentences
+      ~UD_MARATHI.filter_long_sentences
+      ~UD_MARATHI.get_all_sentences
+      ~UD_MARATHI.get_label_distribution
+      ~UD_MARATHI.make_label_dictionary
+      ~UD_MARATHI.make_tag_dictionary
+      ~UD_MARATHI.make_vocab_dictionary
+      ~UD_MARATHI.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_MARATHI.dev
+      ~UD_MARATHI.test
+      ~UD_MARATHI.train
+   
+   

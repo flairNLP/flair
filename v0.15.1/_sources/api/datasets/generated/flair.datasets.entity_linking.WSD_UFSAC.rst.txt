@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.WSD\_UFSAC
+=========================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: WSD_UFSAC
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WSD_UFSAC.__init__
+      ~WSD_UFSAC.add_label_noise
+      ~WSD_UFSAC.downsample
+      ~WSD_UFSAC.filter_empty_sentences
+      ~WSD_UFSAC.filter_long_sentences
+      ~WSD_UFSAC.get_all_sentences
+      ~WSD_UFSAC.get_label_distribution
+      ~WSD_UFSAC.make_label_dictionary
+      ~WSD_UFSAC.make_tag_dictionary
+      ~WSD_UFSAC.make_vocab_dictionary
+      ~WSD_UFSAC.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WSD_UFSAC.dev
+      ~WSD_UFSAC.test
+      ~WSD_UFSAC.train
+   
+   

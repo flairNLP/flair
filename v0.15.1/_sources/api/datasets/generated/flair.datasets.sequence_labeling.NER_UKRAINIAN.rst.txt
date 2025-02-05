@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_UKRAINIAN
+================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_UKRAINIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_UKRAINIAN.__init__
+      ~NER_UKRAINIAN.add_label_noise
+      ~NER_UKRAINIAN.downsample
+      ~NER_UKRAINIAN.filter_empty_sentences
+      ~NER_UKRAINIAN.filter_long_sentences
+      ~NER_UKRAINIAN.get_all_sentences
+      ~NER_UKRAINIAN.get_label_distribution
+      ~NER_UKRAINIAN.make_label_dictionary
+      ~NER_UKRAINIAN.make_tag_dictionary
+      ~NER_UKRAINIAN.make_vocab_dictionary
+      ~NER_UKRAINIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_UKRAINIAN.dev
+      ~NER_UKRAINIAN.test
+      ~NER_UKRAINIAN.train
+   
+   

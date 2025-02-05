@@ -1,0 +1,30 @@
+﻿flair.splitter.SpacySentenceSplitter
+====================================
+
+.. currentmodule:: flair.splitter
+
+.. autoclass:: SpacySentenceSplitter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SpacySentenceSplitter.__init__
+      ~SpacySentenceSplitter.split
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SpacySentenceSplitter.name
+      ~SpacySentenceSplitter.tokenizer
+   
+   

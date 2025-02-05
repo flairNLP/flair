@@ -1,0 +1,22 @@
+﻿flair.trainers.TextCorpus
+=========================
+
+.. currentmodule:: flair.trainers
+
+.. autoclass:: TextCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TextCorpus.__init__
+   
+   
+
+   
+   
+   

@@ -1,0 +1,25 @@
+﻿flair.trainers.LanguageModelTrainer
+===================================
+
+.. currentmodule:: flair.trainers
+
+.. autoclass:: LanguageModelTrainer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LanguageModelTrainer.__init__
+      ~LanguageModelTrainer.evaluate
+      ~LanguageModelTrainer.load_checkpoint
+      ~LanguageModelTrainer.train
+   
+   
+
+   
+   
+   

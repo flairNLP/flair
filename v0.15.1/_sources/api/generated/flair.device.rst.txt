@@ -1,0 +1,6 @@
+﻿flair.device
+============
+
+.. currentmodule:: flair
+
+.. autodata:: device

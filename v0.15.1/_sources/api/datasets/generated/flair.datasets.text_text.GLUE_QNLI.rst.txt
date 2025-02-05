@@ -1,0 +1,41 @@
+﻿flair.datasets.text\_text.GLUE\_QNLI
+====================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: GLUE_QNLI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GLUE_QNLI.__init__
+      ~GLUE_QNLI.add_label_noise
+      ~GLUE_QNLI.downsample
+      ~GLUE_QNLI.filter_empty_sentences
+      ~GLUE_QNLI.filter_long_sentences
+      ~GLUE_QNLI.get_all_sentences
+      ~GLUE_QNLI.get_label_distribution
+      ~GLUE_QNLI.make_label_dictionary
+      ~GLUE_QNLI.make_tag_dictionary
+      ~GLUE_QNLI.make_vocab_dictionary
+      ~GLUE_QNLI.obtain_statistics
+      ~GLUE_QNLI.tsv_from_eval_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GLUE_QNLI.dev
+      ~GLUE_QNLI.test
+      ~GLUE_QNLI.train
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.biomedical.HUNER\_SPECIES
+========================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_SPECIES
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES.__init__
+      ~HUNER_SPECIES.add_label_noise
+      ~HUNER_SPECIES.downsample
+      ~HUNER_SPECIES.filter_empty_sentences
+      ~HUNER_SPECIES.filter_long_sentences
+      ~HUNER_SPECIES.get_all_sentences
+      ~HUNER_SPECIES.get_label_distribution
+      ~HUNER_SPECIES.make_label_dictionary
+      ~HUNER_SPECIES.make_tag_dictionary
+      ~HUNER_SPECIES.make_vocab_dictionary
+      ~HUNER_SPECIES.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES.dev
+      ~HUNER_SPECIES.test
+      ~HUNER_SPECIES.train
+   
+   

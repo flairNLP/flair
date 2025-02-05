@@ -1,0 +1,26 @@
+﻿flair.datasets.biomedical.KaewphanCorpusHelper
+==============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: KaewphanCorpusHelper
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~KaewphanCorpusHelper.__init__
+      ~KaewphanCorpusHelper.download_cll_dataset
+      ~KaewphanCorpusHelper.download_gellus_dataset
+      ~KaewphanCorpusHelper.prepare_and_save_dataset
+      ~KaewphanCorpusHelper.read_dataset
+   
+   
+
+   
+   
+   

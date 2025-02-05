@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_DANISH
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_DANISH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_DANISH.__init__
+      ~UD_DANISH.add_label_noise
+      ~UD_DANISH.downsample
+      ~UD_DANISH.filter_empty_sentences
+      ~UD_DANISH.filter_long_sentences
+      ~UD_DANISH.get_all_sentences
+      ~UD_DANISH.get_label_distribution
+      ~UD_DANISH.make_label_dictionary
+      ~UD_DANISH.make_tag_dictionary
+      ~UD_DANISH.make_vocab_dictionary
+      ~UD_DANISH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_DANISH.dev
+      ~UD_DANISH.test
+      ~UD_DANISH.train
+   
+   

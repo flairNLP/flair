@@ -1,0 +1,92 @@
+﻿flair.embeddings.token.FastTextEmbeddings
+=========================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: FastTextEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FastTextEmbeddings.__init__
+      ~FastTextEmbeddings.add_module
+      ~FastTextEmbeddings.apply
+      ~FastTextEmbeddings.bfloat16
+      ~FastTextEmbeddings.buffers
+      ~FastTextEmbeddings.children
+      ~FastTextEmbeddings.compile
+      ~FastTextEmbeddings.cpu
+      ~FastTextEmbeddings.cuda
+      ~FastTextEmbeddings.double
+      ~FastTextEmbeddings.embed
+      ~FastTextEmbeddings.eval
+      ~FastTextEmbeddings.extra_repr
+      ~FastTextEmbeddings.float
+      ~FastTextEmbeddings.forward
+      ~FastTextEmbeddings.from_params
+      ~FastTextEmbeddings.get_buffer
+      ~FastTextEmbeddings.get_cached_vec
+      ~FastTextEmbeddings.get_extra_state
+      ~FastTextEmbeddings.get_instance_parameters
+      ~FastTextEmbeddings.get_names
+      ~FastTextEmbeddings.get_parameter
+      ~FastTextEmbeddings.get_submodule
+      ~FastTextEmbeddings.half
+      ~FastTextEmbeddings.ipu
+      ~FastTextEmbeddings.load_embedding
+      ~FastTextEmbeddings.load_state_dict
+      ~FastTextEmbeddings.modules
+      ~FastTextEmbeddings.mtia
+      ~FastTextEmbeddings.named_buffers
+      ~FastTextEmbeddings.named_children
+      ~FastTextEmbeddings.named_modules
+      ~FastTextEmbeddings.named_parameters
+      ~FastTextEmbeddings.parameters
+      ~FastTextEmbeddings.register_backward_hook
+      ~FastTextEmbeddings.register_buffer
+      ~FastTextEmbeddings.register_forward_hook
+      ~FastTextEmbeddings.register_forward_pre_hook
+      ~FastTextEmbeddings.register_full_backward_hook
+      ~FastTextEmbeddings.register_full_backward_pre_hook
+      ~FastTextEmbeddings.register_load_state_dict_post_hook
+      ~FastTextEmbeddings.register_load_state_dict_pre_hook
+      ~FastTextEmbeddings.register_module
+      ~FastTextEmbeddings.register_parameter
+      ~FastTextEmbeddings.register_state_dict_post_hook
+      ~FastTextEmbeddings.register_state_dict_pre_hook
+      ~FastTextEmbeddings.requires_grad_
+      ~FastTextEmbeddings.save_embeddings
+      ~FastTextEmbeddings.set_extra_state
+      ~FastTextEmbeddings.set_submodule
+      ~FastTextEmbeddings.share_memory
+      ~FastTextEmbeddings.state_dict
+      ~FastTextEmbeddings.to
+      ~FastTextEmbeddings.to_empty
+      ~FastTextEmbeddings.to_params
+      ~FastTextEmbeddings.train
+      ~FastTextEmbeddings.type
+      ~FastTextEmbeddings.xpu
+      ~FastTextEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FastTextEmbeddings.T_destination
+      ~FastTextEmbeddings.call_super_init
+      ~FastTextEmbeddings.dump_patches
+      ~FastTextEmbeddings.embedding_length
+      ~FastTextEmbeddings.embedding_type
+      ~FastTextEmbeddings.embeddings_name
+      ~FastTextEmbeddings.training
+   
+   

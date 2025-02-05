@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_CROATIAN
+=====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_CROATIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_CROATIAN.__init__
+      ~UD_CROATIAN.add_label_noise
+      ~UD_CROATIAN.downsample
+      ~UD_CROATIAN.filter_empty_sentences
+      ~UD_CROATIAN.filter_long_sentences
+      ~UD_CROATIAN.get_all_sentences
+      ~UD_CROATIAN.get_label_distribution
+      ~UD_CROATIAN.make_label_dictionary
+      ~UD_CROATIAN.make_tag_dictionary
+      ~UD_CROATIAN.make_vocab_dictionary
+      ~UD_CROATIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_CROATIAN.dev
+      ~UD_CROATIAN.test
+      ~UD_CROATIAN.train
+   
+   

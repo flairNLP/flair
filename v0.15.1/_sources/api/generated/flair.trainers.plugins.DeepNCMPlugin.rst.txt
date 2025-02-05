@@ -1,0 +1,40 @@
+﻿flair.trainers.plugins.DeepNCMPlugin
+====================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: DeepNCMPlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DeepNCMPlugin.__init__
+      ~DeepNCMPlugin.after_training_batch
+      ~DeepNCMPlugin.after_training_epoch
+      ~DeepNCMPlugin.attach_to
+      ~DeepNCMPlugin.detach
+      ~DeepNCMPlugin.get_state
+      ~DeepNCMPlugin.hook
+      ~DeepNCMPlugin.mark_func_as_hook
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DeepNCMPlugin.attach_to_all_processes
+      ~DeepNCMPlugin.corpus
+      ~DeepNCMPlugin.decoders
+      ~DeepNCMPlugin.model
+      ~DeepNCMPlugin.pluggable
+      ~DeepNCMPlugin.trainer
+   
+   

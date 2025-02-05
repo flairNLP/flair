@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.document\_mean\_pooling
+====================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: document_mean_pooling

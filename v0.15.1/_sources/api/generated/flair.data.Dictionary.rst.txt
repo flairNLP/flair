@@ -1,0 +1,35 @@
+﻿flair.data.Dictionary
+=====================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: Dictionary
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Dictionary.__init__
+      ~Dictionary.add_item
+      ~Dictionary.get_idx_for_item
+      ~Dictionary.get_idx_for_items
+      ~Dictionary.get_item_for_index
+      ~Dictionary.get_items
+      ~Dictionary.has_item
+      ~Dictionary.is_span_prediction_problem
+      ~Dictionary.load
+      ~Dictionary.load_from_file
+      ~Dictionary.remove_item
+      ~Dictionary.save
+      ~Dictionary.set_start_stop_tags
+      ~Dictionary.start_stop_tags_are_set
+   
+   
+
+   
+   
+   

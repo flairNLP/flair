@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_JAPANESE
+=====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_JAPANESE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_JAPANESE.__init__
+      ~UD_JAPANESE.add_label_noise
+      ~UD_JAPANESE.downsample
+      ~UD_JAPANESE.filter_empty_sentences
+      ~UD_JAPANESE.filter_long_sentences
+      ~UD_JAPANESE.get_all_sentences
+      ~UD_JAPANESE.get_label_distribution
+      ~UD_JAPANESE.make_label_dictionary
+      ~UD_JAPANESE.make_tag_dictionary
+      ~UD_JAPANESE.make_vocab_dictionary
+      ~UD_JAPANESE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_JAPANESE.dev
+      ~UD_JAPANESE.test
+      ~UD_JAPANESE.train
+   
+   

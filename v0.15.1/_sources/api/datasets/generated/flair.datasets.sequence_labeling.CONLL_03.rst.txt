@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.CONLL\_03
+===========================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: CONLL_03
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CONLL_03.__init__
+      ~CONLL_03.add_label_noise
+      ~CONLL_03.downsample
+      ~CONLL_03.filter_empty_sentences
+      ~CONLL_03.filter_long_sentences
+      ~CONLL_03.get_all_sentences
+      ~CONLL_03.get_label_distribution
+      ~CONLL_03.make_label_dictionary
+      ~CONLL_03.make_tag_dictionary
+      ~CONLL_03.make_vocab_dictionary
+      ~CONLL_03.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CONLL_03.dev
+      ~CONLL_03.test
+      ~CONLL_03.train
+   
+   

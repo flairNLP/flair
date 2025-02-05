@@ -1,0 +1,40 @@
+﻿flair.datasets.biomedical.HUNER\_CELL\_LINE
+===========================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_CELL_LINE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_CELL_LINE.__init__
+      ~HUNER_CELL_LINE.add_label_noise
+      ~HUNER_CELL_LINE.downsample
+      ~HUNER_CELL_LINE.filter_empty_sentences
+      ~HUNER_CELL_LINE.filter_long_sentences
+      ~HUNER_CELL_LINE.get_all_sentences
+      ~HUNER_CELL_LINE.get_label_distribution
+      ~HUNER_CELL_LINE.make_label_dictionary
+      ~HUNER_CELL_LINE.make_tag_dictionary
+      ~HUNER_CELL_LINE.make_vocab_dictionary
+      ~HUNER_CELL_LINE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_CELL_LINE.dev
+      ~HUNER_CELL_LINE.test
+      ~HUNER_CELL_LINE.train
+   
+   

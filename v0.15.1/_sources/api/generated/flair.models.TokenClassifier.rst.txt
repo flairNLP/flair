@@ -1,0 +1,91 @@
+﻿flair.models.TokenClassifier
+============================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: TokenClassifier
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TokenClassifier.__init__
+      ~TokenClassifier.add_module
+      ~TokenClassifier.apply
+      ~TokenClassifier.bfloat16
+      ~TokenClassifier.buffers
+      ~TokenClassifier.children
+      ~TokenClassifier.compile
+      ~TokenClassifier.cpu
+      ~TokenClassifier.cuda
+      ~TokenClassifier.double
+      ~TokenClassifier.eval
+      ~TokenClassifier.evaluate
+      ~TokenClassifier.extra_repr
+      ~TokenClassifier.float
+      ~TokenClassifier.forward
+      ~TokenClassifier.forward_loss
+      ~TokenClassifier.get_buffer
+      ~TokenClassifier.get_extra_state
+      ~TokenClassifier.get_parameter
+      ~TokenClassifier.get_submodule
+      ~TokenClassifier.get_used_tokens
+      ~TokenClassifier.half
+      ~TokenClassifier.ipu
+      ~TokenClassifier.load
+      ~TokenClassifier.load_state_dict
+      ~TokenClassifier.modules
+      ~TokenClassifier.mtia
+      ~TokenClassifier.named_buffers
+      ~TokenClassifier.named_children
+      ~TokenClassifier.named_modules
+      ~TokenClassifier.named_parameters
+      ~TokenClassifier.parameters
+      ~TokenClassifier.predict
+      ~TokenClassifier.print_model_card
+      ~TokenClassifier.register_backward_hook
+      ~TokenClassifier.register_buffer
+      ~TokenClassifier.register_forward_hook
+      ~TokenClassifier.register_forward_pre_hook
+      ~TokenClassifier.register_full_backward_hook
+      ~TokenClassifier.register_full_backward_pre_hook
+      ~TokenClassifier.register_load_state_dict_post_hook
+      ~TokenClassifier.register_load_state_dict_pre_hook
+      ~TokenClassifier.register_module
+      ~TokenClassifier.register_parameter
+      ~TokenClassifier.register_state_dict_post_hook
+      ~TokenClassifier.register_state_dict_pre_hook
+      ~TokenClassifier.requires_grad_
+      ~TokenClassifier.save
+      ~TokenClassifier.set_extra_state
+      ~TokenClassifier.set_submodule
+      ~TokenClassifier.share_memory
+      ~TokenClassifier.state_dict
+      ~TokenClassifier.to
+      ~TokenClassifier.to_empty
+      ~TokenClassifier.train
+      ~TokenClassifier.type
+      ~TokenClassifier.xpu
+      ~TokenClassifier.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TokenClassifier.T_destination
+      ~TokenClassifier.call_super_init
+      ~TokenClassifier.dump_patches
+      ~TokenClassifier.label_type
+      ~TokenClassifier.model_card
+      ~TokenClassifier.multi_label_threshold
+      ~TokenClassifier.training
+   
+   

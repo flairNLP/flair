@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_ENGLISH\_STACKOVERFLOW
+=============================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_ENGLISH_STACKOVERFLOW
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_STACKOVERFLOW.__init__
+      ~NER_ENGLISH_STACKOVERFLOW.add_label_noise
+      ~NER_ENGLISH_STACKOVERFLOW.downsample
+      ~NER_ENGLISH_STACKOVERFLOW.filter_empty_sentences
+      ~NER_ENGLISH_STACKOVERFLOW.filter_long_sentences
+      ~NER_ENGLISH_STACKOVERFLOW.get_all_sentences
+      ~NER_ENGLISH_STACKOVERFLOW.get_label_distribution
+      ~NER_ENGLISH_STACKOVERFLOW.make_label_dictionary
+      ~NER_ENGLISH_STACKOVERFLOW.make_tag_dictionary
+      ~NER_ENGLISH_STACKOVERFLOW.make_vocab_dictionary
+      ~NER_ENGLISH_STACKOVERFLOW.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_STACKOVERFLOW.dev
+      ~NER_ENGLISH_STACKOVERFLOW.test
+      ~NER_ENGLISH_STACKOVERFLOW.train
+   
+   

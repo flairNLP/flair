@@ -1,0 +1,29 @@
+﻿flair.tokenization.JapaneseTokenizer
+====================================
+
+.. currentmodule:: flair.tokenization
+
+.. autoclass:: JapaneseTokenizer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~JapaneseTokenizer.__init__
+      ~JapaneseTokenizer.tokenize
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~JapaneseTokenizer.name
+   
+   

@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.pad\_sequence\_embeddings
+======================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: pad_sequence_embeddings

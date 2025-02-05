@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_NAIJA
+==================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_NAIJA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_NAIJA.__init__
+      ~UD_NAIJA.add_label_noise
+      ~UD_NAIJA.downsample
+      ~UD_NAIJA.filter_empty_sentences
+      ~UD_NAIJA.filter_long_sentences
+      ~UD_NAIJA.get_all_sentences
+      ~UD_NAIJA.get_label_distribution
+      ~UD_NAIJA.make_label_dictionary
+      ~UD_NAIJA.make_tag_dictionary
+      ~UD_NAIJA.make_vocab_dictionary
+      ~UD_NAIJA.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_NAIJA.dev
+      ~UD_NAIJA.test
+      ~UD_NAIJA.train
+   
+   

@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_VARIOME
+==============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_VARIOME
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_VARIOME.__init__
+      ~HUNER_GENE_VARIOME.add_label_noise
+      ~HUNER_GENE_VARIOME.downsample
+      ~HUNER_GENE_VARIOME.filter_empty_sentences
+      ~HUNER_GENE_VARIOME.filter_long_sentences
+      ~HUNER_GENE_VARIOME.get_all_sentences
+      ~HUNER_GENE_VARIOME.get_corpus_sentence_splitter
+      ~HUNER_GENE_VARIOME.get_entity_type_mapping
+      ~HUNER_GENE_VARIOME.get_label_distribution
+      ~HUNER_GENE_VARIOME.get_subset
+      ~HUNER_GENE_VARIOME.make_label_dictionary
+      ~HUNER_GENE_VARIOME.make_tag_dictionary
+      ~HUNER_GENE_VARIOME.make_vocab_dictionary
+      ~HUNER_GENE_VARIOME.obtain_statistics
+      ~HUNER_GENE_VARIOME.split_url
+      ~HUNER_GENE_VARIOME.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_VARIOME.dev
+      ~HUNER_GENE_VARIOME.test
+      ~HUNER_GENE_VARIOME.train
+   
+   

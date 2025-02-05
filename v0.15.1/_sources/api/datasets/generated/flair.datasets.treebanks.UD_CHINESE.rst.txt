@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_CHINESE
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_CHINESE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_CHINESE.__init__
+      ~UD_CHINESE.add_label_noise
+      ~UD_CHINESE.downsample
+      ~UD_CHINESE.filter_empty_sentences
+      ~UD_CHINESE.filter_long_sentences
+      ~UD_CHINESE.get_all_sentences
+      ~UD_CHINESE.get_label_distribution
+      ~UD_CHINESE.make_label_dictionary
+      ~UD_CHINESE.make_tag_dictionary
+      ~UD_CHINESE.make_vocab_dictionary
+      ~UD_CHINESE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_CHINESE.dev
+      ~UD_CHINESE.test
+      ~UD_CHINESE.train
+   
+   

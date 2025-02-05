@@ -1,0 +1,41 @@
+﻿flair.datasets.text\_text.GLUE\_QQP
+===================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: GLUE_QQP
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GLUE_QQP.__init__
+      ~GLUE_QQP.add_label_noise
+      ~GLUE_QQP.downsample
+      ~GLUE_QQP.filter_empty_sentences
+      ~GLUE_QQP.filter_long_sentences
+      ~GLUE_QQP.get_all_sentences
+      ~GLUE_QQP.get_label_distribution
+      ~GLUE_QQP.make_label_dictionary
+      ~GLUE_QQP.make_tag_dictionary
+      ~GLUE_QQP.make_vocab_dictionary
+      ~GLUE_QQP.obtain_statistics
+      ~GLUE_QQP.tsv_from_eval_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GLUE_QQP.dev
+      ~GLUE_QQP.test
+      ~GLUE_QQP.train
+   
+   

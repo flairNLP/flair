@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_KAZAKH
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_KAZAKH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_KAZAKH.__init__
+      ~UD_KAZAKH.add_label_noise
+      ~UD_KAZAKH.downsample
+      ~UD_KAZAKH.filter_empty_sentences
+      ~UD_KAZAKH.filter_long_sentences
+      ~UD_KAZAKH.get_all_sentences
+      ~UD_KAZAKH.get_label_distribution
+      ~UD_KAZAKH.make_label_dictionary
+      ~UD_KAZAKH.make_tag_dictionary
+      ~UD_KAZAKH.make_vocab_dictionary
+      ~UD_KAZAKH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_KAZAKH.dev
+      ~UD_KAZAKH.test
+      ~UD_KAZAKH.train
+   
+   

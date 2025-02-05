@@ -1,0 +1,98 @@
+﻿flair.models.FewshotClassifier
+==============================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: FewshotClassifier
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FewshotClassifier.__init__
+      ~FewshotClassifier.add_and_switch_to_new_task
+      ~FewshotClassifier.add_module
+      ~FewshotClassifier.apply
+      ~FewshotClassifier.bfloat16
+      ~FewshotClassifier.buffers
+      ~FewshotClassifier.children
+      ~FewshotClassifier.compile
+      ~FewshotClassifier.cpu
+      ~FewshotClassifier.cuda
+      ~FewshotClassifier.double
+      ~FewshotClassifier.eval
+      ~FewshotClassifier.evaluate
+      ~FewshotClassifier.extra_repr
+      ~FewshotClassifier.float
+      ~FewshotClassifier.forward
+      ~FewshotClassifier.forward_loss
+      ~FewshotClassifier.get_buffer
+      ~FewshotClassifier.get_current_label_dictionary
+      ~FewshotClassifier.get_current_label_type
+      ~FewshotClassifier.get_extra_state
+      ~FewshotClassifier.get_parameter
+      ~FewshotClassifier.get_submodule
+      ~FewshotClassifier.get_used_tokens
+      ~FewshotClassifier.half
+      ~FewshotClassifier.ipu
+      ~FewshotClassifier.is_current_task_multi_label
+      ~FewshotClassifier.list_existing_tasks
+      ~FewshotClassifier.load
+      ~FewshotClassifier.load_state_dict
+      ~FewshotClassifier.modules
+      ~FewshotClassifier.mtia
+      ~FewshotClassifier.named_buffers
+      ~FewshotClassifier.named_children
+      ~FewshotClassifier.named_modules
+      ~FewshotClassifier.named_parameters
+      ~FewshotClassifier.parameters
+      ~FewshotClassifier.predict
+      ~FewshotClassifier.predict_zero_shot
+      ~FewshotClassifier.print_model_card
+      ~FewshotClassifier.register_backward_hook
+      ~FewshotClassifier.register_buffer
+      ~FewshotClassifier.register_forward_hook
+      ~FewshotClassifier.register_forward_pre_hook
+      ~FewshotClassifier.register_full_backward_hook
+      ~FewshotClassifier.register_full_backward_pre_hook
+      ~FewshotClassifier.register_load_state_dict_post_hook
+      ~FewshotClassifier.register_load_state_dict_pre_hook
+      ~FewshotClassifier.register_module
+      ~FewshotClassifier.register_parameter
+      ~FewshotClassifier.register_state_dict_post_hook
+      ~FewshotClassifier.register_state_dict_pre_hook
+      ~FewshotClassifier.requires_grad_
+      ~FewshotClassifier.save
+      ~FewshotClassifier.set_extra_state
+      ~FewshotClassifier.set_submodule
+      ~FewshotClassifier.share_memory
+      ~FewshotClassifier.state_dict
+      ~FewshotClassifier.switch_to_task
+      ~FewshotClassifier.to
+      ~FewshotClassifier.to_empty
+      ~FewshotClassifier.train
+      ~FewshotClassifier.type
+      ~FewshotClassifier.xpu
+      ~FewshotClassifier.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FewshotClassifier.T_destination
+      ~FewshotClassifier.call_super_init
+      ~FewshotClassifier.dump_patches
+      ~FewshotClassifier.label_type
+      ~FewshotClassifier.model_card
+      ~FewshotClassifier.tars_embeddings
+      ~FewshotClassifier.training
+   
+   

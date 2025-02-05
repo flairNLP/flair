@@ -1,0 +1,30 @@
+﻿flair.splitter.TagSentenceSplitter
+==================================
+
+.. currentmodule:: flair.splitter
+
+.. autoclass:: TagSentenceSplitter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TagSentenceSplitter.__init__
+      ~TagSentenceSplitter.split
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TagSentenceSplitter.name
+      ~TagSentenceSplitter.tokenizer
+   
+   

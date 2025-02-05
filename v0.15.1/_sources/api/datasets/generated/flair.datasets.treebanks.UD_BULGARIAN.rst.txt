@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_BULGARIAN
+======================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_BULGARIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_BULGARIAN.__init__
+      ~UD_BULGARIAN.add_label_noise
+      ~UD_BULGARIAN.downsample
+      ~UD_BULGARIAN.filter_empty_sentences
+      ~UD_BULGARIAN.filter_long_sentences
+      ~UD_BULGARIAN.get_all_sentences
+      ~UD_BULGARIAN.get_label_distribution
+      ~UD_BULGARIAN.make_label_dictionary
+      ~UD_BULGARIAN.make_tag_dictionary
+      ~UD_BULGARIAN.make_vocab_dictionary
+      ~UD_BULGARIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_BULGARIAN.dev
+      ~UD_BULGARIAN.test
+      ~UD_BULGARIAN.train
+   
+   

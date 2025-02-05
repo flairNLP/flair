@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_ALL\_CRAFT\_V4
+===============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_ALL_CRAFT_V4
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_ALL_CRAFT_V4.__init__
+      ~HUNER_ALL_CRAFT_V4.add_label_noise
+      ~HUNER_ALL_CRAFT_V4.downsample
+      ~HUNER_ALL_CRAFT_V4.filter_empty_sentences
+      ~HUNER_ALL_CRAFT_V4.filter_long_sentences
+      ~HUNER_ALL_CRAFT_V4.get_all_sentences
+      ~HUNER_ALL_CRAFT_V4.get_corpus_sentence_splitter
+      ~HUNER_ALL_CRAFT_V4.get_entity_type_mapping
+      ~HUNER_ALL_CRAFT_V4.get_label_distribution
+      ~HUNER_ALL_CRAFT_V4.get_subset
+      ~HUNER_ALL_CRAFT_V4.make_label_dictionary
+      ~HUNER_ALL_CRAFT_V4.make_tag_dictionary
+      ~HUNER_ALL_CRAFT_V4.make_vocab_dictionary
+      ~HUNER_ALL_CRAFT_V4.obtain_statistics
+      ~HUNER_ALL_CRAFT_V4.split_url
+      ~HUNER_ALL_CRAFT_V4.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_ALL_CRAFT_V4.dev
+      ~HUNER_ALL_CRAFT_V4.test
+      ~HUNER_ALL_CRAFT_V4.train
+   
+   

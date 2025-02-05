@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.WSD\_MASC
+========================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: WSD_MASC
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WSD_MASC.__init__
+      ~WSD_MASC.add_label_noise
+      ~WSD_MASC.downsample
+      ~WSD_MASC.filter_empty_sentences
+      ~WSD_MASC.filter_long_sentences
+      ~WSD_MASC.get_all_sentences
+      ~WSD_MASC.get_label_distribution
+      ~WSD_MASC.make_label_dictionary
+      ~WSD_MASC.make_tag_dictionary
+      ~WSD_MASC.make_vocab_dictionary
+      ~WSD_MASC.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WSD_MASC.dev
+      ~WSD_MASC.test
+      ~WSD_MASC.train
+   
+   

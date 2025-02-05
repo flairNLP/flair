@@ -1,0 +1,91 @@
+﻿flair.embeddings.token.PooledFlairEmbeddings
+============================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: PooledFlairEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PooledFlairEmbeddings.__init__
+      ~PooledFlairEmbeddings.add_module
+      ~PooledFlairEmbeddings.apply
+      ~PooledFlairEmbeddings.bfloat16
+      ~PooledFlairEmbeddings.buffers
+      ~PooledFlairEmbeddings.children
+      ~PooledFlairEmbeddings.compile
+      ~PooledFlairEmbeddings.cpu
+      ~PooledFlairEmbeddings.cuda
+      ~PooledFlairEmbeddings.double
+      ~PooledFlairEmbeddings.embed
+      ~PooledFlairEmbeddings.eval
+      ~PooledFlairEmbeddings.extra_repr
+      ~PooledFlairEmbeddings.float
+      ~PooledFlairEmbeddings.forward
+      ~PooledFlairEmbeddings.from_params
+      ~PooledFlairEmbeddings.get_buffer
+      ~PooledFlairEmbeddings.get_extra_state
+      ~PooledFlairEmbeddings.get_instance_parameters
+      ~PooledFlairEmbeddings.get_names
+      ~PooledFlairEmbeddings.get_parameter
+      ~PooledFlairEmbeddings.get_submodule
+      ~PooledFlairEmbeddings.half
+      ~PooledFlairEmbeddings.ipu
+      ~PooledFlairEmbeddings.load_embedding
+      ~PooledFlairEmbeddings.load_state_dict
+      ~PooledFlairEmbeddings.modules
+      ~PooledFlairEmbeddings.mtia
+      ~PooledFlairEmbeddings.named_buffers
+      ~PooledFlairEmbeddings.named_children
+      ~PooledFlairEmbeddings.named_modules
+      ~PooledFlairEmbeddings.named_parameters
+      ~PooledFlairEmbeddings.parameters
+      ~PooledFlairEmbeddings.register_backward_hook
+      ~PooledFlairEmbeddings.register_buffer
+      ~PooledFlairEmbeddings.register_forward_hook
+      ~PooledFlairEmbeddings.register_forward_pre_hook
+      ~PooledFlairEmbeddings.register_full_backward_hook
+      ~PooledFlairEmbeddings.register_full_backward_pre_hook
+      ~PooledFlairEmbeddings.register_load_state_dict_post_hook
+      ~PooledFlairEmbeddings.register_load_state_dict_pre_hook
+      ~PooledFlairEmbeddings.register_module
+      ~PooledFlairEmbeddings.register_parameter
+      ~PooledFlairEmbeddings.register_state_dict_post_hook
+      ~PooledFlairEmbeddings.register_state_dict_pre_hook
+      ~PooledFlairEmbeddings.requires_grad_
+      ~PooledFlairEmbeddings.save_embeddings
+      ~PooledFlairEmbeddings.set_extra_state
+      ~PooledFlairEmbeddings.set_submodule
+      ~PooledFlairEmbeddings.share_memory
+      ~PooledFlairEmbeddings.state_dict
+      ~PooledFlairEmbeddings.to
+      ~PooledFlairEmbeddings.to_empty
+      ~PooledFlairEmbeddings.to_params
+      ~PooledFlairEmbeddings.train
+      ~PooledFlairEmbeddings.type
+      ~PooledFlairEmbeddings.xpu
+      ~PooledFlairEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PooledFlairEmbeddings.T_destination
+      ~PooledFlairEmbeddings.call_super_init
+      ~PooledFlairEmbeddings.dump_patches
+      ~PooledFlairEmbeddings.embedding_length
+      ~PooledFlairEmbeddings.embedding_type
+      ~PooledFlairEmbeddings.embeddings_name
+      ~PooledFlairEmbeddings.training
+   
+   

@@ -1,0 +1,81 @@
+﻿flair.nn.LockedDropout
+======================
+
+.. currentmodule:: flair.nn
+
+.. autoclass:: LockedDropout
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LockedDropout.__init__
+      ~LockedDropout.add_module
+      ~LockedDropout.apply
+      ~LockedDropout.bfloat16
+      ~LockedDropout.buffers
+      ~LockedDropout.children
+      ~LockedDropout.compile
+      ~LockedDropout.cpu
+      ~LockedDropout.cuda
+      ~LockedDropout.double
+      ~LockedDropout.eval
+      ~LockedDropout.extra_repr
+      ~LockedDropout.float
+      ~LockedDropout.forward
+      ~LockedDropout.get_buffer
+      ~LockedDropout.get_extra_state
+      ~LockedDropout.get_parameter
+      ~LockedDropout.get_submodule
+      ~LockedDropout.half
+      ~LockedDropout.ipu
+      ~LockedDropout.load_state_dict
+      ~LockedDropout.modules
+      ~LockedDropout.mtia
+      ~LockedDropout.named_buffers
+      ~LockedDropout.named_children
+      ~LockedDropout.named_modules
+      ~LockedDropout.named_parameters
+      ~LockedDropout.parameters
+      ~LockedDropout.register_backward_hook
+      ~LockedDropout.register_buffer
+      ~LockedDropout.register_forward_hook
+      ~LockedDropout.register_forward_pre_hook
+      ~LockedDropout.register_full_backward_hook
+      ~LockedDropout.register_full_backward_pre_hook
+      ~LockedDropout.register_load_state_dict_post_hook
+      ~LockedDropout.register_load_state_dict_pre_hook
+      ~LockedDropout.register_module
+      ~LockedDropout.register_parameter
+      ~LockedDropout.register_state_dict_post_hook
+      ~LockedDropout.register_state_dict_pre_hook
+      ~LockedDropout.requires_grad_
+      ~LockedDropout.set_extra_state
+      ~LockedDropout.set_submodule
+      ~LockedDropout.share_memory
+      ~LockedDropout.state_dict
+      ~LockedDropout.to
+      ~LockedDropout.to_empty
+      ~LockedDropout.train
+      ~LockedDropout.type
+      ~LockedDropout.xpu
+      ~LockedDropout.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LockedDropout.T_destination
+      ~LockedDropout.call_super_init
+      ~LockedDropout.dump_patches
+      ~LockedDropout.training
+   
+   

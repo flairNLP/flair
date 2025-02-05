@@ -1,0 +1,25 @@
+﻿flair.datasets.biomedical.HunerJNLPBA
+=====================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HunerJNLPBA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HunerJNLPBA.__init__
+      ~HunerJNLPBA.download_and_prepare_test
+      ~HunerJNLPBA.download_and_prepare_train
+      ~HunerJNLPBA.read_file
+   
+   
+
+   
+   
+   

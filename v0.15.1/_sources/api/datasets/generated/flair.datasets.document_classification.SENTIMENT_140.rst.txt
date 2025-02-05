@@ -1,0 +1,40 @@
+﻿flair.datasets.document\_classification.SENTIMENT\_140
+======================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: SENTIMENT_140
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SENTIMENT_140.__init__
+      ~SENTIMENT_140.add_label_noise
+      ~SENTIMENT_140.downsample
+      ~SENTIMENT_140.filter_empty_sentences
+      ~SENTIMENT_140.filter_long_sentences
+      ~SENTIMENT_140.get_all_sentences
+      ~SENTIMENT_140.get_label_distribution
+      ~SENTIMENT_140.make_label_dictionary
+      ~SENTIMENT_140.make_tag_dictionary
+      ~SENTIMENT_140.make_vocab_dictionary
+      ~SENTIMENT_140.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SENTIMENT_140.dev
+      ~SENTIMENT_140.test
+      ~SENTIMENT_140.train
+   
+   

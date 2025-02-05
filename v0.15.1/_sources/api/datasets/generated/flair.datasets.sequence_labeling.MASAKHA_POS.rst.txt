@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.MASAKHA\_POS
+==============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: MASAKHA_POS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MASAKHA_POS.__init__
+      ~MASAKHA_POS.add_label_noise
+      ~MASAKHA_POS.downsample
+      ~MASAKHA_POS.filter_empty_sentences
+      ~MASAKHA_POS.filter_long_sentences
+      ~MASAKHA_POS.get_all_sentences
+      ~MASAKHA_POS.get_label_distribution
+      ~MASAKHA_POS.make_label_dictionary
+      ~MASAKHA_POS.make_tag_dictionary
+      ~MASAKHA_POS.make_vocab_dictionary
+      ~MASAKHA_POS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MASAKHA_POS.dev
+      ~MASAKHA_POS.test
+      ~MASAKHA_POS.train
+   
+   

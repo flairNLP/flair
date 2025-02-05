@@ -1,0 +1,23 @@
+﻿flair.datasets.ocr.OcrJsonDataset
+=================================
+
+.. currentmodule:: flair.datasets.ocr
+
+.. autoclass:: OcrJsonDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OcrJsonDataset.__init__
+      ~OcrJsonDataset.is_in_memory
+   
+   
+
+   
+   
+   

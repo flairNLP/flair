@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_DISEASE\_VARIOME
+=================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_DISEASE_VARIOME
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_DISEASE_VARIOME.__init__
+      ~HUNER_DISEASE_VARIOME.add_label_noise
+      ~HUNER_DISEASE_VARIOME.downsample
+      ~HUNER_DISEASE_VARIOME.filter_empty_sentences
+      ~HUNER_DISEASE_VARIOME.filter_long_sentences
+      ~HUNER_DISEASE_VARIOME.get_all_sentences
+      ~HUNER_DISEASE_VARIOME.get_corpus_sentence_splitter
+      ~HUNER_DISEASE_VARIOME.get_entity_type_mapping
+      ~HUNER_DISEASE_VARIOME.get_label_distribution
+      ~HUNER_DISEASE_VARIOME.get_subset
+      ~HUNER_DISEASE_VARIOME.make_label_dictionary
+      ~HUNER_DISEASE_VARIOME.make_tag_dictionary
+      ~HUNER_DISEASE_VARIOME.make_vocab_dictionary
+      ~HUNER_DISEASE_VARIOME.obtain_statistics
+      ~HUNER_DISEASE_VARIOME.split_url
+      ~HUNER_DISEASE_VARIOME.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_DISEASE_VARIOME.dev
+      ~HUNER_DISEASE_VARIOME.test
+      ~HUNER_DISEASE_VARIOME.train
+   
+   

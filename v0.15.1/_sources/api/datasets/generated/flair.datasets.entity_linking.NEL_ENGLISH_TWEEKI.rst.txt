@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.NEL\_ENGLISH\_TWEEKI
+===================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: NEL_ENGLISH_TWEEKI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NEL_ENGLISH_TWEEKI.__init__
+      ~NEL_ENGLISH_TWEEKI.add_label_noise
+      ~NEL_ENGLISH_TWEEKI.downsample
+      ~NEL_ENGLISH_TWEEKI.filter_empty_sentences
+      ~NEL_ENGLISH_TWEEKI.filter_long_sentences
+      ~NEL_ENGLISH_TWEEKI.get_all_sentences
+      ~NEL_ENGLISH_TWEEKI.get_label_distribution
+      ~NEL_ENGLISH_TWEEKI.make_label_dictionary
+      ~NEL_ENGLISH_TWEEKI.make_tag_dictionary
+      ~NEL_ENGLISH_TWEEKI.make_vocab_dictionary
+      ~NEL_ENGLISH_TWEEKI.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NEL_ENGLISH_TWEEKI.dev
+      ~NEL_ENGLISH_TWEEKI.test
+      ~NEL_ENGLISH_TWEEKI.train
+   
+   

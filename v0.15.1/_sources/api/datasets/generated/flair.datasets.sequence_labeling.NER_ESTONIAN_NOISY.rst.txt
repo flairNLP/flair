@@ -1,0 +1,42 @@
+﻿flair.datasets.sequence\_labeling.NER\_ESTONIAN\_NOISY
+======================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_ESTONIAN_NOISY
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_ESTONIAN_NOISY.__init__
+      ~NER_ESTONIAN_NOISY.add_label_noise
+      ~NER_ESTONIAN_NOISY.downsample
+      ~NER_ESTONIAN_NOISY.filter_empty_sentences
+      ~NER_ESTONIAN_NOISY.filter_long_sentences
+      ~NER_ESTONIAN_NOISY.get_all_sentences
+      ~NER_ESTONIAN_NOISY.get_label_distribution
+      ~NER_ESTONIAN_NOISY.make_label_dictionary
+      ~NER_ESTONIAN_NOISY.make_tag_dictionary
+      ~NER_ESTONIAN_NOISY.make_vocab_dictionary
+      ~NER_ESTONIAN_NOISY.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_ESTONIAN_NOISY.data_url
+      ~NER_ESTONIAN_NOISY.dev
+      ~NER_ESTONIAN_NOISY.label_url
+      ~NER_ESTONIAN_NOISY.test
+      ~NER_ESTONIAN_NOISY.train
+   
+   

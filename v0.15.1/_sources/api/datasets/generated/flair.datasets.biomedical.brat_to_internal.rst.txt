@@ -1,0 +1,6 @@
+﻿flair.datasets.biomedical.brat\_to\_internal
+============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autofunction:: brat_to_internal

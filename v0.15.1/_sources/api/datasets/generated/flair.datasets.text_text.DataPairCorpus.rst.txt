@@ -1,0 +1,40 @@
+﻿flair.datasets.text\_text.DataPairCorpus
+========================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: DataPairCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DataPairCorpus.__init__
+      ~DataPairCorpus.add_label_noise
+      ~DataPairCorpus.downsample
+      ~DataPairCorpus.filter_empty_sentences
+      ~DataPairCorpus.filter_long_sentences
+      ~DataPairCorpus.get_all_sentences
+      ~DataPairCorpus.get_label_distribution
+      ~DataPairCorpus.make_label_dictionary
+      ~DataPairCorpus.make_tag_dictionary
+      ~DataPairCorpus.make_vocab_dictionary
+      ~DataPairCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DataPairCorpus.dev
+      ~DataPairCorpus.test
+      ~DataPairCorpus.train
+   
+   

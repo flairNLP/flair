@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_CHINESE\_WEIBO
+=====================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_CHINESE_WEIBO
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_CHINESE_WEIBO.__init__
+      ~NER_CHINESE_WEIBO.add_label_noise
+      ~NER_CHINESE_WEIBO.downsample
+      ~NER_CHINESE_WEIBO.filter_empty_sentences
+      ~NER_CHINESE_WEIBO.filter_long_sentences
+      ~NER_CHINESE_WEIBO.get_all_sentences
+      ~NER_CHINESE_WEIBO.get_label_distribution
+      ~NER_CHINESE_WEIBO.make_label_dictionary
+      ~NER_CHINESE_WEIBO.make_tag_dictionary
+      ~NER_CHINESE_WEIBO.make_vocab_dictionary
+      ~NER_CHINESE_WEIBO.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_CHINESE_WEIBO.dev
+      ~NER_CHINESE_WEIBO.test
+      ~NER_CHINESE_WEIBO.train
+   
+   

@@ -1,0 +1,41 @@
+﻿flair.datasets.text\_text.GLUE\_STSB
+====================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: GLUE_STSB
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GLUE_STSB.__init__
+      ~GLUE_STSB.add_label_noise
+      ~GLUE_STSB.downsample
+      ~GLUE_STSB.filter_empty_sentences
+      ~GLUE_STSB.filter_long_sentences
+      ~GLUE_STSB.get_all_sentences
+      ~GLUE_STSB.get_label_distribution
+      ~GLUE_STSB.make_label_dictionary
+      ~GLUE_STSB.make_tag_dictionary
+      ~GLUE_STSB.make_vocab_dictionary
+      ~GLUE_STSB.obtain_statistics
+      ~GLUE_STSB.tsv_from_eval_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GLUE_STSB.dev
+      ~GLUE_STSB.test
+      ~GLUE_STSB.train
+   
+   

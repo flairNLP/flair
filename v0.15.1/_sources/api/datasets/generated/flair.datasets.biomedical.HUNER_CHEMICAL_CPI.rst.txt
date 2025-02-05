@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_CHEMICAL\_CPI
+==============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_CHEMICAL_CPI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_CHEMICAL_CPI.__init__
+      ~HUNER_CHEMICAL_CPI.add_label_noise
+      ~HUNER_CHEMICAL_CPI.bin_search_passage
+      ~HUNER_CHEMICAL_CPI.build_corpus_directory_name
+      ~HUNER_CHEMICAL_CPI.downsample
+      ~HUNER_CHEMICAL_CPI.filter_empty_sentences
+      ~HUNER_CHEMICAL_CPI.filter_long_sentences
+      ~HUNER_CHEMICAL_CPI.get_all_sentences
+      ~HUNER_CHEMICAL_CPI.get_entity_type_mapping
+      ~HUNER_CHEMICAL_CPI.get_label_distribution
+      ~HUNER_CHEMICAL_CPI.make_label_dictionary
+      ~HUNER_CHEMICAL_CPI.make_tag_dictionary
+      ~HUNER_CHEMICAL_CPI.make_vocab_dictionary
+      ~HUNER_CHEMICAL_CPI.obtain_statistics
+      ~HUNER_CHEMICAL_CPI.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_CHEMICAL_CPI.dev
+      ~HUNER_CHEMICAL_CPI.test
+      ~HUNER_CHEMICAL_CPI.train
+   
+   

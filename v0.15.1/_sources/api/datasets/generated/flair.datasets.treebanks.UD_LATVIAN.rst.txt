@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_LATVIAN
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_LATVIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_LATVIAN.__init__
+      ~UD_LATVIAN.add_label_noise
+      ~UD_LATVIAN.downsample
+      ~UD_LATVIAN.filter_empty_sentences
+      ~UD_LATVIAN.filter_long_sentences
+      ~UD_LATVIAN.get_all_sentences
+      ~UD_LATVIAN.get_label_distribution
+      ~UD_LATVIAN.make_label_dictionary
+      ~UD_LATVIAN.make_tag_dictionary
+      ~UD_LATVIAN.make_vocab_dictionary
+      ~UD_LATVIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_LATVIAN.dev
+      ~UD_LATVIAN.test
+      ~UD_LATVIAN.train
+   
+   

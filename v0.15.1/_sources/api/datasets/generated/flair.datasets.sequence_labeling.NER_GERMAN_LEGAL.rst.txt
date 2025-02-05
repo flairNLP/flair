@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_GERMAN\_LEGAL
+====================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_GERMAN_LEGAL
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_GERMAN_LEGAL.__init__
+      ~NER_GERMAN_LEGAL.add_label_noise
+      ~NER_GERMAN_LEGAL.downsample
+      ~NER_GERMAN_LEGAL.filter_empty_sentences
+      ~NER_GERMAN_LEGAL.filter_long_sentences
+      ~NER_GERMAN_LEGAL.get_all_sentences
+      ~NER_GERMAN_LEGAL.get_label_distribution
+      ~NER_GERMAN_LEGAL.make_label_dictionary
+      ~NER_GERMAN_LEGAL.make_tag_dictionary
+      ~NER_GERMAN_LEGAL.make_vocab_dictionary
+      ~NER_GERMAN_LEGAL.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_GERMAN_LEGAL.dev
+      ~NER_GERMAN_LEGAL.test
+      ~NER_GERMAN_LEGAL.train
+   
+   

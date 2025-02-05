@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.BioBertHelper
+=======================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: BioBertHelper
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BioBertHelper.__init__
+      ~BioBertHelper.add_label_noise
+      ~BioBertHelper.convert_and_write
+      ~BioBertHelper.download_corpora
+      ~BioBertHelper.downsample
+      ~BioBertHelper.filter_empty_sentences
+      ~BioBertHelper.filter_long_sentences
+      ~BioBertHelper.get_all_sentences
+      ~BioBertHelper.get_label_distribution
+      ~BioBertHelper.make_label_dictionary
+      ~BioBertHelper.make_tag_dictionary
+      ~BioBertHelper.make_vocab_dictionary
+      ~BioBertHelper.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BioBertHelper.dev
+      ~BioBertHelper.test
+      ~BioBertHelper.train
+   
+   

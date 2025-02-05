@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.UP\_FRENCH
+============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: UP_FRENCH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UP_FRENCH.__init__
+      ~UP_FRENCH.add_label_noise
+      ~UP_FRENCH.downsample
+      ~UP_FRENCH.filter_empty_sentences
+      ~UP_FRENCH.filter_long_sentences
+      ~UP_FRENCH.get_all_sentences
+      ~UP_FRENCH.get_label_distribution
+      ~UP_FRENCH.make_label_dictionary
+      ~UP_FRENCH.make_tag_dictionary
+      ~UP_FRENCH.make_vocab_dictionary
+      ~UP_FRENCH.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UP_FRENCH.dev
+      ~UP_FRENCH.test
+      ~UP_FRENCH.train
+   
+   

@@ -1,0 +1,50 @@
+﻿flair.data.Span
+===============
+
+.. currentmodule:: flair.data
+
+.. autoclass:: Span
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Span.__init__
+      ~Span.add_label
+      ~Span.add_metadata
+      ~Span.clear_embeddings
+      ~Span.get_each_embedding
+      ~Span.get_embedding
+      ~Span.get_label
+      ~Span.get_labels
+      ~Span.get_metadata
+      ~Span.has_label
+      ~Span.has_metadata
+      ~Span.remove_labels
+      ~Span.set_embedding
+      ~Span.set_label
+      ~Span.to
+      ~Span.to_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Span.embedding
+      ~Span.end_position
+      ~Span.labels
+      ~Span.score
+      ~Span.start_position
+      ~Span.tag
+      ~Span.text
+      ~Span.unlabeled_identifier
+   
+   

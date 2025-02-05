@@ -1,0 +1,35 @@
+﻿flair.data.Label
+================
+
+.. currentmodule:: flair.data
+
+.. autoclass:: Label
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Label.__init__
+      ~Label.set_value
+      ~Label.to_dict
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Label.labeled_identifier
+      ~Label.metadata_str
+      ~Label.score
+      ~Label.shortstring
+      ~Label.unlabeled_identifier
+      ~Label.value
+   
+   

@@ -1,0 +1,99 @@
+﻿flair.models.TARSTagger
+=======================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: TARSTagger
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TARSTagger.__init__
+      ~TARSTagger.add_and_switch_to_new_task
+      ~TARSTagger.add_module
+      ~TARSTagger.apply
+      ~TARSTagger.bfloat16
+      ~TARSTagger.buffers
+      ~TARSTagger.children
+      ~TARSTagger.compile
+      ~TARSTagger.cpu
+      ~TARSTagger.cuda
+      ~TARSTagger.double
+      ~TARSTagger.eval
+      ~TARSTagger.evaluate
+      ~TARSTagger.extra_repr
+      ~TARSTagger.float
+      ~TARSTagger.forward
+      ~TARSTagger.forward_loss
+      ~TARSTagger.get_buffer
+      ~TARSTagger.get_current_label_dictionary
+      ~TARSTagger.get_current_label_type
+      ~TARSTagger.get_extra_state
+      ~TARSTagger.get_parameter
+      ~TARSTagger.get_submodule
+      ~TARSTagger.get_used_tokens
+      ~TARSTagger.half
+      ~TARSTagger.ipu
+      ~TARSTagger.is_current_task_multi_label
+      ~TARSTagger.list_existing_tasks
+      ~TARSTagger.load
+      ~TARSTagger.load_state_dict
+      ~TARSTagger.modules
+      ~TARSTagger.mtia
+      ~TARSTagger.named_buffers
+      ~TARSTagger.named_children
+      ~TARSTagger.named_modules
+      ~TARSTagger.named_parameters
+      ~TARSTagger.parameters
+      ~TARSTagger.predict
+      ~TARSTagger.predict_zero_shot
+      ~TARSTagger.print_model_card
+      ~TARSTagger.register_backward_hook
+      ~TARSTagger.register_buffer
+      ~TARSTagger.register_forward_hook
+      ~TARSTagger.register_forward_pre_hook
+      ~TARSTagger.register_full_backward_hook
+      ~TARSTagger.register_full_backward_pre_hook
+      ~TARSTagger.register_load_state_dict_post_hook
+      ~TARSTagger.register_load_state_dict_pre_hook
+      ~TARSTagger.register_module
+      ~TARSTagger.register_parameter
+      ~TARSTagger.register_state_dict_post_hook
+      ~TARSTagger.register_state_dict_pre_hook
+      ~TARSTagger.requires_grad_
+      ~TARSTagger.save
+      ~TARSTagger.set_extra_state
+      ~TARSTagger.set_submodule
+      ~TARSTagger.share_memory
+      ~TARSTagger.state_dict
+      ~TARSTagger.switch_to_task
+      ~TARSTagger.to
+      ~TARSTagger.to_empty
+      ~TARSTagger.train
+      ~TARSTagger.type
+      ~TARSTagger.xpu
+      ~TARSTagger.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TARSTagger.T_destination
+      ~TARSTagger.call_super_init
+      ~TARSTagger.dump_patches
+      ~TARSTagger.label_type
+      ~TARSTagger.model_card
+      ~TARSTagger.static_label_type
+      ~TARSTagger.tars_embeddings
+      ~TARSTagger.training
+   
+   

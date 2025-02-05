@@ -1,0 +1,92 @@
+﻿flair.embeddings.token.MuseCrosslingualEmbeddings
+=================================================
+
+.. currentmodule:: flair.embeddings.token
+
+.. autoclass:: MuseCrosslingualEmbeddings
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MuseCrosslingualEmbeddings.__init__
+      ~MuseCrosslingualEmbeddings.add_module
+      ~MuseCrosslingualEmbeddings.apply
+      ~MuseCrosslingualEmbeddings.bfloat16
+      ~MuseCrosslingualEmbeddings.buffers
+      ~MuseCrosslingualEmbeddings.children
+      ~MuseCrosslingualEmbeddings.compile
+      ~MuseCrosslingualEmbeddings.cpu
+      ~MuseCrosslingualEmbeddings.cuda
+      ~MuseCrosslingualEmbeddings.double
+      ~MuseCrosslingualEmbeddings.embed
+      ~MuseCrosslingualEmbeddings.eval
+      ~MuseCrosslingualEmbeddings.extra_repr
+      ~MuseCrosslingualEmbeddings.float
+      ~MuseCrosslingualEmbeddings.forward
+      ~MuseCrosslingualEmbeddings.from_params
+      ~MuseCrosslingualEmbeddings.get_buffer
+      ~MuseCrosslingualEmbeddings.get_cached_vec
+      ~MuseCrosslingualEmbeddings.get_extra_state
+      ~MuseCrosslingualEmbeddings.get_instance_parameters
+      ~MuseCrosslingualEmbeddings.get_names
+      ~MuseCrosslingualEmbeddings.get_parameter
+      ~MuseCrosslingualEmbeddings.get_submodule
+      ~MuseCrosslingualEmbeddings.half
+      ~MuseCrosslingualEmbeddings.ipu
+      ~MuseCrosslingualEmbeddings.load_embedding
+      ~MuseCrosslingualEmbeddings.load_state_dict
+      ~MuseCrosslingualEmbeddings.modules
+      ~MuseCrosslingualEmbeddings.mtia
+      ~MuseCrosslingualEmbeddings.named_buffers
+      ~MuseCrosslingualEmbeddings.named_children
+      ~MuseCrosslingualEmbeddings.named_modules
+      ~MuseCrosslingualEmbeddings.named_parameters
+      ~MuseCrosslingualEmbeddings.parameters
+      ~MuseCrosslingualEmbeddings.register_backward_hook
+      ~MuseCrosslingualEmbeddings.register_buffer
+      ~MuseCrosslingualEmbeddings.register_forward_hook
+      ~MuseCrosslingualEmbeddings.register_forward_pre_hook
+      ~MuseCrosslingualEmbeddings.register_full_backward_hook
+      ~MuseCrosslingualEmbeddings.register_full_backward_pre_hook
+      ~MuseCrosslingualEmbeddings.register_load_state_dict_post_hook
+      ~MuseCrosslingualEmbeddings.register_load_state_dict_pre_hook
+      ~MuseCrosslingualEmbeddings.register_module
+      ~MuseCrosslingualEmbeddings.register_parameter
+      ~MuseCrosslingualEmbeddings.register_state_dict_post_hook
+      ~MuseCrosslingualEmbeddings.register_state_dict_pre_hook
+      ~MuseCrosslingualEmbeddings.requires_grad_
+      ~MuseCrosslingualEmbeddings.save_embeddings
+      ~MuseCrosslingualEmbeddings.set_extra_state
+      ~MuseCrosslingualEmbeddings.set_submodule
+      ~MuseCrosslingualEmbeddings.share_memory
+      ~MuseCrosslingualEmbeddings.state_dict
+      ~MuseCrosslingualEmbeddings.to
+      ~MuseCrosslingualEmbeddings.to_empty
+      ~MuseCrosslingualEmbeddings.to_params
+      ~MuseCrosslingualEmbeddings.train
+      ~MuseCrosslingualEmbeddings.type
+      ~MuseCrosslingualEmbeddings.xpu
+      ~MuseCrosslingualEmbeddings.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MuseCrosslingualEmbeddings.T_destination
+      ~MuseCrosslingualEmbeddings.call_super_init
+      ~MuseCrosslingualEmbeddings.dump_patches
+      ~MuseCrosslingualEmbeddings.embedding_length
+      ~MuseCrosslingualEmbeddings.embedding_type
+      ~MuseCrosslingualEmbeddings.embeddings_name
+      ~MuseCrosslingualEmbeddings.training
+   
+   

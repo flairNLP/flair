@@ -1,0 +1,91 @@
+﻿flair.models.MultitaskModel
+===========================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: MultitaskModel
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MultitaskModel.__init__
+      ~MultitaskModel.add_module
+      ~MultitaskModel.apply
+      ~MultitaskModel.bfloat16
+      ~MultitaskModel.buffers
+      ~MultitaskModel.children
+      ~MultitaskModel.compile
+      ~MultitaskModel.cpu
+      ~MultitaskModel.cuda
+      ~MultitaskModel.double
+      ~MultitaskModel.eval
+      ~MultitaskModel.evaluate
+      ~MultitaskModel.extra_repr
+      ~MultitaskModel.float
+      ~MultitaskModel.forward
+      ~MultitaskModel.forward_loss
+      ~MultitaskModel.get_buffer
+      ~MultitaskModel.get_extra_state
+      ~MultitaskModel.get_parameter
+      ~MultitaskModel.get_submodule
+      ~MultitaskModel.get_used_tokens
+      ~MultitaskModel.half
+      ~MultitaskModel.ipu
+      ~MultitaskModel.load
+      ~MultitaskModel.load_state_dict
+      ~MultitaskModel.modules
+      ~MultitaskModel.mtia
+      ~MultitaskModel.named_buffers
+      ~MultitaskModel.named_children
+      ~MultitaskModel.named_modules
+      ~MultitaskModel.named_parameters
+      ~MultitaskModel.parameters
+      ~MultitaskModel.predict
+      ~MultitaskModel.print_model_card
+      ~MultitaskModel.register_backward_hook
+      ~MultitaskModel.register_buffer
+      ~MultitaskModel.register_forward_hook
+      ~MultitaskModel.register_forward_pre_hook
+      ~MultitaskModel.register_full_backward_hook
+      ~MultitaskModel.register_full_backward_pre_hook
+      ~MultitaskModel.register_load_state_dict_post_hook
+      ~MultitaskModel.register_load_state_dict_pre_hook
+      ~MultitaskModel.register_module
+      ~MultitaskModel.register_parameter
+      ~MultitaskModel.register_state_dict_post_hook
+      ~MultitaskModel.register_state_dict_pre_hook
+      ~MultitaskModel.requires_grad_
+      ~MultitaskModel.save
+      ~MultitaskModel.set_extra_state
+      ~MultitaskModel.set_submodule
+      ~MultitaskModel.share_memory
+      ~MultitaskModel.split_batch_to_task_ids
+      ~MultitaskModel.state_dict
+      ~MultitaskModel.to
+      ~MultitaskModel.to_empty
+      ~MultitaskModel.train
+      ~MultitaskModel.type
+      ~MultitaskModel.xpu
+      ~MultitaskModel.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MultitaskModel.T_destination
+      ~MultitaskModel.call_super_init
+      ~MultitaskModel.dump_patches
+      ~MultitaskModel.label_type
+      ~MultitaskModel.model_card
+      ~MultitaskModel.training
+   
+   

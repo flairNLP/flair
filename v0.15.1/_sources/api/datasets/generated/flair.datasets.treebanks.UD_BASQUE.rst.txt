@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_BASQUE
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_BASQUE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_BASQUE.__init__
+      ~UD_BASQUE.add_label_noise
+      ~UD_BASQUE.downsample
+      ~UD_BASQUE.filter_empty_sentences
+      ~UD_BASQUE.filter_long_sentences
+      ~UD_BASQUE.get_all_sentences
+      ~UD_BASQUE.get_label_distribution
+      ~UD_BASQUE.make_label_dictionary
+      ~UD_BASQUE.make_tag_dictionary
+      ~UD_BASQUE.make_vocab_dictionary
+      ~UD_BASQUE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_BASQUE.dev
+      ~UD_BASQUE.test
+      ~UD_BASQUE.train
+   
+   

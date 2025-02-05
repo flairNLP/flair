@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.BIGBIO\_NER\_CORPUS
+=============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: BIGBIO_NER_CORPUS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BIGBIO_NER_CORPUS.__init__
+      ~BIGBIO_NER_CORPUS.add_label_noise
+      ~BIGBIO_NER_CORPUS.bin_search_passage
+      ~BIGBIO_NER_CORPUS.build_corpus_directory_name
+      ~BIGBIO_NER_CORPUS.downsample
+      ~BIGBIO_NER_CORPUS.filter_empty_sentences
+      ~BIGBIO_NER_CORPUS.filter_long_sentences
+      ~BIGBIO_NER_CORPUS.get_all_sentences
+      ~BIGBIO_NER_CORPUS.get_entity_type_mapping
+      ~BIGBIO_NER_CORPUS.get_label_distribution
+      ~BIGBIO_NER_CORPUS.make_label_dictionary
+      ~BIGBIO_NER_CORPUS.make_tag_dictionary
+      ~BIGBIO_NER_CORPUS.make_vocab_dictionary
+      ~BIGBIO_NER_CORPUS.obtain_statistics
+      ~BIGBIO_NER_CORPUS.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BIGBIO_NER_CORPUS.dev
+      ~BIGBIO_NER_CORPUS.test
+      ~BIGBIO_NER_CORPUS.train
+   
+   

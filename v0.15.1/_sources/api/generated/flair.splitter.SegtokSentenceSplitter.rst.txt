@@ -1,0 +1,30 @@
+﻿flair.splitter.SegtokSentenceSplitter
+=====================================
+
+.. currentmodule:: flair.splitter
+
+.. autoclass:: SegtokSentenceSplitter
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SegtokSentenceSplitter.__init__
+      ~SegtokSentenceSplitter.split
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SegtokSentenceSplitter.name
+      ~SegtokSentenceSplitter.tokenizer
+   
+   

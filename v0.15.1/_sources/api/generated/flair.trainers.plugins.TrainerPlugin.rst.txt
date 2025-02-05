@@ -1,0 +1,37 @@
+﻿flair.trainers.plugins.TrainerPlugin
+====================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: TrainerPlugin
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TrainerPlugin.__init__
+      ~TrainerPlugin.attach_to
+      ~TrainerPlugin.detach
+      ~TrainerPlugin.get_state
+      ~TrainerPlugin.hook
+      ~TrainerPlugin.mark_func_as_hook
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TrainerPlugin.attach_to_all_processes
+      ~TrainerPlugin.corpus
+      ~TrainerPlugin.model
+      ~TrainerPlugin.pluggable
+      ~TrainerPlugin.trainer
+   
+   

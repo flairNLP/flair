@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_CELL\_LINE\_CELL\_FINDER
+=========================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_CELL_LINE_CELL_FINDER
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_CELL_LINE_CELL_FINDER.__init__
+      ~HUNER_CELL_LINE_CELL_FINDER.add_label_noise
+      ~HUNER_CELL_LINE_CELL_FINDER.downsample
+      ~HUNER_CELL_LINE_CELL_FINDER.filter_empty_sentences
+      ~HUNER_CELL_LINE_CELL_FINDER.filter_long_sentences
+      ~HUNER_CELL_LINE_CELL_FINDER.get_all_sentences
+      ~HUNER_CELL_LINE_CELL_FINDER.get_corpus_sentence_splitter
+      ~HUNER_CELL_LINE_CELL_FINDER.get_label_distribution
+      ~HUNER_CELL_LINE_CELL_FINDER.get_subset
+      ~HUNER_CELL_LINE_CELL_FINDER.make_label_dictionary
+      ~HUNER_CELL_LINE_CELL_FINDER.make_tag_dictionary
+      ~HUNER_CELL_LINE_CELL_FINDER.make_vocab_dictionary
+      ~HUNER_CELL_LINE_CELL_FINDER.obtain_statistics
+      ~HUNER_CELL_LINE_CELL_FINDER.split_url
+      ~HUNER_CELL_LINE_CELL_FINDER.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_CELL_LINE_CELL_FINDER.dev
+      ~HUNER_CELL_LINE_CELL_FINDER.test
+      ~HUNER_CELL_LINE_CELL_FINDER.train
+   
+   

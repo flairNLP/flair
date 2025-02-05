@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.document\_max\_pooling
+===================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autofunction:: document_max_pooling

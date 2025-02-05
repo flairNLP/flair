@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.MultiFileJsonlCorpus
+======================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: MultiFileJsonlCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MultiFileJsonlCorpus.__init__
+      ~MultiFileJsonlCorpus.add_label_noise
+      ~MultiFileJsonlCorpus.downsample
+      ~MultiFileJsonlCorpus.filter_empty_sentences
+      ~MultiFileJsonlCorpus.filter_long_sentences
+      ~MultiFileJsonlCorpus.get_all_sentences
+      ~MultiFileJsonlCorpus.get_label_distribution
+      ~MultiFileJsonlCorpus.make_label_dictionary
+      ~MultiFileJsonlCorpus.make_tag_dictionary
+      ~MultiFileJsonlCorpus.make_vocab_dictionary
+      ~MultiFileJsonlCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MultiFileJsonlCorpus.dev
+      ~MultiFileJsonlCorpus.test
+      ~MultiFileJsonlCorpus.train
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_FAROESE
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_FAROESE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_FAROESE.__init__
+      ~UD_FAROESE.add_label_noise
+      ~UD_FAROESE.downsample
+      ~UD_FAROESE.filter_empty_sentences
+      ~UD_FAROESE.filter_long_sentences
+      ~UD_FAROESE.get_all_sentences
+      ~UD_FAROESE.get_label_distribution
+      ~UD_FAROESE.make_label_dictionary
+      ~UD_FAROESE.make_tag_dictionary
+      ~UD_FAROESE.make_vocab_dictionary
+      ~UD_FAROESE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_FAROESE.dev
+      ~UD_FAROESE.test
+      ~UD_FAROESE.train
+   
+   

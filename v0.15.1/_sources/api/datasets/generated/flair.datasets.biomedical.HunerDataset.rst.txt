@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HunerDataset
+======================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HunerDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HunerDataset.__init__
+      ~HunerDataset.add_label_noise
+      ~HunerDataset.downsample
+      ~HunerDataset.filter_empty_sentences
+      ~HunerDataset.filter_long_sentences
+      ~HunerDataset.get_all_sentences
+      ~HunerDataset.get_corpus_sentence_splitter
+      ~HunerDataset.get_label_distribution
+      ~HunerDataset.get_subset
+      ~HunerDataset.make_label_dictionary
+      ~HunerDataset.make_tag_dictionary
+      ~HunerDataset.make_vocab_dictionary
+      ~HunerDataset.obtain_statistics
+      ~HunerDataset.split_url
+      ~HunerDataset.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HunerDataset.dev
+      ~HunerDataset.test
+      ~HunerDataset.train
+   
+   

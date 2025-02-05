@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_GERMAN\_EUROPARL
+=======================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_GERMAN_EUROPARL
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_GERMAN_EUROPARL.__init__
+      ~NER_GERMAN_EUROPARL.add_label_noise
+      ~NER_GERMAN_EUROPARL.downsample
+      ~NER_GERMAN_EUROPARL.filter_empty_sentences
+      ~NER_GERMAN_EUROPARL.filter_long_sentences
+      ~NER_GERMAN_EUROPARL.get_all_sentences
+      ~NER_GERMAN_EUROPARL.get_label_distribution
+      ~NER_GERMAN_EUROPARL.make_label_dictionary
+      ~NER_GERMAN_EUROPARL.make_tag_dictionary
+      ~NER_GERMAN_EUROPARL.make_vocab_dictionary
+      ~NER_GERMAN_EUROPARL.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_GERMAN_EUROPARL.dev
+      ~NER_GERMAN_EUROPARL.test
+      ~NER_GERMAN_EUROPARL.train
+   
+   

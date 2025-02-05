@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_MULTI\_WIKIANN
+=====================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_MULTI_WIKIANN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_MULTI_WIKIANN.__init__
+      ~NER_MULTI_WIKIANN.add_label_noise
+      ~NER_MULTI_WIKIANN.downsample
+      ~NER_MULTI_WIKIANN.filter_empty_sentences
+      ~NER_MULTI_WIKIANN.filter_long_sentences
+      ~NER_MULTI_WIKIANN.get_all_sentences
+      ~NER_MULTI_WIKIANN.get_label_distribution
+      ~NER_MULTI_WIKIANN.make_label_dictionary
+      ~NER_MULTI_WIKIANN.make_tag_dictionary
+      ~NER_MULTI_WIKIANN.make_vocab_dictionary
+      ~NER_MULTI_WIKIANN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_MULTI_WIKIANN.dev
+      ~NER_MULTI_WIKIANN.test
+      ~NER_MULTI_WIKIANN.train
+   
+   

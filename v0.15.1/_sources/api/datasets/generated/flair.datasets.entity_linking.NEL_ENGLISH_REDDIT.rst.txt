@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.NEL\_ENGLISH\_REDDIT
+===================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: NEL_ENGLISH_REDDIT
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NEL_ENGLISH_REDDIT.__init__
+      ~NEL_ENGLISH_REDDIT.add_label_noise
+      ~NEL_ENGLISH_REDDIT.downsample
+      ~NEL_ENGLISH_REDDIT.filter_empty_sentences
+      ~NEL_ENGLISH_REDDIT.filter_long_sentences
+      ~NEL_ENGLISH_REDDIT.get_all_sentences
+      ~NEL_ENGLISH_REDDIT.get_label_distribution
+      ~NEL_ENGLISH_REDDIT.make_label_dictionary
+      ~NEL_ENGLISH_REDDIT.make_tag_dictionary
+      ~NEL_ENGLISH_REDDIT.make_vocab_dictionary
+      ~NEL_ENGLISH_REDDIT.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NEL_ENGLISH_REDDIT.dev
+      ~NEL_ENGLISH_REDDIT.test
+      ~NEL_ENGLISH_REDDIT.train
+   
+   

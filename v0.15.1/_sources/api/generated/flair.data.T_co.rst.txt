@@ -1,0 +1,6 @@
+﻿flair.data.T\_co
+================
+
+.. currentmodule:: flair.data
+
+.. autodata:: T_co

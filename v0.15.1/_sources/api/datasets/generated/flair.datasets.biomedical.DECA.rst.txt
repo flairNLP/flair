@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.DECA
+==============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: DECA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DECA.__init__
+      ~DECA.add_label_noise
+      ~DECA.download_corpus
+      ~DECA.downsample
+      ~DECA.filter_empty_sentences
+      ~DECA.filter_long_sentences
+      ~DECA.get_all_sentences
+      ~DECA.get_label_distribution
+      ~DECA.make_label_dictionary
+      ~DECA.make_tag_dictionary
+      ~DECA.make_vocab_dictionary
+      ~DECA.obtain_statistics
+      ~DECA.parse_corpus
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DECA.dev
+      ~DECA.test
+      ~DECA.train
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_ENGLISH\_SEC\_FILLINGS
+=============================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_ENGLISH_SEC_FILLINGS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_SEC_FILLINGS.__init__
+      ~NER_ENGLISH_SEC_FILLINGS.add_label_noise
+      ~NER_ENGLISH_SEC_FILLINGS.downsample
+      ~NER_ENGLISH_SEC_FILLINGS.filter_empty_sentences
+      ~NER_ENGLISH_SEC_FILLINGS.filter_long_sentences
+      ~NER_ENGLISH_SEC_FILLINGS.get_all_sentences
+      ~NER_ENGLISH_SEC_FILLINGS.get_label_distribution
+      ~NER_ENGLISH_SEC_FILLINGS.make_label_dictionary
+      ~NER_ENGLISH_SEC_FILLINGS.make_tag_dictionary
+      ~NER_ENGLISH_SEC_FILLINGS.make_vocab_dictionary
+      ~NER_ENGLISH_SEC_FILLINGS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_SEC_FILLINGS.dev
+      ~NER_ENGLISH_SEC_FILLINGS.test
+      ~NER_ENGLISH_SEC_FILLINGS.train
+   
+   

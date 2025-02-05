@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_CATALAN
+====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_CATALAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_CATALAN.__init__
+      ~UD_CATALAN.add_label_noise
+      ~UD_CATALAN.downsample
+      ~UD_CATALAN.filter_empty_sentences
+      ~UD_CATALAN.filter_long_sentences
+      ~UD_CATALAN.get_all_sentences
+      ~UD_CATALAN.get_label_distribution
+      ~UD_CATALAN.make_label_dictionary
+      ~UD_CATALAN.make_tag_dictionary
+      ~UD_CATALAN.make_vocab_dictionary
+      ~UD_CATALAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_CATALAN.dev
+      ~UD_CATALAN.test
+      ~UD_CATALAN.train
+   
+   

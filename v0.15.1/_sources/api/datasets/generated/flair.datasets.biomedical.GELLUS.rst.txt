@@ -1,0 +1,40 @@
+﻿flair.datasets.biomedical.GELLUS
+================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: GELLUS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GELLUS.__init__
+      ~GELLUS.add_label_noise
+      ~GELLUS.downsample
+      ~GELLUS.filter_empty_sentences
+      ~GELLUS.filter_long_sentences
+      ~GELLUS.get_all_sentences
+      ~GELLUS.get_label_distribution
+      ~GELLUS.make_label_dictionary
+      ~GELLUS.make_tag_dictionary
+      ~GELLUS.make_vocab_dictionary
+      ~GELLUS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GELLUS.dev
+      ~GELLUS.test
+      ~GELLUS.train
+   
+   

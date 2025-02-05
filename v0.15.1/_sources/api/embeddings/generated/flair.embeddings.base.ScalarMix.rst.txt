@@ -1,0 +1,81 @@
+﻿flair.embeddings.base.ScalarMix
+===============================
+
+.. currentmodule:: flair.embeddings.base
+
+.. autoclass:: ScalarMix
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ScalarMix.__init__
+      ~ScalarMix.add_module
+      ~ScalarMix.apply
+      ~ScalarMix.bfloat16
+      ~ScalarMix.buffers
+      ~ScalarMix.children
+      ~ScalarMix.compile
+      ~ScalarMix.cpu
+      ~ScalarMix.cuda
+      ~ScalarMix.double
+      ~ScalarMix.eval
+      ~ScalarMix.extra_repr
+      ~ScalarMix.float
+      ~ScalarMix.forward
+      ~ScalarMix.get_buffer
+      ~ScalarMix.get_extra_state
+      ~ScalarMix.get_parameter
+      ~ScalarMix.get_submodule
+      ~ScalarMix.half
+      ~ScalarMix.ipu
+      ~ScalarMix.load_state_dict
+      ~ScalarMix.modules
+      ~ScalarMix.mtia
+      ~ScalarMix.named_buffers
+      ~ScalarMix.named_children
+      ~ScalarMix.named_modules
+      ~ScalarMix.named_parameters
+      ~ScalarMix.parameters
+      ~ScalarMix.register_backward_hook
+      ~ScalarMix.register_buffer
+      ~ScalarMix.register_forward_hook
+      ~ScalarMix.register_forward_pre_hook
+      ~ScalarMix.register_full_backward_hook
+      ~ScalarMix.register_full_backward_pre_hook
+      ~ScalarMix.register_load_state_dict_post_hook
+      ~ScalarMix.register_load_state_dict_pre_hook
+      ~ScalarMix.register_module
+      ~ScalarMix.register_parameter
+      ~ScalarMix.register_state_dict_post_hook
+      ~ScalarMix.register_state_dict_pre_hook
+      ~ScalarMix.requires_grad_
+      ~ScalarMix.set_extra_state
+      ~ScalarMix.set_submodule
+      ~ScalarMix.share_memory
+      ~ScalarMix.state_dict
+      ~ScalarMix.to
+      ~ScalarMix.to_empty
+      ~ScalarMix.train
+      ~ScalarMix.type
+      ~ScalarMix.xpu
+      ~ScalarMix.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ScalarMix.T_destination
+      ~ScalarMix.call_super_init
+      ~ScalarMix.dump_patches
+      ~ScalarMix.training
+   
+   

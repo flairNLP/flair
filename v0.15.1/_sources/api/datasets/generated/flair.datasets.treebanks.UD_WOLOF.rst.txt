@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_WOLOF
+==================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_WOLOF
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_WOLOF.__init__
+      ~UD_WOLOF.add_label_noise
+      ~UD_WOLOF.downsample
+      ~UD_WOLOF.filter_empty_sentences
+      ~UD_WOLOF.filter_long_sentences
+      ~UD_WOLOF.get_all_sentences
+      ~UD_WOLOF.get_label_distribution
+      ~UD_WOLOF.make_label_dictionary
+      ~UD_WOLOF.make_tag_dictionary
+      ~UD_WOLOF.make_vocab_dictionary
+      ~UD_WOLOF.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_WOLOF.dev
+      ~UD_WOLOF.test
+      ~UD_WOLOF.train
+   
+   

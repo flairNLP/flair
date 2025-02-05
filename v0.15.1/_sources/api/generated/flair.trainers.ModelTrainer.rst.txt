@@ -1,0 +1,40 @@
+﻿flair.trainers.ModelTrainer
+===========================
+
+.. currentmodule:: flair.trainers
+
+.. autoclass:: ModelTrainer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ModelTrainer.__init__
+      ~ModelTrainer.append_plugin
+      ~ModelTrainer.check_for_and_delete_previous_best_models
+      ~ModelTrainer.dispatch
+      ~ModelTrainer.fine_tune
+      ~ModelTrainer.get_batch_steps
+      ~ModelTrainer.register_hook
+      ~ModelTrainer.remove_hook
+      ~ModelTrainer.reset_training_attributes
+      ~ModelTrainer.train
+      ~ModelTrainer.train_custom
+      ~ModelTrainer.validate_event
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ModelTrainer.plugins
+      ~ModelTrainer.valid_events
+   
+   

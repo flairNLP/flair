@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_BIONLP\_ST\_2011\_EPI
+============================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_BIONLP_ST_2011_EPI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.__init__
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.add_label_noise
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.bin_search_passage
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.build_corpus_directory_name
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.downsample
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.filter_empty_sentences
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.filter_long_sentences
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.get_all_sentences
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.get_entity_type_mapping
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.get_label_distribution
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.make_label_dictionary
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.make_tag_dictionary
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.make_vocab_dictionary
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.obtain_statistics
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.dev
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.test
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.train
+   
+   

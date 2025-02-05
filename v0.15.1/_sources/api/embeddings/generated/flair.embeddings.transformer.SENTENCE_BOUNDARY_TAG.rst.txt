@@ -1,0 +1,6 @@
+﻿flair.embeddings.transformer.SENTENCE\_BOUNDARY\_TAG
+====================================================
+
+.. currentmodule:: flair.embeddings.transformer
+
+.. autodata:: SENTENCE_BOUNDARY_TAG

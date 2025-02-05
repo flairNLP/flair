@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UniversalDependenciesCorpus
+====================================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UniversalDependenciesCorpus
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UniversalDependenciesCorpus.__init__
+      ~UniversalDependenciesCorpus.add_label_noise
+      ~UniversalDependenciesCorpus.downsample
+      ~UniversalDependenciesCorpus.filter_empty_sentences
+      ~UniversalDependenciesCorpus.filter_long_sentences
+      ~UniversalDependenciesCorpus.get_all_sentences
+      ~UniversalDependenciesCorpus.get_label_distribution
+      ~UniversalDependenciesCorpus.make_label_dictionary
+      ~UniversalDependenciesCorpus.make_tag_dictionary
+      ~UniversalDependenciesCorpus.make_vocab_dictionary
+      ~UniversalDependenciesCorpus.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UniversalDependenciesCorpus.dev
+      ~UniversalDependenciesCorpus.test
+      ~UniversalDependenciesCorpus.train
+   
+   

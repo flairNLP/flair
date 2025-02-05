@@ -1,0 +1,40 @@
+﻿flair.datasets.document\_classification.GO\_EMOTIONS
+====================================================
+
+.. currentmodule:: flair.datasets.document_classification
+
+.. autoclass:: GO_EMOTIONS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GO_EMOTIONS.__init__
+      ~GO_EMOTIONS.add_label_noise
+      ~GO_EMOTIONS.downsample
+      ~GO_EMOTIONS.filter_empty_sentences
+      ~GO_EMOTIONS.filter_long_sentences
+      ~GO_EMOTIONS.get_all_sentences
+      ~GO_EMOTIONS.get_label_distribution
+      ~GO_EMOTIONS.make_label_dictionary
+      ~GO_EMOTIONS.make_tag_dictionary
+      ~GO_EMOTIONS.make_vocab_dictionary
+      ~GO_EMOTIONS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GO_EMOTIONS.dev
+      ~GO_EMOTIONS.test
+      ~GO_EMOTIONS.train
+   
+   

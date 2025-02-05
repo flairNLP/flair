@@ -1,0 +1,91 @@
+﻿flair.nn.DefaultClassifier
+==========================
+
+.. currentmodule:: flair.nn
+
+.. autoclass:: DefaultClassifier
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DefaultClassifier.__init__
+      ~DefaultClassifier.add_module
+      ~DefaultClassifier.apply
+      ~DefaultClassifier.bfloat16
+      ~DefaultClassifier.buffers
+      ~DefaultClassifier.children
+      ~DefaultClassifier.compile
+      ~DefaultClassifier.cpu
+      ~DefaultClassifier.cuda
+      ~DefaultClassifier.double
+      ~DefaultClassifier.eval
+      ~DefaultClassifier.evaluate
+      ~DefaultClassifier.extra_repr
+      ~DefaultClassifier.float
+      ~DefaultClassifier.forward
+      ~DefaultClassifier.forward_loss
+      ~DefaultClassifier.get_buffer
+      ~DefaultClassifier.get_extra_state
+      ~DefaultClassifier.get_parameter
+      ~DefaultClassifier.get_submodule
+      ~DefaultClassifier.get_used_tokens
+      ~DefaultClassifier.half
+      ~DefaultClassifier.ipu
+      ~DefaultClassifier.load
+      ~DefaultClassifier.load_state_dict
+      ~DefaultClassifier.modules
+      ~DefaultClassifier.mtia
+      ~DefaultClassifier.named_buffers
+      ~DefaultClassifier.named_children
+      ~DefaultClassifier.named_modules
+      ~DefaultClassifier.named_parameters
+      ~DefaultClassifier.parameters
+      ~DefaultClassifier.predict
+      ~DefaultClassifier.print_model_card
+      ~DefaultClassifier.register_backward_hook
+      ~DefaultClassifier.register_buffer
+      ~DefaultClassifier.register_forward_hook
+      ~DefaultClassifier.register_forward_pre_hook
+      ~DefaultClassifier.register_full_backward_hook
+      ~DefaultClassifier.register_full_backward_pre_hook
+      ~DefaultClassifier.register_load_state_dict_post_hook
+      ~DefaultClassifier.register_load_state_dict_pre_hook
+      ~DefaultClassifier.register_module
+      ~DefaultClassifier.register_parameter
+      ~DefaultClassifier.register_state_dict_post_hook
+      ~DefaultClassifier.register_state_dict_pre_hook
+      ~DefaultClassifier.requires_grad_
+      ~DefaultClassifier.save
+      ~DefaultClassifier.set_extra_state
+      ~DefaultClassifier.set_submodule
+      ~DefaultClassifier.share_memory
+      ~DefaultClassifier.state_dict
+      ~DefaultClassifier.to
+      ~DefaultClassifier.to_empty
+      ~DefaultClassifier.train
+      ~DefaultClassifier.type
+      ~DefaultClassifier.xpu
+      ~DefaultClassifier.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DefaultClassifier.T_destination
+      ~DefaultClassifier.call_super_init
+      ~DefaultClassifier.dump_patches
+      ~DefaultClassifier.label_type
+      ~DefaultClassifier.model_card
+      ~DefaultClassifier.multi_label_threshold
+      ~DefaultClassifier.training
+   
+   

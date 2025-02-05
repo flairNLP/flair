@@ -1,0 +1,45 @@
+﻿flair.datasets.biomedical.HUNER\_SPECIES\_S800
+==============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_SPECIES_S800
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES_S800.__init__
+      ~HUNER_SPECIES_S800.add_label_noise
+      ~HUNER_SPECIES_S800.downsample
+      ~HUNER_SPECIES_S800.filter_empty_sentences
+      ~HUNER_SPECIES_S800.filter_long_sentences
+      ~HUNER_SPECIES_S800.get_all_sentences
+      ~HUNER_SPECIES_S800.get_corpus_sentence_splitter
+      ~HUNER_SPECIES_S800.get_entity_type_mapping
+      ~HUNER_SPECIES_S800.get_label_distribution
+      ~HUNER_SPECIES_S800.get_subset
+      ~HUNER_SPECIES_S800.make_label_dictionary
+      ~HUNER_SPECIES_S800.make_tag_dictionary
+      ~HUNER_SPECIES_S800.make_vocab_dictionary
+      ~HUNER_SPECIES_S800.obtain_statistics
+      ~HUNER_SPECIES_S800.split_url
+      ~HUNER_SPECIES_S800.to_internal
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_SPECIES_S800.dev
+      ~HUNER_SPECIES_S800.test
+      ~HUNER_SPECIES_S800.train
+   
+   

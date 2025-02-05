@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_ENGLISH\_WEBPAGES
+========================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_ENGLISH_WEBPAGES
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_WEBPAGES.__init__
+      ~NER_ENGLISH_WEBPAGES.add_label_noise
+      ~NER_ENGLISH_WEBPAGES.downsample
+      ~NER_ENGLISH_WEBPAGES.filter_empty_sentences
+      ~NER_ENGLISH_WEBPAGES.filter_long_sentences
+      ~NER_ENGLISH_WEBPAGES.get_all_sentences
+      ~NER_ENGLISH_WEBPAGES.get_label_distribution
+      ~NER_ENGLISH_WEBPAGES.make_label_dictionary
+      ~NER_ENGLISH_WEBPAGES.make_tag_dictionary
+      ~NER_ENGLISH_WEBPAGES.make_vocab_dictionary
+      ~NER_ENGLISH_WEBPAGES.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_ENGLISH_WEBPAGES.dev
+      ~NER_ENGLISH_WEBPAGES.test
+      ~NER_ENGLISH_WEBPAGES.train
+   
+   

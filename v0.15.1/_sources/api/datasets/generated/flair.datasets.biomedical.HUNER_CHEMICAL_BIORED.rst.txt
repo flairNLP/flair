@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_CHEMICAL\_BIORED
+=================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_CHEMICAL_BIORED
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_CHEMICAL_BIORED.__init__
+      ~HUNER_CHEMICAL_BIORED.add_label_noise
+      ~HUNER_CHEMICAL_BIORED.bin_search_passage
+      ~HUNER_CHEMICAL_BIORED.build_corpus_directory_name
+      ~HUNER_CHEMICAL_BIORED.downsample
+      ~HUNER_CHEMICAL_BIORED.filter_empty_sentences
+      ~HUNER_CHEMICAL_BIORED.filter_long_sentences
+      ~HUNER_CHEMICAL_BIORED.get_all_sentences
+      ~HUNER_CHEMICAL_BIORED.get_entity_type_mapping
+      ~HUNER_CHEMICAL_BIORED.get_label_distribution
+      ~HUNER_CHEMICAL_BIORED.make_label_dictionary
+      ~HUNER_CHEMICAL_BIORED.make_tag_dictionary
+      ~HUNER_CHEMICAL_BIORED.make_vocab_dictionary
+      ~HUNER_CHEMICAL_BIORED.obtain_statistics
+      ~HUNER_CHEMICAL_BIORED.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_CHEMICAL_BIORED.dev
+      ~HUNER_CHEMICAL_BIORED.test
+      ~HUNER_CHEMICAL_BIORED.train
+   
+   

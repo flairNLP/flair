@@ -1,0 +1,91 @@
+﻿flair.models.WordTagger
+=======================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: WordTagger
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WordTagger.__init__
+      ~WordTagger.add_module
+      ~WordTagger.apply
+      ~WordTagger.bfloat16
+      ~WordTagger.buffers
+      ~WordTagger.children
+      ~WordTagger.compile
+      ~WordTagger.cpu
+      ~WordTagger.cuda
+      ~WordTagger.double
+      ~WordTagger.eval
+      ~WordTagger.evaluate
+      ~WordTagger.extra_repr
+      ~WordTagger.float
+      ~WordTagger.forward
+      ~WordTagger.forward_loss
+      ~WordTagger.get_buffer
+      ~WordTagger.get_extra_state
+      ~WordTagger.get_parameter
+      ~WordTagger.get_submodule
+      ~WordTagger.get_used_tokens
+      ~WordTagger.half
+      ~WordTagger.ipu
+      ~WordTagger.load
+      ~WordTagger.load_state_dict
+      ~WordTagger.modules
+      ~WordTagger.mtia
+      ~WordTagger.named_buffers
+      ~WordTagger.named_children
+      ~WordTagger.named_modules
+      ~WordTagger.named_parameters
+      ~WordTagger.parameters
+      ~WordTagger.predict
+      ~WordTagger.print_model_card
+      ~WordTagger.register_backward_hook
+      ~WordTagger.register_buffer
+      ~WordTagger.register_forward_hook
+      ~WordTagger.register_forward_pre_hook
+      ~WordTagger.register_full_backward_hook
+      ~WordTagger.register_full_backward_pre_hook
+      ~WordTagger.register_load_state_dict_post_hook
+      ~WordTagger.register_load_state_dict_pre_hook
+      ~WordTagger.register_module
+      ~WordTagger.register_parameter
+      ~WordTagger.register_state_dict_post_hook
+      ~WordTagger.register_state_dict_pre_hook
+      ~WordTagger.requires_grad_
+      ~WordTagger.save
+      ~WordTagger.set_extra_state
+      ~WordTagger.set_submodule
+      ~WordTagger.share_memory
+      ~WordTagger.state_dict
+      ~WordTagger.to
+      ~WordTagger.to_empty
+      ~WordTagger.train
+      ~WordTagger.type
+      ~WordTagger.xpu
+      ~WordTagger.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WordTagger.T_destination
+      ~WordTagger.call_super_init
+      ~WordTagger.dump_patches
+      ~WordTagger.label_type
+      ~WordTagger.model_card
+      ~WordTagger.multi_label_threshold
+      ~WordTagger.training
+   
+   

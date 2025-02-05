@@ -1,0 +1,41 @@
+﻿flair.datasets.text\_text.GLUE\_MNLI
+====================================
+
+.. currentmodule:: flair.datasets.text_text
+
+.. autoclass:: GLUE_MNLI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GLUE_MNLI.__init__
+      ~GLUE_MNLI.add_label_noise
+      ~GLUE_MNLI.downsample
+      ~GLUE_MNLI.filter_empty_sentences
+      ~GLUE_MNLI.filter_long_sentences
+      ~GLUE_MNLI.get_all_sentences
+      ~GLUE_MNLI.get_label_distribution
+      ~GLUE_MNLI.make_label_dictionary
+      ~GLUE_MNLI.make_tag_dictionary
+      ~GLUE_MNLI.make_vocab_dictionary
+      ~GLUE_MNLI.obtain_statistics
+      ~GLUE_MNLI.tsv_from_eval_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GLUE_MNLI.dev
+      ~GLUE_MNLI.test
+      ~GLUE_MNLI.train
+   
+   

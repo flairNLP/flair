@@ -1,0 +1,22 @@
+﻿flair.datasets.biomedical.InternalBioNerDataset
+===============================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: InternalBioNerDataset
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InternalBioNerDataset.__init__
+   
+   
+
+   
+   
+   

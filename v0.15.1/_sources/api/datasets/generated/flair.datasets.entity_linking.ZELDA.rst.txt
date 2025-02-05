@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.ZELDA
+====================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: ZELDA
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ZELDA.__init__
+      ~ZELDA.add_label_noise
+      ~ZELDA.downsample
+      ~ZELDA.filter_empty_sentences
+      ~ZELDA.filter_long_sentences
+      ~ZELDA.get_all_sentences
+      ~ZELDA.get_label_distribution
+      ~ZELDA.make_label_dictionary
+      ~ZELDA.make_tag_dictionary
+      ~ZELDA.make_vocab_dictionary
+      ~ZELDA.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ZELDA.dev
+      ~ZELDA.test
+      ~ZELDA.train
+   
+   

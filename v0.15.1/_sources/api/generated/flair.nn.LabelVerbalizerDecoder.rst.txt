@@ -1,0 +1,82 @@
+﻿flair.nn.LabelVerbalizerDecoder
+===============================
+
+.. currentmodule:: flair.nn
+
+.. autoclass:: LabelVerbalizerDecoder
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LabelVerbalizerDecoder.__init__
+      ~LabelVerbalizerDecoder.add_module
+      ~LabelVerbalizerDecoder.apply
+      ~LabelVerbalizerDecoder.bfloat16
+      ~LabelVerbalizerDecoder.buffers
+      ~LabelVerbalizerDecoder.children
+      ~LabelVerbalizerDecoder.compile
+      ~LabelVerbalizerDecoder.cpu
+      ~LabelVerbalizerDecoder.cuda
+      ~LabelVerbalizerDecoder.double
+      ~LabelVerbalizerDecoder.eval
+      ~LabelVerbalizerDecoder.extra_repr
+      ~LabelVerbalizerDecoder.float
+      ~LabelVerbalizerDecoder.forward
+      ~LabelVerbalizerDecoder.get_buffer
+      ~LabelVerbalizerDecoder.get_extra_state
+      ~LabelVerbalizerDecoder.get_parameter
+      ~LabelVerbalizerDecoder.get_submodule
+      ~LabelVerbalizerDecoder.half
+      ~LabelVerbalizerDecoder.ipu
+      ~LabelVerbalizerDecoder.load_state_dict
+      ~LabelVerbalizerDecoder.modules
+      ~LabelVerbalizerDecoder.mtia
+      ~LabelVerbalizerDecoder.named_buffers
+      ~LabelVerbalizerDecoder.named_children
+      ~LabelVerbalizerDecoder.named_modules
+      ~LabelVerbalizerDecoder.named_parameters
+      ~LabelVerbalizerDecoder.parameters
+      ~LabelVerbalizerDecoder.register_backward_hook
+      ~LabelVerbalizerDecoder.register_buffer
+      ~LabelVerbalizerDecoder.register_forward_hook
+      ~LabelVerbalizerDecoder.register_forward_pre_hook
+      ~LabelVerbalizerDecoder.register_full_backward_hook
+      ~LabelVerbalizerDecoder.register_full_backward_pre_hook
+      ~LabelVerbalizerDecoder.register_load_state_dict_post_hook
+      ~LabelVerbalizerDecoder.register_load_state_dict_pre_hook
+      ~LabelVerbalizerDecoder.register_module
+      ~LabelVerbalizerDecoder.register_parameter
+      ~LabelVerbalizerDecoder.register_state_dict_post_hook
+      ~LabelVerbalizerDecoder.register_state_dict_pre_hook
+      ~LabelVerbalizerDecoder.requires_grad_
+      ~LabelVerbalizerDecoder.set_extra_state
+      ~LabelVerbalizerDecoder.set_submodule
+      ~LabelVerbalizerDecoder.share_memory
+      ~LabelVerbalizerDecoder.state_dict
+      ~LabelVerbalizerDecoder.to
+      ~LabelVerbalizerDecoder.to_empty
+      ~LabelVerbalizerDecoder.train
+      ~LabelVerbalizerDecoder.type
+      ~LabelVerbalizerDecoder.verbalize_labels
+      ~LabelVerbalizerDecoder.xpu
+      ~LabelVerbalizerDecoder.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LabelVerbalizerDecoder.T_destination
+      ~LabelVerbalizerDecoder.call_super_init
+      ~LabelVerbalizerDecoder.dump_patches
+      ~LabelVerbalizerDecoder.training
+   
+   

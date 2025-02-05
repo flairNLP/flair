@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.BIGBIO\_EL\_GNORMPLUS
+====================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: BIGBIO_EL_GNORMPLUS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BIGBIO_EL_GNORMPLUS.__init__
+      ~BIGBIO_EL_GNORMPLUS.add_label_noise
+      ~BIGBIO_EL_GNORMPLUS.downsample
+      ~BIGBIO_EL_GNORMPLUS.filter_empty_sentences
+      ~BIGBIO_EL_GNORMPLUS.filter_long_sentences
+      ~BIGBIO_EL_GNORMPLUS.get_all_sentences
+      ~BIGBIO_EL_GNORMPLUS.get_label_distribution
+      ~BIGBIO_EL_GNORMPLUS.make_label_dictionary
+      ~BIGBIO_EL_GNORMPLUS.make_tag_dictionary
+      ~BIGBIO_EL_GNORMPLUS.make_vocab_dictionary
+      ~BIGBIO_EL_GNORMPLUS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BIGBIO_EL_GNORMPLUS.dev
+      ~BIGBIO_EL_GNORMPLUS.test
+      ~BIGBIO_EL_GNORMPLUS.train
+   
+   

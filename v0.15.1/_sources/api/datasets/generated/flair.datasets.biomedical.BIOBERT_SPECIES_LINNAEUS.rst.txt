@@ -1,0 +1,40 @@
+﻿flair.datasets.biomedical.BIOBERT\_SPECIES\_LINNAEUS
+====================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: BIOBERT_SPECIES_LINNAEUS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BIOBERT_SPECIES_LINNAEUS.__init__
+      ~BIOBERT_SPECIES_LINNAEUS.add_label_noise
+      ~BIOBERT_SPECIES_LINNAEUS.downsample
+      ~BIOBERT_SPECIES_LINNAEUS.filter_empty_sentences
+      ~BIOBERT_SPECIES_LINNAEUS.filter_long_sentences
+      ~BIOBERT_SPECIES_LINNAEUS.get_all_sentences
+      ~BIOBERT_SPECIES_LINNAEUS.get_label_distribution
+      ~BIOBERT_SPECIES_LINNAEUS.make_label_dictionary
+      ~BIOBERT_SPECIES_LINNAEUS.make_tag_dictionary
+      ~BIOBERT_SPECIES_LINNAEUS.make_vocab_dictionary
+      ~BIOBERT_SPECIES_LINNAEUS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BIOBERT_SPECIES_LINNAEUS.dev
+      ~BIOBERT_SPECIES_LINNAEUS.test
+      ~BIOBERT_SPECIES_LINNAEUS.train
+   
+   

@@ -1,0 +1,13 @@
+﻿flair.visual
+============
+
+.. automodule:: flair.visual
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Highlighter
+      Visualizer
+   

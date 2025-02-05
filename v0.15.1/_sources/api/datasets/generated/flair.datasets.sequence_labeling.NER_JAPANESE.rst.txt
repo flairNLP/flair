@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_JAPANESE
+===============================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_JAPANESE
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_JAPANESE.__init__
+      ~NER_JAPANESE.add_label_noise
+      ~NER_JAPANESE.downsample
+      ~NER_JAPANESE.filter_empty_sentences
+      ~NER_JAPANESE.filter_long_sentences
+      ~NER_JAPANESE.get_all_sentences
+      ~NER_JAPANESE.get_label_distribution
+      ~NER_JAPANESE.make_label_dictionary
+      ~NER_JAPANESE.make_tag_dictionary
+      ~NER_JAPANESE.make_vocab_dictionary
+      ~NER_JAPANESE.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_JAPANESE.dev
+      ~NER_JAPANESE.test
+      ~NER_JAPANESE.train
+   
+   

@@ -1,0 +1,42 @@
+﻿flair.datasets.biomedical.CELL\_FINDER
+======================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: CELL_FINDER
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CELL_FINDER.__init__
+      ~CELL_FINDER.add_label_noise
+      ~CELL_FINDER.download_and_prepare
+      ~CELL_FINDER.downsample
+      ~CELL_FINDER.filter_empty_sentences
+      ~CELL_FINDER.filter_long_sentences
+      ~CELL_FINDER.get_all_sentences
+      ~CELL_FINDER.get_label_distribution
+      ~CELL_FINDER.make_label_dictionary
+      ~CELL_FINDER.make_tag_dictionary
+      ~CELL_FINDER.make_vocab_dictionary
+      ~CELL_FINDER.obtain_statistics
+      ~CELL_FINDER.read_folder
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CELL_FINDER.dev
+      ~CELL_FINDER.test
+      ~CELL_FINDER.train
+   
+   

@@ -1,0 +1,91 @@
+﻿flair.models.RelationExtractor
+==============================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: RelationExtractor
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RelationExtractor.__init__
+      ~RelationExtractor.add_module
+      ~RelationExtractor.apply
+      ~RelationExtractor.bfloat16
+      ~RelationExtractor.buffers
+      ~RelationExtractor.children
+      ~RelationExtractor.compile
+      ~RelationExtractor.cpu
+      ~RelationExtractor.cuda
+      ~RelationExtractor.double
+      ~RelationExtractor.eval
+      ~RelationExtractor.evaluate
+      ~RelationExtractor.extra_repr
+      ~RelationExtractor.float
+      ~RelationExtractor.forward
+      ~RelationExtractor.forward_loss
+      ~RelationExtractor.get_buffer
+      ~RelationExtractor.get_extra_state
+      ~RelationExtractor.get_parameter
+      ~RelationExtractor.get_submodule
+      ~RelationExtractor.get_used_tokens
+      ~RelationExtractor.half
+      ~RelationExtractor.ipu
+      ~RelationExtractor.load
+      ~RelationExtractor.load_state_dict
+      ~RelationExtractor.modules
+      ~RelationExtractor.mtia
+      ~RelationExtractor.named_buffers
+      ~RelationExtractor.named_children
+      ~RelationExtractor.named_modules
+      ~RelationExtractor.named_parameters
+      ~RelationExtractor.parameters
+      ~RelationExtractor.predict
+      ~RelationExtractor.print_model_card
+      ~RelationExtractor.register_backward_hook
+      ~RelationExtractor.register_buffer
+      ~RelationExtractor.register_forward_hook
+      ~RelationExtractor.register_forward_pre_hook
+      ~RelationExtractor.register_full_backward_hook
+      ~RelationExtractor.register_full_backward_pre_hook
+      ~RelationExtractor.register_load_state_dict_post_hook
+      ~RelationExtractor.register_load_state_dict_pre_hook
+      ~RelationExtractor.register_module
+      ~RelationExtractor.register_parameter
+      ~RelationExtractor.register_state_dict_post_hook
+      ~RelationExtractor.register_state_dict_pre_hook
+      ~RelationExtractor.requires_grad_
+      ~RelationExtractor.save
+      ~RelationExtractor.set_extra_state
+      ~RelationExtractor.set_submodule
+      ~RelationExtractor.share_memory
+      ~RelationExtractor.state_dict
+      ~RelationExtractor.to
+      ~RelationExtractor.to_empty
+      ~RelationExtractor.train
+      ~RelationExtractor.type
+      ~RelationExtractor.xpu
+      ~RelationExtractor.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RelationExtractor.T_destination
+      ~RelationExtractor.call_super_init
+      ~RelationExtractor.dump_patches
+      ~RelationExtractor.label_type
+      ~RelationExtractor.model_card
+      ~RelationExtractor.multi_label_threshold
+      ~RelationExtractor.training
+   
+   

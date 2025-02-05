@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_ESTONIAN
+=====================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_ESTONIAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_ESTONIAN.__init__
+      ~UD_ESTONIAN.add_label_noise
+      ~UD_ESTONIAN.downsample
+      ~UD_ESTONIAN.filter_empty_sentences
+      ~UD_ESTONIAN.filter_long_sentences
+      ~UD_ESTONIAN.get_all_sentences
+      ~UD_ESTONIAN.get_label_distribution
+      ~UD_ESTONIAN.make_label_dictionary
+      ~UD_ESTONIAN.make_tag_dictionary
+      ~UD_ESTONIAN.make_vocab_dictionary
+      ~UD_ESTONIAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_ESTONIAN.dev
+      ~UD_ESTONIAN.test
+      ~UD_ESTONIAN.train
+   
+   

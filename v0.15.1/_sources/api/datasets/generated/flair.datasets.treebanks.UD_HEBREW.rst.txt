@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_HEBREW
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_HEBREW
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_HEBREW.__init__
+      ~UD_HEBREW.add_label_noise
+      ~UD_HEBREW.downsample
+      ~UD_HEBREW.filter_empty_sentences
+      ~UD_HEBREW.filter_long_sentences
+      ~UD_HEBREW.get_all_sentences
+      ~UD_HEBREW.get_label_distribution
+      ~UD_HEBREW.make_label_dictionary
+      ~UD_HEBREW.make_tag_dictionary
+      ~UD_HEBREW.make_vocab_dictionary
+      ~UD_HEBREW.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_HEBREW.dev
+      ~UD_HEBREW.test
+      ~UD_HEBREW.train
+   
+   

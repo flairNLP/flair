@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_KOREAN
+===================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_KOREAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_KOREAN.__init__
+      ~UD_KOREAN.add_label_noise
+      ~UD_KOREAN.downsample
+      ~UD_KOREAN.filter_empty_sentences
+      ~UD_KOREAN.filter_long_sentences
+      ~UD_KOREAN.get_all_sentences
+      ~UD_KOREAN.get_label_distribution
+      ~UD_KOREAN.make_label_dictionary
+      ~UD_KOREAN.make_tag_dictionary
+      ~UD_KOREAN.make_vocab_dictionary
+      ~UD_KOREAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_KOREAN.dev
+      ~UD_KOREAN.test
+      ~UD_KOREAN.train
+   
+   

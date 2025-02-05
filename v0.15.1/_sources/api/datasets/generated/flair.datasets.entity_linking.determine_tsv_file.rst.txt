@@ -1,0 +1,6 @@
+﻿flair.datasets.entity\_linking.determine\_tsv\_file
+===================================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autofunction:: determine_tsv_file

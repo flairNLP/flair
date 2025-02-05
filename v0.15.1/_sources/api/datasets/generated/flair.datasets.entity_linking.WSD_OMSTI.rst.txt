@@ -1,0 +1,40 @@
+﻿flair.datasets.entity\_linking.WSD\_OMSTI
+=========================================
+
+.. currentmodule:: flair.datasets.entity_linking
+
+.. autoclass:: WSD_OMSTI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~WSD_OMSTI.__init__
+      ~WSD_OMSTI.add_label_noise
+      ~WSD_OMSTI.downsample
+      ~WSD_OMSTI.filter_empty_sentences
+      ~WSD_OMSTI.filter_long_sentences
+      ~WSD_OMSTI.get_all_sentences
+      ~WSD_OMSTI.get_label_distribution
+      ~WSD_OMSTI.make_label_dictionary
+      ~WSD_OMSTI.make_tag_dictionary
+      ~WSD_OMSTI.make_vocab_dictionary
+      ~WSD_OMSTI.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~WSD_OMSTI.dev
+      ~WSD_OMSTI.test
+      ~WSD_OMSTI.train
+   
+   

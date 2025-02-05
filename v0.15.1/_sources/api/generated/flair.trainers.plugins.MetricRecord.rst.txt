@@ -1,0 +1,37 @@
+﻿flair.trainers.plugins.MetricRecord
+===================================
+
+.. currentmodule:: flair.trainers.plugins
+
+.. autoclass:: MetricRecord
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MetricRecord.__init__
+      ~MetricRecord.histogram
+      ~MetricRecord.is_type
+      ~MetricRecord.scalar
+      ~MetricRecord.scalar_list
+      ~MetricRecord.string
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MetricRecord.is_histogram
+      ~MetricRecord.is_scalar
+      ~MetricRecord.is_scalar_list
+      ~MetricRecord.is_string
+      ~MetricRecord.joined_name
+   
+   

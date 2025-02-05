@@ -1,0 +1,44 @@
+﻿flair.datasets.biomedical.HUNER\_GENE\_SETH\_CORPUS
+===================================================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: HUNER_GENE_SETH_CORPUS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~HUNER_GENE_SETH_CORPUS.__init__
+      ~HUNER_GENE_SETH_CORPUS.add_label_noise
+      ~HUNER_GENE_SETH_CORPUS.bin_search_passage
+      ~HUNER_GENE_SETH_CORPUS.build_corpus_directory_name
+      ~HUNER_GENE_SETH_CORPUS.downsample
+      ~HUNER_GENE_SETH_CORPUS.filter_empty_sentences
+      ~HUNER_GENE_SETH_CORPUS.filter_long_sentences
+      ~HUNER_GENE_SETH_CORPUS.get_all_sentences
+      ~HUNER_GENE_SETH_CORPUS.get_entity_type_mapping
+      ~HUNER_GENE_SETH_CORPUS.get_label_distribution
+      ~HUNER_GENE_SETH_CORPUS.make_label_dictionary
+      ~HUNER_GENE_SETH_CORPUS.make_tag_dictionary
+      ~HUNER_GENE_SETH_CORPUS.make_vocab_dictionary
+      ~HUNER_GENE_SETH_CORPUS.obtain_statistics
+      ~HUNER_GENE_SETH_CORPUS.to_internal_dataset
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~HUNER_GENE_SETH_CORPUS.dev
+      ~HUNER_GENE_SETH_CORPUS.test
+      ~HUNER_GENE_SETH_CORPUS.train
+   
+   

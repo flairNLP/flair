@@ -1,0 +1,6 @@
+﻿flair.embeddings.base.load\_embeddings
+======================================
+
+.. currentmodule:: flair.embeddings.base
+
+.. autofunction:: load_embeddings

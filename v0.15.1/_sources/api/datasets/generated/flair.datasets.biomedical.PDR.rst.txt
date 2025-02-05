@@ -1,0 +1,41 @@
+﻿flair.datasets.biomedical.PDR
+=============================
+
+.. currentmodule:: flair.datasets.biomedical
+
+.. autoclass:: PDR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PDR.__init__
+      ~PDR.add_label_noise
+      ~PDR.download_corpus
+      ~PDR.downsample
+      ~PDR.filter_empty_sentences
+      ~PDR.filter_long_sentences
+      ~PDR.get_all_sentences
+      ~PDR.get_label_distribution
+      ~PDR.make_label_dictionary
+      ~PDR.make_tag_dictionary
+      ~PDR.make_vocab_dictionary
+      ~PDR.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~PDR.dev
+      ~PDR.test
+      ~PDR.train
+   
+   

@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.CONLL\_03\_GERMAN
+===================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: CONLL_03_GERMAN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CONLL_03_GERMAN.__init__
+      ~CONLL_03_GERMAN.add_label_noise
+      ~CONLL_03_GERMAN.downsample
+      ~CONLL_03_GERMAN.filter_empty_sentences
+      ~CONLL_03_GERMAN.filter_long_sentences
+      ~CONLL_03_GERMAN.get_all_sentences
+      ~CONLL_03_GERMAN.get_label_distribution
+      ~CONLL_03_GERMAN.make_label_dictionary
+      ~CONLL_03_GERMAN.make_tag_dictionary
+      ~CONLL_03_GERMAN.make_vocab_dictionary
+      ~CONLL_03_GERMAN.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CONLL_03_GERMAN.dev
+      ~CONLL_03_GERMAN.test
+      ~CONLL_03_GERMAN.train
+   
+   

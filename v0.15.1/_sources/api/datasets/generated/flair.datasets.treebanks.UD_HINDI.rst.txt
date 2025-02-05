@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_HINDI
+==================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_HINDI
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_HINDI.__init__
+      ~UD_HINDI.add_label_noise
+      ~UD_HINDI.downsample
+      ~UD_HINDI.filter_empty_sentences
+      ~UD_HINDI.filter_long_sentences
+      ~UD_HINDI.get_all_sentences
+      ~UD_HINDI.get_label_distribution
+      ~UD_HINDI.make_label_dictionary
+      ~UD_HINDI.make_tag_dictionary
+      ~UD_HINDI.make_vocab_dictionary
+      ~UD_HINDI.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_HINDI.dev
+      ~UD_HINDI.test
+      ~UD_HINDI.train
+   
+   

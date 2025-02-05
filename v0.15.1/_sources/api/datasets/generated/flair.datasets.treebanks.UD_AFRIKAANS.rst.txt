@@ -1,0 +1,40 @@
+﻿flair.datasets.treebanks.UD\_AFRIKAANS
+======================================
+
+.. currentmodule:: flair.datasets.treebanks
+
+.. autoclass:: UD_AFRIKAANS
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~UD_AFRIKAANS.__init__
+      ~UD_AFRIKAANS.add_label_noise
+      ~UD_AFRIKAANS.downsample
+      ~UD_AFRIKAANS.filter_empty_sentences
+      ~UD_AFRIKAANS.filter_long_sentences
+      ~UD_AFRIKAANS.get_all_sentences
+      ~UD_AFRIKAANS.get_label_distribution
+      ~UD_AFRIKAANS.make_label_dictionary
+      ~UD_AFRIKAANS.make_tag_dictionary
+      ~UD_AFRIKAANS.make_vocab_dictionary
+      ~UD_AFRIKAANS.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~UD_AFRIKAANS.dev
+      ~UD_AFRIKAANS.test
+      ~UD_AFRIKAANS.train
+   
+   

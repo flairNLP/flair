@@ -1,0 +1,95 @@
+﻿flair.models.SpanClassifier
+===========================
+
+.. currentmodule:: flair.models
+
+.. autoclass:: SpanClassifier
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SpanClassifier.__init__
+      ~SpanClassifier.add_module
+      ~SpanClassifier.apply
+      ~SpanClassifier.bfloat16
+      ~SpanClassifier.buffers
+      ~SpanClassifier.children
+      ~SpanClassifier.compile
+      ~SpanClassifier.cpu
+      ~SpanClassifier.cuda
+      ~SpanClassifier.double
+      ~SpanClassifier.emb_first
+      ~SpanClassifier.emb_firstAndLast
+      ~SpanClassifier.emb_last
+      ~SpanClassifier.emb_mean
+      ~SpanClassifier.eval
+      ~SpanClassifier.evaluate
+      ~SpanClassifier.extra_repr
+      ~SpanClassifier.float
+      ~SpanClassifier.forward
+      ~SpanClassifier.forward_loss
+      ~SpanClassifier.get_buffer
+      ~SpanClassifier.get_extra_state
+      ~SpanClassifier.get_parameter
+      ~SpanClassifier.get_submodule
+      ~SpanClassifier.get_used_tokens
+      ~SpanClassifier.half
+      ~SpanClassifier.ipu
+      ~SpanClassifier.load
+      ~SpanClassifier.load_state_dict
+      ~SpanClassifier.modules
+      ~SpanClassifier.mtia
+      ~SpanClassifier.named_buffers
+      ~SpanClassifier.named_children
+      ~SpanClassifier.named_modules
+      ~SpanClassifier.named_parameters
+      ~SpanClassifier.parameters
+      ~SpanClassifier.predict
+      ~SpanClassifier.print_model_card
+      ~SpanClassifier.register_backward_hook
+      ~SpanClassifier.register_buffer
+      ~SpanClassifier.register_forward_hook
+      ~SpanClassifier.register_forward_pre_hook
+      ~SpanClassifier.register_full_backward_hook
+      ~SpanClassifier.register_full_backward_pre_hook
+      ~SpanClassifier.register_load_state_dict_post_hook
+      ~SpanClassifier.register_load_state_dict_pre_hook
+      ~SpanClassifier.register_module
+      ~SpanClassifier.register_parameter
+      ~SpanClassifier.register_state_dict_post_hook
+      ~SpanClassifier.register_state_dict_pre_hook
+      ~SpanClassifier.requires_grad_
+      ~SpanClassifier.save
+      ~SpanClassifier.set_extra_state
+      ~SpanClassifier.set_submodule
+      ~SpanClassifier.share_memory
+      ~SpanClassifier.state_dict
+      ~SpanClassifier.to
+      ~SpanClassifier.to_empty
+      ~SpanClassifier.train
+      ~SpanClassifier.type
+      ~SpanClassifier.xpu
+      ~SpanClassifier.zero_grad
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SpanClassifier.T_destination
+      ~SpanClassifier.call_super_init
+      ~SpanClassifier.dump_patches
+      ~SpanClassifier.label_type
+      ~SpanClassifier.model_card
+      ~SpanClassifier.multi_label_threshold
+      ~SpanClassifier.training
+   
+   
