@@ -15,7 +15,6 @@
    
       ~ANAT_EM.__init__
       ~ANAT_EM.add_label_noise
-      ~ANAT_EM.download_corpus
       ~ANAT_EM.downsample
       ~ANAT_EM.filter_empty_sentences
       ~ANAT_EM.filter_long_sentences
@@ -25,7 +24,6 @@
       ~ANAT_EM.make_tag_dictionary
       ~ANAT_EM.make_vocab_dictionary
       ~ANAT_EM.obtain_statistics
-      ~ANAT_EM.parse_input_files
    
    
 
