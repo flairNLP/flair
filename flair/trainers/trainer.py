@@ -722,7 +722,7 @@ class ModelTrainer(Pluggable):
                                 if epoch_train_samples > 0
                                 else epoch_train_samples / (batch_no + 1)
                             )
-                            intermittent_loss = aggregate(intermittent_loss)
+                            intermittent_loss = aggregate(intermittent_loss, np.mean)
 
                             current_time = time.time()
                             samples_per_second = epoch_train_samples / (current_time - epoch_start_time)
@@ -743,7 +743,7 @@ class ModelTrainer(Pluggable):
                         self.dispatch("after_training_batch", **batch_kw)
 
                     train_loss = epoch_train_loss / epoch_train_samples
-                    train_loss = aggregate(train_loss)
+                    train_loss = aggregate(train_loss, np.mean)
                     self._record(MetricRecord.scalar(("train", "loss"), train_loss, epoch))
 
                     total_train_samples += epoch_train_samples
@@ -772,6 +772,7 @@ class ModelTrainer(Pluggable):
                             embedding_storage_mode=embeddings_storage_mode,
                             gold_label_type=self.model.label_type,
                             gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
+                            multi_gpu=multi_gpu,
                         )
 
                         # log results
@@ -874,6 +875,7 @@ class ModelTrainer(Pluggable):
                     gold_label_dictionary=gold_label_dictionary_for_eval,
                     exclude_labels=exclude_labels,
                     return_loss=False,
+                    multi_gpu=multi_gpu,
                 )
 
                 log.info(test_results.detailed_results)
