@@ -1,9 +1,28 @@
 name: 'Build doc page for artifact'
 on:
-  push:
-    branches: "*"
+  pull_request:
+    branches: [master]
+
+
+permissions:
+  pull-requests: write
 
 jobs:
+  create_docs_comment:
+    name: Create the docs comment on new pull requests
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    env:
+      branch_name: ${{ github.ref_name }}
+    steps:
+      - name: Add or update comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          url: 'flairNLP.github.io/flair-dev-docs/${{ env.branch_name }}/'
+          body: 'The docs will be available at ${{ url }}'
+          edit-mode: replace
+
   build_docs:
     name: Build the docs using Sphinx and publish as artifact
     runs-on: ubuntu-latest
@@ -27,8 +46,6 @@ jobs:
       - name: Fetch git tags
         run: git fetch --tags origin
       - name: Change config to current branch
-        env:
-          BRANCH_NAME: ${{ github.ref_name }}
         run: |
           sed -i 's/^smv_branch_whitelist = r"^master$"/smv_branch_whitelist = r"^${{ env.BRANCH_NAME }}$"/' docs/conf.py
           sed -i 's/^smv_tag_whitelist = r"^v\d+\.\d+\.\d+$"/smv_tag_whitelist = "^$"/' docs/conf.py
@@ -36,27 +53,62 @@ jobs:
       - name: Build docs
         run: |
           sphinx-multiversion docs doc_build/
-      - name: Add redirect to stable doc
-        env:
-          BRANCH_NAME: ${{ github.ref_name }}
-        run: |
-          cp assets/redirect.html doc_build/index.html
-          cp assets/redirect.html doc_build/404.html
-          cp assets/README.md doc_build/README.md
-          sed -i "s/\[VERSION\]/${{ env.BRANCH_NAME }}/g" doc_build/index.html
-          sed -i "s/\[VERSION\]/${{ env.BRANCH_NAME }}/g" doc_build/404.html
       - name: Publish dev website
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.FLAIR_DEV_DOCS_TOKEN }}
           external_repository: 'flairNLP/flair-dev-docs'
-          destination_dir: './${{ github.ref_name }}'
+          destination_dir: './${{ env.branch_name }}'
           publish_branch: main
           allow_empty_commit: true
-          publish_dir: ./doc_build
+          publish_dir: './doc_build/${{ env.branch_name }}'
           disable_nojekyll: true
+          user_name: flair-docs-automation
+          user_email: actions@github.com
       - name: Archive website results
         uses: actions/upload-artifact@v4
         with:
           name: website
           path: doc_build
+  delete-comment-on-close:
+    if: github.event.action == 'closed' && needs.find-existing-comment.outputs.comment-id != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find existing PR comment
+        id: find-comment
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: "The docs will be available at"
+      - name: Delete comment
+        if: steps.find-comment.outputs.comment-id != ''
+        uses: peter-evans/delete-comment@v3
+        with:
+          comment-id: ${{ needs.find-existing-comment.outputs.comment-id }}
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          repository: owner/target-repo  # Replace with the target repo
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}  # Use a PAT with repo write access
+
+      - name: Remove folder
+        run: rm -rf path/to/folder  # Replace with the actual folder path
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "flair-docs-automation"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Remove ${{ github.repository }}@${{ github.sha }}"
+          git push
+      - name: Delete page
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.FLAIR_DEV_DOCS_TOKEN }}
+          external_repository: 'flairNLP/flair-dev-docs'
+          destination_dir: './${{ env.branch_name }}'
+          publish_branch: main
+          allow_empty_commit: true
+          publish_dir: './doc_build/${{ env.branch_name }}'
+          disable_nojekyll: true
