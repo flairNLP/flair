@@ -57,7 +57,6 @@ jobs:
           user_name: 'flair-automation'
           commit_msg: 'Add docs for ${{ github.ref_name }}'
       - name: Archive website results
-      - name: Archive code coverage results
         uses: actions/upload-artifact@v4
         with:
           name: website
