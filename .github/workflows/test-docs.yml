@@ -46,17 +46,14 @@ jobs:
           sed -i "s/\[VERSION\]/${{ env.BRANCH_NAME }}/g" doc_build/index.html
           sed -i "s/\[VERSION\]/${{ env.BRANCH_NAME }}/g" doc_build/404.html
       - name: Publish dev website
-        uses: datalbry/copy_folder_to_another_repo_action@1.0.0
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.FLAIR_DEV_DOCS_TOKEN }}
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          source_folder: 'doc_build'
-          destination_repo: 'flairNLP/flair-dev-docs'
-          destination_folder: '${{ env.BRANCH_NAME }}'
-          user_email: 'no-reply@github.com'
-          user_name: 'flair-automation'
-          destination_branch: 'main'
-          commit_msg: 'Add docs for ${{ github.ref_name }}'
+          github_token: ${{ secrets.FLAIR_DEV_DOCS_TOKEN }}
+          external_repository: 'flairNLP/flair-dev-docs'
+          destination_dir: '${{ env.BRANCH_NAME }}'
+          publish_branch: main
+          allow_empty_commit: true
+          publish_dir: ./doc_build
       - name: Archive website results
         uses: actions/upload-artifact@v4
         with:
