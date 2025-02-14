@@ -17,10 +17,11 @@ jobs:
     steps:
       - name: Add or update comment
         uses: peter-evans/create-or-update-comment@v4
+        env:
+          url: 'flairNLP.github.io/flair-dev-docs/${{ env.branch_name }}/'
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          url: 'flairNLP.github.io/flair-dev-docs/${{ env.branch_name }}/'
-          body: 'The docs will be available at ${{ url }}'
+          body: 'The docs will be available at ${{ env.url }}'
           edit-mode: replace
 
   build_docs:
