@@ -50,7 +50,7 @@ jobs:
         with:
           personal_token: ${{ secrets.FLAIR_DEV_DOCS_TOKEN }}
           external_repository: 'flairNLP/flair-dev-docs'
-          destination_dir: './${{ env.BRANCH_NAME }}'
+          destination_dir: './${{ github.ref_name }}'
           publish_branch: main
           allow_empty_commit: true
           publish_dir: ./doc_build
