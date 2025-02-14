@@ -48,7 +48,7 @@ jobs:
       - name: Publish dev website
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.FLAIR_DEV_DOCS_TOKEN }}
+          personal_token: ${{ secrets.FLAIR_DEV_DOCS_TOKEN }}
           external_repository: 'flairNLP/flair-dev-docs'
           destination_dir: '${{ env.BRANCH_NAME }}'
           publish_branch: main
