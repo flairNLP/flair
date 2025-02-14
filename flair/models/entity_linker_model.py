@@ -80,9 +80,9 @@ class CandidateGenerator:
 
 
 class SpanClassifier(flair.nn.DefaultClassifier[Sentence, Span]):
-    """Entity Linking Model.
+    """Span Classification Model.
 
-    The model expects text/sentences with annotated entity mentions and predicts entities to these mentions.
+    The model expects text/sentences with annotated entity mentions and classifies these mentions.
     To this end a word embedding is used to embed the sentences and the embedding of the entity mention goes through a linear layer to get the actual class label.
     The model is able to predict '<unk>' for entity mentions that the model can not confidently match to any of the known labels.
     """
