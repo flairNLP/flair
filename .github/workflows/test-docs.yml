@@ -55,6 +55,7 @@ jobs:
           destination_folder: '${{ env.BRANCH_NAME }}'
           user_email: 'no-reply@github.com'
           user_name: 'flair-automation'
+          destination_branch: 'main'
           commit_msg: 'Add docs for ${{ github.ref_name }}'
       - name: Archive website results
         uses: actions/upload-artifact@v4
