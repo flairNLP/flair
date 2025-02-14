@@ -50,6 +50,8 @@ jobs:
           sed -i 's/^smv_branch_whitelist = r"^master$"/smv_branch_whitelist = r"^${{ env.branch_name }}$"/' docs/conf.py
           sed -i 's/^smv_tag_whitelist = r"^v\d+\.\d+\.\d+$"/smv_tag_whitelist = "^$"/' docs/conf.py
           cat docs/conf.py
+      - name: Fetch branch
+        run: git fetch --depth 1
       - name: Build docs
         run: |
           sphinx-multiversion docs doc_build/
