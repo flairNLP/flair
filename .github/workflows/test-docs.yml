@@ -13,15 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.action == 'opened'
     env:
-      branch_name: ${{ github.ref_name }}
+      branch_name: ${{ github.event.pull_request.head.ref }}
     steps:
       - name: Add or update comment
         uses: peter-evans/create-or-update-comment@v4
         env:
-          url: 'flairNLP.github.io/flair-dev-docs/${{ env.branch_name }}/'
+          url: 'http://flairNLP.github.io/flair-dev-docs/${{ env.branch_name }}/'
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body: 'The docs will be available at ${{ env.url }}'
+          body: 'The docs of this branch will be visible [here](${{ env.url }})'
           edit-mode: replace
 
   build_docs:
@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       python-version: 3.9
+      branch_name: ${{ github.event.pull_request.head.ref }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -71,9 +72,11 @@ jobs:
         with:
           name: website
           path: doc_build
-  delete-comment-on-close:
+  cleanup:
     if: github.event.action == 'closed' && needs.find-existing-comment.outputs.comment-id != ''
     runs-on: ubuntu-latest
+    env:
+      branch_name: ${{ github.event.pull_request.head.ref }}
     steps:
       - name: Find existing PR comment
         id: find-comment
