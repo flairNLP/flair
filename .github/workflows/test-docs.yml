@@ -54,6 +54,7 @@ jobs:
           publish_branch: main
           allow_empty_commit: true
           publish_dir: ./doc_build
+          disable_nojekyll: true
       - name: Archive website results
         uses: actions/upload-artifact@v4
         with:
