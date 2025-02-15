@@ -99,7 +99,7 @@ jobs:
           token: ${{ secrets.FLAIR_DEV_DOCS_TOKEN }}
 
       - name: Remove folder
-        run: rm -rf path/to/folder  # Replace with the actual folder path
+        run: rm -rf './${{ env.branch_name }}'
 
       - name: Commit and push changes
         run: |
