@@ -28,6 +28,7 @@ jobs:
   build_docs:
     name: Build the docs using Sphinx and publish as artifact
     runs-on: ubuntu-latest
+    if: github.event.action != 'closed'
     env:
       python-version: 3.9
       branch_name: ${{ github.event.pull_request.head.ref }}
@@ -74,7 +75,7 @@ jobs:
           name: website
           path: doc_build
   cleanup:
-    if: github.event.action == 'closed' && needs.find-existing-comment.outputs.comment-id != ''
+    if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     env:
       branch_name: ${{ github.event.pull_request.head.ref }}
