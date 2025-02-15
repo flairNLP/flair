@@ -89,7 +89,7 @@ jobs:
           body-includes: "The docs will be available at"
       - name: Delete comment
         if: steps.find-comment.outputs.comment-id != ''
-        uses: peter-evans/delete-comment@v3
+        uses: detomarco/delete-comment@v1
         with:
           comment-id: ${{ needs.find-existing-comment.outputs.comment-id }}
       - name: Checkout target repository
