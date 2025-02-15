@@ -29,7 +29,7 @@ log = logging.getLogger("flair")
 
 class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
     def __init__(self) -> None:
-        self._current_task = None
+        self._current_task: Optional[str] = None
         self._task_specific_attributes: dict[str, dict[str, Any]] = {}
         self.label_nearest_map = None
         self.tars_model: flair.nn.Classifier[Sentence]
@@ -223,9 +223,9 @@ class FewshotClassifier(flair.nn.Classifier[Sentence], ABC):
         """Lists existing tasks in the loaded TARS model on the console."""
         return set(self._task_specific_attributes.keys())
 
-    def switch_to_task(self, task_name):
+    def switch_to_task(self, task_name: Optional[str]) -> None:
         """Switches to a task which was previously added."""
-        if task_name not in self._task_specific_attributes:
+        if task_name is not None and task_name not in self._task_specific_attributes:
             log.error(
                 "Provided `%s` does not exist in the model. Consider calling `add_and_switch_to_new_task` first.",
                 task_name,
