@@ -95,8 +95,8 @@ jobs:
       - name: Checkout target repository
         uses: actions/checkout@v4
         with:
-          repository: owner/target-repo  # Replace with the target repo
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}  # Use a PAT with repo write access
+          repository: flairNLP/flair-dev-docs
+          token: ${{ secrets.FLAIR_DEV_DOCS_TOKEN }}
 
       - name: Remove folder
         run: rm -rf path/to/folder  # Replace with the actual folder path
@@ -108,13 +108,3 @@ jobs:
           git add .
           git commit -m "Remove ${{ github.repository }}@${{ github.sha }}"
           git push
-      - name: Delete page
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          personal_token: ${{ secrets.FLAIR_DEV_DOCS_TOKEN }}
-          external_repository: 'flairNLP/flair-dev-docs'
-          destination_dir: './${{ env.branch_name }}'
-          publish_branch: main
-          allow_empty_commit: true
-          publish_dir: './doc_build/${{ env.branch_name }}'
-          disable_nojekyll: true
