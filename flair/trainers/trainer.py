@@ -343,6 +343,7 @@ class ModelTrainer(Pluggable):
         use_final_model_for_eval: bool = False,
         gold_label_dictionary_for_eval: Optional[Dictionary] = None,
         exclude_labels: Optional[list[str]] = None,
+        evaluate_each_k_steps: Optional[int] = None,
         # sampling and shuffling
         sampler: Optional[Union[FlairSampler, type[FlairSampler]]] = None,
         shuffle: bool = True,
@@ -716,6 +717,15 @@ class ModelTrainer(Pluggable):
                             epoch_train_loss += batch_train_loss
                             epoch_train_samples += batch_train_samples
 
+                        if evaluate_each_k_steps and batch_count % evaluate_each_k_steps == 0:
+                            self.__evaluate_current_state(base_path, best_epoch_score,
+                                                          determine_best_epoch_using_dev_score,
+                                                          embeddings_storage_mode, epoch, eval_batch_size,
+                                                          evaluation_splits,
+                                                          exclude_labels, gold_label_dictionary_for_eval,
+                                                          main_evaluation_metric, save_best_model, save_optimizer_state,
+                                                          train_loss)
+
                         if (batch_no + 1) % log_modulo == 0:
                             intermittent_loss = (
                                 epoch_train_loss / epoch_train_samples
@@ -755,66 +765,11 @@ class ModelTrainer(Pluggable):
                     # - SchedulerPlugin -> log bad epochs
                     self.dispatch("after_training_epoch", epoch=epoch)
 
-                    self.model.eval()
-
-                    # Determine if this is the best model or if we need to anneal
-                    current_epoch_has_best_model_so_far = False
-                    validation_scores: tuple = ()
-
-                    for evaluation_split, evaluation_split_data in evaluation_splits.items():
-                        eval_result = self.model.evaluate(
-                            evaluation_split_data,
-                            out_path=base_path / f"{evaluation_split}.tsv",
-                            mini_batch_size=eval_batch_size,
-                            exclude_labels=exclude_labels,
-                            main_evaluation_metric=main_evaluation_metric,
-                            gold_label_dictionary=gold_label_dictionary_for_eval,
-                            embedding_storage_mode=embeddings_storage_mode,
-                            gold_label_type=self.model.label_type,
-                            gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
-                        )
-
-                        # log results
-                        log.info(
-                            f"{evaluation_split.upper()} : loss {eval_result.loss}"
-                            f" - {main_evaluation_metric[1]}"
-                            f" ({main_evaluation_metric[0]})"
-                            f"  {round(eval_result.main_score, 4)}"
-                        )
-
-                        # depending on memory mode, embeddings are moved to CPU, GPU or deleted
-                        store_embeddings(evaluation_split_data, embeddings_storage_mode)
-
-                        self._publish_eval_result(eval_result, evaluation_split, global_step=epoch)
-
-                        # use DEV split to determine if this is the best model so far
-                        if determine_best_epoch_using_dev_score and evaluation_split == "dev":
-                            validation_scores = eval_result.main_score, eval_result.loss
-
-                            if eval_result.main_score > best_epoch_score:
-                                current_epoch_has_best_model_so_far = True
-                                best_epoch_score = eval_result.main_score
-
-                    # if not using DEV score, determine best model using train loss
-                    if not determine_best_epoch_using_dev_score:
-                        validation_scores = (train_loss,)
-
-                        if train_loss < best_epoch_score:
-                            current_epoch_has_best_model_so_far = True
-                            best_epoch_score = train_loss
-
-                    # - LossFilePlugin -> somehow prints all relevant metrics
-                    # - AnnealPlugin -> scheduler step
-                    self.dispatch(
-                        "after_evaluation",
-                        epoch=epoch,
-                        current_model_is_best=current_epoch_has_best_model_so_far,
-                        validation_scores=validation_scores,
-                    )
-
-                    if save_best_model and current_epoch_has_best_model_so_far:
-                        log.info("saving best model")
-                        self._save_model(base_path / "best-model.pt", checkpoint=save_optimizer_state)
+                    self.__evaluate_current_state(base_path, best_epoch_score, determine_best_epoch_using_dev_score,
+                                                  embeddings_storage_mode, epoch, eval_batch_size, evaluation_splits,
+                                                  exclude_labels, gold_label_dictionary_for_eval,
+                                                  main_evaluation_metric, save_best_model, save_optimizer_state,
+                                                  train_loss)
 
                 # - SWAPlugin -> restores SGD weights from SWA
                 self.dispatch("after_training_loop")
@@ -898,6 +853,66 @@ class ModelTrainer(Pluggable):
         self.reset_training_attributes()
 
         return return_values
+
+    def __evaluate_current_state(self, base_path, best_epoch_score, determine_best_epoch_using_dev_score,
+                                 embeddings_storage_mode, epoch, eval_batch_size, evaluation_splits, exclude_labels,
+                                 gold_label_dictionary_for_eval, main_evaluation_metric, save_best_model,
+                                 save_optimizer_state, train_loss):
+        self.model.eval()
+        # Determine if this is the best model or if we need to anneal
+        current_epoch_has_best_model_so_far = False
+        validation_scores: tuple = ()
+        for evaluation_split, evaluation_split_data in evaluation_splits.items():
+            eval_result = self.model.evaluate(
+                evaluation_split_data,
+                out_path=base_path / f"{evaluation_split}.tsv",
+                mini_batch_size=eval_batch_size,
+                exclude_labels=exclude_labels,
+                main_evaluation_metric=main_evaluation_metric,
+                gold_label_dictionary=gold_label_dictionary_for_eval,
+                embedding_storage_mode=embeddings_storage_mode,
+                gold_label_type=self.model.label_type,
+                gold_label_dictionary_for_eval=gold_label_dictionary_for_eval,
+            )
+
+            # log results
+            log.info(
+                f"{evaluation_split.upper()} : loss {eval_result.loss}"
+                f" - {main_evaluation_metric[1]}"
+                f" ({main_evaluation_metric[0]})"
+                f"  {round(eval_result.main_score, 4)}"
+            )
+
+            # depending on memory mode, embeddings are moved to CPU, GPU or deleted
+            store_embeddings(evaluation_split_data, embeddings_storage_mode)
+
+            self._publish_eval_result(eval_result, evaluation_split, global_step=epoch)
+
+            # use DEV split to determine if this is the best model so far
+            if determine_best_epoch_using_dev_score and evaluation_split == "dev":
+                validation_scores = eval_result.main_score, eval_result.loss
+
+                if eval_result.main_score > best_epoch_score:
+                    current_epoch_has_best_model_so_far = True
+                    best_epoch_score = eval_result.main_score
+        # if not using DEV score, determine best model using train loss
+        if not determine_best_epoch_using_dev_score:
+            validation_scores = (train_loss,)
+
+            if train_loss < best_epoch_score:
+                current_epoch_has_best_model_so_far = True
+                best_epoch_score = train_loss
+        # - LossFilePlugin -> somehow prints all relevant metrics
+        # - AnnealPlugin -> scheduler step
+        self.dispatch(
+            "after_evaluation",
+            epoch=epoch,
+            current_model_is_best=current_epoch_has_best_model_so_far,
+            validation_scores=validation_scores,
+        )
+        if save_best_model and current_epoch_has_best_model_so_far:
+            log.info("saving best model")
+            self._save_model(base_path / "best-model.pt", checkpoint=save_optimizer_state)
 
     def _get_current_lr_and_momentum(self, batch_count):
         current_learning_rate = [group["lr"] for group in self.optimizer.param_groups]
