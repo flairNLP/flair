@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 
-base_path1 = './test_relabel_baseline/standard/noise_crowd'
 base_path2 = '.'
 
 for category in ['2']:#,'3','4']:
@@ -18,5 +17,4 @@ for category in ['2']:#,'3','4']:
             full_data = pd.merge(data1, data2, left_index=True, right_index=True)
         else:
             full_data = pd.concat([full_data, pd.merge(data1, data2, left_index=True, right_index=True)], axis = 0)
-    full_data =full_data.round(4)
-    full_data.to_csv(f'category{category}_merged_optimal_table.csv',index=True,header=True)
+    full_data.to_csv(f'category{category}_merged_optimal_table.csv',index=True,header=True, float_format='%.3f')
