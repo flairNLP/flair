@@ -5,6 +5,8 @@ from utils import *
 import pandas as pd
 from sklearn import metrics
 import json
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # separate file for each category
 # rows: metrics 
@@ -57,8 +59,8 @@ categories = [
 ]
 
 base_paths = {}
-base_paths['EE'] = './test_relabel_baseline/EE/noise_crowd/'
-base_paths['standard'] = './test_relabel_baseline/standard/noise_crowd/'
+base_paths['EE'] = './noisebench_baselin/category0/EE_/noise_crowd/'
+base_paths['standard'] = './noisebench_baselin/category0/standard_/noise_crowd/'
 
 seeds = ['100', '13','500']
 
@@ -67,6 +69,10 @@ exp_paths['EE'] = [f'{seed}_with_init-0.3/' for seed in seeds]#, '42_with_init-0
 exp_paths['standard'] = [f'{seed}/' for seed in seeds]
 
 def get_metrics_thresholds(y_test,  y_pred_proba, metric, direction, epoch, total_num_noisy):
+    print(metric)
+    print(y_pred_proba)
+    print(len(y_pred_proba))
+    print(total_num_noisy)
 
     if metric in ['msp','BvSB','confidence', 'correctness','iter_norm']:
         thresholds = np.arange(0, 1, 0.1)
@@ -84,6 +90,10 @@ def get_metrics_thresholds(y_test,  y_pred_proba, metric, direction, epoch, tota
     elif metric == 'mild':
         # todo: fix.
         thresholds = np.arange(-epoch, epoch, 1)
+        # print(thresholds)
+        # input()
+        # print(y_pred_proba)
+        # input()
     elif metric == 'mild_f':
         # todo: fix.
         thresholds = np.arange(1, epoch +1 , 1)
@@ -92,7 +102,11 @@ def get_metrics_thresholds(y_test,  y_pred_proba, metric, direction, epoch, tota
         thresholds = np.arange(1, epoch+1, 1)
 
     prec, rec = [], []
-    
+    print(y_test)
+    # fig, ax = plt.subplots()
+    # sns.histplot(pd.concat([pd.Series(y_pred_proba, name='val'), pd.Series(y_test, name='flag')], axis=1), binwidth=0.1,binrange=(0,1), hue='flag',x='val', ax=ax)
+    # ax.set_ylim((0,1000))
+    # plt.show()
     for th in thresholds:
         if direction == 'left':
             y_pred = np.where(y_pred_proba < th, 1, 0)
@@ -292,7 +306,7 @@ def optimize_F1s():
                         category['max_num_noisy'][seed] = total_num_noisy
 
         for category in categories:
-            
+            print(category)            
             f_scores = ['f05','f1','f2']
             all_threshold_scores = {}
 
@@ -309,8 +323,10 @@ def optimize_F1s():
                         all_threshold_scores[score][metric]['scores'].append(0)
                         all_threshold_scores[score][metric]['thresholds'].append(0)
 
-            for i in [str(i) for i in range(start_index, max_epochs)]:
 
+            for i in [str(i) for i in range(start_index, max_epochs)]:
+                print('epoch')
+                print(i)
                 directions = {metric: [] for metric in sample_metrics[mode]}
 
                 threshold_scores = {}
@@ -320,7 +336,9 @@ def optimize_F1s():
                 thresholds = {metric: [] for metric in sample_metrics[mode]}
 
                 for seed, exp_path in zip(seeds, exp_paths[mode]):
-
+                    print('seed')
+                    print(seed)
+                    print(category)
                     path = base_paths[mode] + exp_path + 'phase1/'
 
                     filepath = path+'epoch_log'+'_'+i+'.log'
@@ -331,6 +349,7 @@ def optimize_F1s():
                         dataset = df[(df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (df['noisy']=='O')]
                     else:
                         dataset = df[(df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (df['noisy']!='O')]
+
                     total_epoch = dataset['mild'].max()
 
                     for metric in sample_metrics[mode]:

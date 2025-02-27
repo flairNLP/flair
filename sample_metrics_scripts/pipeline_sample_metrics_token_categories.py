@@ -498,15 +498,26 @@ def run_experiment(seed, config, category_configs, output_path, data_path, train
         }
 
         # PHASE 2: Relabel categories
-        if category_id != '0':
+        mask_flag = False
+
+        if category_id == '0':
+            # PHASE 1: Retrain the model with updated labels
+            trainer = ModelTrainer(tagger, conll_corpus)
+
+            if config["parameters"]["scheduler"] and config["parameters"]["scheduler"] == "None":
+                fine_tuning_args["scheduler"] = None
+                
+            tagger.calculate_sample_metrics = True
+
+            out = trainer.fine_tune(**fine_tuning_args)
+            return out['test_score']
+        else:
             last_epoch_change = 0
             noise_f1s = []
 
             add_bioes_ner_tags(conll_corpus.train, tag_column = tag_type, bio_tag_column=tag_type+'_new_bio')
             
             phase1_base_path = fine_tuning_args['base_path']
-
-            mask_flag = False
 
             for category_config in category_configs:
                 print(category_config)
@@ -516,18 +527,20 @@ def run_experiment(seed, config, category_configs, output_path, data_path, train
                 fine_tuning_args['base_path'] = phase1_base_path+os.sep+'cat'+category_config['id']
 
                 fine_tuning_args['max_epochs'] = int(category_config["epoch_change"]) - last_epoch_change
-
-                trainer = ModelTrainer(tagger, conll_corpus) # phase 1: continue training the same model from decoder init or phase 0
-
-                if config["parameters"]["scheduler"] and config["parameters"]["scheduler"] == "None":
-                    fine_tuning_args["scheduler"] = None
+                
+                if fine_tuning_args['max_epochs'] > 0:
                     
-                out = trainer.fine_tune(**fine_tuning_args) # out: after phase 1 (standard or EE)
+                    trainer = ModelTrainer(tagger, conll_corpus) # phase 1: continue training the same model from decoder init or phase 0
 
-                if config['parameters']['seq_tagger_mode'] == 'standard':
-                    tagger.predict(conll_corpus.train, label_name='predicted_bio', mini_batch_size=16, force_token_predictions=True)
-                else:
-                    tagger.predict(conll_corpus.train, label_name='predicted_bio', mini_batch_size=16, force_token_predictions=True, layer_idx=-1)
+                    if config["parameters"]["scheduler"] and config["parameters"]["scheduler"] == "None":
+                        fine_tuning_args["scheduler"] = None
+                        
+                    out = trainer.fine_tune(**fine_tuning_args) # out: after phase 1 (standard or EE)
+
+                    if config['parameters']['seq_tagger_mode'] == 'standard':
+                        tagger.predict(conll_corpus.train, label_name='predicted_bio', mini_batch_size=16, force_token_predictions=True)
+                    else:
+                        tagger.predict(conll_corpus.train, label_name='predicted_bio', mini_batch_size=16, force_token_predictions=True, layer_idx=-1)
 
                 if category_config['modification'] == 'relabel':
                     tokens_changed, tokens_changed_additionally = relabel_category(conll_corpus.train, tag_column = tag_type, prediction_bio_column = 'predicted_bio',metric = category_config["metric"], threshold = float(category_config["threshold"]), direction=category_config["direction"], category_id=category_config['id'])
@@ -710,6 +723,8 @@ def main():
         category_ids.append('3')
         category_config['id'] = '3'
         category_configs.append(category_config)
+
+    category_configs = sorted(category_configs, key=lambda x: int(x['epoch_change']))
 
     if len(category_configs) == 0:
         category_configs.append(category_config_empty)     

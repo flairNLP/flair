@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 
-categories_ids = ['4']
+categories_ids = ['1','2','3','4']#,'3']#,'4']
 
 dataset='noise_crowd'
 

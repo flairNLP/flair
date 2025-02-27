@@ -3,14 +3,14 @@ import os
 
 base_path2 = '.'
 
-for category in ['2']:#,'3','4']:
+for category in ['1','2','3','4']:#, '2','3']:#,'3','4']:
     data2 = pd.read_csv(base_path2+os.sep+'optimal_category'+category+'_test_scores.csv',header = 0, index_col=[0,1, 2])
 
     full_data = None
     for mode in ['standard', 'EE']:
-        base_path1 = f'./test_relabel_baseline/{mode}/noise_crowd'
+        base_path1 = f'./noisebench_baselin/category0/{mode}_/noise_crowd'
 
-        data1 = pd.read_csv(base_path1+os.sep+'optimal_F1s_category'+category+'.csv',header = 0, index_col=[0,1])
+        data1 = pd.read_csv(base_path1+os.sep+'optimal_testF1s_merged_category'+category+'.csv',header = 0, index_col=[0,1])
         print(data1)
 
         if full_data is None:
