@@ -346,11 +346,15 @@ def optimize_F1s():
             # and
             # output_results_file(category)
             
-            optimize_F1s_output = open(base_paths[mode]+ os.sep+'optimal_F1s_category'+category['id']+'.csv','w')
+            optimize_F1s_output = open(base_paths[mode]+ os.sep+'optimal_testF1s_merged_category'+category['id']+'.csv','w')
             
             optimize_F1s_output.write('metric, f_score, score, epoch, threshold, direction\n')
 
             for metric in sample_metrics[mode]:
+                epochs = []
+                thresholds = []
+                directions = []
+                scores = []
                 for f_type in f_scores:
                     print(all_threshold_scores[f_type][metric]['scores'])
                     print(all_threshold_scores[f_type][metric]['thresholds'])
@@ -360,10 +364,49 @@ def optimize_F1s():
                     threshold = all_threshold_scores[f_type][metric]['thresholds'][np.argmax(all_threshold_scores[f_type][metric]['scores'])]
                     epoch = np.argmax(all_threshold_scores[f_type][metric]['scores'])
                     direction = all_threshold_scores[f_type][metric]['direction']
-
+                    epochs.append(epoch)
+                    thresholds.append(threshold)
+                    directions.append(direction)
+                    scores.append(score)
                     print(f'{metric}, {f_type}, {score}, {epoch}, {threshold}, {direction}\n')
-                    optimize_F1s_output.write(f'{metric}, {f_type}, {score}, {epoch}, {threshold}, {direction}\n')
-                    output_config(category, metric,  f_type, score, epoch, threshold, direction, mode)
-                    #input()
+                    # uncomment to get full table with actual f score values
+                    # optimize_F1s_output.write(f'{metric}, {f_type}, {score}, {epoch}, {threshold}, {direction}\n')
+                    # output_config(category, metric,  f_type, score, epoch, threshold, direction, mode)
+
+                # uncomment to get reduced table with merged duplicate parameter sets
+                if epochs[0] == epochs[1] and thresholds[0] == thresholds[1] and directions[0] == directions[1]:
+                    if epochs[2] == epochs[1] and thresholds[2] == thresholds[1] and directions[2] == directions[1]: #123
+                        optimize_F1s_output.write(f"{metric}, {'_'.join([f_type for f_type in f_scores])}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
+                        output_config(category, metric,  '_'.join([f_type for f_type in f_scores]), scores[0], epochs[0], thresholds[0], directions[0], mode)
+                    else: #12, 3
+                        optimize_F1s_output.write(f"{metric}, {'_'.join([f_type for f_type in f_scores[0:2]])}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
+                        output_config(category, metric,  '_'.join([f_type for f_type in f_scores[0:2]]), scores[0], epochs[0], thresholds[0], directions[0], mode)
+
+                        optimize_F1s_output.write(f"{metric}, {f_scores[2]}, {scores[2]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
+                        output_config(category, metric,  f_scores[2], scores[2], epochs[2], thresholds[2], directions[2], mode)
+
+                elif epochs[2] == epochs[1] and thresholds[2] == thresholds[1] and directions[2] == directions[1]: #1, 23
+                    optimize_F1s_output.write(f"{metric}, {'_'.join([f_type for f_type in f_scores[1:3]])},  {scores[1]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
+                    output_config(category, metric,  '_'.join([f_type for f_type in f_scores[1:3]]), score, epoch, threshold, direction, mode)
+
+                    optimize_F1s_output.write(f"{metric}, {f_scores[0]}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
+                    output_config(category, metric,  f_scores[0], scores[0], epochs[0], thresholds[0], directions[0], mode)
+
+                elif epochs[2] == epochs[0] and thresholds[2] == thresholds[0] and directions[2] == directions[0]: #2, 13
+                    optimize_F1s_output.write(f"{metric}, {f_scores[0]+'_'+f_scores[2]},  {scores[0]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
+                    output_config(category, metric,  f_scores[0]+'_'+f_scores[2], score, epoch, threshold, direction, mode)
+
+                    optimize_F1s_output.write(f'{metric}, {f_scores[1]}, {scores[1]}, {epochs[1]}, {thresholds[1]}, {directions[1]}\n')
+                    output_config(category, metric,  f_scores[1], scores[1], epochs[1], thresholds[1], directions[1], mode)   
+                else:
+                    optimize_F1s_output.write(f"{metric}, {f_scores[0]}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
+                    output_config(category, metric,  f_scores[0], scores[0], epochs[0], thresholds[0], directions[0], mode)
+
+                    optimize_F1s_output.write(f"{metric}, {f_scores[1]}, {scores[1]}, {epochs[1]}, {thresholds[1]}, {directions[1]}\n")
+                    output_config(category, metric,  f_scores[1], scores[1], epochs[1], thresholds[1], directions[1], mode)
+
+                    optimize_F1s_output.write(f"{metric}, {f_scores[2]}, {scores[2]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
+                    output_config(category, metric,  f_scores[2], scores[2], epochs[2], thresholds[2], directions[2], mode)
+                #input()
 
 optimize_F1s()
