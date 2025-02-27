@@ -16,7 +16,7 @@ metrics_mode = 'epoch_end'
 
 
 sample_metrics = {
-    'standard':['msp', 'confidence','BvSB','entropy', 'correctness', 'variability','iter_norm', 'pehist', 'mild'],
+    'standard':['cross_entropy','msp', 'confidence','BvSB','entropy', 'correctness', 'variability','iter_norm', 'pehist', 'mild'],
     'EE':['tac','tal','le','pd','fl']
 }
 
