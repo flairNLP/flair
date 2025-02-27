@@ -66,7 +66,7 @@ exp_paths = {}
 exp_paths['EE'] = [f'{seed}_with_init-0.3/' for seed in seeds]#, '42_with_init-0.3/','100_with_init-0.3/']  1_with_init-0.3
 exp_paths['standard'] = [f'{seed}/' for seed in seeds]
 
-def get_metrics_thresholds(y_test,  y_pred_proba, metric, direction, epoch):
+def get_metrics_thresholds(y_test,  y_pred_proba, metric, direction, epoch, total_num_noisy):
 
     if metric in ['msp','BvSB','confidence', 'correctness','iter_norm']:
         thresholds = np.arange(0, 1, 0.1)
@@ -97,15 +97,18 @@ def get_metrics_thresholds(y_test,  y_pred_proba, metric, direction, epoch):
         if direction == 'left':
             y_pred = np.where(y_pred_proba < th, 0, 1)
         else:
-            y_pred = np.where(y_pred_proba > th, 0, 1)
-        prec.append(metrics.precision_score(y_test, y_pred))
-        rec.append(metrics.recall_score(y_test, y_pred))
+        prec_score = ((y_test == y_pred) & (y_test == 1)).sum() / y_pred.sum() # this should be very high (>90)
+        rec_score = ((y_test == y_pred) & (y_test == 1)).sum() / total_num_noisy #this should be as high as possible.
+        f05 = 1.25 * prec_score * rec_score / (0.25 * prec_score + rec_score)
+        
+        prec.append(prec_score)
+        rec.append(rec_score)
 
     return np.asarray(prec), np.asarray(rec), np.asarray(thresholds)
 
 
 
-def get_score_from_df(dataset, metric, epoch):           
+def get_score_from_df(dataset, metric, epoch, total_num_noisy):           
     y_test = dataset[noise_flag_name].values # noisy are 1, clean are 0
     y_pred_proba_values = dataset[metric].values
     #print(y_test)
@@ -131,14 +134,14 @@ def get_score_from_df(dataset, metric, epoch):
     # TODO: change this to 95% with clipping...
 
     #print(y_pred_proba)
-    prec1, rec1, thresholds1 = get_metrics_thresholds(y_test,  y_pred_proba, metric, 'left', epoch=epoch)
+    prec1, rec1, thresholds1 = get_metrics_thresholds(y_test,  y_pred_proba, metric, 'left', epoch=epoch, total_num_noisy=total_num_noisy)
     print(prec1)
     print(rec1)
     auc1 = metrics.average_precision_score(y_test, y_pred_proba_normalized)
     # noisy are 1, clean are 0
     # direction: right
 
-    prec2, rec2, thresholds2 = get_metrics_thresholds(y_test,  y_pred_proba, metric, 'right', epoch=epoch)
+    prec2, rec2, thresholds2 = get_metrics_thresholds(y_test,  y_pred_proba, metric, 'right', epoch=epoch, total_num_noisy=total_num_noisy)
     print(prec2)
     print(rec2)
     print(len(prec1))
@@ -260,6 +263,33 @@ def optimize_F1s():
         else:
             start_index = 0
 
+        for cat in categories:
+            cat['max_num_noisy'] = {seed: 0 for seed in seeds}
+
+        for seed, exp_path in zip(seeds, exp_paths[mode]):
+            path = base_paths[mode] + exp_path + 'phase1/'
+
+            for i in [str(i) for i in range(start_index, max_epochs)]:
+
+                filepath = path+'epoch_log'+'_'+i+'.log'
+                df = pd.read_csv(filepath,  delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
+
+                df[correct_prediction_flag_name] = df['predicted'] == df['noisy']
+                # print('full df len ')
+                # print(len(df))
+                # input()
+                for category in categories:
+
+                    if category['observed_label'] == 'O':
+                        dataset = df[(df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (df['noisy']=='O')]
+                    else:
+                        dataset = df[(df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (df['noisy']!='O')]
+
+                    total_num_noisy = dataset['noisy_flag'].sum()
+
+                    if total_num_noisy > category['max_num_noisy'][seed]:
+                        category['max_num_noisy'][seed] = total_num_noisy
+
         for category in categories:
             
             f_scores = ['f05','f1','f2']
@@ -303,7 +333,7 @@ def optimize_F1s():
                     total_epoch = dataset['mild'].max()
 
                     for metric in sample_metrics[mode]:
-                        result = get_score_from_df(dataset, metric, epoch=total_epoch) #list of 10 (over thresholds)
+                        result = get_score_from_df(dataset, metric, epoch=total_epoch, total_num_noisy=category['max_num_noisy'][seed]) #list of 10 (over thresholds)
 
                         for f_type in f_scores:
                             threshold_scores[f_type][metric].append(result[f_type])
