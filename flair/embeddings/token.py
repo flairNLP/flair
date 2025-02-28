@@ -1633,16 +1633,16 @@ def replace_with_language_code(string: str):
 
 
 __all__ = [
-    "TransformerWordEmbeddings",
-    "StackedEmbeddings",
-    "WordEmbeddings",
+    "BytePairEmbeddings",
     "CharacterEmbeddings",
-    "FlairEmbeddings",
-    "PooledFlairEmbeddings",
     "FastTextEmbeddings",
-    "OneHotEmbeddings",
+    "FlairEmbeddings",
     "HashEmbeddings",
     "MuseCrosslingualEmbeddings",
-    "BytePairEmbeddings",
     "NILCEmbeddings",
+    "OneHotEmbeddings",
+    "PooledFlairEmbeddings",
+    "StackedEmbeddings",
+    "TransformerWordEmbeddings",
+    "WordEmbeddings",
 ]

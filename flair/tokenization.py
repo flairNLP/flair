@@ -81,8 +81,7 @@ class SegtokTokenizer(Tokenizer):
     """
 
     def __init__(self, additional_split_characters: Optional[list[str]] = None) -> None:
-        """Initializes the SegtokTokenizer with an optional parameter for additional characters that should always
-        be split.
+        """Initializes the SegtokTokenizer.
 
         The default behavior uses simple rules to split text into tokens. If you want to ensure that certain characters
         always become their own token, you can change default behavior by setting the ``additional_split_characters``

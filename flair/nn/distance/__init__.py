@@ -3,11 +3,11 @@ from .euclidean import EuclideanDistance, EuclideanMean
 from .hyperbolic import HyperbolicDistance, HyperbolicMean
 
 __all__ = [
+    "CosineDistance",
     "EuclideanDistance",
     "EuclideanMean",
     "HyperbolicDistance",
     "HyperbolicMean",
-    "CosineDistance",
     "LogitCosineDistance",
     "NegativeScaledDotProduct",
 ]

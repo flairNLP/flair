@@ -2,8 +2,7 @@ import importlib
 import inspect
 from collections.abc import Iterable
 from types import ModuleType
-from typing import Any, Iterable, List, Optional, Protocol, Type, TypeVar, Union, overload
-
+from typing import Any, Optional, Protocol, TypeVar, Union, overload
 
 T = TypeVar("T")
 
@@ -12,7 +11,7 @@ class StringLike(Protocol):
     def __str__(self) -> str: ...
 
 
-def get_non_abstract_subclasses(cls: Type[T]) -> Iterable[Type[T]]:
+def get_non_abstract_subclasses(cls: type[T]) -> Iterable[type[T]]:
     for subclass in cls.__subclasses__():
         yield from get_non_abstract_subclasses(subclass)
         if inspect.isabstract(subclass):

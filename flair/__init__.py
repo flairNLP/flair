@@ -85,16 +85,16 @@ def set_seed(seed: int):
 
 
 __all__ = [
-    "cache_root",
-    "device",
     "__version__",
-    "logger",
-    "set_seed",
+    "cache_root",
     "data",
+    "datasets",
+    "device",
+    "logger",
     "models",
     "nn",
+    "set_proxies",
+    "set_seed",
     "trainers",
     "visual",
-    "datasets",
-    "set_proxies",
 ]

@@ -16,6 +16,7 @@ from flair.data import (
 )
 from flair.datasets.base import find_train_dev_test_files
 from flair.file_utils import cached_path, unpack_file, unzip_file
+from flair.tokenization import Tokenizer
 
 log = logging.getLogger("flair")
 
@@ -26,7 +27,7 @@ class ParallelTextCorpus(Corpus):
         source_file: Union[str, Path],
         target_file: Union[str, Path],
         name: str,
-        use_tokenizer: bool = True,
+        use_tokenizer: Union[bool, Tokenizer] = True,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         in_memory: bool = True,
@@ -63,7 +64,7 @@ class OpusParallelCorpus(ParallelTextCorpus):
         dataset: str,
         l1: str,
         l2: str,
-        use_tokenizer: bool = True,
+        use_tokenizer: Union[bool, Tokenizer] = True,
         max_tokens_per_doc=-1,
         max_chars_per_doc=-1,
         in_memory: bool = True,
@@ -72,21 +73,23 @@ class OpusParallelCorpus(ParallelTextCorpus):
         """Instantiates a Parallel Corpus from OPUS.
 
         see http://opus.nlpl.eu/
-        :param dataset: Name of the dataset (one of "tatoeba")
-        :param l1: Language code of first language in pair ("en", "de", etc.)
-        :param l2: Language code of second language in pair ("en", "de", etc.)
-        :param use_tokenizer: Whether or not to use in-built tokenizer
-        :param max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
-        :param max_chars_per_doc: If set, shortens sentences to this maximum number of characters
-        :param in_memory: If True, keeps dataset fully in memory
-        """
-        if l1 > l2:
-            l1, l2 = l2, l1
 
+        Args:
+            dataset: Name of the dataset (one of "tatoeba")
+            l1: Language code of first language in pair ("en", "de", etc.)
+            l2: Language code of second language in pair ("en", "de", etc.)
+            use_tokenizer: You can optionally specify a custom tokenizer to split the text into tokens. By default,
+                :class:`flair.tokenization.SegtokTokenizer` will be used. If `use_tokenizer` is set to False,
+                :class:`flair.tokenization.SpaceTokenizer` will be used instead.
+            max_tokens_per_doc: If set, shortens sentences to this maximum number of tokens
+            max_chars_per_doc: If set, shortens sentences to this maximum number of characters
+            in_memory: If True, keeps dataset fully in memory
+        """
         # check if dataset is supported
         supported_datasets = ["tatoeba", "subtitles"]
         if dataset not in supported_datasets:
-            log.error(f"Dataset must be one of: {supported_datasets}")
+            msg = f"Invalid name for dataset: {dataset}. should be one of {supported_datasets}"
+            raise ValueError(msg)
 
         # set file names
         if dataset == "tatoeba":
@@ -96,11 +99,13 @@ class OpusParallelCorpus(ParallelTextCorpus):
             l2_file = flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"Tatoeba.{l1}-{l2}.{l2}"
 
         # set file names
-        if dataset == "subtitles":
+        elif dataset == "subtitles":
             link = f"https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2018/moses/{l1}-{l2}.txt.zip"
 
             l1_file = flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"OpenSubtitles.{l1}-{l2}.{l1}"
             l2_file = flair.cache_root / "datasets" / dataset / f"{l1}-{l2}" / f"OpenSubtitles.{l1}-{l2}.{l2}"
+        else:
+            assert False
 
         # download and unzip in file structure if necessary
         if not l1_file.exists():
@@ -125,9 +130,9 @@ class ParallelTextDataset(FlairDataset):
         self,
         path_to_source: Union[str, Path],
         path_to_target: Union[str, Path],
-        max_tokens_per_doc=-1,
-        max_chars_per_doc=-1,
-        use_tokenizer=True,
+        max_tokens_per_doc: int = -1,
+        max_chars_per_doc: int = -1,
+        use_tokenizer: Union[bool, Tokenizer] = True,
         in_memory: bool = True,
     ) -> None:
         path_to_source = Path(path_to_source)

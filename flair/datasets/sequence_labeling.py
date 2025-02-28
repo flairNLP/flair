@@ -841,10 +841,7 @@ class ColumnDataset(FlairDataset):
     def __line_completes_sentence(self, line: str) -> bool:
 
         if self.documents_as_sentences and self.document_separator_token:
-            if line.startswith(self.document_separator_token):
-                return True
-            else:
-                return False
+            return line.startswith(self.document_separator_token)
 
         sentence_completed = line.isspace() or line == ""
         return sentence_completed
@@ -5570,9 +5567,10 @@ class NER_BAVARIAN_WIKI(ColumnCorpus):
             # Add sentence boundary marker
             modified_split_filename = data_path / f"bar-wiki-{split}.tsv"
             if not modified_split_filename.is_file():
-                f_out = open(modified_split_filename, "w", encoding="utf-8")
-
-                with open(original_split_filename, encoding="utf-8") as f_p:
+                with (
+                    open(modified_split_filename, "w", encoding="utf-8") as f_out,
+                    open(original_split_filename, encoding="utf-8") as f_p,
+                ):
                     for line in f_p:
                         line = line.strip()
                         if line.startswith("# newdoc id = "):
@@ -5581,7 +5579,6 @@ class NER_BAVARIAN_WIKI(ColumnCorpus):
                         if line.startswith("# "):
                             continue
                         f_out.write(f"{line}\n")
-                f_out.close()
 
         columns = {0: "text", 1: "ner"}
 

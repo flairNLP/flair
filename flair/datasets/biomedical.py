@@ -1104,7 +1104,7 @@ class MIRNA(ColumnCorpus):
                     document_text += sentence_separator
 
                 sentence_offset = len(document_text)
-                document_text += sentence.get("text") if document_text else sentence.get("text")
+                document_text += sentence.get("text")
 
                 for entity in sentence.xpath(".//entity"):
                     start, end = entity.get("charOffset").split("-")
@@ -4146,7 +4146,7 @@ class BIONLP2013_CG(BioNLPCorpus):
 
 @deprecated(
     version="0.13",
-    reason='Please use BIGBIO_NER_CORPUS implementation by calling ´corpus = BIGBIO_NER_CORPUS("bigbio/anat_em", trust_remote_code=True)´',
+    reason='Please use BIGBIO_NER_CORPUS implementation by calling `corpus = BIGBIO_NER_CORPUS("bigbio/anat_em", trust_remote_code=True)`',
 )
 class ANAT_EM(ColumnCorpus):
     """Corpus for anatomical named entity mention recognition.
@@ -4156,8 +4156,6 @@ class ANAT_EM(ColumnCorpus):
     https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3957068/
     http://nactem.ac.uk/anatomytagger/#AnatEM
     """
-
-    pass
 
 
 class BioBertHelper(ColumnCorpus):

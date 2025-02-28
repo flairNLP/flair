@@ -260,7 +260,7 @@ class LanguageModelTrainer:
                     curr_split += 1
                     train_data = self._batchify(train_slice.flatten(), mini_batch_size)
 
-                    log.info("Split %d" % curr_split + f"\t - ({datetime.datetime.now():%H:%M:%S})")
+                    log.info(f"Split {curr_split}\t - ({datetime.datetime.now():%H:%M:%S})")
 
                     for group in optimizer.param_groups:
                         learning_rate = group["lr"]
@@ -281,7 +281,7 @@ class LanguageModelTrainer:
                         data, targets = self._get_batch(train_data, i, sequence_length)
 
                         if not data.is_cuda and cuda.is_available():
-                            log.info("Batch %d is not on CUDA, training will be very slow" % (batch))
+                            log.info("Batch %d is not on CUDA, training will be very slow", batch)
                             raise Exception("data isnt on cuda")
 
                         self.model.zero_grad()
@@ -367,7 +367,7 @@ class LanguageModelTrainer:
 
                     log.info(summary)
                     log.info("-" * 89)
-                    log.info("%d seconds for train split %d" % (time.time() - split_start_time, curr_split))
+                    log.info("%d seconds for train split %d", time.time() - split_start_time, curr_split)
 
                 log.info("Epoch time: %.2f" % (time.time() - epoch_start_time))
 
