@@ -31,6 +31,30 @@ category_conditions = {
     '4':(False, False)
 }
 
+def update_dataset_with_epoch_log_info(path, dataset, metric, predicted_bio_column, tag_bio_column):
+
+    with open(path, 'r') as f:
+        lines = f.readlines()
+        columns = lines[0].split('\t')
+
+        for line in lines[1:]:
+            line = line.strip().split('\t')
+
+            sentence_id, token_id = line[columns.index('sent_index')], line[columns.index('token_index')]
+            metric_value = line[columns.index(metric)]
+
+            token_id = int(token_id)
+            sentence_id = int(sentence_id)
+
+            token = dataset[sentence_id][token_id]
+
+            predicted_bio = line[columns.index('predicted')]
+            tag_bio = line[columns.index('noisy')]
+
+            token.set_label(predicted_bio_column, predicted_bio)
+            token.set_label(tag_bio_column, tag_bio)
+            token.get_label(metric,metric_value)
+
 def output_bio_dataset(dataset, tag_column, filename):
 
     if not os.path.exists(os.path.dirname(filename)):
@@ -295,7 +319,7 @@ def copy_new_tag_to_original(dataset, tag_column = 'ner', new_tag_column = 'ner_
         for lab in sent.get_labels(new_tag_column):
             lab.data_point.set_label(tag_column, lab.value)
 
-def run_experiment(seed, config, category_configs, output_path, data_path, train_filename, dev_filename, test_filename, tag_type, initialize_decoders_lr, num_epochs_decoder_init, only_clean_flag, pre_train_clean_flag, post_train_clean_flag, category_id):
+def run_experiment(seed, config, category_configs, output_path, data_path, train_filename, dev_filename, test_filename, tag_type, initialize_decoders_lr, num_epochs_decoder_init, only_clean_flag, pre_train_clean_flag, post_train_clean_flag, category_id, paths_to_baselines):
 
     conll_corpus = ColumnCorpus(
         data_folder="./",
@@ -381,166 +405,45 @@ def run_experiment(seed, config, category_configs, output_path, data_path, train
                 monitor_train_sample=1.0,  #
             ) # out: after decoder_init only (EE)
 
-        else:
-            output_path_training = f"{output_path}/{seed}"
-            embeddings = TransformerWordEmbeddings(
-                model=config["parameters"]["model"],
-                layers="-1",
-                subtoken_pooling="first",
-                fine_tune=True,
-                use_context=False, # EST
-            )
-
-            tagger = SequenceTagger(
-                hidden_size=256,
-                embeddings=embeddings,
-                tag_dictionary=tag_dictionary,
-                tag_type=tag_type,
-                use_crf=False,
-                use_rnn=False,
-                reproject_embeddings=False,
-                calculate_sample_metrics=True,
-                metrics_mode = metrics_mode,
-                metrics_save_list = [category_config['metric'] for category_config in category_configs]
-
-            )
-    else:
-
-        output_path_training = f"{output_path}/{seed}_with_init-{initialize_decoders_lr}"
-
-        # Load embeddings
-        embeddings = TransformerWordEmbeddings(
-            model="xlm-roberta-large",
-            layers="all",
-            subtoken_pooling="first",
-            fine_tune=True,
-            use_context=False, # maybe it should be True?
-            layer_mean=False,
-        )
-
-        # initialize tagger
-        tagger = EarlyExitSequenceTagger(
-            hidden_size=256,
-            embeddings=embeddings,
-            tag_dictionary=tag_dictionary,
-            tag_type=tag_type,
-            use_crf=False,
-            use_rnn=False,
-            reproject_embeddings=False,
-            weighted_loss=False,
-            print_all_predictions=False,
-            modified_loss=False,
-            calculate_sample_metrics=True,
-            metrics_mode = metrics_mode,
-            metrics_save_list = [category_config['metric'] for category_config in category_configs]
-        )
-
-        # initialize trainer
-        trainer = ModelTrainer(tagger, conll_corpus)
-
-        # initialize decoders
-        # First, train only the offramp-decoders
-        tagger.embeddings.fine_tune = False
-        tagger.embeddings.static_embeddings = True
-
-        # init all decoders equally
-        tagger.weighted_loss = False
-
-        tagger.modified_loss = False
-
-        out = trainer.fine_tune(
-            output_path_training + os.sep + "decoder_init",
-            learning_rate=initialize_decoders_lr,
-            mini_batch_size=int(batch_size),
-            max_epochs=num_epochs_decoder_init,
-            save_final_model=False,
-            monitor_test=False,  #
-            monitor_train_sample=1.0,  #
-        ) # out: after decoder_init only (EE)
-
-        tagger.print_all_predictions = True
-
-        if metrics_mode == 'epoch_end':
-            # copy last decoder init to be epoch 0
-            os.rename(output_path_training + os.sep + 'decoder_init' + os.sep +f'epoch_log_{num_epochs_decoder_init}.log', output_path_training + os.sep + 'epoch_log_0.log')
-
-            tagger.calculate_sample_metrics = True       
-            kwargs = {}
-            kwargs['final_train_eval'] = True
-            tagger.evaluate(
-                conll_corpus.test, gold_label_type=tag_type, out_path=output_path_training + os.sep + "train_sample_0.tsv", **kwargs
-            )
-            os.rename(output_path_training + os.sep + 'decoder_init' + os.sep +f'epoch_log_{num_epochs_decoder_init}.log', output_path_training + os.sep + 'epoch_log_0_test.log')
-
-            tagger.calculate_sample_metrics = True       
-            kwargs = {}
-            kwargs['final_train_eval'] = True
-            tagger.evaluate(
-                conll_corpus.dev, gold_label_type=tag_type, out_path=output_path_training + os.sep + "train_sample_0.tsv", **kwargs
-            )
-            os.rename(output_path_training + os.sep + 'decoder_init' + os.sep +f'epoch_log_{num_epochs_decoder_init}.log', output_path_training + os.sep + 'epoch_log_0_dev.log')
-        tagger.embeddings.fine_tune = True
-        tagger.embeddings.static_embeddings = False
 
     if only_clean_flag:
         # finish experiment if we only use clean validation
         return out["test_score"]
     else:
 
-        fine_tuning_args = {
-            "base_path": output_path_training + os.sep + 'phase1',
-            "learning_rate": float(learning_rate),
-            "mini_batch_size": int(batch_size),
-            "max_epochs": epoch_change,
-            "save_final_model": False,
-            "monitor_test": config["parameters"]["monitor_test"],
-            "monitor_train_sample": 1.0,
-        }
-
-        # PHASE 2: Relabel categories
         mask_flag = False
 
-        if category_id == '0':
-            # PHASE 1: Retrain the model with updated labels
-            trainer = ModelTrainer(tagger, conll_corpus)
+        if category_id != '0':
 
-            if config["parameters"]["scheduler"] and config["parameters"]["scheduler"] == "None":
-                fine_tuning_args["scheduler"] = None
-                
-            tagger.calculate_sample_metrics = True
-
-            out = trainer.fine_tune(**fine_tuning_args)
-            return out['test_score']
-        else:
             last_epoch_change = 0
             noise_f1s = []
 
             add_bioes_ner_tags(conll_corpus.train, tag_column = tag_type, bio_tag_column=tag_type+'_new_bio')
             
-            phase1_base_path = fine_tuning_args['base_path']
-
             for category_config in category_configs:
+
                 print(category_config)
+                
                 if category_config['modification'] == 'mask':
                     mask_flag=True
+
+                current_epoch = category_config["epoch_change"]
+                current_metric = category_config["metric"]
+                current_threshold = category_config["threshold"]
+                current_direction = category_config["direction"]
+                current_id = category_config["id"]
+
                 # gradually change the labels of 'new_ner' column
-                fine_tuning_args['base_path'] = phase1_base_path+os.sep+'cat'+category_config['id']
 
-                fine_tuning_args['max_epochs'] = int(category_config["epoch_change"]) - last_epoch_change
+                epoch_file = f'{paths_to_baselines[config['parameters']['seq_tagger_mode']]}/{seed}/epoch_log_{current_epoch}.log'
                 
-                if fine_tuning_args['max_epochs'] > 0:
-                    
-                    trainer = ModelTrainer(tagger, conll_corpus) # phase 1: continue training the same model from decoder init or phase 0
-
-                    if config["parameters"]["scheduler"] and config["parameters"]["scheduler"] == "None":
-                        fine_tuning_args["scheduler"] = None
-                        
-                    out = trainer.fine_tune(**fine_tuning_args) # out: after phase 1 (standard or EE)
-
-                    if config['parameters']['seq_tagger_mode'] == 'standard':
-                        tagger.predict(conll_corpus.train, label_name='predicted_bio', mini_batch_size=16, force_token_predictions=True)
-                    else:
-                        tagger.predict(conll_corpus.train, label_name='predicted_bio', mini_batch_size=16, force_token_predictions=True, layer_idx=-1)
+                if not os.path.exists(epoch_file):
+                    raise Exception(f"File {epoch_file} does not exist. Please provide a valida baseline path.")
+            
+                update_dataset_with_epoch_log_info(epoch_file, conll_corpus.train, metric= current_metric, predicted_bio_column = 'predicted_bio',tag_bio_column = 'ner_bio') # predicted_bio, ner, ner_bio
+             
+                
+                # PHASE 2: Relabel categories
 
                 if category_config['modification'] == 'relabel':
                     tokens_changed, tokens_changed_additionally = relabel_category(conll_corpus.train, tag_column = tag_type, prediction_bio_column = 'predicted_bio',metric = category_config["metric"], threshold = float(category_config["threshold"]), direction=category_config["direction"], category_id=category_config['id'])
@@ -563,6 +466,7 @@ def run_experiment(seed, config, category_configs, output_path, data_path, train
             output_bio_dataset(conll_corpus.train, tag_column = 'ner_new_bio', filename = f'{output_path_training}/noise_crowd_relabeled.train')
 
             copy_new_tag_to_original(conll_corpus.train,tag_column = tag_type, new_tag_column = tag_type+'_new')
+
             # PHASE 3: Retrain the model with updated labels
 
         if config["parameters"]["model_reinit"] or config["parameters"]["seq_tagger_mode"] == 'EE':
@@ -620,10 +524,45 @@ def run_experiment(seed, config, category_configs, output_path, data_path, train
 
         print(conll_corpus.dev[0].get_labels('ner'))
         print(conll_corpus.dev[1].get_labels('ner'))
-        print(conll_corpus.dev[2].get_labels('ner'))
+        print(conll_corpus.t_score"]
+        else:
+            parent_data_path = pathlib.Path(data_path).parent
+            clean_val_subset_filename =  f"{parent_data_path}/clean_subset_100_{seed}.dev"
+            if not os.path.exists(clean_val_subset_filename):
+                raise Exception(f"File {clean_val_subset_filename} does not exist. Please create it first.")
+            
+            conll_corpus_val_clean = ColumnCorpus(
+                data_folder="./",
+                column_format={0: "text", 1: "ner"}, 
+                document_separator_token="-DOCSTART-",
+                train_file=clean_val_subset_filename,
+                dev_file=dev_filename,
+                test_file=test_filename,
+            )
+            trainer = ModelTrainer(tagger, conll_corpus_val_clean)
+            out = trainer.fine_tune(output_path_training + os.sep + "phase4",
+            learning_rate=float(learning_rate),
+            mini_batch_size=int(batch_size),
+            max_epochs=5,
+            save_final_model=False,
+            monitor_test=False,  #
+            monitor_train_sample=1.0
+            )
+            return out["test_score"]
+dev[2].get_labels('ner'))
         print(conll_corpus.dev[3].get_labels('ner'))
 
         trainer = ModelTrainer(tagger, conll_corpus)
+
+        fine_tuning_args = {
+            "base_path": output_path_training + os.sep + 'phase1',
+            "learning_rate": float(learning_rate),
+            "mini_batch_size": int(batch_size),
+            "max_epochs": epoch_change,
+            "save_final_model": False,
+            "monitor_test": config["parameters"]["monitor_test"],
+            "monitor_train_sample": 1.0,
+        }
 
         fine_tuning_args["max_epochs"] = num_epochs
         fine_tuning_args['base_path'] = output_path_training + os.sep + 'phase3'
@@ -659,8 +598,7 @@ def run_experiment(seed, config, category_configs, output_path, data_path, train
             )
             return out["test_score"]
 
-
-def main():
+def main(paths_to_baselines):
 
     argParser = argparse.ArgumentParser()
 
@@ -786,8 +724,20 @@ def main():
 
         temp_f1_scores = []
 
+        baseline_modes = [config['seq_tagger_mode']] ## change this later to allow e.g. PD for category 1 and confidence for category 2
+            
         for seed in seeds:
-            score = run_experiment(seed, config, category_configs, output_path, data_path, train_filename,dev_filename, test_filename, tag_type, initialize_decoders_lr, num_epochs_decoder_init, only_clean_flag, pre_train_clean_flag, post_train_clean_flag, category_id)
+
+            if len(paths_to_baselines) == 0:
+                for mode in baseline_modes:
+                    max_epochs = category_configs[-1]['epoch_change']
+                    paths_to_baselines[mode] = run_baseline(mode, seed, max_epochs, corpus_name, data_path)
+            else:
+                for key in paths_to_baselines:
+                    if key not in baseline_modes:
+                        del paths_to_baselines[key]
+
+            score = run_experiment(seed, config, category_configs, output_path, data_path, train_filename,dev_filename, test_filename, tag_type, initialize_decoders_lr, num_epochs_decoder_init, only_clean_flag, pre_train_clean_flag, post_train_clean_flag, category_id, paths_to_baselines)
             temp_f1_scores.append(score)
 
         with open(output_path + os.sep + "test_results.tsv", "w", encoding='utf-8') as f:
@@ -797,4 +747,5 @@ def main():
 
 if __name__ == "__main__":
     os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
-    main()
+    paths_to_baselines = {}
+    main(paths_to_baselines)
