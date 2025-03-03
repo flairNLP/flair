@@ -264,21 +264,27 @@ def update_dataset_with_epoch_log_info(path, dataset, metric, predicted_bio_colu
     with open(path, 'r') as f:
         lines = f.readlines()
         columns = lines[0].split('\t')
-
+        sentence = None
         for line in lines[1:]:
+            if len(line)==1:
+                sentence=None
+                continue
+
             line = line.strip().split('\t')
 
-            sentence_id, token_id = line[columns.index('sent_index')], line[columns.index('token_index')]
+            if sentence is None:
+                sentence_id = int(line[columns.index('sent_index')])
+                sentence = dataset[sentence_id]
+
+            token_id = line[columns.index('token_index')]
             metric_value = line[columns.index(metric)]
 
             token_id = int(token_id)
-            sentence_id = int(sentence_id)
 
-            token = dataset[sentence_id][token_id]
+            token = sentence[token_id]
 
             predicted_bio = line[columns.index('predicted')]
             tag_bio = line[columns.index('noisy')]
-
             token.set_label(predicted_bio_column, predicted_bio)
             token.set_label(tag_bio_column, tag_bio)
             token.get_label(metric,metric_value)
