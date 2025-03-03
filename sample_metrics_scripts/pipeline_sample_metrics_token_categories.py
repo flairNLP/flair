@@ -547,19 +547,18 @@ def copy_new_tag_to_original(dataset, tag_column = 'ner', new_tag_column = 'ner_
         for lab in sent.get_labels(new_tag_column):
             lab.data_point.set_label(tag_column, lab.value)
 
-def run_experiment(seed, config, category_configs, output_path, data_path, train_filename, dev_filename, test_filename, tag_type, initialize_decoders_lr, num_epochs_decoder_init, only_clean_flag, pre_train_clean_flag, post_train_clean_flag, category_id, paths_to_baselines):
+def run_experiment(seed, config, category_configs, output_path, corpus_name, train_filename, dev_filename, test_filename, tag_type, category_id, paths_to_baselines):
 
     conll_corpus = ColumnCorpus(
         data_folder="./",
         column_format={0: "text", 1: "ner_clean", 2: "ner"},  # if we work with nessie (two-column) format
-        #document_separator_token="-DOCSTART-", # EST
+        document_separator_token="-DOCSTART-", # EST
         train_file=train_filename,
         dev_file=dev_filename,
         test_file=test_filename,
         column_delimiter = '\t'
     )
 
-    tag_dictionary = conll_corpus.make_label_dictionary(label_type=tag_type, add_unk=False)
     tag_dictionary = conll_corpus.make_label_dictionary(label_type=tag_type+'_clean', add_unk=False)
 
     calculate_f1_between_columns(conll_corpus.train, tag_type+'_clean',tag_type, label_dictionary=tag_dictionary)
@@ -568,7 +567,7 @@ def run_experiment(seed, config, category_configs, output_path, data_path, train
     output_bio_dataset(conll_corpus.train, tag_column = tag_type+'_bio', filename = f'{output_path}/noise_crowd_backup.train')
 
     learning_rate = float(config["parameters"]["learning_rate"])
-    batch_size = float(config["parameters"]["batch_size"])
+    batch_size = int(config["parameters"]["batch_size"])
     num_epochs = int(config["parameters"]["num_epochs"])
     metrics_mode = config["parameters"]["metrics_mode"]
 
@@ -852,7 +851,6 @@ def main():
     seq_tagger_mode = config["parameters"]["seq_tagger_mode"]
     paths_to_baselines = config['paths']['baseline_paths']
 
-    category_id = '0'
     category_config_empty = {
         'metric':'',
         'f_type':'',
@@ -865,29 +863,14 @@ def main():
     category_configs = []
     category_ids = []
 
-    if config["parameters"]['modify_category1']:
-        category_config = config["parameters"]['modify_category1']
-        category_ids.append('1')
-        category_config['id'] = '1'
-        category_configs.append(category_config)
 
-    if config["parameters"]['modify_category2']:
-        category_config = config["parameters"]['modify_category2']
-        category_ids.append('2')
-        category_config['id'] = '2'
-        category_configs.append(category_config)
-
-    if config["parameters"]['modify_category4']:
-        category_config = config["parameters"]['modify_category4']
-        category_ids.append('4')
-        category_config['id'] = '4'
-        category_configs.append(category_config)
-
-    if config["parameters"]['modify_category3']:
-        category_config = config["parameters"]['modify_category3']
-        category_ids.append('3')
-        category_config['id'] = '3'
-        category_configs.append(category_config)
+    for cat_id in category_conditions:
+        category_config = config["parameters"]['modify_category'+cat_id]
+        print(category_config)
+        if category_config is not False:
+            category_ids.append(cat_id)
+            category_config['id'] = cat_id
+            category_configs.append(category_config)
 
     category_configs = sorted(category_configs, key=lambda x: int(x['epoch_change']))
 
@@ -921,11 +904,6 @@ def main():
     else:
         experiment_path = config["paths"]["resources_path"] + "category"+category_id + os.sep + f"{seq_tagger_mode}_{category_configs[0]['metric']}"+ os.sep + category_configs[0]['f_type'] + os.sep + category_configs[0]['modification'] + os.sep
 
-    # if relabel_category1_flag:
-    #     experiment_path += config['parameters']['metric'] + os.sep
-
-    initialize_decoders_lr = 0.3
-    num_epochs_decoder_init = 10
 
     seeds = [ 13, 100, 500]
     tag_type = "ner"
