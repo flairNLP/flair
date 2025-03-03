@@ -1128,6 +1128,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if "Please use the model as it is" not in str(e):
                 raise e
 
+        self.peft_config = peft_config
         if peft_config is not None:
             # add adapters for finetuning
             try:
@@ -1376,6 +1377,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             "subtoken_pooling": self.subtoken_pooling,
             "cls_pooling": self.cls_pooling,
             "config_state_dict": config_dict,
+            "peft_config": self.peft_config,
         }
 
         return model_state
