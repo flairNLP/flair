@@ -1,0 +1,38 @@
+{
+    "paths": {
+        "resources_path": "test_sample_metrics/resources/noisebench/",
+        "data_path": "../../NoiseBench/data/noisebench/.nessieformat/",
+        "train_filename_extension": ".train",
+        "dev_filename_extension": ".dev",
+        "test_filename_extension": "clean.test",
+        "baseline_paths":{
+            "EE":"test_sample_metrics/resources/noisebench/baseline/EE/",
+            "standard":"test_sample_metrics/resources/noisebench/baseline/standard/"
+        },
+        "configs_path":{
+            "EE":"test_sample_metrics/configs_EE",
+            "standard":"test_sample_metrics/configs"
+        },
+        "results_tables_path":"test_sample_metrics/sample_metrics_results"
+    },
+    "parameters": {
+        "batch_size": "8",
+        "learning_rate": "5.0e-6",
+        "num_epochs": "2",
+        "model": "xlm-roberta-base",
+        "metrics_mode": "epoch_end",
+        "monitor_test": false,
+        "scheduler": "Default",
+        "model_reinit": true,
+        "modes": ["standard"]
+    },
+    "corpora": [
+        "noise_crowd"
+    ],
+    "seeds": [
+        "100"
+    ],
+    "sample_metrics": {
+        "standard":["msp"]
+    }
+}
