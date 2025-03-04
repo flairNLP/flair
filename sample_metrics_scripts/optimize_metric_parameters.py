@@ -188,9 +188,9 @@ def output_config(category, metric, f_type, score, epoch, threshold, direction, 
     "paths": {
         "resources_path": f"{config['paths']['results_tables_path']}/resources/relabel_cat{category['id']}/",
         "data_path":"../../NoiseBench/data/noisebench/.nessieformat/",
-        "train_filename_extension" :".train",
-        "dev_filename_extension" :".dev",
-        "test_filename_extension" :"clean.test",
+        "train_filename_extension" :config['paths']['train_filename_extension'],
+        "dev_filename_extension" :config['paths']['dev_filename_extension'],
+        "test_filename_extension" :config['paths']['test_filename_extension'],
         "baseline_paths":{
             "EE":config['paths']['baseline_paths']['EE'],
             "standard":config['paths']['baseline_paths']['standard'],
@@ -201,10 +201,10 @@ def output_config(category, metric, f_type, score, epoch, threshold, direction, 
         "learning_rate":config['parameters']['learning_rate'],
         "num_epochs":config['parameters']['num_epochs'],
         "model":config['parameters']['model'],
-        "monitor_test":False,
-        "scheduler": "Default",
+        "monitor_test":config['parameters']['monitor_test'],
+        "scheduler":config['parameters']['scheduler'],
         "metrics_mode":config['parameters']['metrics_mode'],
-        "model_reinit":True,
+        "model_reinit":config['parameters']['model_reinit'],
         "modify_category1":False,
         "modify_category2":False,
         "modify_category3":False,
@@ -212,7 +212,8 @@ def output_config(category, metric, f_type, score, epoch, threshold, direction, 
     },
     "corpora" : [
         "noise_crowd"
-    ]
+    ],
+    "seeds":config['seeds']
     }
 
     base_config['parameters']['seq_tagger_mode'] = mode

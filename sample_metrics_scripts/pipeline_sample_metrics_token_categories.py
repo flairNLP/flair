@@ -757,7 +757,7 @@ def main(config, gpu=0):
         experiment_path = config["paths"]["resources_path"] + "category"+category_id + os.sep + f"{seq_tagger_mode}_{category_configs[0]['metric']}"+ os.sep + category_configs[0]['f_type'] + os.sep + category_configs[0]['modification'] + os.sep
 
 
-    seeds = [ 13, 100, 500]
+    seeds = [int(seed) for seed in config['seeds']]
     tag_type = "ner"
 
     if not os.path.exists(experiment_path):

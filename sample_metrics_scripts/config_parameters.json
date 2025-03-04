@@ -2,6 +2,9 @@
     "paths": {
         "resources_path": "resources/noisebench/",
         "data_path": "../../NoiseBench/data/noisebench/.nessieformat/",
+        "train_filename_extension": ".train",
+        "dev_filename_extension": ".dev",
+        "test_filename_extension": "clean.test",
         "baseline_paths":{
             "EE":"resources/noisebench/baseline/EE/",
             "standard":"resources/noisebench/baseline/standard/"
@@ -17,6 +20,9 @@
         "learning_rate": "5.0e-6",
         "num_epochs": "10",
         "model": "xlm-roberta-large",
+        "monitor_test": false,
+        "scheduler": "Default",
+        "model_reinit": true,
         "metrics_mode": "epoch_end",
         "modes": ["EE", "standard"]
     },
