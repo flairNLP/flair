@@ -171,7 +171,7 @@ def get_score_from_df(dataset, metric, epoch, noise_flag_name, total_num_noisy):
 
 def output_config(category, metric, f_type, score, epoch, threshold, direction, mode, config):
 
-    config_path = config['paths']['configs_paths'][mode]
+    config_path = config['paths']['configs_path'][mode]
     
     if not os.path.exists(config_path ):
         os.makedirs(config_path )
@@ -262,7 +262,7 @@ def optimize_F1s(config, corpus_name):
     correct_prediction_flag_name = 'correct_prediction_flag'
     noise_flag_name = 'noisy_flag'
 
-    base_paths = {key: config['paths']['baseline_paths'][key] + os.sep + corpus_name for key in seq_tagger_modes}
+    base_paths = {key: config['paths']['baseline_paths'][key] + corpus_name for key in seq_tagger_modes}
 
     seeds = config['seeds']
 
@@ -274,7 +274,7 @@ def optimize_F1s(config, corpus_name):
 
     for mode in seq_tagger_modes:
 
-        filepath = base_paths[mode] + exp_paths[mode][0]+'phase1/epoch_log'+'_0.log'
+        filepath = base_paths[mode] + exp_paths[mode][0]+'epoch_log'+'_0.log'
 
         if not os.path.exists(filepath):
             start_index = 1
@@ -285,7 +285,7 @@ def optimize_F1s(config, corpus_name):
             cat['max_num_noisy'] = {seed: 0 for seed in seeds}
 
         for seed, exp_path in zip(seeds, exp_paths[mode]):
-            path = base_paths[mode] + exp_path + 'phase1/'
+            path = base_paths[mode] + os.sep+ exp_path 
 
             for i in [str(i) for i in range(start_index, max_epochs)]:
 
@@ -342,7 +342,7 @@ def optimize_F1s(config, corpus_name):
                     print('seed')
                     print(seed)
                     print(category)
-                    path = base_paths[mode] + exp_path + 'phase1/'
+                    path = base_paths[mode] + os.sep +exp_path 
 
                     filepath = path+'epoch_log'+'_'+i+'.log'
                     df = pd.read_csv(filepath,  delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
@@ -399,7 +399,12 @@ def optimize_F1s(config, corpus_name):
             # and
             # output_results_file(category)
             
-            optimize_F1s_output = open(results_path + os.sep + corpus_name + os.sep + mode + os.sep+'optimal_F1s_merged_category'+category['id']+'.csv','w')
+            filepath = results_path + os.sep + corpus_name + os.sep + mode+'_mode'
+
+            if not os.path.exists(filepath):
+                os.makedirs(filepath)
+
+            optimize_F1s_output = open(filepath + os.sep+'optimal_F1s_category'+category['id']+'.csv','w')
             
             optimize_F1s_output.write('metric, f_score, score, epoch, threshold, direction\n')
 

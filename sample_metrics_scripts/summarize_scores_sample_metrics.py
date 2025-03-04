@@ -9,15 +9,20 @@ def summarize_test_scores(results_tables_path, corpus_name):
     dataset = corpus_name
 
     for category_id in categories_ids:
+        
+        test_scores_tables_path = results_tables_path + os.sep + dataset+ os.sep +'test_scores'
 
-        optimize_F1s_output = open(results_tables_path + os.sep + dataset+ os.sep+'optimal_category'+category_id+'_test_scores.csv','w')
+        if not os.path.exists(test_scores_tables_path):
+            os.makedirs(test_scores_tables_path)
+
+        optimize_F1s_output = open(test_scores_tables_path + os.sep+'category'+category_id+'_test_scores.csv','w')
 
         optimize_F1s_output.write('metric, f_score, modification, noise share, test score, std test score \n')
 
         experiment_path = results_tables_path+os.sep+'resources/relabel_cat'+category_id+os.sep+'category'+category_id
 
         for metric in os.listdir(experiment_path):
-
+            # this includes both standard and EE metrics
             for f_type in os.listdir(os.path.join(experiment_path,metric)):
                 print(os.path.join(experiment_path, metric, f_type))
                 for modif in os.listdir(os.path.join(experiment_path, metric, f_type)):
