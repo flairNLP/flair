@@ -7,7 +7,9 @@ from summarize_scores_sample_metrics import *
 from merge_optimal_F_score_tables import *
 import os
 
-def run(config):
+def run(config, gpu=0):
+
+    flair.device = torch.device("cuda:" + str(gpu))
 
     seeds = [int(seed) for seed in config['seeds']]
     corpora = config['corpora']
@@ -53,11 +55,12 @@ if __name__ == "__main__":
     argParser = argparse.ArgumentParser()
 
     argParser.add_argument("-c", "--config", help="filename with experiment configuration")
+    argParser.add_argument("-g", "--gpu", help="set gpu id", default=0)
 
     args = argParser.parse_args()
 
     with open(args.config) as json_file:
         config = json.load(json_file)
 
-    run(config)
+    run(config, args.gpu)
 
