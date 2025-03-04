@@ -1,5 +1,4 @@
 import re
-import typing
 from dataclasses import dataclass, field
 from typing import Union
 

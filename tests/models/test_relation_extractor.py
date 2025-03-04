@@ -21,7 +21,7 @@ class TestRelationExtractor(BaseModelTest):
     }
     training_args = {
         "max_epochs": 4,
-        "mini_batch_size": 2,
+        "mini_batch_size": 4,
         "learning_rate": 0.1,
     }
 

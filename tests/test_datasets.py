@@ -376,9 +376,9 @@ def test_load_conllu_plus_corpus(tasks_base_path):
         in_memory=False,
     )
 
-    assert len(corpus.train) == 4
-    assert len(corpus.dev) == 4
-    assert len(corpus.test) == 4
+    assert len(corpus.train) == 5
+    assert len(corpus.dev) == 5
+    assert len(corpus.test) == 5
 
     _assert_conllu_dataset(corpus.train)
 
@@ -393,9 +393,9 @@ def test_load_conllu_corpus_plus_in_memory(tasks_base_path):
         in_memory=True,
     )
 
-    assert len(corpus.train) == 4
-    assert len(corpus.dev) == 4
-    assert len(corpus.test) == 4
+    assert len(corpus.train) == 5
+    assert len(corpus.dev) == 5
+    assert len(corpus.test) == 5
 
     _assert_conllu_dataset(corpus.train)
 
@@ -937,6 +937,29 @@ def test_german_mobie(tasks_base_path):
     # See MobIE paper (https://aclanthology.org/2021.konvens-1.22/), table 2
     ref_sentences = 7_077
     ref_tokens = 90_971
+
+    actual_sentences = sum(
+        [1 for sentence in corpus.train + corpus.dev + corpus.test if sentence[0].text != "-DOCSTART-"]
+    )
+    actual_tokens = sum(
+        [len(sentence) for sentence in corpus.train + corpus.dev + corpus.test if sentence[0].text != "-DOCSTART-"]
+    )
+
+    assert ref_sentences == actual_sentences, (
+        f"Number of parsed sentences ({actual_sentences}) does not match with "
+        f"reported number of sentences ({ref_sentences})!"
+    )
+    assert (
+        ref_tokens == actual_tokens
+    ), f"Number of parsed tokens ({actual_tokens}) does not match with reported number of tokens ({ref_tokens})!"
+
+
+@pytest.mark.skip()
+def test_bavarian_wiki(tasks_base_path):
+    corpus = flair.datasets.NER_BAVARIAN_WIKI()
+
+    ref_sentences = 3_577
+    ref_tokens = 75_690
 
     actual_sentences = sum(
         [1 for sentence in corpus.train + corpus.dev + corpus.test if sentence[0].text != "-DOCSTART-"]

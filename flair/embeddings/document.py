@@ -210,7 +210,7 @@ class DocumentTFIDFEmbeddings(DocumentEmbeddings):
             sentences = [sentences]
 
         raw_sentences = [s.to_original_text() for s in sentences]
-        tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).A)
+        tfidf_vectors = torch.from_numpy(self.vectorizer.transform(raw_sentences).toarray())
 
         for sentence_id, sentence in enumerate(sentences):
             sentence.set_embedding(self.name, tfidf_vectors[sentence_id])
@@ -691,10 +691,9 @@ class DocumentCNNEmbeddings(DocumentEmbeddings):
 
         lengths: list[int] = [len(sentence.tokens) for sentence in sentences]
         padding_length: int = max(max(lengths), self.min_sequence_length)
-
         pre_allocated_zero_tensor = torch.zeros(
             self.embeddings.embedding_length * padding_length,
-            dtype=self.convs[0].weight.dtype,
+            dtype=cast(torch.nn.Conv1d, self.convs[0]).weight.dtype,
             device=flair.device,
         )
 

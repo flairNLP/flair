@@ -382,4 +382,4 @@ def load_torch_state(model_file: str) -> dict[str, typing.Any]:
         # to load models on some Mac/Windows setups
         # see https://github.com/zalandoresearch/flair/issues/351
         f = load_big_file(model_file)
-        return torch.load(f, map_location="cpu")
+        return torch.load(f, map_location="cpu", weights_only=False)
