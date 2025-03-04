@@ -1,7 +1,7 @@
 
 import os
 import csv
-from utils import *
+import numpy as np
 import pandas as pd
 from sklearn import metrics
 import json
@@ -12,19 +12,6 @@ import matplotlib.pyplot as plt
 # rows: metrics 
 # columns: F score type, type, threshold, epoch and </> (direction), seq_tagger_mode.
 
-
-seq_tagger_modes = ['standard','EE']
-metrics_mode = 'epoch_end'
-
-
-sample_metrics = {
-    'standard':['cross_entropy','msp', 'confidence','BvSB','entropy', 'correctness', 'variability','iter_norm', 'pehist', 'mild'],
-    'EE':['tac','tal','le','pd','fl']
-}
-
-correct_prediction_flag_name = 'correct_prediction_flag'
-noise_flag_name = 'noisy_flag'
-max_epochs=10
 
 categories = [
     { 
@@ -57,16 +44,6 @@ categories = [
         'observed_label':'non-O'
     }
 ]
-
-base_paths = {}
-base_paths['EE'] = './noisebench_baselin/category0/EE_/noise_crowd/'
-base_paths['standard'] = './noisebench_baselin/category0/standard_/noise_crowd/'
-
-seeds = ['100', '13','500']
-
-exp_paths = {}
-exp_paths['EE'] = [f'{seed}_with_init-0.3/' for seed in seeds]#, '42_with_init-0.3/','100_with_init-0.3/']  1_with_init-0.3
-exp_paths['standard'] = [f'{seed}/' for seed in seeds]
 
 def get_metrics_thresholds(y_test,  y_pred_proba, metric, direction, epoch, total_num_noisy):
     print(metric)
@@ -123,7 +100,7 @@ def get_metrics_thresholds(y_test,  y_pred_proba, metric, direction, epoch, tota
 
 
 
-def get_score_from_df(dataset, metric, epoch, total_num_noisy):           
+def get_score_from_df(dataset, metric, epoch, noise_flag_name, total_num_noisy):           
     y_test = dataset[noise_flag_name].values # noisy are 1, clean are 0
     y_pred_proba_values = dataset[metric].values
     #print(y_test)
@@ -192,11 +169,13 @@ def get_score_from_df(dataset, metric, epoch, total_num_noisy):
 
     return {'f05':f05, 'f1':f1,'f2':f2, 'thresholds':thresholds, 'direction':direction}
 
-def output_config(category, metric, f_type, score, epoch, threshold, direction, mode):
-    config_path = base_paths[mode]
-    if not os.path.exists(config_path  + 'config'):
-        os.makedirs(config_path + 'config')
-    config_path += os.sep + 'config'
+def output_config(category, metric, f_type, score, epoch, threshold, direction, mode, config):
+
+    config_path = config['paths']['configs_paths'][mode]
+    
+    if not os.path.exists(config_path ):
+        os.makedirs(config_path )
+
     config_path += os.sep + 'category'+category['id'] + os.sep + metric + os.sep + f_type 
 
     if not os.path.exists(config_path):
@@ -207,20 +186,24 @@ def output_config(category, metric, f_type, score, epoch, threshold, direction, 
     "experiment_name": "relabel_cat"+category['id'],
     
     "paths": {
-        "resources_path": "resources/relabel_cat"+category['id']+"/",
+        "resources_path": f"{config['paths']['results_tables_path']}/resources/relabel_cat{category['id']}/",
         "data_path":"../../NoiseBench/data/noisebench/.nessieformat/",
         "train_filename_extension" :".train",
         "dev_filename_extension" :".dev",
-        "test_filename_extension" :"clean.test"
+        "test_filename_extension" :"clean.test",
+        "baseline_paths":{
+            "EE":config['paths']['baseline_paths']['EE'],
+            "standard":config['paths']['baseline_paths']['standard'],
+        }
     },
     "parameters": {
-        "batch_size":'8',
-        "learning_rate":'5.0e-6',
-        "num_epochs":'10',
-        "model":"xlm-roberta-large",
+        "batch_size":config['parameters']['batch_size'],
+        "learning_rate":config['parameters']['learning_rate'],
+        "num_epochs":config['parameters']['num_epochs'],
+        "model":config['parameters']['model'],
         "monitor_test":False,
         "scheduler": "Default",
-        "metrics_mode": "epoch_end",
+        "metrics_mode":config['parameters']['metrics_mode'],
         "model_reinit":True,
         "modify_category1":False,
         "modify_category2":False,
@@ -260,7 +243,7 @@ def output_config(category, metric, f_type, score, epoch, threshold, direction, 
     with open(config_path + os.sep + 'mask.config', 'w') as fp:
         json.dump(base_config, fp, indent=4)
 
-def optimize_F1s():
+def optimize_F1s(config, corpus_name):
     '''
     Categories:
 
@@ -270,7 +253,27 @@ def optimize_F1s():
     4. incorrect prediction and predicted label is not O - (1,1) 
     '''
 
+    seq_tagger_modes = config['parameters']['modes']
+    metrics_mode = config['parameters']['metrics_mode']
+    max_epochs = config['parameters']['num_epochs']
+
+    sample_metrics = config['sample_metrics']
+
+    correct_prediction_flag_name = 'correct_prediction_flag'
+    noise_flag_name = 'noisy_flag'
+
+    base_paths = {key: config['paths']['baseline_paths'][key] + os.sep + corpus_name for key in seq_tagger_modes}
+
+    seeds = config['seeds']
+
+    exp_paths = {}
+    exp_paths['EE'] = [f'{seed}_with_init-0.3/' for seed in seeds]#, '42_with_init-0.3/','100_with_init-0.3/']  1_with_init-0.3
+    exp_paths['standard'] = [f'{seed}/' for seed in seeds]
+
+    results_path = config['paths']['results_tables_path']
+
     for mode in seq_tagger_modes:
+
         filepath = base_paths[mode] + exp_paths[mode][0]+'phase1/epoch_log'+'_0.log'
 
         if not os.path.exists(filepath):
@@ -353,7 +356,7 @@ def optimize_F1s():
                     total_epoch = dataset['mild'].max()
 
                     for metric in sample_metrics[mode]:
-                        result = get_score_from_df(dataset, metric, epoch=total_epoch, total_num_noisy=category['max_num_noisy'][seed]) #list of 10 (over thresholds)
+                        result = get_score_from_df(dataset, metric, epoch=total_epoch, noise_flag_name=noise_flag_name, total_num_noisy=category['max_num_noisy'][seed]) #list of 10 (over thresholds)
 
                         for f_type in f_scores:
                             threshold_scores[f_type][metric].append(result[f_type])
@@ -396,7 +399,7 @@ def optimize_F1s():
             # and
             # output_results_file(category)
             
-            optimize_F1s_output = open(base_paths[mode]+ os.sep+'optimal_testF1s_merged_category'+category['id']+'.csv','w')
+            optimize_F1s_output = open(results_path + os.sep + corpus_name + os.sep + mode + os.sep+'optimal_F1s_merged_category'+category['id']+'.csv','w')
             
             optimize_F1s_output.write('metric, f_score, score, epoch, threshold, direction\n')
 
@@ -418,45 +421,45 @@ def optimize_F1s():
                     thresholds.append(threshold)
                     directions.append(direction)
                     scores.append(score)
-                    print(f'{metric}, {f_type}, {score}, {epoch}, {threshold}, {direction}\n')
                     # uncomment to get full table with actual f score values
                     # optimize_F1s_output.write(f'{metric}, {f_type}, {score}, {epoch}, {threshold}, {direction}\n')
                     # output_config(category, metric,  f_type, score, epoch, threshold, direction, mode)
 
                 # uncomment to get reduced table with merged duplicate parameter sets
+                # todo: fix
                 if epochs[0] == epochs[1] and thresholds[0] == thresholds[1] and directions[0] == directions[1]:
                     if epochs[2] == epochs[1] and thresholds[2] == thresholds[1] and directions[2] == directions[1]: #123
                         optimize_F1s_output.write(f"{metric}, {'_'.join([f_type for f_type in f_scores])}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
-                        output_config(category, metric,  '_'.join([f_type for f_type in f_scores]), scores[0], epochs[0], thresholds[0], directions[0], mode)
+                        output_config(category, metric,  '_'.join([f_type for f_type in f_scores]), scores[0], epochs[0], thresholds[0], directions[0], mode, config)
                     else: #12, 3
                         optimize_F1s_output.write(f"{metric}, {'_'.join([f_type for f_type in f_scores[0:2]])}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
-                        output_config(category, metric,  '_'.join([f_type for f_type in f_scores[0:2]]), scores[0], epochs[0], thresholds[0], directions[0], mode)
+                        output_config(category, metric,  '_'.join([f_type for f_type in f_scores[0:2]]), scores[0], epochs[0], thresholds[0], directions[0], mode, config)
 
                         optimize_F1s_output.write(f"{metric}, {f_scores[2]}, {scores[2]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
-                        output_config(category, metric,  f_scores[2], scores[2], epochs[2], thresholds[2], directions[2], mode)
+                        output_config(category, metric,  f_scores[2], scores[2], epochs[2], thresholds[2], directions[2], mode, config)
 
                 elif epochs[2] == epochs[1] and thresholds[2] == thresholds[1] and directions[2] == directions[1]: #1, 23
                     optimize_F1s_output.write(f"{metric}, {'_'.join([f_type for f_type in f_scores[1:3]])},  {scores[1]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
-                    output_config(category, metric,  '_'.join([f_type for f_type in f_scores[1:3]]), score, epoch, threshold, direction, mode)
+                    output_config(category, metric,  '_'.join([f_type for f_type in f_scores[1:3]]), score, epoch, threshold, direction, mode, config)
 
                     optimize_F1s_output.write(f"{metric}, {f_scores[0]}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
-                    output_config(category, metric,  f_scores[0], scores[0], epochs[0], thresholds[0], directions[0], mode)
+                    output_config(category, metric,  f_scores[0], scores[0], epochs[0], thresholds[0], directions[0], mode, config)
 
                 elif epochs[2] == epochs[0] and thresholds[2] == thresholds[0] and directions[2] == directions[0]: #2, 13
                     optimize_F1s_output.write(f"{metric}, {f_scores[0]+'_'+f_scores[2]},  {scores[0]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
-                    output_config(category, metric,  f_scores[0]+'_'+f_scores[2], score, epoch, threshold, direction, mode)
+                    output_config(category, metric,  f_scores[0]+'_'+f_scores[2], score, epoch, threshold, direction, mode, config)
 
                     optimize_F1s_output.write(f'{metric}, {f_scores[1]}, {scores[1]}, {epochs[1]}, {thresholds[1]}, {directions[1]}\n')
-                    output_config(category, metric,  f_scores[1], scores[1], epochs[1], thresholds[1], directions[1], mode)   
+                    output_config(category, metric,  f_scores[1], scores[1], epochs[1], thresholds[1], directions[1], mode, config)   
                 else:
                     optimize_F1s_output.write(f"{metric}, {f_scores[0]}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
-                    output_config(category, metric,  f_scores[0], scores[0], epochs[0], thresholds[0], directions[0], mode)
+                    output_config(category, metric,  f_scores[0], scores[0], epochs[0], thresholds[0], directions[0], mode, config)
 
                     optimize_F1s_output.write(f"{metric}, {f_scores[1]}, {scores[1]}, {epochs[1]}, {thresholds[1]}, {directions[1]}\n")
-                    output_config(category, metric,  f_scores[1], scores[1], epochs[1], thresholds[1], directions[1], mode)
+                    output_config(category, metric,  f_scores[1], scores[1], epochs[1], thresholds[1], directions[1], mode, config)
 
                     optimize_F1s_output.write(f"{metric}, {f_scores[2]}, {scores[2]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
-                    output_config(category, metric,  f_scores[2], scores[2], epochs[2], thresholds[2], directions[2], mode)
+                    output_config(category, metric,  f_scores[2], scores[2], epochs[2], thresholds[2], directions[2], mode, config)
                 #input()
 
-optimize_F1s()
+#optimize_F1s()
