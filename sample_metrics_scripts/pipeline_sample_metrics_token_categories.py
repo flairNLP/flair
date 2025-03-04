@@ -8,8 +8,12 @@ from collections import defaultdict
 
 import numpy as np
 import torch
+import sys
+
+sys.path.append('./')
 
 import flair
+
 from flair.datasets import ColumnCorpus
 from flair.embeddings import TransformerWordEmbeddings
 from flair.models import SequenceTagger, EarlyExitSequenceTagger
