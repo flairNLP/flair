@@ -285,7 +285,7 @@ def update_dataset_with_epoch_log_info(path, dataset, metric, predicted_bio_colu
                 sentence = dataset[sentence_id]
 
             token_id = line[columns.index('token_index')]
-            metric_value = line[columns.index(metric)]
+            metric_value = float(line[columns.index(metric)])
 
             token_id = int(token_id)
 
@@ -295,7 +295,7 @@ def update_dataset_with_epoch_log_info(path, dataset, metric, predicted_bio_colu
             tag_bio = line[columns.index('noisy')]
             token.set_label(predicted_bio_column, predicted_bio)
             token.set_label(tag_bio_column, tag_bio)
-            token.get_label(metric,metric_value)
+            token.set_metric(metric,metric_value)
 
 def output_bio_dataset(dataset, tag_column, filename):
 
