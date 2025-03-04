@@ -31,13 +31,15 @@ category_conditions = {
     '4':(False, False)
 }
 
-def run_standard_baseline(seed, corpus_name, data_path, config, max_epochs):
+def run_standard_baseline(seed, corpus_name, config, max_epochs):
     learning_rate = float(config["parameters"]["learning_rate"])
     batch_size = int(config["parameters"]["batch_size"])
     num_epochs = max_epochs
     metrics_mode = config["parameters"]["metrics_mode"]
+    data_path = config["paths"]["data_path"]
 
-    output_path_training = f"{config['paths']['resources_path']}baseline/standard/{corpus_name}/{str(seed)}"
+    baseline_path = f"{config['paths']['resources_path']}baseline/standard"
+    output_path_training = f"{baseline_path}/{corpus_name}/{str(seed)}"
 
     train_extension = config["paths"]["train_filename_extension"]
     dev_extension = config["paths"]["dev_filename_extension"]
@@ -110,15 +112,17 @@ def run_standard_baseline(seed, corpus_name, data_path, config, max_epochs):
     tagger.calculate_sample_metrics = True
 
     out = trainer.fine_tune(**fine_tuning_args)
-    return output_path_training, out["test_score"]
+    return baseline_path, out["test_score"]
 
-def run_EE_baseline(seed, corpus_name, data_path, config, max_epochs, initialize_decoders_lr, num_epochs_decoder_init):
+def run_EE_baseline(seed, corpus_name, config, max_epochs, initialize_decoders_lr, num_epochs_decoder_init):
     learning_rate = float(config["parameters"]["learning_rate"])
     batch_size = int(config["parameters"]["batch_size"])
     num_epochs = max_epochs
     metrics_mode = config["parameters"]["metrics_mode"]
+    data_path = config["paths"]["data_path"]
 
-    output_path_training = f"{config['paths']['resources_path']}baseline/EE/{corpus_name}/{str(seed)}_with_init-{initialize_decoders_lr}"
+    baseline_path = f"{config['paths']['resources_path']}baseline/EE"
+    output_path_training = f"{baseline_path}/{corpus_name}/{str(seed)}_with_init-{initialize_decoders_lr}"
 
     train_extension = config["paths"]["train_filename_extension"]
     dev_extension = config["paths"]["dev_filename_extension"]
@@ -245,18 +249,18 @@ def run_EE_baseline(seed, corpus_name, data_path, config, max_epochs, initialize
     tagger.calculate_sample_metrics = True
 
     out = trainer.fine_tune(**fine_tuning_args)
-    return output_path_training, out["test_score"]
+    return baseline_path, out["test_score"]
 
 
 
-def run_baseline(mode, seed,  corpus_name, data_path, config, max_epochs):
+def run_baseline(mode, seed,  corpus_name, config, max_epochs):
     if mode == 'EE':
         # decoder init parameters are predefined for now.   
         initialize_decoders_lr = 0.3
         num_epochs_decoder_init = 10
-        return run_EE_baseline(seed, corpus_name, data_path, config, max_epochs, initialize_decoders_lr=initialize_decoders_lr, num_epochs_decoder_init=num_epochs_decoder_init) 
+        return run_EE_baseline(seed, corpus_name,config, max_epochs, initialize_decoders_lr=initialize_decoders_lr, num_epochs_decoder_init=num_epochs_decoder_init) 
     else:
-        return run_standard_baseline(seed, corpus_name, data_path, config, max_epochs)
+        return run_standard_baseline(seed, corpus_name, config, max_epochs)
 
 
 def update_dataset_with_epoch_log_info(path, dataset, metric, predicted_bio_column, tag_bio_column):
@@ -579,6 +583,10 @@ def run_experiment(seed, config, category_configs, output_path, corpus_name, tra
     flair.set_seed(seed)
 
     output_path_training = f"{output_path}/{seed}"
+
+    if not os.path.exists(output_path_training):
+        os.makedirs(output_path_training)
+
     ## main code block
     mask_flag = False
 
@@ -690,21 +698,9 @@ def run_experiment(seed, config, category_configs, output_path, corpus_name, tra
 
     return out["test_score"]
 
-def main():
+def main(config, gpu=0):
 
-    argParser = argparse.ArgumentParser()
-
-    argParser.add_argument("-c", "--config", help="filename with experiment configuration")
-    argParser.add_argument("-g", "--gpu", help="set gpu id", default=0)
-    # set gpu ID
-
-    args = argParser.parse_args()
-
-    with open(args.config) as json_file:
-        config = json.load(json_file)
-
-    print(config)
-    flair.device = torch.device("cuda:" + str(args.gpu))
+    flair.device = torch.device("cuda:" + str(gpu))
 
     data_path = config["paths"]["data_path"]
     corpora = config["corpora"]
@@ -784,7 +780,9 @@ def main():
         temp_f1_scores = []
 
         baseline_modes = [config['parameters']['seq_tagger_mode']] ## change this later to allow e.g. PD for category 1 and confidence for category 2
-            
+        
+        paths_to_baselines_seed = {}
+
         for seed in seeds:
 
             if flag_run_baseline:
@@ -793,9 +791,9 @@ def main():
                         max_epochs = int(config['parameters']['num_epochs'])
                     else:
                         max_epochs = int(category_configs[-1]['epoch_change'])
-                    paths_to_baselines[mode], baseline_score = run_baseline(mode, seed, corpus_name, data_path, config, max_epochs) 
+                    paths_to_baselines_seed[mode], baseline_score = run_baseline(mode, seed, corpus_name, config, max_epochs) 
             else:
-                paths_to_baselines = {k: paths_to_baselines[k] for k in baseline_modes}
+                paths_to_baselines_seed = {k: f'{paths_to_baselines[k]}' for k in baseline_modes}
 
             if category_id != '0':
                 score = run_experiment(seed, config, category_configs, output_path, corpus_name, train_filename, dev_filename, test_filename, tag_type, category_id, paths_to_baselines)
@@ -812,6 +810,17 @@ def main():
             f.write(f"{label} \t{np.mean(temp_f1_scores)!s} \t {np.std(temp_f1_scores)!s} \n")
 
 if __name__ == "__main__":
-    os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 
-    main()
+    argParser = argparse.ArgumentParser()
+
+    argParser.add_argument("-c", "--config", help="filename with experiment configuration")
+    argParser.add_argument("-g", "--gpu", help="set gpu id", default=0)
+    # set gpu ID
+
+    args = argParser.parse_args()
+
+    with open(args.config) as json_file:
+        config = json.load(json_file)
+
+
+    main(config, gpu = args.gpu)
