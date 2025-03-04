@@ -5,8 +5,6 @@ import numpy as np
 import pandas as pd
 from sklearn import metrics
 import json
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 # separate file for each category
 # rows: metrics 
@@ -256,7 +254,7 @@ def optimize_F1s(config, corpus_name):
 
     seq_tagger_modes = config['parameters']['modes']
     metrics_mode = config['parameters']['metrics_mode']
-    max_epochs = config['parameters']['num_epochs']
+    max_epochs = int(config['parameters']['num_epochs'])
 
     sample_metrics = config['sample_metrics']
 
