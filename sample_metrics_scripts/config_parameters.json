@@ -1,0 +1,35 @@
+{
+    "paths": {
+        "resources_path": "resources/noisebench/",
+        "data_path": "../../NoiseBench/data/noisebench/.nessieformat/",
+        "baseline_paths":{
+            "EE":"resources/noisebench/baseline/EE/",
+            "standard":"resources/noisebench/baseline/standard/"
+        },
+        "configs_path":{
+            "EE":"configs_EE",
+            "standard":"configs"
+        },
+        "results_tables_path":"sample_metrics_results"
+    },
+    "parameters": {
+        "batch_size": "8",
+        "learning_rate": "5.0e-6",
+        "num_epochs": "10",
+        "model": "xlm-roberta-large",
+        "metrics_mode": "epoch_end",
+        "modes": ["EE", "standard"]
+    },
+    "corpora": [
+        "noise_crowd"
+    ],
+    "seeds": [
+        "100",
+        "13",
+        "500"
+    ],
+    "sample_metrics": {
+        "standard":["cross_entropy","msp", "confidence","BvSB","entropy", "correctness", "variability","iter_norm", "pehist", "mild"],
+        "EE":["tac","tal","le","pd","fl"]
+    }
+}
