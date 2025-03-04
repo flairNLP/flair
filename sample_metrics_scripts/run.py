@@ -14,6 +14,7 @@ def run(config):
 
     for corpus_name in corpora:
 
+        # 1. Run baseline for each mode: standard fine-tuning and early-exit fine-tuning
         for mode in config['parameters']['modes']:
             temp_f1_scores = []
             for seed in seeds:
@@ -26,8 +27,10 @@ def run(config):
                 label = f"{str(config['parameters']['batch_size'])}_{str(config['parameters']['learning_rate'])}"
                 f.write(f"{label} \t{np.mean(temp_f1_scores)!s} \t {np.std(temp_f1_scores)!s} \n")
 
+        # 2. Find optimal parameter sets for each sample metric, mode and category
         optimize_F1s(config, corpus_name=corpus_name)
 
+        # 3. Run experiment (relabel or mask each category) based on the optimal parameter sets from 2. 
         for mode in config['parameters']['modes']:
             config_path = config['paths']['configs_path'][mode]
 
@@ -39,8 +42,10 @@ def run(config):
                         config = json.load(json_file)
 
                     main(config)
+        # 4. Summarize the test scores from 3. 
         summarize_test_scores(config['paths']['results_tables_path'], corpus_name)
 
+        # 5. Merge the optimal parameter sets from 2. and the summarized test scores from 4.
         merge_tables(f"{config['paths']['results_tables_path']}/{corpus_name}", config['parameters']['modes']) 
 
 
