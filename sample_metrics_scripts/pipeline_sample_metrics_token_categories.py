@@ -648,7 +648,9 @@ def run_experiment(seed, config, category_configs, output_path, corpus_name, tra
 
         # PHASE 3: Retrain the model with updated labels
 
-    if config["parameters"]["model_reinit"] or config["parameters"]["seq_tagger_mode"] == 'EE':
+    if True: # model_reinit is always True for now
+        
+        # if config["parameters"]["model_reinit"] or config["parameters"]["seq_tagger_mode"] == 'EE': 
 
         embeddings = TransformerWordEmbeddings(
             model=config["parameters"]["model"],

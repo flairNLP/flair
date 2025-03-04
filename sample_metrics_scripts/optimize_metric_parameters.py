@@ -74,7 +74,7 @@ def get_metrics_thresholds(y_test,  y_pred_proba, metric, direction, epoch, tota
     elif metric == 'mild_f':
         # todo: fix.
         thresholds = np.arange(1, epoch +1 , 1)
-    elif metric == 'mild_m':
+    else:
         # todo: fix.
         thresholds = np.arange(1, epoch+1, 1)
 
