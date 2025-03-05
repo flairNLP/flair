@@ -401,7 +401,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     # new dp properties: last_iter; last_pred; last_conf, last_sq_sum   
 
                     for metric in self.metrics_save_list:
-                        token.set_metric(metric, metrics_dict[metric][i].item())
+                        if metric != '':
+                            token.set_metric(metric, metrics_dict[metric][i].item())
                     i+=1 
                 outfile.write('\n')
 
@@ -1378,11 +1379,12 @@ class EarlyExitSequenceTagger(SequenceTagger):
             )
          # if modified loss, then return per-sample losses
         #TODO: add check for different variants of loss
-        self.metrics_list.append('pd')
-        self.metrics_list.append('fl')
-        self.metrics_list.append('tac')
-        self.metrics_list.append('tal')
-        self.metrics_list.append('le')
+        if self.calculate_sample_metrics:
+            self.metrics_list.append('pd')
+            self.metrics_list.append('fl')
+            self.metrics_list.append('tac')
+            self.metrics_list.append('tal')
+            self.metrics_list.append('le')
 
         self.to(flair.device)
 
