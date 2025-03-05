@@ -184,7 +184,7 @@ def output_config(category, metric, f_type, score, epoch, threshold, direction, 
     "experiment_name": "relabel_cat"+category['id'],
     
     "paths": {
-        "resources_path": f"{config['paths']['results_tables_path']}/resources/relabel_cat{category['id']}/",
+        "resources_path": f"{config['paths']['resources_path']}/relabel_cat{category['id']}/",
         "data_path":"../../NoiseBench/data/noisebench/.nessieformat/",
         "train_filename_extension" :config['paths']['train_filename_extension'],
         "dev_filename_extension" :config['paths']['dev_filename_extension'],
