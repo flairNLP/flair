@@ -42,7 +42,13 @@ def run_standard_baseline(seed, corpus_name, config, max_epochs):
     metrics_mode = config["parameters"]["metrics_mode"]
     data_path = config["paths"]["data_path"]
 
-    baseline_path = f"{config['paths']['resources_path']}baseline/standard"
+    if 'baseline_paths' in config['paths']:
+        # this is if the function is called from run.py
+        baseline_path = config['paths']['baseline_paths']['standard']
+    else:
+        # this is if the function is called from main()
+        baseline_path = f"{config['paths']['resources_path']}baseline/standard"
+
     output_path_training = f"{baseline_path}/{corpus_name}/{str(seed)}"
 
     train_extension = config["paths"]["train_filename_extension"]
@@ -128,7 +134,13 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
     metrics_mode = config["parameters"]["metrics_mode"]
     data_path = config["paths"]["data_path"]
 
-    baseline_path = f"{config['paths']['resources_path']}baseline/EE"
+    if 'baseline_paths' in config['paths']:
+        # this is if the function is called from run.py
+        baseline_path = config['paths']['baseline_paths']['EE']
+    else:
+        # this is if the function is called from main()
+        baseline_path = f"{config['paths']['resources_path']}baseline/EE"
+
     output_path_training = f"{baseline_path}/{corpus_name}/{str(seed)}_with_init-{initialize_decoders_lr}"
 
     train_extension = config["paths"]["train_filename_extension"]
