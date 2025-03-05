@@ -24,7 +24,8 @@
         "scheduler": "Default",
         "model_reinit": true,
         "metrics_mode": "epoch_end",
-        "modes": ["EE", "standard"]
+        "modes": ["EE", "standard"],
+        "decoder_init":{"lr":0.3, "num_epochs":10}
     },
     "corpora": [
         "noise_crowd"

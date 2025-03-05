@@ -118,7 +118,10 @@ def run_standard_baseline(seed, corpus_name, config, max_epochs):
     out = trainer.fine_tune(**fine_tuning_args)
     return baseline_path, out["test_score"]
 
-def run_EE_baseline(seed, corpus_name, config, max_epochs, initialize_decoders_lr, num_epochs_decoder_init):
+def run_EE_baseline(seed, corpus_name, config, max_epochs):
+    initialize_decoders_lr = float(config["parameters"]["decoder_init"]["lr"])
+    num_epochs_decoder_init = int(config["parameters"]["decoder_init"]["num_epochs"])
+
     learning_rate = float(config["parameters"]["learning_rate"])
     batch_size = int(config["parameters"]["batch_size"])
     num_epochs = max_epochs
@@ -259,11 +262,8 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs, initialize_decoders_l
 
 def run_baseline(mode, seed,  corpus_name, config, max_epochs):
     if mode == 'EE':
-        # decoder init parameters are predefined for now.   
-        initialize_decoders_lr = 0.3
-        num_epochs_decoder_init = 10
-        return run_EE_baseline(seed, corpus_name,config, max_epochs, initialize_decoders_lr=initialize_decoders_lr, num_epochs_decoder_init=num_epochs_decoder_init) 
-    else:
+        return run_EE_baseline(seed, corpus_name, config, max_epochs) 
+    else: 
         return run_standard_baseline(seed, corpus_name, config, max_epochs)
 
 
@@ -614,9 +614,11 @@ def run_experiment(seed, config, category_configs, output_path, corpus_name, tra
             current_id = category_config["id"]
 
             # gradually change the labels of 'new_ner' column
+            if config['parameters']['seq_tagger_mode'] == 'standard':
+                epoch_file = f"{paths_to_baselines[config['parameters']['seq_tagger_mode']]}{corpus_name}/{seed}/epoch_log_{current_epoch}.log"
+            else:
+                epoch_file = f"{paths_to_baselines[config['parameters']['seq_tagger_mode']]}{corpus_name}/{seed}_with_init-{config['parameters']['decoder_init']['lr']}/epoch_log_{current_epoch}.log"
 
-            epoch_file = f"{paths_to_baselines[config['parameters']['seq_tagger_mode']]}{corpus_name}/{seed}/epoch_log_{current_epoch}.log"
-            
             if not os.path.exists(epoch_file):
                 raise Exception(f"File {epoch_file} does not exist. Please provide a valida baseline path.")
         

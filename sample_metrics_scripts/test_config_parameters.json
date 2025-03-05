@@ -24,7 +24,8 @@
         "monitor_test": false,
         "scheduler": "Default",
         "model_reinit": true,
-        "modes": ["standard"]
+        "modes": ["EE", "standard"],
+        "decoder_init":{"lr":"0.3", "num_epochs":"10"}
     },
     "corpora": [
         "noise_crowd"
