@@ -699,8 +699,6 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
         "monitor_train_sample": 1.0,
     }
 
-    tagger.calculate_sample_metrics = False
-
     out = trainer.fine_tune(**fine_tuning_args) # out: after phase 3
 
     return out["test_score"]
@@ -785,7 +783,7 @@ def main(config, gpu=0):
                 paths_to_baselines_seed = {k: f'{paths_to_baselines[k]}' for k in baseline_modes}
 
             if category_id != '0':
-                score = run_experiment(seed, config, category_configs, corpus_name, tag_type, category_id, paths_to_baselines, experiment_path)
+                score = run_experiment(seed, config, category_configs, corpus_name, tag_type, category_id, paths_to_baselines, output_path)
             elif flag_run_baseline:
                 score = baseline_score
             else:

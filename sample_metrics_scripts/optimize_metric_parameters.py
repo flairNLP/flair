@@ -185,7 +185,7 @@ def output_config(category, metric, f_type, score, epoch, threshold, direction, 
     
     "paths": {
         "resources_path": f"{config['paths']['resources_path']}/relabel_cat{category['id']}/",
-        "data_path":"../../NoiseBench/data/noisebench/.nessieformat/",
+        "data_path":config['paths']['data_path'],
         "train_filename_extension" :config['paths']['train_filename_extension'],
         "dev_filename_extension" :config['paths']['dev_filename_extension'],
         "test_filename_extension" :config['paths']['test_filename_extension'],
@@ -254,7 +254,6 @@ def optimize_F1s(config, corpus_name):
     '''
 
     seq_tagger_modes = config['parameters']['modes']
-    metrics_mode = config['parameters']['metrics_mode']
     max_epochs = int(config['parameters']['num_epochs'])
 
     sample_metrics = config['sample_metrics']
