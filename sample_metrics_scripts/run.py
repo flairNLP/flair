@@ -41,9 +41,10 @@ def run(config, gpu=0):
                     config_filepath = os.path.abspath(os.path.join(dirpath, f))
 
                     with open(config_filepath) as json_file:
-                        config = json.load(json_file)
+                        experiment_config = json.load(json_file)
 
-                    main(config)
+                    main(experiment_config)
+
         # 4. Summarize the test scores from 3. 
         summarize_test_scores(config['paths']['results_tables_path'], corpus_name)
 
