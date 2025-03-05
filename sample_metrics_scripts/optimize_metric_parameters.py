@@ -243,6 +243,12 @@ def output_config(category, metric, f_type, score, epoch, threshold, direction, 
     with open(config_path + os.sep + 'mask.config', 'w') as fp:
         json.dump(base_config, fp, indent=4)
 
+def write_output(file, metric, f_types, score, epoch, threshold, direction, category, mode, config):
+    f_type_str = '_'.join(f_types) if isinstance(f_types, list) else f_types
+    file.write(f"{metric}, {f_type_str}, {score}, {epoch}, {threshold}, {direction}\n")
+    output_config(category, metric, f_type_str, score, epoch, threshold, direction, mode, config)
+
+
 def optimize_F1s(config, corpus_name):
     '''
     Categories:
@@ -403,9 +409,9 @@ def optimize_F1s(config, corpus_name):
             if not os.path.exists(filepath):
                 os.makedirs(filepath)
 
-            optimize_F1s_output = open(filepath + os.sep+'optimal_F1s_category'+category['id']+'.csv','w')
+            optimize_F1s_output_file = open(filepath + os.sep+'optimal_F1s_category'+category['id']+'.csv','w')
             
-            optimize_F1s_output.write('metric, f_score, score, epoch, threshold, direction\n')
+            optimize_F1s_output_file.write('metric, f_score, score, epoch, threshold, direction\n')
 
             for metric in sample_metrics[mode]:
                 epochs = []
@@ -426,44 +432,32 @@ def optimize_F1s(config, corpus_name):
                     directions.append(direction)
                     scores.append(score)
                     # uncomment to get full table with actual f score values
-                    # optimize_F1s_output.write(f'{metric}, {f_type}, {score}, {epoch}, {threshold}, {direction}\n')
+                    # optimize_F1s_output_file.write(f'{metric}, {f_type}, {score}, {epoch}, {threshold}, {direction}\n')
                     # output_config(category, metric,  f_type, score, epoch, threshold, direction, mode)
 
                 # uncomment to get reduced table with merged duplicate parameter sets
-                # todo: fix
-                if epochs[0] == epochs[1] and thresholds[0] == thresholds[1] and directions[0] == directions[1]:
-                    if epochs[2] == epochs[1] and thresholds[2] == thresholds[1] and directions[2] == directions[1]: #123
-                        optimize_F1s_output.write(f"{metric}, {'_'.join([f_type for f_type in f_scores])}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
-                        output_config(category, metric,  '_'.join([f_type for f_type in f_scores]), scores[0], epochs[0], thresholds[0], directions[0], mode, config)
-                    else: #12, 3
-                        optimize_F1s_output.write(f"{metric}, {'_'.join([f_type for f_type in f_scores[0:2]])}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
-                        output_config(category, metric,  '_'.join([f_type for f_type in f_scores[0:2]]), scores[0], epochs[0], thresholds[0], directions[0], mode, config)
+                # 0 - f05
+                # 1 - f1
+                # 2 - f2                
+                indices = {0,1,2}
+                pairs = [(0, 1), (1, 2), (0, 2)]
+                for i, j in pairs:
+                    if epochs[i] == epochs[j] and thresholds[i] == thresholds[j] and directions[i] == directions[j]:
 
-                        optimize_F1s_output.write(f"{metric}, {f_scores[2]}, {scores[2]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
-                        output_config(category, metric,  f_scores[2], scores[2], epochs[2], thresholds[2], directions[2], mode, config)
-
-                elif epochs[2] == epochs[1] and thresholds[2] == thresholds[1] and directions[2] == directions[1]: #1, 23
-                    optimize_F1s_output.write(f"{metric}, {'_'.join([f_type for f_type in f_scores[1:3]])},  {scores[1]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
-                    output_config(category, metric,  '_'.join([f_type for f_type in f_scores[1:3]]), score, epoch, threshold, direction, mode, config)
-
-                    optimize_F1s_output.write(f"{metric}, {f_scores[0]}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
-                    output_config(category, metric,  f_scores[0], scores[0], epochs[0], thresholds[0], directions[0], mode, config)
-
-                elif epochs[2] == epochs[0] and thresholds[2] == thresholds[0] and directions[2] == directions[0]: #2, 13
-                    optimize_F1s_output.write(f"{metric}, {f_scores[0]+'_'+f_scores[2]},  {scores[0]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
-                    output_config(category, metric,  f_scores[0]+'_'+f_scores[2], score, epoch, threshold, direction, mode, config)
-
-                    optimize_F1s_output.write(f'{metric}, {f_scores[1]}, {scores[1]}, {epochs[1]}, {thresholds[1]}, {directions[1]}\n')
-                    output_config(category, metric,  f_scores[1], scores[1], epochs[1], thresholds[1], directions[1], mode, config)   
+                        remaining = indices - {i, j}
+                        k = remaining.pop()
+                        
+                        if epochs[i] == epochs[k] and thresholds[i] == thresholds[k] and directions[i] == directions[k]:
+                            # all three are the same
+                            write_output(optimize_F1s_output_file, metric, f_scores, scores[0], epochs[0], thresholds[0], directions[0], category, mode, config)
+                        else:
+                            # two are the same, one is different
+                            write_output(optimize_F1s_output_file, metric, [f_scores[i], f_scores[j]], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config)
+                            write_output(optimize_F1s_output_file, metric, f_scores[k], scores[k], epochs[k], thresholds[k], directions[k], category, mode, config)
+                        break
                 else:
-                    optimize_F1s_output.write(f"{metric}, {f_scores[0]}, {scores[0]}, {epochs[0]}, {thresholds[0]}, {directions[0]}\n")
-                    output_config(category, metric,  f_scores[0], scores[0], epochs[0], thresholds[0], directions[0], mode, config)
-
-                    optimize_F1s_output.write(f"{metric}, {f_scores[1]}, {scores[1]}, {epochs[1]}, {thresholds[1]}, {directions[1]}\n")
-                    output_config(category, metric,  f_scores[1], scores[1], epochs[1], thresholds[1], directions[1], mode, config)
-
-                    optimize_F1s_output.write(f"{metric}, {f_scores[2]}, {scores[2]}, {epochs[2]}, {thresholds[2]}, {directions[2]}\n")
-                    output_config(category, metric,  f_scores[2], scores[2], epochs[2], thresholds[2], directions[2], mode, config)
-                #input()
+                    # all three are different
+                    for i in list(indices):
+                        write_output(optimize_F1s_output_file, metric, f_scores[i], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config)
 
 #optimize_F1s()
