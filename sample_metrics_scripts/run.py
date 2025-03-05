@@ -4,7 +4,6 @@ import json
 from pipeline_sample_metrics_token_categories import *
 from optimize_metric_parameters import *
 from summarize_scores_sample_metrics import *
-from merge_optimal_F_score_tables import *
 import os
 
 def run(config, gpu=0):
