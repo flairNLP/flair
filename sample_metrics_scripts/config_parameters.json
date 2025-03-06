@@ -1,4 +1,5 @@
 {
+    "plot_histograms": true,
     "paths": {
         "resources_path": "sample_metrics_experiments/resources/noisebench/",
         "data_path": "../../NoiseBench/data/noisebench/.nessieformat/",

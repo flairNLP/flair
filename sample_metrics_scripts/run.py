@@ -19,6 +19,7 @@ def run(config, gpu=0):
         for mode in config['parameters']['modes']:
             temp_f1_scores = []
             for seed in seeds:
+                # baseline paths don't have to be set beforehand
                 baseline_path, score = run_baseline(mode, seed,  corpus_name, config, int(config['parameters']['num_epochs']))
 
                 temp_f1_scores.append(score)
@@ -28,7 +29,15 @@ def run(config, gpu=0):
                 label = "f1"
                 f.write(f"{label} \t{np.mean(temp_f1_scores)!s} \t {np.std(temp_f1_scores)!s} \n")
 
+        # Optional: plot histograms of metrics for baseline runs, for each seed
+        
+        if config['plot_histograms']:
+            for mode in config['parameters']['modes']:
+                plot_metric_distributions(base_path = f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/", mode=mode, seeds = seeds, sample_metrics=config['sample_metrics'][mode], dset='train',max_epochs=int(config['parameters']['num_epochs']) + 1)
+
+
         # 2. Find optimal parameter sets for each sample metric, mode and category
+
         optimize_F1s(config, corpus_name=corpus_name)
 
         # 3. Run experiment (relabel or mask each category) based on the optimal parameter sets from 2. 
