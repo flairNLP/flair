@@ -1,43 +1,66 @@
 {
-    "plot_histograms": true,
-    "paths": {
-        "resources_path": "sample_metrics_experiments/resources/noisebench/",
-        "data_path": "../../NoiseBench/data/noisebench/.nessieformat/",
-        "train_filename_extension": ".train",
-        "dev_filename_extension": ".dev",
-        "test_filename_extension": "clean.test",
-        "baseline_paths":{
-            "EE":"sample_metrics_experiments/resources/noisebench/baseline/EE",
-            "standard":"sample_metrics_experiments/resources/noisebench/baseline/standard"
-        },
-        "configs_path":{
-            "EE":"sample_metrics_experiments/configs_EE",
-            "standard":"sample_metrics_experiments/configs"
-        },
-        "results_tables_path":"sample_metrics_experiments/sample_metrics_results"
+  "plot_histograms": true,
+  "paths": {
+    "resources_path": "sample_metrics_experiments/resources/noisebench/",
+    "data_path": "sample_metrics_scripts/data/",
+    "train_filename_extension": ".train",
+    "dev_filename_extension": ".dev",
+    "test_filename_extension": "clean.test",
+    "baseline_paths": {
+      "EE": "sample_metrics_experiments/resources/noisebench/baseline/EE",
+      "standard": "sample_metrics_experiments/resources/noisebench/baseline/standard"
     },
-    "parameters": {
-        "batch_size": "8",
-        "learning_rate": "5.0e-6",
-        "num_epochs": "10",
-        "model": "xlm-roberta-large",
-        "monitor_test": false,
-        "scheduler": "Default",
-        "model_reinit": true,
-        "metrics_mode": "epoch_end",
-        "modes": ["EE", "standard"],
-        "decoder_init":{"lr":0.3, "num_epochs":10}
+    "configs_path": {
+      "EE": "sample_metrics_experiments/configs_EE",
+      "standard": "sample_metrics_experiments/configs"
     },
-    "corpora": [
-        "noise_crowd"
+    "results_tables_path": "sample_metrics_experiments/sample_metrics_results"
+  },
+  "parameters": {
+    "batch_size": "8",
+    "learning_rate": "5.0e-6",
+    "num_epochs": "10",
+    "model": "xlm-roberta-large",
+    "monitor_test": false,
+    "scheduler": "Default",
+    "model_reinit": true,
+    "metrics_mode": "epoch_end",
+    "modes": [
+      "EE",
+      "standard"
     ],
-    "seeds": [
-        "100",
-        "13",
-        "500"
-    ],
-    "sample_metrics": {
-        "standard":["cross_entropy","msp", "confidence","BvSB","entropy", "correctness", "variability","iter_norm", "pehist", "mild"],
-        "EE":["tac","tal","le","pd","fl"]
+    "decoder_init": {
+      "lr": 0.3,
+      "num_epochs": 10
     }
+  },
+  "corpora": [
+    "noise_crowd"
+  ],
+  "seeds": [
+    "100",
+    "13",
+    "500"
+  ],
+  "sample_metrics": {
+    "standard": [
+      "cross_entropy",
+      "msp",
+      "confidence",
+      "BvSB",
+      "entropy",
+      "correctness",
+      "variability",
+      "iter_norm",
+      "pehist",
+      "mild"
+    ],
+    "EE": [
+      "tac",
+      "tal",
+      "le",
+      "pd",
+      "fl"
+    ]
+  }
 }

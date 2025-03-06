@@ -1,4 +1,3 @@
-
 import argparse
 import json
 from pipeline_sample_metrics_token_categories import *
@@ -6,8 +5,8 @@ from optimize_metric_parameters import *
 from summarize_scores_sample_metrics import *
 import os
 
-def run(config, gpu=0):
 
+def run(config, gpu=0):
     flair.device = torch.device("cuda:" + str(gpu))
 
     seeds = [int(seed) for seed in config['seeds']]
@@ -20,7 +19,8 @@ def run(config, gpu=0):
             temp_f1_scores = []
             for seed in seeds:
                 # baseline paths don't have to be set beforehand
-                baseline_path, score = run_baseline(mode, seed,  corpus_name, config, int(config['parameters']['num_epochs']))
+                baseline_path, score = run_baseline(mode, seed, corpus_name, config,
+                                                    int(config['parameters']['num_epochs']))
 
                 temp_f1_scores.append(score)
 
@@ -30,11 +30,12 @@ def run(config, gpu=0):
                 f.write(f"{label} \t{np.mean(temp_f1_scores)!s} \t {np.std(temp_f1_scores)!s} \n")
 
         # Optional: plot histograms of metrics for baseline runs, for each seed
-        
+
         if config['plot_histograms']:
             for mode in config['parameters']['modes']:
-                plot_metric_distributions(base_path = f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/", mode=mode, seeds = seeds, sample_metrics=config['sample_metrics'][mode], dset='train',max_epochs=int(config['parameters']['num_epochs']) + 1)
-
+                plot_metric_distributions(base_path=f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/",
+                                          mode=mode, seeds=seeds, sample_metrics=config['sample_metrics'][mode],
+                                          dset='train', max_epochs=int(config['parameters']['num_epochs']) + 1)
 
         # 2. Find optimal parameter sets for each sample metric, mode and category
 
@@ -44,7 +45,7 @@ def run(config, gpu=0):
         for mode in config['parameters']['modes']:
             config_path = config['paths']['configs_path'][mode]
 
-            for dirpath,_,filenames in os.walk(config_path):
+            for dirpath, _, filenames in os.walk(config_path):
                 for f in filenames:
                     config_filepath = os.path.abspath(os.path.join(dirpath, f))
 
@@ -57,7 +58,7 @@ def run(config, gpu=0):
         summarize_test_scores(config['paths']['results_tables_path'], corpus_name)
 
         # 5. Merge the optimal parameter sets from 2. and the summarized test scores from 4.
-        merge_tables(f"{config['paths']['results_tables_path']}/{corpus_name}", config['parameters']['modes']) 
+        merge_tables(f"{config['paths']['results_tables_path']}/{corpus_name}", config['parameters']['modes'])
 
 
 if __name__ == "__main__":
@@ -72,4 +73,3 @@ if __name__ == "__main__":
         config = json.load(json_file)
 
     run(config, args.gpu)
-

@@ -27,45 +27,50 @@ from flair.training_utils import store_embeddings, Result
 
 log = logging.getLogger("flair")
 
+
 def calculate_mild_f(seq):
-    #seq = [0 if x == False else 1 for x in n.values ]
+    # seq = [0 if x == False else 1 for x in n.values ]
     tmp = ''.join([str(int(item)) for item in seq])
     tmp1 = [item for item in tmp.split('0') if item]
     p1 = len(''.join(tmp1)) if len(tmp1) != 0 else 0
     return p1
 
+
 def calculate_mild_m(seq):
-    #seq = [0 if x == False else 1 for x in n.values ]
+    # seq = [0 if x == False else 1 for x in n.values ]
     tmp = ''.join([str(int(item)) for item in seq])
     tmp2 = [item for item in tmp.split('1') if item]
     p2 = len(''.join(tmp2)) if len(tmp2) != 0 else 0
     return p2
 
+
 class SequenceTagger(flair.nn.Classifier[Sentence]):
     def __init__(
-        self,
-        embeddings: TokenEmbeddings,
-        tag_dictionary: Dictionary,
-        tag_type: str,
-        use_rnn: bool = True,
-        rnn: Optional[torch.nn.RNN] = None,
-        rnn_type: str = "LSTM",
-        tag_format: str = "BIOES",
-        hidden_size: int = 256,
-        rnn_layers: int = 1,
-        bidirectional: bool = True,
-        use_crf: bool = True,
-        reproject_embeddings: bool = True,
-        dropout: float = 0.0,
-        word_dropout: float = 0.05,
-        locked_dropout: float = 0.5,
-        train_initial_hidden_state: bool = False,
-        loss_weights: Optional[Dict[str, float]] = None,
-        init_from_state_dict: bool = False,
-        allow_unk_predictions: bool = False,
-        calculate_sample_metrics: bool = False,
-        metrics_mode: str = "epoch_end",
-        metrics_save_list: List[str] = []
+            self,
+            embeddings: TokenEmbeddings,
+            tag_dictionary: Dictionary,
+            tag_type: str,
+            use_rnn: bool = True,
+            rnn: Optional[torch.nn.RNN] = None,
+            rnn_type: str = "LSTM",
+            tag_format: str = "BIOES",
+            hidden_size: int = 256,
+            rnn_layers: int = 1,
+            bidirectional: bool = True,
+            use_crf: bool = True,
+            reproject_embeddings: bool = True,
+            dropout: float = 0.0,
+            word_dropout: float = 0.05,
+            locked_dropout: float = 0.5,
+            train_initial_hidden_state: bool = False,
+            loss_weights: Optional[Dict[str, float]] = None,
+            init_from_state_dict: bool = False,
+            allow_unk_predictions: bool = False,
+            calculate_sample_metrics: bool = False,
+            metrics_mode: str = "epoch_end",
+            # "epoch_end" means all metrics are computed at the end of an epoch,
+            # "batch_forward" means metrics are computed during forward pass
+            metrics_save_list: List[str] = []
     ) -> None:
         """Sequence Tagger class for predicting labels for single tokens. Can be parameterized by several attributes.
 
@@ -220,13 +225,33 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         if use_crf:
             self.crf = CRF(self.label_dictionary, self.tagset_size, init_from_state_dict)
             self.viterbi_decoder = ViterbiDecoder(self.label_dictionary)
-        
+
         self.calculate_sample_metrics = calculate_sample_metrics
 
         # as a next step, this could be extended to all classifiers and implemented in DefaultClassifier too.
         if self.calculate_sample_metrics:
-            self.metrics_list = ['confidence','variability','correctness','msp','BvSB','cross_entropy','entropy','iter_norm','pehist','mild_m','mild_f','mild']
-            self.metrics_history_variables_list = ['last_prediction','last_confidence_sum','last_sq_difference_sum','last_correctness_sum','last_iteration','hist_prediction', 'hist_MILD','total_epochs']
+            self.metrics_list = ['confidence',
+                                 'variability',
+                                 'correctness',
+                                 'msp',
+                                 'BvSB',
+                                 'cross_entropy',
+                                 'entropy',
+                                 'iter_norm',
+                                 'pehist',
+                                 'mild_m',
+                                 'mild_f',
+                                 'mild']
+            self.metrics_history_variables_list = ['last_prediction',
+                                                   'last_confidence_sum',
+                                                   'last_sq_difference_sum',
+                                                   'last_correctness_sum',
+                                                   'last_iteration',
+                                                   'hist_prediction',
+                                                   'hist_MILD',
+                                                   'total_epochs']
+
+            # maximum value required for pehist TODO: check
             self.max_certainty = -np.log(1.0 / float(self.tagset_size))
             self.mode = metrics_mode
             self.metrics_save_list = metrics_save_list
@@ -273,11 +298,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     @staticmethod
     def RNN(
-        rnn_type: str,
-        rnn_layers: int,
-        hidden_size: int,
-        bidirectional: bool,
-        rnn_input_dim: int,
+            rnn_type: str,
+            rnn_layers: int,
+            hidden_size: int,
+            bidirectional: bool,
+            rnn_input_dim: int,
     ) -> torch.nn.RNN:
         """Static wrapper function returning an RNN instance from PyTorch.
 
@@ -304,7 +329,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     # start of sample metrics functions
     def _get_history_metrics_for_batch(self, sentences):
-        #get metrics for each token in the batch from the previous epoch
+        # get metrics for each token in the batch from the previous epoch
 
         history_metrics_dict = {}
 
@@ -328,13 +353,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
     def _init_metrics_logging(self, epoch_log_path, sentences):
         if not os.path.isfile(self.print_out_path / epoch_log_path):
             with open(self.print_out_path / epoch_log_path, "w") as outfile:
-                outfile.write("Text\t" + 
-                            "sent_index\t" +
-                            "token_index\t" +
-                            "predicted\t" + 
-                            "noisy\t" + 
-                            "clean\t" + 
-                            "noisy_flag\t")
+                outfile.write("Text\t" +
+                              "sent_index\t" +
+                              "token_index\t" +
+                              "predicted\t" +
+                              "noisy\t" +
+                              "clean\t" +
+                              "noisy_flag\t")
                 for metric in self.metrics_history_variables_list:
                     if metric == "hist_prediction" or metric == "hist_MILD":
                         continue
@@ -351,20 +376,20 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 for dp in sent.tokens:
                     # enable choice of metrics to store?
                     dp.set_metric('last_prediction', -1)
-                    dp.set_metric('last_confidence_sum', 0 )
-                    dp.set_metric('last_sq_difference_sum', 0 )
-                    dp.set_metric('last_correctness_sum', 0 )
-                    dp.set_metric('last_iteration', 0 )
-                    dp.set_metric('total_epochs', 0 )
+                    dp.set_metric('last_confidence_sum', 0)
+                    dp.set_metric('last_sq_difference_sum', 0)
+                    dp.set_metric('last_correctness_sum', 0)
+                    dp.set_metric('last_iteration', 0)
+                    dp.set_metric('total_epochs', 0)
                     dp.set_metric("hist_prediction", torch.zeros(17, device=flair.device))
                     dp.set_metric("hist_MILD", torch.zeros(1, device=flair.device))
 
-    
-    def _log_metrics(self, epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, gold_labels, clean_labels):
-        
-        i=0
-        
-        #BIO
+    def _log_metrics(self, epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict,
+                     pred, gold_labels, clean_labels):
+
+        i = 0
+
+        # BIO
         history_predicted = self._convert_bioes_to_bio(history_metrics_dict['last_prediction'])
         with open(self.print_out_path / epoch_log_path, "a") as outfile:
             for sent_ind, sent in enumerate(sentences):
@@ -377,24 +402,28 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                         + f"{str(self.label_dictionary.get_item_for_index(gold_labels[i].item()))}\t"
                         + f"{str(self.label_dictionary.get_item_for_index(clean_labels[i].item()))}\t"
                         + f"{str(self.label_dictionary.get_item_for_index(gold_labels[i].item()) != self.label_dictionary.get_item_for_index(clean_labels[i].item()))}\t")
-                    
+
                     for metric in self.metrics_history_variables_list:
                         if metric == 'last_prediction':
-                            outfile.write(f"{str(self.label_dictionary.get_item_for_index(history_predicted[i].item()))}\t")
+                            outfile.write(
+                                f"{str(self.label_dictionary.get_item_for_index(history_predicted[i].item()))}\t")
                         elif metric == "hist_prediction" or metric == "hist_MILD":
                             continue
                         else:
-                            outfile.write(f"{str(round(history_metrics_dict[metric][i].item(),4))}\t")
+                            outfile.write(f"{str(round(history_metrics_dict[metric][i].item(), 4))}\t")
                     for metric in self.metrics_list:
-                        outfile.write(f"{str(round(metrics_dict[metric][i].item(),4))}\t")
-                    outfile.write("\n")            
-                                
-                    #set updated history metrics
-                    token.set_metric('last_prediction',updated_history_metrics_dict['last_prediction'][i].item() )
-                    token.set_metric('last_confidence_sum', updated_history_metrics_dict['last_confidence_sum'][i].item() )
-                    token.set_metric('last_sq_difference_sum', updated_history_metrics_dict['last_sq_difference_sum'][i].item() )
-                    token.set_metric('last_correctness_sum', updated_history_metrics_dict['last_correctness_sum'][i].item() )
-                    token.set_metric('last_iteration',updated_history_metrics_dict['last_iteration'][i].item() )
+                        outfile.write(f"{str(round(metrics_dict[metric][i].item(), 4))}\t")
+                    outfile.write("\n")
+
+                    # set updated history metrics
+                    token.set_metric('last_prediction', updated_history_metrics_dict['last_prediction'][i].item())
+                    token.set_metric('last_confidence_sum',
+                                     updated_history_metrics_dict['last_confidence_sum'][i].item())
+                    token.set_metric('last_sq_difference_sum',
+                                     updated_history_metrics_dict['last_sq_difference_sum'][i].item())
+                    token.set_metric('last_correctness_sum',
+                                     updated_history_metrics_dict['last_correctness_sum'][i].item())
+                    token.set_metric('last_iteration', updated_history_metrics_dict['last_iteration'][i].item())
                     token.set_metric("total_epochs", updated_history_metrics_dict["total_epochs"][i].item())
                     token.set_metric("hist_prediction", updated_history_metrics_dict["hist_prediction"][i])
                     token.set_metric("hist_MILD", updated_history_metrics_dict["hist_MILD"][i])
@@ -403,33 +432,39 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     for metric in self.metrics_save_list:
                         if metric != '':
                             token.set_metric(metric, metrics_dict[metric][i].item())
-                    i+=1 
+                    i += 1
                 outfile.write('\n')
 
-    def _calculate_metrics(self, history_metrics_dict, softmax, gold_labels):
+    def _calculate_metrics(self, history_metrics_dict, scores, gold_labels):
 
+        softmax = torch.nn.functional.softmax(scores, dim=-1)
         pred = torch.argmax(softmax, dim=1)
 
         values, indices = softmax.topk(2)
 
-        # Metric: Max softmax prob (calculate_loss)
-        msp = values[:,0]
-        assert msp.cpu().detach().all()
-        # Best vs second best (calculate_loss)
-        BvSB = msp - values[:,1]
+        # TODO: all globally needed variables computed first
         total_epochs = history_metrics_dict["total_epochs"]
         total_epochs = torch.add(total_epochs, 1)
 
-        batch_label_indexer = gold_labels.reshape(gold_labels.size(dim=0),1)
-        current_prob_true_labl = softmax.gather(index=batch_label_indexer, dim=1)[:,0]
+        # Metric: Max softmax prob (calculate_loss)
+        probability_of_predicted_label = values[:, 0]
+        probability_of_second_ranked_prediction = values[:, 1]
+        probability_of_true_label = softmax.gather(index=gold_labels.reshape(gold_labels.size(dim=0), 1), dim=1)[:, 0]
 
-        confidence_sum = torch.add(history_metrics_dict['last_confidence_sum'], current_prob_true_labl)
+        assert probability_of_predicted_label.cpu().detach().all()
+
+        # Best vs second best
+        BvSB = probability_of_predicted_label - probability_of_second_ranked_prediction
+
+        # Confidence TODO: include separating comments for each measure
+        confidence_sum = torch.add(history_metrics_dict['last_confidence_sum'], probability_of_true_label)
         confidence = torch.div(confidence_sum, total_epochs)
 
-        sq_difference_sum = torch.add(history_metrics_dict['last_sq_difference_sum'], torch.square(torch.sub(current_prob_true_labl,confidence)))
+        sq_difference_sum = torch.add(history_metrics_dict['last_sq_difference_sum'],
+                                      torch.square(torch.sub(probability_of_true_label, confidence)))
         variability = torch.sqrt(torch.div(sq_difference_sum, total_epochs))
 
-        correctness_sum = torch.add(history_metrics_dict['last_correctness_sum'],(gold_labels == pred).bool())
+        correctness_sum = torch.add(history_metrics_dict['last_correctness_sum'], (gold_labels == pred).bool())
         correctness = torch.div(correctness_sum, total_epochs)
 
         iteration = history_metrics_dict["last_iteration"].clone()
@@ -442,7 +477,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         batch_label_indexer_pred = pred.reshape(pred.size(dim=0), 1)
         update_tensor = torch.zeros_like(pehist)
         update_tensor = update_tensor.scatter_(1, batch_label_indexer_pred, 1)
-        pehist = torch.add(pehist, update_tensor) # update pehist
+        pehist = torch.add(pehist, update_tensor)  # update pehist
         total_epochs_extended = total_epochs.unsqueeze(1)
         total_epochs_extended = total_epochs_extended.expand(total_epochs_extended.size()[0], pehist.size()[1])
         pehist = torch.div(pehist, total_epochs_extended)
@@ -477,10 +512,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         entropy = -torch.sum(torch.mul(softmax, torch.nan_to_num(torch.log(softmax))), dim=-1)
 
         # calculate cross entropy for each data point
-        cross_entropy = torch.nn.functional.nll_loss(torch.nan_to_num(torch.log(softmax)), gold_labels, reduction='none')
-        metrics_dict = {'confidence':confidence, 'BvSB':BvSB, 'msp':msp,'correctness':correctness, 'iter_norm':iter_norm, 'entropy':entropy, 'cross_entropy':cross_entropy,'variability':variability,'pehist':pe_hist_entropy,'mild_m':mild_m_tensor,'mild_f':mild_f_tensor,'mild':mild_tensor}
-        
-        #update history metrics
+        cross_entropy = torch.nn.functional.nll_loss(torch.nan_to_num(torch.log(softmax)), gold_labels,
+                                                     reduction='none')
+        metrics_dict = {'confidence': confidence, 'BvSB': BvSB, 'msp': probability_of_predicted_label, 'correctness': correctness,
+                        'iter_norm': iter_norm, 'entropy': entropy, 'cross_entropy': cross_entropy,
+                        'variability': variability, 'pehist': pe_hist_entropy, 'mild_m': mild_m_tensor,
+                        'mild_f': mild_f_tensor, 'mild': mild_tensor}
+
+        # update history metrics
         updated_history_metrics_dict = {}
         updated_history_metrics_dict["last_prediction"] = pred
         updated_history_metrics_dict["last_iteration"] = iteration
@@ -490,7 +529,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         updated_history_metrics_dict["total_epochs"] = total_epochs
         updated_history_metrics_dict["hist_prediction"] = pehist
         updated_history_metrics_dict["hist_MILD"] = mild_history_new
-        
+
         return pred, metrics_dict, updated_history_metrics_dict
 
     def _convert_bioes_to_bio(self, label_indices):
@@ -500,9 +539,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         for ind in label_indices.tolist():
             label = self.label_dictionary.get_item_for_index(ind)
             if label.startswith('S-'):
-                bio_labels_list.append('B-'+label[2:])
+                bio_labels_list.append('B-' + label[2:])
             elif label.startswith('E-'):
-                bio_labels_list.append('I-'+label[2:])
+                bio_labels_list.append('I-' + label[2:])
             else:
                 bio_labels_list.append(label)
 
@@ -520,13 +559,13 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         self._init_metrics_logging(epoch_log_path, sentences)
         history_metrics_dict = self._get_history_metrics_for_batch(sentences)
-        softmax = torch.nn.functional.softmax(scores, dim=-1)
         # softmax: shape = (total_num_tokens, 17) 
 
-        pred, metrics_dict, updated_history_metrics_dict = self._calculate_metrics(history_metrics_dict, softmax, observed_labels)
+        pred, metrics_dict, updated_history_metrics_dict = self._calculate_metrics(history_metrics_dict, scores,
+                                                                                   observed_labels)
 
-        self._log_metrics(epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict, pred, observed_labels, clean_labels)
-
+        self._log_metrics(epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict,
+                          pred, observed_labels, clean_labels)
 
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
         # if there are no sentences, there is no loss
@@ -544,7 +583,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         if self.calculate_sample_metrics and self.mode == 'batch_forward':
             # BIOES
-            clean_labels = self._prepare_label_tensor(sentences, label_type = self.label_type+'_clean')
+            clean_labels = self._prepare_label_tensor(sentences, label_type=self.label_type + '_clean')
 
             self.calculate_and_log_metrics(sentences, scores, gold_labels, clean_labels)
 
@@ -651,8 +690,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return scores
 
-
-    def _get_gold_labels(self, sentences: List[Sentence], label_type = None) -> List[str]:
+    def _get_gold_labels(self, sentences: List[Sentence], label_type=None) -> List[str]:
         # is esentially noisy (observed) label
         """Extracts gold labels from each sentence.
 
@@ -690,8 +728,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         return labels
 
-    def _prepare_label_tensor(self, sentences: List[Sentence], label_type = None):
-        gold_labels = self._get_gold_labels(sentences, label_type = label_type)
+    def _prepare_label_tensor(self, sentences: List[Sentence], label_type=None):
+        gold_labels = self._get_gold_labels(sentences, label_type=label_type)
         labels = torch.tensor(
             [self.label_dictionary.get_idx_for_item(label) for label in gold_labels],
             dtype=torch.long,
@@ -699,17 +737,16 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         )
         return labels
 
-
     def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
-        force_token_predictions: bool = False,
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
+            force_token_predictions: bool = False,
     ):
         """Predicts labels for current batch with CRF or Softmax.
 
@@ -801,7 +838,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                         sentence_scores = [label[1] for label in sentence_predictions]
                         predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
                         for predicted_span in predicted_spans:
-                            span: Span = sentence[predicted_span[0][0] : predicted_span[0][-1] + 1]
+                            span: Span = sentence[predicted_span[0][0]: predicted_span[0][-1] + 1]
                             span.add_label(label_name, value=predicted_span[2], score=predicted_span[1])
 
                     # token-labels can be added directly ("O" and legacy "_" predictions are skipped)
@@ -844,8 +881,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     for token, score, prediction in zip(sentence, scores, predictions_for_sentence)
                 ]
             )
-            scores_batch = scores_batch[len(sentence) :]
-            prediction_batch = prediction_batch[len(sentence) :]
+            scores_batch = scores_batch[len(sentence):]
+            prediction_batch = prediction_batch[len(sentence):]
 
         if probabilities_for_all_classes:
             lengths = [len(sentence) for sentence in batch]
@@ -868,7 +905,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         prob_tags_per_sentence = []
         previous = 0
         for length in lengths:
-            prob_tags_per_sentence.append(prob_all_tags[previous : previous + length])
+            prob_tags_per_sentence.append(prob_all_tags[previous: previous + length])
             previous = length
         return prob_tags_per_sentence
 
@@ -1199,11 +1236,11 @@ for entity in sentence.get_spans('ner'):
 ```"""
 
     def push_to_hub(
-        self,
-        repo_id: str,
-        token: Optional[str] = None,
-        private: Optional[bool] = None,
-        commit_message: str = "Add new SequenceTagger model.",
+            self,
+            repo_id: str,
+            token: Optional[str] = None,
+            private: Optional[bool] = None,
+            commit_message: str = "Add new SequenceTagger model.",
     ):
         """Uploads the Sequence Tagger model to a Hugging Face Hub repository.
 
@@ -1310,7 +1347,7 @@ for entity in sentence.get_spans('ner'):
                     lines.append(eval_line)
                 lines.append("\n")
         return lines
-    
+
     @classmethod
     def load(cls, model_path: Union[str, Path, Dict[str, Any]]) -> "SequenceTagger":
         from typing import cast
@@ -1320,22 +1357,22 @@ for entity in sentence.get_spans('ner'):
 
 class EarlyExitSequenceTagger(SequenceTagger):
     def __init__(
-        self,
-        embeddings: TransformerWordEmbeddings, # layer_mean = False, layers = "all"
-        tag_dictionary: Dictionary,
-        tag_type: str,
-        use_rnn = False,
-        use_crf = False, 
-        reproject_embeddings = False,
-        weighted_loss: bool = True,
-        last_layer_only: bool = False,
-        print_all_predictions = True,
-        modified_loss = False,
-        relabel_noisy_hard = False,
-        relabel_noisy_soft = False,
-        relabel_path = '',
-        calculate_sample_metrics = False,
-        **seqtaggerargs
+            self,
+            embeddings: TransformerWordEmbeddings,  # layer_mean = False, layers = "all"
+            tag_dictionary: Dictionary,
+            tag_type: str,
+            use_rnn=False,
+            use_crf=False,
+            reproject_embeddings=False,
+            weighted_loss: bool = True,
+            last_layer_only: bool = False,
+            print_all_predictions=True,
+            modified_loss=False,
+            relabel_noisy_hard=False,
+            relabel_noisy_soft=False,
+            relabel_path='',
+            calculate_sample_metrics=False,
+            **seqtaggerargs
     ):
         """
         Adds Early-Exit functionality to the SequenceTagger
@@ -1346,28 +1383,29 @@ class EarlyExitSequenceTagger(SequenceTagger):
         :param relabel_noisy: allows for PD-based selection of noisy samples and their relabelling (default criterion is PD<2, incorrect prediction)
         """
         super().__init__(
-            embeddings = embeddings,
-            tag_dictionary = tag_dictionary,
-            tag_type = tag_type,
-            use_rnn = use_rnn,
-            use_crf = use_crf, 
-            reproject_embeddings = reproject_embeddings,
+            embeddings=embeddings,
+            tag_dictionary=tag_dictionary,
+            tag_type=tag_type,
+            use_rnn=use_rnn,
+            use_crf=use_crf,
+            reproject_embeddings=reproject_embeddings,
             calculate_sample_metrics=calculate_sample_metrics,
             **seqtaggerargs
         )
-        
+
         if embeddings.layer_mean:
             raise AssertionError("layer_mean must be disabled for the transformer embeddings")
-        self.n_layers = len(embeddings.layer_indexes) # the output of the emb layer before the transformer blocks counts as well
+        self.n_layers = len(
+            embeddings.layer_indexes)  # the output of the emb layer before the transformer blocks counts as well
         self.final_embedding_size = int(embeddings.embedding_length / self.n_layers)
         self.linear = torch.nn.ModuleList(
-            torch.nn.Linear(self.final_embedding_size, len(self.label_dictionary)) 
+            torch.nn.Linear(self.final_embedding_size, len(self.label_dictionary))
             for _ in range(self.n_layers)
-            )
+        )
         self.weighted_loss = weighted_loss
         self.last_layer_only = last_layer_only
         self.print_all_predictions = print_all_predictions
-        self.modified_loss=modified_loss
+        self.modified_loss = modified_loss
         self.relabel_noisy_hard = relabel_noisy_hard
         self.relabel_noisy_soft = relabel_noisy_soft
         self.relabel_path = relabel_path
@@ -1377,8 +1415,8 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 if use_crf
                 else torch.nn.CrossEntropyLoss(weight=self.loss_weights, reduction='none')
             )
-         # if modified loss, then return per-sample losses
-        #TODO: add check for different variants of loss
+        # if modified loss, then return per-sample losses
+        # TODO: add check for different variants of loss
         if self.calculate_sample_metrics:
             self.metrics_list.append('pd')
             self.metrics_list.append('fl')
@@ -1441,16 +1479,16 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         return torch.stack(scores)
 
-
     def hard_relabel(self, sentences):
         to_print = True
         if to_print:
-            epoch_log_path = self.relabel_path +'/relabelled_'+str(self.model_card["training_parameters"]["epoch"])+'.tsv'
+            epoch_log_path = self.relabel_path + '/relabelled_' + str(
+                self.model_card["training_parameters"]["epoch"]) + '.tsv'
             outfile = open(Path(epoch_log_path), "a+", encoding="utf-8")
-        
+
         for sentence in sentences:
-            output=False
-            token_scores = [ 1 for label in sentence.tokens]
+            output = False
+            token_scores = [1 for label in sentence.tokens]
             new_token_bio_labels = []
 
             for token in sentence:
@@ -1467,48 +1505,48 @@ class EarlyExitSequenceTagger(SequenceTagger):
                         if to_print:
                             outfile.write('clean \n')
                             outfile.write('old_sentence \n')
-                            outfile.write(sentence.text+'\n')
-                            outfile.write(str(sentence.get_labels('ner'))+'\n')
+                            outfile.write(sentence.text + '\n')
+                            outfile.write(str(sentence.get_labels('ner')) + '\n')
                             outfile.write('current token\n')
-                            outfile.write(str(token)+'\n')
-                        output=True
+                            outfile.write(str(token) + '\n')
+                        output = True
 
                     elif pred == clean:
                         # this means a noisy sample was relabelled correctly
                         if to_print:
                             outfile.write('noisy \n')
                             outfile.write('old_sentence \n')
-                            outfile.write(sentence.text+'\n')
-                            outfile.write(str(sentence.get_labels('ner'))+'\n')
+                            outfile.write(sentence.text + '\n')
+                            outfile.write(str(sentence.get_labels('ner')) + '\n')
                             outfile.write('current token\n')
-                            outfile.write(str(token)+'\n')
-                        output=True
+                            outfile.write(str(token) + '\n')
+                        output = True
 
                     new_token_bio_labels.append(token.get_label('predicted_bio').value)
-                    token.set_label('gold_bio',token.get_label('predicted_bio').value)
+                    token.set_label('gold_bio', token.get_label('predicted_bio').value)
                 else:
                     new_token_bio_labels.append(token.get_label('gold_bio').value)
 
-            for gold_label in sentence.get_labels('ner'): # ner is hardcoded for now
+            for gold_label in sentence.get_labels('ner'):  # ner is hardcoded for now
                 gold_span: Span = gold_label.data_point
-                gold_span.remove_labels('ner')        
+                gold_span.remove_labels('ner')
 
             updated_spans = get_spans_from_bio(new_token_bio_labels, token_scores)
 
             for updated_span in updated_spans:
-                span: Span = sentence[updated_span[0][0] : updated_span[0][-1] + 1]
-                span.add_label('ner', value=updated_span[2], score=updated_span[1]) # ner is hardcoded for now
-        
+                span: Span = sentence[updated_span[0][0]: updated_span[0][-1] + 1]
+                span.add_label('ner', value=updated_span[2], score=updated_span[1])  # ner is hardcoded for now
+
             if to_print:
                 if output:
                     outfile.write('token labels\n')
                     outfile.write(str(new_token_bio_labels))
                     outfile.write('new_sentence \n')
-                    outfile.write(sentence.text+'\n')
+                    outfile.write(sentence.text + '\n')
                     outfile.write(str(sentence.get_labels('ner')))
                     outfile.write('\n')
                     outfile.write('\n')
-                
+
         if to_print:
             outfile.close()
 
@@ -1521,15 +1559,14 @@ class EarlyExitSequenceTagger(SequenceTagger):
         # calculate and set pd metric here
         pd = []
         fl = []
-        total_last =[]
+        total_last = []
         total_correct = []
         layer_entropy = []
-
 
         for i in range(softmax.size()[1]):
             layer_metrics = self._calculate_layer_metrics(softmax[:, i, :].cpu(), gold_labels[i].item())
             pd.append(layer_metrics['prediction_depth'])
-            fl.append(layer_metrics['first_layer']) # todo: pass pred as an argument, since it's already calculated
+            fl.append(layer_metrics['first_layer'])  # todo: pass pred as an argument, since it's already calculated
             total_last.append(layer_metrics['total_agree_w_last'])
             total_correct.append(layer_metrics['total_agree_w_correct'])
             layer_entropy.append(layer_metrics['layer_entropy'])
@@ -1543,20 +1580,21 @@ class EarlyExitSequenceTagger(SequenceTagger):
         return pred, metrics_dict, updated_history_metrics_dict
 
     def _prepare_soft_label_tensor(self, sentences: List[Sentence]):
-        
+
         to_print = True
 
-        lista = [] 
+        lista = []
         layer_idx = -1
         if to_print:
-            epoch_log_path = self.relabel_path +'/relabelled_'+str(self.model_card["training_parameters"]["epoch"])+'.tsv'
+            epoch_log_path = self.relabel_path + '/relabelled_' + str(
+                self.model_card["training_parameters"]["epoch"]) + '.tsv'
             outfile = open(Path(epoch_log_path), "a+", encoding="utf-8")
         i = 0
 
         for sentence in sentences:
             # set gold token-level
-            output=False
-            token_scores = [ 1 for label in sentence.tokens]
+            output = False
+            token_scores = [1 for label in sentence.tokens]
             new_token_bio_labels = []
             new_token_soft_labels = []
 
@@ -1569,10 +1607,12 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 change = False
 
                 soft_labels = np.zeros(len(self.label_dictionary))
-                soft_labels[self.label_dictionary.get_idx_for_item(gold)] += pd / self.n_layers # high pd - keep gold
-                soft_labels[self.label_dictionary.get_idx_for_item(pred)] += 1 - pd / self.n_layers # low pd - keep pred
+                soft_labels[self.label_dictionary.get_idx_for_item(gold)] += pd / self.n_layers  # high pd - keep gold
+                soft_labels[
+                    self.label_dictionary.get_idx_for_item(pred)] += 1 - pd / self.n_layers  # low pd - keep pred
 
-                if soft_labels[self.label_dictionary.get_idx_for_item(pred)] > soft_labels[self.label_dictionary.get_idx_for_item(gold)]:
+                if soft_labels[self.label_dictionary.get_idx_for_item(pred)] > soft_labels[
+                    self.label_dictionary.get_idx_for_item(gold)]:
                     change = True
 
                 if change:
@@ -1583,56 +1623,55 @@ class EarlyExitSequenceTagger(SequenceTagger):
                         if to_print:
                             outfile.write('clean \n')
                             outfile.write('old_sentence \n')
-                            outfile.write(sentence.text+'\n')
-                            outfile.write(str(sentence.get_labels('ner'))+'\n')
+                            outfile.write(sentence.text + '\n')
+                            outfile.write(str(sentence.get_labels('ner')) + '\n')
                             outfile.write('current token\n')
-                            outfile.write(str(token)+'\n')
-                        output=True
+                            outfile.write(str(token) + '\n')
+                        output = True
                     elif pred == clean:
                         # this means a noisy sample was relabelled correctly
 
                         if to_print:
                             outfile.write('noisy \n')
                             outfile.write('old_sentence \n')
-                            outfile.write(sentence.text+'\n')
-                            outfile.write(str(sentence.get_labels('ner'))+'\n')
+                            outfile.write(sentence.text + '\n')
+                            outfile.write(str(sentence.get_labels('ner')) + '\n')
                             outfile.write('current token\n')
-                            outfile.write(str(token)+'\n')
-                        output=True
+                            outfile.write(str(token) + '\n')
+                        output = True
 
-                    token.set_label('gold_bio',pred)
+                    token.set_label('gold_bio', pred)
                 else:
                     new_token_bio_labels.append(gold)
 
                 lista.append(soft_labels)
                 new_token_soft_labels.append(soft_labels)
-                i+=1
+                i += 1
 
             if output:
                 outfile.write("\n".join([str(x) for x in new_token_soft_labels]))
                 outfile.write("\n")
 
-                
-            for gold_label in sentence.get_labels('ner'): # ner is hardcoded for now
+            for gold_label in sentence.get_labels('ner'):  # ner is hardcoded for now
                 gold_span: Span = gold_label.data_point
-                gold_span.remove_labels('ner')        
+                gold_span.remove_labels('ner')
 
             updated_spans = get_spans_from_bio(new_token_bio_labels, token_scores)
 
             for updated_span in updated_spans:
-                span: Span = sentence[updated_span[0][0] : updated_span[0][-1] + 1]
-                span.add_label('ner', value=updated_span[2], score=updated_span[1]) # ner is hardcoded for now
+                span: Span = sentence[updated_span[0][0]: updated_span[0][-1] + 1]
+                span.add_label('ner', value=updated_span[2], score=updated_span[1])  # ner is hardcoded for now
 
             if to_print:
                 if output:
                     outfile.write('token labels\n')
-                    outfile.write(str(new_token_bio_labels)+'\n')
+                    outfile.write(str(new_token_bio_labels) + '\n')
                     outfile.write('new_sentence \n')
-                    outfile.write(sentence.text+'\n')
+                    outfile.write(sentence.text + '\n')
                     outfile.write(str(sentence.get_labels('ner')))
                     outfile.write('\n')
                     outfile.write('\n')
-        if to_print:    
+        if to_print:
             outfile.close()
 
         # labels = lista
@@ -1644,7 +1683,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
 
-        if self.relabel_noisy_hard :  #and int(self.model_card["training_parameters"]["epoch"])>1
+        if self.relabel_noisy_hard:  # and int(self.model_card["training_parameters"]["epoch"])>1
             self.hard_relabel(sentences)
 
         sentences = sorted(sentences, key=len, reverse=True)
@@ -1654,18 +1693,17 @@ class EarlyExitSequenceTagger(SequenceTagger):
         # forward pass to get scores
         scores = self.forward(sentence_tensor, lengths)
 
-        if self.relabel_noisy_soft:# and int(self.model_card["training_parameters"]["epoch"])>1:
-            gold_labels = self._prepare_soft_label_tensor(sentences)#, scores)
+        if self.relabel_noisy_soft:  # and int(self.model_card["training_parameters"]["epoch"])>1:
+            gold_labels = self._prepare_soft_label_tensor(sentences)  # , scores)
         else:
             gold_labels = self._prepare_label_tensor(sentences)
 
         if self.calculate_sample_metrics and self.mode == "batch_forward":
-            clean_labels = self._prepare_label_tensor(sentences, label_type = self.label_type+'_clean')
-            self.calculate_and_log_metrics(sentences, scores, gold_labels, clean_labels)       
+            clean_labels = self._prepare_label_tensor(sentences, label_type=self.label_type + '_clean')
+            self.calculate_and_log_metrics(sentences, scores, gold_labels, clean_labels)
 
-        # calculate loss given scores and labels
+            # calculate loss given scores and labels
         return self._calculate_loss(scores, gold_labels)
-
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.LongTensor) -> Tuple[torch.Tensor, int]:
 
@@ -1674,62 +1712,65 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         if self.last_layer_only:
             loss = self.loss_function(scores[-1], labels)
-        elif self.modified_loss: 
+        elif self.modified_loss:
             if self.weighted_loss:
-                
+
                 layer_weights = torch.arange(self.n_layers, device=flair.device)
                 layer_weighted_loss = 0
                 for i in range(self.n_layers):
                     layer_loss = self.loss_function(scores[i], labels)
                     layer_weighted_loss += layer_weights[i] * layer_loss
-                loss = layer_weighted_loss / sum(layer_weights) #per-sample layer-weighted average loss
-            else: 
-                loss = 0
-                for i in range(1, self.n_layers):
-                    loss += self.loss_function(scores[i], labels)
-                loss = loss / (self.n_layers - 1) #per-sample layer average loss
-            
-            softmax_batch = F.softmax(scores, dim=2).detach()
-            
-            last_layer_prediction = torch.argmax(softmax_batch[-1,:,:], dim=-1)
-
-            max_pd_tensor  = torch.full(loss.size(), self.n_layers, device=flair.device, requires_grad=False)
-
-            pds = []
-            for i in range(softmax_batch.size()[1]):
-                pd = self._calculate_pd(softmax_batch[:, i, :])
-                pds.append(pd+1)
-            pds = torch.tensor(pds, device = flair.device, requires_grad=False) # get per-sample PDs
-
-            correct_prediction_indicator = torch.eq(last_layer_prediction, labels).int()
-            incorrect_prediction_indicator = torch.ones_like(correct_prediction_indicator) - correct_prediction_indicator
-
-            # per-sample loss - correct predictions weighted by PD
-            loss_correct = (max_pd_tensor * loss) / pds * correct_prediction_indicator # correct predictions -> downweigh high PD
-            # per-sample loss - incorrect predictions weighted by PD
-            loss_incorrect = (pds * loss) / max_pd_tensor * incorrect_prediction_indicator # incorrect predictions -> downweigh low PD
-
-            loss = loss_correct + loss_incorrect
-            loss = loss.sum() #sample-average loss
-        else:
-            if self.weighted_loss:
-                layer_weights = torch.arange(self.n_layers, device=flair.device)
-                
-                # 0.01 and 1 weights
-                #layer_weights = [0.01 for i in range(self.n_layers)]
-                #layer_weights[-1] = 1
-                #layer_weights = torch.tensor(layer_weights, dtype=torch.float, device=flair.device, requires_grad=False)
-
-                layer_weighted_loss = 0
-                for i in range(self.n_layers):
-                    layer_loss = self.loss_function(scores[i], labels)
-                    layer_weighted_loss += layer_weights[i] * layer_loss
-                loss = layer_weighted_loss / sum(layer_weights) # sample-sum layer-weighted average loss
+                loss = layer_weighted_loss / sum(layer_weights)  # per-sample layer-weighted average loss
             else:
                 loss = 0
                 for i in range(1, self.n_layers):
                     loss += self.loss_function(scores[i], labels)
-                loss = loss / (self.n_layers - 1) #sample-sum layer average loss
+                loss = loss / (self.n_layers - 1)  # per-sample layer average loss
+
+            softmax_batch = F.softmax(scores, dim=2).detach()
+
+            last_layer_prediction = torch.argmax(softmax_batch[-1, :, :], dim=-1)
+
+            max_pd_tensor = torch.full(loss.size(), self.n_layers, device=flair.device, requires_grad=False)
+
+            pds = []
+            for i in range(softmax_batch.size()[1]):
+                pd = self._calculate_pd(softmax_batch[:, i, :])
+                pds.append(pd + 1)
+            pds = torch.tensor(pds, device=flair.device, requires_grad=False)  # get per-sample PDs
+
+            correct_prediction_indicator = torch.eq(last_layer_prediction, labels).int()
+            incorrect_prediction_indicator = torch.ones_like(
+                correct_prediction_indicator) - correct_prediction_indicator
+
+            # per-sample loss - correct predictions weighted by PD
+            loss_correct = (
+                                       max_pd_tensor * loss) / pds * correct_prediction_indicator  # correct predictions -> downweigh high PD
+            # per-sample loss - incorrect predictions weighted by PD
+            loss_incorrect = (
+                                         pds * loss) / max_pd_tensor * incorrect_prediction_indicator  # incorrect predictions -> downweigh low PD
+
+            loss = loss_correct + loss_incorrect
+            loss = loss.sum()  # sample-average loss
+        else:
+            if self.weighted_loss:
+                layer_weights = torch.arange(self.n_layers, device=flair.device)
+
+                # 0.01 and 1 weights
+                # layer_weights = [0.01 for i in range(self.n_layers)]
+                # layer_weights[-1] = 1
+                # layer_weights = torch.tensor(layer_weights, dtype=torch.float, device=flair.device, requires_grad=False)
+
+                layer_weighted_loss = 0
+                for i in range(self.n_layers):
+                    layer_loss = self.loss_function(scores[i], labels)
+                    layer_weighted_loss += layer_weights[i] * layer_loss
+                loss = layer_weighted_loss / sum(layer_weights)  # sample-sum layer-weighted average loss
+            else:
+                loss = 0
+                for i in range(1, self.n_layers):
+                    loss += self.loss_function(scores[i], labels)
+                loss = loss / (self.n_layers - 1)  # sample-sum layer average loss
         return loss, len(labels)
 
     def _calculate_layer_metrics(self, scores: torch.Tensor, gold_label: int) -> int:
@@ -1747,23 +1788,24 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         pred_labels = torch.argmax(scores, dim=-1)
         frequencies = torch.bincount(pred_labels, minlength=len(self.label_dictionary))
-        frequencies = frequencies / frequencies.sum()   # normalize frequencies
-        
-        layer_entropy = -torch.sum(torch.mul(frequencies, torch.nan_to_num(torch.log(frequencies)))) #which dimension?
+        frequencies = frequencies / frequencies.sum()  # normalize frequencies
+
+        layer_entropy = -torch.sum(torch.mul(frequencies, torch.nan_to_num(torch.log(frequencies))))  # which dimension?
 
         for i in range(self.n_layers - 1, -1, -1):  # iterate over the layers starting from the penultimate one
             if pred_labels[i] == gold_label:
                 fl = i  # pd will have the ID of the lowest layer predicting the training label
                 total_agree_w_correct += 1
-            
+
             if pred_labels[i] == pred_labels[-1]:
-                if not final_pd: # if prediction is the same as the last layer
+                if not final_pd:  # if prediction is the same as the last layer
                     pd -= 1
                 total_agree_w_last += 1
-            else: # if prediction is not the same as the last layer, then pd sequence is broken and final pd is set
+            else:  # if prediction is not the same as the last layer, then pd sequence is broken and final pd is set
                 final_pd = True
 
-        return {'prediction_depth': pd,'first_layer':fl,'layer_entropy':layer_entropy,'total_agree_w_last':total_agree_w_last,'total_agree_w_correct':total_agree_w_correct}       
+        return {'prediction_depth': pd, 'first_layer': fl, 'layer_entropy': layer_entropy,
+                'total_agree_w_last': total_agree_w_last, 'total_agree_w_correct': total_agree_w_correct}
 
     def _standard_inference(self, features: torch.Tensor, batch: List[Sentence], probabilities_for_all_classes: bool):
         """
@@ -1789,11 +1831,9 @@ class EarlyExitSequenceTagger(SequenceTagger):
                         for token, score, prediction in zip(sentence, scores, predictions_for_sentence)
                     ]
                 )
-                scores_batch = scores_batch[len(sentence) :]
-                prediction_batch = prediction_batch[len(sentence) :]
+                scores_batch = scores_batch[len(sentence):]
+                prediction_batch = prediction_batch[len(sentence):]
             predictions.append(layer_predictions)
-        
-
 
         if probabilities_for_all_classes:
             for i in range(self.n_layers):
@@ -1803,18 +1843,17 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         return predictions, all_tags
 
-
     def predict(
-        self,
-        sentences: Union[List[Sentence], Sentence],
-        mini_batch_size: int = 32,
-        return_probabilities_for_all_classes: bool = False,
-        verbose: bool = False,
-        label_name: Optional[str] = None,
-        return_loss=False,
-        embedding_storage_mode="none",
-        force_token_predictions: bool = False,
-        layer_idx: int = -1,
+            self,
+            sentences: Union[List[Sentence], Sentence],
+            mini_batch_size: int = 32,
+            return_probabilities_for_all_classes: bool = False,
+            verbose: bool = False,
+            label_name: Optional[str] = None,
+            return_loss=False,
+            embedding_storage_mode="none",
+            force_token_predictions: bool = False,
+            layer_idx: int = -1,
     ):  # type: ignore
         """
         Predicts labels for current batch with Softmax.
@@ -1902,7 +1941,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
                         sentence_scores = [label[1] for label in sentence_predictions]
                         predicted_spans = get_spans_from_bio(sentence_tags, sentence_scores)
                         for predicted_span in predicted_spans:
-                            span: Span = sentence[predicted_span[0][0] : predicted_span[0][-1] + 1]
+                            span: Span = sentence[predicted_span[0][0]: predicted_span[0][-1] + 1]
                             span.add_label(label_name, value=predicted_span[2], score=predicted_span[1])
 
                     # token-labels can be added directly ("O" and legacy "_" predictions are skipped)
@@ -1923,21 +1962,20 @@ class EarlyExitSequenceTagger(SequenceTagger):
             if return_loss:
                 return overall_loss, label_count
 
-
     def evaluate(
-        self,
-        data_points: Union[List[DT], Dataset],
-        gold_label_type: str,
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
-        gold_label_dictionary: Optional[Dictionary] = None,
-        return_loss: bool = True,
-        layer_idx = -1,
-        **kwargs,
+            self,
+            data_points: Union[List[DT], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: Optional[int] = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
+            gold_label_dictionary: Optional[Dictionary] = None,
+            return_loss: bool = True,
+            layer_idx=-1,
+            **kwargs,
     ) -> Result:
         import numpy as np
         import sklearn
@@ -2037,7 +2075,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 store_embeddings(batch, embedding_storage_mode)
 
                 # make printout lines
-                if out_path and layer_idx==-1 and self.print_all_predictions:
+                if out_path and layer_idx == -1 and self.print_all_predictions:
                     lines.extend(self._print_predictions(batch, gold_label_type))
 
             self.log_metrics_train_eval = False
@@ -2060,8 +2098,9 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 )
 
             # write all_predicted_values to out_file if set (per-epoch)
-            if out_path and layer_idx==-1 and self.print_all_predictions:
-                epoch_log_path = str(out_path)[:-4]+'_'+str(self.model_card["training_parameters"]["epoch"])+'.tsv'
+            if out_path and layer_idx == -1 and self.print_all_predictions:
+                epoch_log_path = str(out_path)[:-4] + '_' + str(
+                    self.model_card["training_parameters"]["epoch"]) + '.tsv'
                 with open(Path(epoch_log_path), "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
 
@@ -2180,11 +2219,11 @@ class EarlyExitSequenceTagger(SequenceTagger):
             classification_report_dict = {}
 
         detailed_result = (
-            "\nResults:"
-            f"\n- F-score (micro) {micro_f_score}"
-            f"\n- F-score (macro) {macro_f_score}"
-            f"\n- Accuracy {accuracy_score}"
-            "\n\nBy class:\n" + classification_report
+                "\nResults:"
+                f"\n- F-score (micro) {micro_f_score}"
+                f"\n- F-score (macro) {macro_f_score}"
+                f"\n- Accuracy {accuracy_score}"
+                "\n\nBy class:\n" + classification_report
         )
 
         if average_over > 0:
@@ -2194,11 +2233,10 @@ class EarlyExitSequenceTagger(SequenceTagger):
             main_score=main_score,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            scores={'loss':eval_loss.item()},
+            scores={'loss': eval_loss.item()},
         )
 
         return result
-
 
     def _print_predictions(self, batch, gold_label_type):
         # this override also prints out PD for each token
@@ -2219,16 +2257,17 @@ class EarlyExitSequenceTagger(SequenceTagger):
                         token.set_label("gold_bio", prefix + gold_label.value)
                         prefix = "I-"
 
-                sentence_flag = datapoint.get_labels(gold_label_type) != datapoint.get_labels(gold_label_type+'_clean')
+                sentence_flag = datapoint.get_labels(gold_label_type) != datapoint.get_labels(
+                    gold_label_type + '_clean')
 
                 # set clean token-level
-                for clean_label in datapoint.get_labels(gold_label_type+'_clean'):
+                for clean_label in datapoint.get_labels(gold_label_type + '_clean'):
                     clean_span: Span = clean_label.data_point
                     prefix = "B-"
                     for token in clean_span:
-                        token.set_label("clean_bio", prefix + clean_label.value) # TODO: add checks, this only works if ner_clean column is given
+                        token.set_label("clean_bio",
+                                        prefix + clean_label.value)  # TODO: add checks, this only works if ner_clean column is given
                         prefix = "I-"
-
 
                 # set predicted token-level
                 for predicted_label in datapoint.get_labels("predicted"):
@@ -2245,12 +2284,12 @@ class EarlyExitSequenceTagger(SequenceTagger):
                     pred = token.get_label('predicted_bio').value
                     eval_line = (
                         f"{token.text} "
-                        f"{gold} " # observed (noisy) label
-                        f"{clean} " # clean label
-                        f"{pred} " # predicted label
-                        f"{pred == gold} " # correct prediction flag
-                        f"{gold != clean} " # noisy flag 
-                        f"{sentence_flag} " # sentence noisy flag
+                        f"{gold} "  # observed (noisy) label
+                        f"{clean} "  # clean label
+                        f"{pred} "  # predicted label
+                        f"{pred == gold} "  # correct prediction flag
+                        f"{gold != clean} "  # noisy flag 
+                        f"{sentence_flag} "  # sentence noisy flag
                         f"{token.get_label('PD').score}\n"
                     )
                     lines.append(eval_line)
@@ -2269,15 +2308,13 @@ class EarlyExitSequenceTagger(SequenceTagger):
                 lines.append("\n")
 
         return lines
- 
-    
 
 
 class DetachedEarlyExitSequenceTagger(EarlyExitSequenceTagger):
     def __init__(
-        self,
-        modify_last_decoder_lr = True,
-        **seqtaggerargs
+            self,
+            modify_last_decoder_lr=True,
+            **seqtaggerargs
     ):
         super().__init__(
             **seqtaggerargs
@@ -2301,8 +2338,8 @@ class DetachedEarlyExitSequenceTagger(EarlyExitSequenceTagger):
                 sentence_layer_tensor = self.locked_dropout(sentence_layer_tensor)
 
             # linear map to tag space
-            if i < self.n_layers-1:
-                features = self.linear[i](sentence_layer_tensor.detach()) # if any layer but last .detach()
+            if i < self.n_layers - 1:
+                features = self.linear[i](sentence_layer_tensor.detach())  # if any layer but last .detach()
             else:
                 features = self.linear[i](sentence_layer_tensor)
             # think about having a factor for all other decoders
@@ -2316,10 +2353,10 @@ class DetachedEarlyExitSequenceTagger(EarlyExitSequenceTagger):
 
 class HybridEarlyExitSequenceTagger(EarlyExitSequenceTagger):
     def __init__(
-        self,
-        embeddings: TransformerWordEmbeddings, # layer_mean = False, layers = "all"
-        warm_up_epochs: bool = False,
-        **seqtaggerargs
+            self,
+            embeddings: TransformerWordEmbeddings,  # layer_mean = False, layers = "all"
+            warm_up_epochs: bool = False,
+            **seqtaggerargs
     ):
         """
         Modify Early-Exit SequenceTagger
@@ -2330,25 +2367,25 @@ class HybridEarlyExitSequenceTagger(EarlyExitSequenceTagger):
         self.warm_up_epochs = warm_up_epochs
 
         super().__init__(
-            embeddings = embeddings,
-            last_layer_only = True,
+            embeddings=embeddings,
+            last_layer_only=True,
             **seqtaggerargs
         )
 
     def evaluate(
-        self,
-        data_points: Union[List[DT], Dataset],
-        gold_label_type: str,
-        out_path: Union[str, Path] = None,
-        embedding_storage_mode: str = "none",
-        mini_batch_size: int = 32,
-        num_workers: Optional[int] = 8,
-        main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
-        exclude_labels: List[str] = [],
-        gold_label_dictionary: Optional[Dictionary] = None,
-        return_loss: bool = True,
-        layer_idx = -1,
-        **kwargs,
+            self,
+            data_points: Union[List[DT], Dataset],
+            gold_label_type: str,
+            out_path: Union[str, Path] = None,
+            embedding_storage_mode: str = "none",
+            mini_batch_size: int = 32,
+            num_workers: Optional[int] = 8,
+            main_evaluation_metric: Tuple[str, str] = ("micro avg", "f1-score"),
+            exclude_labels: List[str] = [],
+            gold_label_dictionary: Optional[Dictionary] = None,
+            return_loss: bool = True,
+            layer_idx=-1,
+            **kwargs,
     ) -> Result:
         import numpy as np
         import sklearn
@@ -2442,7 +2479,7 @@ class HybridEarlyExitSequenceTagger(EarlyExitSequenceTagger):
                 store_embeddings(batch, embedding_storage_mode)
 
                 # make printout lines
-                if out_path and layer_idx==-1:
+                if out_path and layer_idx == -1:
                     lines.extend(self._print_predictions(batch, gold_label_type))
 
             # convert true and predicted values to two span-aligned lists
@@ -2463,8 +2500,9 @@ class HybridEarlyExitSequenceTagger(EarlyExitSequenceTagger):
                 )
 
             # write all_predicted_values to out_file if set
-            if out_path and layer_idx==-1:
-                epoch_log_path = str(out_path)[:-4]+'_'+str(self.model_card["training_parameters"]["epoch"])+'.tsv'
+            if out_path and layer_idx == -1:
+                epoch_log_path = str(out_path)[:-4] + '_' + str(
+                    self.model_card["training_parameters"]["epoch"]) + '.tsv'
                 with open(Path(epoch_log_path), "w", encoding="utf-8") as outfile:
                     outfile.write("".join(lines))
 
@@ -2583,11 +2621,11 @@ class HybridEarlyExitSequenceTagger(EarlyExitSequenceTagger):
             classification_report_dict = {}
 
         detailed_result = (
-            "\nResults:"
-            f"\n- F-score (micro) {micro_f_score}"
-            f"\n- F-score (macro) {macro_f_score}"
-            f"\n- Accuracy {accuracy_score}"
-            "\n\nBy class:\n" + classification_report
+                "\nResults:"
+                f"\n- F-score (micro) {micro_f_score}"
+                f"\n- F-score (macro) {macro_f_score}"
+                f"\n- Accuracy {accuracy_score}"
+                "\n\nBy class:\n" + classification_report
         )
 
         if average_over > 0:
@@ -2597,14 +2635,13 @@ class HybridEarlyExitSequenceTagger(EarlyExitSequenceTagger):
             main_score=main_score,
             detailed_results=detailed_result,
             classification_report=classification_report_dict,
-            scores={'loss':eval_loss.item()},
+            scores={'loss': eval_loss.item()},
         )
 
         ## this would only work if evaluate is called at the end of each epoch, if not it needs to be modified
         if self.embeddings.fine_tune and self.model_card["training_parameters"]["epoch"] == self.warm_up_epochs:
-            
             # change training mode: freeze embeddings, enable fine-tuning of all N classifier heads
             self.last_layer_only = False
-            self.embeddings.fine_tune =  False
+            self.embeddings.fine_tune = False
 
         return result

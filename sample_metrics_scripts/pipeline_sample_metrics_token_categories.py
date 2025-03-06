@@ -27,11 +27,12 @@ import itertools
 import sklearn
 
 category_conditions = {
-    '1':(True, True), # pred == observed, observed == O
-    '2':(False, True), # pred != observed, observed == O
-    '3':(True, False),
-    '4':(False, False)
+    '1': (True, True),  # pred == observed, observed == O
+    '2': (False, True),  # pred != observed, observed == O
+    '3': (True, False),
+    '4': (False, False)
 }
+
 
 def get_data_paths(config, corpus_name):
     train_extension = config["paths"]["train_filename_extension"]
@@ -53,8 +54,8 @@ def get_data_paths(config, corpus_name):
 
     return train_filename, dev_filename, test_filename
 
-def run_standard_baseline(seed, corpus_name, config, max_epochs):
 
+def run_standard_baseline(seed, corpus_name, config, max_epochs):
     learning_rate = float(config["parameters"]["learning_rate"])
     batch_size = int(config["parameters"]["batch_size"])
     num_epochs = max_epochs
@@ -75,12 +76,12 @@ def run_standard_baseline(seed, corpus_name, config, max_epochs):
 
     conll_corpus = ColumnCorpus(
         data_folder="./",
-        column_format={0: "text", 1: tag_type+"_clean", 2: tag_type},  # if we work with nessie (two-column) format
-        document_separator_token="-DOCSTART-", # EST
+        column_format={0: "text", 1: tag_type + "_clean", 2: tag_type},  # if we work with nessie (two-column) format
+        document_separator_token="-DOCSTART-",  # EST
         train_file=train_filename,
         dev_file=dev_filename,
         test_file=test_filename,
-        column_delimiter = '\t'
+        column_delimiter='\t'
     )
 
     tag_dictionary = conll_corpus.make_label_dictionary(label_type=tag_type, add_unk=False)
@@ -90,7 +91,7 @@ def run_standard_baseline(seed, corpus_name, config, max_epochs):
         layers="-1",
         subtoken_pooling="first",
         fine_tune=True,
-        use_context=True, # EST
+        use_context=True,  # EST
     )
 
     tagger = SequenceTagger(
@@ -102,8 +103,8 @@ def run_standard_baseline(seed, corpus_name, config, max_epochs):
         use_rnn=False,
         reproject_embeddings=False,
         calculate_sample_metrics=True,
-        metrics_mode = metrics_mode,
-        metrics_save_list = []
+        metrics_mode=metrics_mode,
+        metrics_save_list=[]
     )
 
     fine_tuning_args = {
@@ -121,10 +122,11 @@ def run_standard_baseline(seed, corpus_name, config, max_epochs):
 
     if config["parameters"]["scheduler"] and config["parameters"]["scheduler"] == "None":
         fine_tuning_args["scheduler"] = None
-        
+
     out = trainer.fine_tune(**fine_tuning_args)
 
     return baseline_path, out["test_score"]
+
 
 def run_EE_baseline(seed, corpus_name, config, max_epochs):
     initialize_decoders_lr = float(config["parameters"]["decoder_init"]["lr"])
@@ -151,11 +153,11 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
     conll_corpus = ColumnCorpus(
         data_folder="./",
         column_format={0: "text", 1: "ner_clean", 2: "ner"},  # if we work with nessie (two-column) format
-        document_separator_token="-DOCSTART-", # EST
+        document_separator_token="-DOCSTART-",  # EST
         train_file=train_filename,
         dev_file=dev_filename,
         test_file=test_filename,
-        column_delimiter = '\t'
+        column_delimiter='\t'
     )
 
     tag_dictionary = conll_corpus.make_label_dictionary(label_type=tag_type, add_unk=False)
@@ -166,7 +168,7 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
         layers="all",
         subtoken_pooling="first",
         fine_tune=True,
-        use_context=False, # maybe it should be True?
+        use_context=False,  # maybe it should be True?
         layer_mean=False,
     )
 
@@ -183,8 +185,8 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
         print_all_predictions=False,
         modified_loss=False,
         calculate_sample_metrics=True,
-        metrics_mode = metrics_mode,
-        metrics_save_list = []
+        metrics_mode=metrics_mode,
+        metrics_save_list=[]
     )
 
     # initialize trainer
@@ -198,7 +200,7 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
     # init all decoders equally
     tagger.weighted_loss = False
     tagger.modified_loss = False
-    
+
     # decoder init
     trainer.fine_tune(
         output_path_training + os.sep + "decoder_init",
@@ -208,30 +210,35 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
         save_final_model=False,
         monitor_test=False,  #
         monitor_train_sample=1.0,  #
-    ) # 
+    )  #
 
     tagger.print_all_predictions = True
 
     if metrics_mode == 'epoch_end':
         # copy last decoder init to be epoch 0
-        os.rename(output_path_training + os.sep + 'decoder_init' + os.sep +f'epoch_log_{num_epochs_decoder_init}.log', output_path_training + os.sep + 'epoch_log_0.log')
+        os.rename(output_path_training + os.sep + 'decoder_init' + os.sep + f'epoch_log_{num_epochs_decoder_init}.log',
+                  output_path_training + os.sep + 'epoch_log_0.log')
 
-        tagger.calculate_sample_metrics = True       
+        tagger.calculate_sample_metrics = True
         kwargs = {}
         kwargs['final_train_eval'] = True
         tagger.evaluate(
-            conll_corpus.test, gold_label_type=tag_type, out_path=output_path_training + os.sep + "train_sample_0.tsv", **kwargs
+            conll_corpus.test, gold_label_type=tag_type, out_path=output_path_training + os.sep + "train_sample_0.tsv",
+            **kwargs
         )
-        os.rename(output_path_training + os.sep + 'decoder_init' + os.sep +f'epoch_log_{num_epochs_decoder_init}.log', output_path_training + os.sep + 'epoch_log_0_test.log')
+        os.rename(output_path_training + os.sep + 'decoder_init' + os.sep + f'epoch_log_{num_epochs_decoder_init}.log',
+                  output_path_training + os.sep + 'epoch_log_0_test.log')
 
         tagger.evaluate(
-            conll_corpus.dev, gold_label_type=tag_type, out_path=output_path_training + os.sep + "train_sample_0.tsv", **kwargs
+            conll_corpus.dev, gold_label_type=tag_type, out_path=output_path_training + os.sep + "train_sample_0.tsv",
+            **kwargs
         )
-        os.rename(output_path_training + os.sep + 'decoder_init' + os.sep +f'epoch_log_{num_epochs_decoder_init}.log', output_path_training + os.sep + 'epoch_log_0_dev.log')
-    
+        os.rename(output_path_training + os.sep + 'decoder_init' + os.sep + f'epoch_log_{num_epochs_decoder_init}.log',
+                  output_path_training + os.sep + 'epoch_log_0_dev.log')
+
     tagger.embeddings.fine_tune = True
     tagger.embeddings.static_embeddings = False
-    tagger.calculate_sample_metrics = True    
+    tagger.calculate_sample_metrics = True
 
     fine_tuning_args = {
         "base_path": output_path_training,
@@ -242,7 +249,6 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
         "monitor_test": config["parameters"]["monitor_test"],
         "monitor_train_sample": 1.0,
     }
-
 
     if config["parameters"]["scheduler"] and config["parameters"]["scheduler"] == "None":
         fine_tuning_args["scheduler"] = None
@@ -255,23 +261,21 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
     return baseline_path, out["test_score"]
 
 
-
-def run_baseline(mode, seed,  corpus_name, config, max_epochs):
+def run_baseline(mode, seed, corpus_name, config, max_epochs):
     if mode == 'EE':
-        return run_EE_baseline(seed, corpus_name, config, max_epochs) 
-    else: 
+        return run_EE_baseline(seed, corpus_name, config, max_epochs)
+    else:
         return run_standard_baseline(seed, corpus_name, config, max_epochs)
 
 
 def update_dataset_with_epoch_log_info(epoch_log_path, dataset, metric, predicted_bio_column, tag_bio_column):
-
     with open(epoch_log_path, 'r') as f:
         lines = f.readlines()
         columns = lines[0].split('\t')
         sentence = None
         for line in lines[1:]:
-            if len(line)==1:
-                sentence=None
+            if len(line) == 1:
+                sentence = None
                 continue
 
             line = line.strip().split('\t')
@@ -289,13 +293,13 @@ def update_dataset_with_epoch_log_info(epoch_log_path, dataset, metric, predicte
 
             predicted_bio = line[columns.index('predicted')]
             tag_bio = line[columns.index('noisy')]
-            
+
             token.set_label(predicted_bio_column, predicted_bio)
             token.set_label(tag_bio_column, tag_bio)
-            token.set_metric(metric,metric_value)
+            token.set_metric(metric, metric_value)
+
 
 def output_bio_dataset(dataset, tag_column, filename):
-
     if not os.path.exists(os.path.dirname(filename)):
         os.makedirs(os.path.dirname(filename))
 
@@ -311,8 +315,8 @@ def output_bio_dataset(dataset, tag_column, filename):
                 f.write('\n')
             f.write('\n')
 
-def calculate_f1_between_columns(dataset, column1, column2, label_dictionary):
 
+def calculate_f1_between_columns(dataset, column1, column2, label_dictionary):
     all_spans: Set[str] = set()
     all_true_values = {}
     all_predicted_values = {}
@@ -347,7 +351,6 @@ def calculate_f1_between_columns(dataset, column1, column2, label_dictionary):
 
         sentence_id += 1
 
-    
     # convert true and predicted values to two span-aligned lists
     true_values_span_aligned = []
     predicted_values_span_aligned = []
@@ -436,11 +439,11 @@ def calculate_f1_between_columns(dataset, column1, column2, label_dictionary):
             ]
 
     detailed_result = (
-        "\nResults:"
-        f"\n- F-score (micro) {round(classification_report_dict['micro avg']['f1-score'], 4)}"
-        f"\n- F-score (macro) {round(classification_report_dict['macro avg']['f1-score'], 4)}"
-        f"\n- Accuracy {accuracy_score}"
-        "\n\nBy class:\n" + classification_report
+            "\nResults:"
+            f"\n- F-score (micro) {round(classification_report_dict['micro avg']['f1-score'], 4)}"
+            f"\n- F-score (macro) {round(classification_report_dict['macro avg']['f1-score'], 4)}"
+            f"\n- Accuracy {accuracy_score}"
+            "\n\nBy class:\n" + classification_report
     )
 
     print(detailed_result)
@@ -456,7 +459,9 @@ def calculate_f1_between_columns(dataset, column1, column2, label_dictionary):
 
     return scores, detailed_result
 
-def relabel_category(dataset, tag_column = 'ner', new_tag_column = 'ner_new',prediction_bio_column = 'predicted_bio', metric = 'confidence',threshold = 0.7, direction='left', category_id='2'):
+
+def relabel_category(dataset, tag_column='ner', new_tag_column='ner_new', prediction_bio_column='predicted_bio',
+                     metric='confidence', threshold=0.7, direction='left', category_id='2'):
     # can only be used with category 2 and 4.
     tag_column_bio = f'{tag_column}_bio'
     new_tag_column_bio = f'{new_tag_column}_bio'
@@ -464,27 +469,33 @@ def relabel_category(dataset, tag_column = 'ner', new_tag_column = 'ner_new',pre
     tokens_changed_additionally = 0
 
     for sent in dataset:
-        flag=False
+        flag = False
         prev = 'O'
         previous_changed = False
 
         for token in sent:
-            if (not token.get_label(tag_column_bio).value.endswith('MASK')) and (token.get_label(tag_column_bio).value == token.get_label(prediction_bio_column).value) == category_conditions[category_id][0] and (token.get_label(tag_column_bio).value == 'O') == category_conditions[category_id][1]: # if incorrect prediction
-                flag=True
+            if (not token.get_label(tag_column_bio).value.endswith('MASK')) and (
+                    token.get_label(tag_column_bio).value == token.get_label(prediction_bio_column).value) == \
+                    category_conditions[category_id][0] and (token.get_label(tag_column_bio).value == 'O') == \
+                    category_conditions[category_id][1]:  # if incorrect prediction
+                flag = True
                 if direction == 'left':
-                    if token.get_metric(metric) < float(threshold): # rule for masking
+                    if token.get_metric(metric) < float(threshold):  # rule for masking
                         token.set_label(new_tag_column_bio, token.get_label(prediction_bio_column).value)
                         tokens_changed += 1
                         prev = token.get_label(prediction_bio_column).value
                         previous_changed = True
                 else:
-                    if token.get_metric(metric) > float(threshold): # rule for masking
+                    if token.get_metric(metric) > float(threshold):  # rule for masking
                         token.set_label(new_tag_column_bio, token.get_label(prediction_bio_column).value)
                         tokens_changed += 1
                         prev = token.get_label(prediction_bio_column).value
                         previous_changed = True
             else:
-                if (previous_changed and prev!= 'O') and (token.get_label(tag_column_bio).value.endswith(prev.split('-')[1]) and token.get_label(prediction_bio_column).value.endswith(prev.split('-')[1])): # if predicted is same entity type as prev and as observed
+                if (previous_changed and prev != 'O') and (
+                        token.get_label(tag_column_bio).value.endswith(prev.split('-')[1]) and token.get_label(
+                        prediction_bio_column).value.endswith(
+                        prev.split('-')[1])):  # if predicted is same entity type as prev and as observed
                     token.set_label(new_tag_column_bio, token.get_label(prediction_bio_column).value)
                     tokens_changed_additionally += 1
                 else:
@@ -494,12 +505,14 @@ def relabel_category(dataset, tag_column = 'ner', new_tag_column = 'ner_new',pre
         bioes_tags = [token.get_label(new_tag_column_bio).value for token in sent]
         predicted_spans = get_spans_from_bio(bioes_tags)
         for span_indices, score, label in predicted_spans:
-            span = sent[span_indices[0] : span_indices[-1] + 1]
+            span = sent[span_indices[0]: span_indices[-1] + 1]
             if label != "O":
                 span.set_label(new_tag_column, value=label, score=score)
     return tokens_changed, tokens_changed_additionally
 
-def mask_category(dataset, tag_column = 'ner', new_tag_column = 'ner_new', prediction_bio_column = 'predicted_bio', metric = 'confidence',threshold = 0.7, direction='left', category_id='1'):
+
+def mask_category(dataset, tag_column='ner', new_tag_column='ner_new', prediction_bio_column='predicted_bio',
+                  metric='confidence', threshold=0.7, direction='left', category_id='1'):
     tag_column_bio = f'{tag_column}_bio'
     new_tag_column_bio = f'{new_tag_column}_bio'
     for sent in dataset:
@@ -510,17 +523,21 @@ def mask_category(dataset, tag_column = 'ner', new_tag_column = 'ner_new', predi
         print('ner')
         print(sent.get_labels(tag_column))
         for token in sent:
-            print(f"{token.text} {token.get_label(prediction_bio_column).value} {token.get_label(tag_column_bio).value}")
-        flag=False
-        for token in sent: 
-            if (not token.get_label(tag_column_bio).value.endswith('MASK')) and (token.get_label(tag_column_bio).value == token.get_label(prediction_bio_column).value) == category_conditions[category_id][0] and (token.get_label(tag_column_bio).value == 'O') == category_conditions[category_id][1]: # if incorrect prediction
+            print(
+                f"{token.text} {token.get_label(prediction_bio_column).value} {token.get_label(tag_column_bio).value}")
+        flag = False
+        for token in sent:
+            if (not token.get_label(tag_column_bio).value.endswith('MASK')) and (
+                    token.get_label(tag_column_bio).value == token.get_label(prediction_bio_column).value) == \
+                    category_conditions[category_id][0] and (token.get_label(tag_column_bio).value == 'O') == \
+                    category_conditions[category_id][1]:  # if incorrect prediction
                 if direction == 'left':
-                    if token.get_metric(metric) < float(threshold): # rule for masking
-                        flag=True
+                    if token.get_metric(metric) < float(threshold):  # rule for masking
+                        flag = True
                         token.set_label(new_tag_column_bio, 'S-MASK')
                 else:
-                    if token.get_metric(metric) > float(threshold): # rule for masking
-                        flag=True
+                    if token.get_metric(metric) > float(threshold):  # rule for masking
+                        flag = True
                         token.set_label(new_tag_column_bio, 'S-MASK')
 
         # sent.remove_labels(tag_column)
@@ -529,12 +546,12 @@ def mask_category(dataset, tag_column = 'ner', new_tag_column = 'ner_new', predi
         predicted_spans = get_spans_from_bio(bioes_tags)
 
         for span_indices, score, label in predicted_spans:
-            span = sent[span_indices[0] : span_indices[-1] + 1]
+            span = sent[span_indices[0]: span_indices[-1] + 1]
             if label != "O":
                 span.set_label(new_tag_column, value=label, score=score)
 
 
-def add_bioes_ner_tags(dataset, tag_column = 'ner', bio_tag_column = None):
+def add_bioes_ner_tags(dataset, tag_column='ner', bio_tag_column=None):
     # add a new column to dataset, which contains token-level tags for NER in BIOES (observed label)
     if bio_tag_column is None:
         bio_tag_column = f'{tag_column}_bio'
@@ -553,31 +570,33 @@ def add_bioes_ner_tags(dataset, tag_column = 'ner', bio_tag_column = None):
                 for i in range(1, len(span) - 1):
                     span[i].set_label(bio_tag_column, f'I-{span.get_label(tag_column).value}')
 
-def copy_new_tag_to_original(dataset, tag_column = 'ner', new_tag_column = 'ner_new'):
+
+def copy_new_tag_to_original(dataset, tag_column='ner', new_tag_column='ner_new'):
     for sent in dataset:
         for lab in sent.get_labels(new_tag_column):
             lab.data_point.set_label(tag_column, lab.value)
 
-def run_experiment(seed, config, category_configs, corpus_name, tag_type, category_id, paths_to_baselines, output_path):
 
+def run_experiment(seed, config, category_configs, corpus_name, tag_type, category_id, paths_to_baselines, output_path):
     train_filename, dev_filename, test_filename = get_data_paths(config, corpus_name)
 
     conll_corpus = ColumnCorpus(
         data_folder="./",
         column_format={0: "text", 1: "ner_clean", 2: "ner"},  # if we work with nessie (two-column) format
-        document_separator_token="-DOCSTART-", # EST
+        document_separator_token="-DOCSTART-",  # EST
         train_file=train_filename,
         dev_file=dev_filename,
         test_file=test_filename,
-        column_delimiter = '\t'
+        column_delimiter='\t'
     )
 
-    tag_dictionary = conll_corpus.make_label_dictionary(label_type=tag_type+'_clean', add_unk=False)
+    tag_dictionary = conll_corpus.make_label_dictionary(label_type=tag_type + '_clean', add_unk=False)
 
-    calculate_f1_between_columns(conll_corpus.train, tag_type+'_clean',tag_type, label_dictionary=tag_dictionary)
+    calculate_f1_between_columns(conll_corpus.train, tag_type + '_clean', tag_type, label_dictionary=tag_dictionary)
 
-    add_bioes_ner_tags(conll_corpus.train, tag_column = tag_type)
-    output_bio_dataset(conll_corpus.train, tag_column = tag_type+'_bio', filename = f'{output_path}/noise_crowd_backup.train')
+    add_bioes_ner_tags(conll_corpus.train, tag_column=tag_type)
+    output_bio_dataset(conll_corpus.train, tag_column=tag_type + '_bio',
+                       filename=f'{output_path}/noise_crowd_backup.train')
 
     learning_rate = float(config["parameters"]["learning_rate"])
     batch_size = int(config["parameters"]["batch_size"])
@@ -597,14 +616,14 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
 
         noise_f1s = []
 
-        add_bioes_ner_tags(conll_corpus.train, tag_column = tag_type, bio_tag_column=tag_type+'_new_bio')
-        
+        add_bioes_ner_tags(conll_corpus.train, tag_column=tag_type, bio_tag_column=tag_type + '_new_bio')
+
         for category_config in category_configs:
 
             print(category_config)
-            
+
             if category_config['modification'] == 'mask':
-                mask_flag=True
+                mask_flag = True
 
             current_epoch = category_config["epoch_change"]
             current_metric = category_config["metric"]
@@ -620,36 +639,46 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
 
             if not os.path.exists(epoch_file):
                 raise Exception(f"File {epoch_file} does not exist. Please provide a valida baseline path.")
-        
-            update_dataset_with_epoch_log_info(epoch_file, conll_corpus.train, metric= current_metric, predicted_bio_column = 'predicted_bio',tag_bio_column = 'ner_bio') # predicted_bio, ner, ner_bio
-            
-            
+
+            update_dataset_with_epoch_log_info(epoch_file, conll_corpus.train, metric=current_metric,
+                                               predicted_bio_column='predicted_bio',
+                                               tag_bio_column='ner_bio')  # predicted_bio, ner, ner_bio
+
             # PHASE 2: Relabel categories
 
             if category_config['modification'] == 'relabel':
-                tokens_changed, tokens_changed_additionally = relabel_category(conll_corpus.train, tag_column = tag_type, prediction_bio_column = 'predicted_bio',metric = current_metric, threshold = current_threshold, direction=current_direction, category_id=current_id)
+                tokens_changed, tokens_changed_additionally = relabel_category(conll_corpus.train, tag_column=tag_type,
+                                                                               prediction_bio_column='predicted_bio',
+                                                                               metric=current_metric,
+                                                                               threshold=current_threshold,
+                                                                               direction=current_direction,
+                                                                               category_id=current_id)
                 print('number of tokens changed:', tokens_changed)
                 print('number of consecutive tokens changed:', tokens_changed_additionally)
 
             elif category_config['modification'] == 'mask':
-                mask_category(conll_corpus.train, tag_column = tag_type, prediction_bio_column = 'predicted_bio', metric = current_metric, threshold = current_threshold, direction = current_direction, category_id=current_id)
-            
-            score, detailed_result = calculate_f1_between_columns(conll_corpus.train, 'ner_new','ner_clean', label_dictionary=tag_dictionary)
-            
+                mask_category(conll_corpus.train, tag_column=tag_type, prediction_bio_column='predicted_bio',
+                              metric=current_metric, threshold=current_threshold, direction=current_direction,
+                              category_id=current_id)
+
+            score, detailed_result = calculate_f1_between_columns(conll_corpus.train, 'ner_new', 'ner_clean',
+                                                                  label_dictionary=tag_dictionary)
+
             noise_f1s.append(score[('micro avg', 'f1-score')])
-        
+
         with open(f'{output_path_training}/noise_f1.txt', 'w') as f:
             for noise_f1 in reversed(noise_f1s):
                 f.write(f'{noise_f1}\n')
-                #f.write(detailed_result)
+                # f.write(detailed_result)
 
-        output_bio_dataset(conll_corpus.train, tag_column = 'ner_new_bio', filename = f'{output_path_training}/noise_crowd_relabeled.train')
+        output_bio_dataset(conll_corpus.train, tag_column='ner_new_bio',
+                           filename=f'{output_path_training}/noise_crowd_relabeled.train')
 
-        copy_new_tag_to_original(conll_corpus.train,tag_column = tag_type, new_tag_column = tag_type+'_new')
+        copy_new_tag_to_original(conll_corpus.train, tag_column=tag_type, new_tag_column=tag_type + '_new')
 
     # PHASE 3: Retrain the model with updated labels
 
-    if True: 
+    if True:
         # model_reinit is always True for now
         # if config["parameters"]["model_reinit"] or config["parameters"]["seq_tagger_mode"] == 'EE': 
 
@@ -658,7 +687,7 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
             layers="-1",
             subtoken_pooling="first",
             fine_tune=True,
-            use_context=True, # EST
+            use_context=True,  # EST
         )
         if category_id != 'O' and mask_flag == True:
             tag_dictionary.add_item('MASK')
@@ -666,12 +695,12 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
                 hidden_size=256,
                 embeddings=embeddings,
                 tag_dictionary=tag_dictionary,
-                tag_type=tag_type, # this is where the relabelling efectively happens
+                tag_type=tag_type,  # this is where the relabelling efectively happens
                 use_crf=False,
                 use_rnn=False,
                 reproject_embeddings=False,
                 calculate_sample_metrics=False,
-                loss_weights={'S-MASK': 0.0,'B-MASK': 0.0,'E-MASK': 0.0,'I-MASK': 0.0}
+                loss_weights={'S-MASK': 0.0, 'B-MASK': 0.0, 'E-MASK': 0.0, 'I-MASK': 0.0}
             )
         else:
             tagger = SequenceTagger(
@@ -685,8 +714,6 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
                 calculate_sample_metrics=False
             )
 
-
-
     trainer = ModelTrainer(tagger, conll_corpus)
 
     fine_tuning_args = {
@@ -699,12 +726,12 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
         "monitor_train_sample": 1.0,
     }
 
-    out = trainer.fine_tune(**fine_tuning_args) # out: after phase 3
+    out = trainer.fine_tune(**fine_tuning_args)  # out: after phase 3
 
     return out["test_score"]
 
-def main(config, gpu=0):
 
+def main(config, gpu=0):
     flair.device = torch.device("cuda:" + str(gpu))
 
     corpora = config["corpora"]
@@ -713,20 +740,19 @@ def main(config, gpu=0):
     paths_to_baselines = config['paths']['baseline_paths']
 
     category_config_empty = {
-        'metric':'',
-        'f_type':'',
-        'modification':'',
-        'threshold':'',
-        'direction':'',
-        'epoch_change':''
+        'metric': '',
+        'f_type': '',
+        'modification': '',
+        'threshold': '',
+        'direction': '',
+        'epoch_change': ''
     }
 
     category_configs = []
     category_ids = []
 
-
     for cat_id in category_conditions:
-        category_config = config["parameters"]['modify_category'+cat_id]
+        category_config = config["parameters"]['modify_category' + cat_id]
         print(category_config)
         if category_config is not False:
             category_ids.append(cat_id)
@@ -736,20 +762,21 @@ def main(config, gpu=0):
     category_configs = sorted(category_configs, key=lambda x: int(x['epoch_change']))
 
     if len(category_configs) == 0:
-        category_configs.append(category_config_empty)     
+        category_configs.append(category_config_empty)
 
-    if len(category_ids)>0:
+    if len(category_ids) > 0:
         category_id = ''.join(category_ids)
     else:
         category_id = '0'
 
     flag_run_baseline = False if len(paths_to_baselines) > 0 else True
-    
+
     if category_id == '0' and flag_run_baseline:
         experiment_path = f'{config["paths"]["resources_path"]}baseline/{seq_tagger_mode}/'  # for now, only one seq tagger mode is allowed.
     else:
-        experiment_path = config["paths"]["resources_path"] + "category"+category_id + os.sep + f"{seq_tagger_mode}_{category_configs[0]['metric']}"+ os.sep + category_configs[0]['f_type'] + os.sep + category_configs[0]['modification'] + os.sep
-
+        experiment_path = config["paths"][
+                              "resources_path"] + "category" + category_id + os.sep + f"{seq_tagger_mode}_{category_configs[0]['metric']}" + os.sep + \
+                          category_configs[0]['f_type'] + os.sep + category_configs[0]['modification'] + os.sep
 
     seeds = [int(seed) for seed in config['seeds']]
     tag_type = "ner"
@@ -763,11 +790,11 @@ def main(config, gpu=0):
     for corpus_name in corpora:
         output_path = experiment_path + corpus_name
 
-
         temp_f1_scores = []
 
-        baseline_modes = [config['parameters']['seq_tagger_mode']] ## change this later to allow e.g. PD for category 1 and confidence for category 2
-        
+        baseline_modes = [config['parameters'][
+                              'seq_tagger_mode']]  ## change this later to allow e.g. PD for category 1 and confidence for category 2
+
         paths_to_baselines_seed = {}
 
         for seed in seeds:
@@ -778,12 +805,14 @@ def main(config, gpu=0):
                         max_epochs = int(config['parameters']['num_epochs'])
                     else:
                         max_epochs = int(category_configs[-1]['epoch_change'])
-                    paths_to_baselines_seed[mode], baseline_score = run_baseline(mode, seed, corpus_name, config, max_epochs) 
+                    paths_to_baselines_seed[mode], baseline_score = run_baseline(mode, seed, corpus_name, config,
+                                                                                 max_epochs)
             else:
                 paths_to_baselines_seed = {k: f'{paths_to_baselines[k]}' for k in baseline_modes}
 
             if category_id != '0':
-                score = run_experiment(seed, config, category_configs, corpus_name, tag_type, category_id, paths_to_baselines, output_path)
+                score = run_experiment(seed, config, category_configs, corpus_name, tag_type, category_id,
+                                       paths_to_baselines, output_path)
             elif flag_run_baseline:
                 score = baseline_score
             else:
@@ -796,8 +825,8 @@ def main(config, gpu=0):
             label = "f1"
             f.write(f"{label} \t{np.mean(temp_f1_scores)!s} \t {np.std(temp_f1_scores)!s} \n")
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     argParser = argparse.ArgumentParser()
 
     argParser.add_argument("-c", "--config", help="filename with experiment configuration")
@@ -809,5 +838,4 @@ if __name__ == "__main__":
     with open(args.config) as json_file:
         config = json.load(json_file)
 
-
-    main(config, gpu = args.gpu)
+    main(config, gpu=args.gpu)
