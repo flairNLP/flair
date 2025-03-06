@@ -6,8 +6,8 @@
         "dev_filename_extension": ".dev",
         "test_filename_extension": "clean.test",
         "baseline_paths":{
-            "EE":"test_sample_metrics/resources/noisebench/baseline/EE/",
-            "standard":"test_sample_metrics/resources/noisebench/baseline/standard/"
+            "EE":"test_sample_metrics/resources/noisebench/baseline/EE",
+            "standard":"test_sample_metrics/resources/noisebench/baseline/standard"
         },
         "configs_path":{
             "EE":"test_sample_metrics/configs_EE",

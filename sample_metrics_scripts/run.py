@@ -25,7 +25,7 @@ def run(config, gpu=0):
 
             with open(baseline_path + os.sep + "test_results.tsv", "w", encoding='utf-8') as f:
                 f.write("params\tmean\tstd\n")
-                label = f"{str(config['parameters']['batch_size'])}_{str(config['parameters']['learning_rate'])}"
+                label = "f1"
                 f.write(f"{label} \t{np.mean(temp_f1_scores)!s} \t {np.std(temp_f1_scores)!s} \n")
 
         # 2. Find optimal parameter sets for each sample metric, mode and category

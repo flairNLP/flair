@@ -182,7 +182,7 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
         weighted_loss=False,
         print_all_predictions=False,
         modified_loss=False,
-        calculate_sample_metrics=False,
+        calculate_sample_metrics=True,
         metrics_mode = metrics_mode,
         metrics_save_list = []
     )
@@ -614,9 +614,9 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
 
             # gradually change the labels of 'new_ner' column
             if config['parameters']['seq_tagger_mode'] == 'standard':
-                epoch_file = f"{paths_to_baselines[config['parameters']['seq_tagger_mode']]}{corpus_name}/{seed}/epoch_log_{current_epoch}.log"
+                epoch_file = f"{paths_to_baselines[config['parameters']['seq_tagger_mode']]}/{corpus_name}/{seed}/epoch_log_{current_epoch}.log"
             else:
-                epoch_file = f"{paths_to_baselines[config['parameters']['seq_tagger_mode']]}{corpus_name}/{seed}_with_init-{config['parameters']['decoder_init']['lr']}/epoch_log_{current_epoch}.log"
+                epoch_file = f"{paths_to_baselines[config['parameters']['seq_tagger_mode']]}/{corpus_name}/{seed}_with_init-{config['parameters']['decoder_init']['lr']}/epoch_log_{current_epoch}.log"
 
             if not os.path.exists(epoch_file):
                 raise Exception(f"File {epoch_file} does not exist. Please provide a valida baseline path.")

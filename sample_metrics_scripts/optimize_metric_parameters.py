@@ -267,7 +267,7 @@ def optimize_F1s(config, corpus_name):
     correct_prediction_flag_name = 'correct_prediction_flag'
     noise_flag_name = 'noisy_flag'
 
-    base_paths = {key: config['paths']['baseline_paths'][key] + corpus_name for key in seq_tagger_modes}
+    base_paths = {key: config['paths']['baseline_paths'][key] + os.sep + corpus_name for key in seq_tagger_modes}
 
     seeds = config['seeds']
 
