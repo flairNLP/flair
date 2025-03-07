@@ -381,8 +381,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     dp.set_metric('last_correctness_sum', 0)
                     dp.set_metric('last_iteration', 0)
                     dp.set_metric('total_epochs', 0)
-                    dp.set_metric("hist_prediction", torch.zeros(17, device=flair.device))
-                    dp.set_metric("hist_MILD", torch.zeros(1, device=flair.device))
+                    dp.set_metric("hist_prediction", torch.zeros(self.tagset_size, device=flair.device)) # distribution of the predictions in all past epochs
+                    dp.set_metric("hist_MILD", torch.zeros(1, device=flair.device)) # list of 1/0 (according to predictions in each past epoch). 1 - correct prediction, 0 - incorrect
 
     def _log_metrics(self, epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict,
                      pred, gold_labels, clean_labels):
@@ -437,99 +437,110 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     def _calculate_metrics(self, history_metrics_dict, scores, gold_labels):
 
-        softmax = torch.nn.functional.softmax(scores, dim=-1)
-        pred = torch.argmax(softmax, dim=1)
+        metrics_dict = {key: [] for key in self.metrics_list}
+        updated_history_metrics_dict = {key: [] for key in self.metrics_history_variables_list}
 
-        values, indices = softmax.topk(2)
+        softmax = F.softmax(scores, dim=-1)
+        
+        for token_index in range(scores.size(0)):
 
-        # TODO: all globally needed variables computed first
-        total_epochs = history_metrics_dict["total_epochs"]
-        total_epochs = torch.add(total_epochs, 1)
+            # TODO: all globally needed variables computed first
 
-        # Metric: Max softmax prob (calculate_loss)
-        probability_of_predicted_label = values[:, 0]
-        probability_of_second_ranked_prediction = values[:, 1]
-        probability_of_true_label = softmax.gather(index=gold_labels.reshape(gold_labels.size(dim=0), 1), dim=1)[:, 0]
+            softmax_token = softmax[token_index]
+            gold_label = gold_labels[token_index]
 
-        assert probability_of_predicted_label.cpu().detach().all()
+            top_2_indices_argmax = np.argsort(softmax_token.cpu().numpy())[::-1][:2] # argsort returns indices in ascending order
+            prediction = indices[0]
+            updated_history_metrics_dict["last_prediction"].append(prediction)
 
-        # Best vs second best
-        BvSB = probability_of_predicted_label - probability_of_second_ranked_prediction
+            total_epochs = history_metrics_dict["total_epochs"][token_index]
+            total_epochs = total_epochs + 1
+            updated_history_metrics_dict["total_epochs"].append(total_epochs)
 
-        # Confidence TODO: include separating comments for each measure
-        confidence_sum = torch.add(history_metrics_dict['last_confidence_sum'], probability_of_true_label)
-        confidence = torch.div(confidence_sum, total_epochs)
+            probability_of_predicted_label = softmax_token[indices[0]]
+            probability_of_second_ranked_prediction = softmax_token[indices[1]]
+            
+            # Metric: Max softmax prob (calculate_loss)
+            probability_of_true_label = softmax_token[gold_label]
+            metrics_dict['msp'].append(probability_of_predicted_label)
 
-        sq_difference_sum = torch.add(history_metrics_dict['last_sq_difference_sum'],
-                                      torch.square(torch.sub(probability_of_true_label, confidence)))
-        variability = torch.sqrt(torch.div(sq_difference_sum, total_epochs))
 
-        correctness_sum = torch.add(history_metrics_dict['last_correctness_sum'], (gold_labels == pred).bool())
-        correctness = torch.div(correctness_sum, total_epochs)
+            # Best vs second best
+            BvSB = probability_of_predicted_label - probability_of_second_ranked_prediction
+            metrics_dict['BvSB'].append(BvSB)
 
-        iteration = history_metrics_dict["last_iteration"].clone()
-        prediction_changed_list = (pred != history_metrics_dict["last_prediction"]).bool()
-        # epoch_id = total_epochs
-        iteration[prediction_changed_list] = total_epochs[prediction_changed_list]
-        iter_norm = torch.div(iteration, total_epochs)
 
-        pehist = history_metrics_dict["hist_prediction"]
-        batch_label_indexer_pred = pred.reshape(pred.size(dim=0), 1)
-        update_tensor = torch.zeros_like(pehist)
-        update_tensor = update_tensor.scatter_(1, batch_label_indexer_pred, 1)
-        pehist = torch.add(pehist, update_tensor)  # update pehist
-        total_epochs_extended = total_epochs.unsqueeze(1)
-        total_epochs_extended = total_epochs_extended.expand(total_epochs_extended.size()[0], pehist.size()[1])
-        pehist = torch.div(pehist, total_epochs_extended)
+            # Confidence TODO: 
+            confidence_sum = history_metrics_dict['last_confidence_sum'][token_index] + probability_of_true_label
+            confidence = confidence_sum / total_epochs
+            metrics_dict['confidence'].append(confidence)
+            updated_history_metrics_dict["last_confidence_sum"].append(confidence_sum)
 
-        temp = torch.log(pehist)
-        temp[temp.isinf()] = 0
+            # Variability 
+            sq_difference_sum = history_metrics_dict['last_sq_difference_sum'][token_index] + np.square(probability_of_true_label - confidence)
+            variability = np.sqrt(sq_difference_sum / total_epochs)
+            metrics_dict['variability'].append(variability)
+            updated_history_metrics_dict["last_sq_difference_sum"].append(sq_difference_sum)
 
-        temp2 = torch.mul(pehist, temp)
-        pe_hist_entropy = -torch.sum(temp2, dim=-1)  # sum over all labels.
-        pe_hist_entropy = pe_hist_entropy / self.max_certainty
-        pe_hist_entropy[pe_hist_entropy == 0] = 0.0
+            # Correctness
+            correctness_sum = history_metrics_dict['last_correctness_sum'] + (gold_label == prediction).bool()
+            correctness = correctness_sum / total_epochs
+            metrics_dict['correctness'].append(correctness)
+            updated_history_metrics_dict["last_correctness_sum"].append(correctness_sum)
 
-        mild_history = history_metrics_dict["hist_MILD"]
-        prediction_correct = (pred == gold_labels).int()
-        mild_history_new = torch.column_stack((mild_history, prediction_correct))
+            # Iteration Learned
+            last_iteration = history_metrics_dict["last_iteration"][token_index]
+            prediction_changed = (prediction != history_metrics_dict["last_prediction"][token_index]).bool()
 
-        mild_m_list = []
-        mild_f_list = []
-        mild_list = []
+            # epoch_id = total_epochs
+            if prediction_changed:
+                last_iteration = total_epochs
+            
+            updated_history_metrics_dict["last_iteration"].append(last_iteration)
 
-        for i, x in enumerate(mild_history_new.cpu().numpy()):
-            mild_m = calculate_mild_m(x)
-            mild_m_list.append(mild_m)
-            mild_f = calculate_mild_f(x)
-            mild_f_list.append(mild_f)
+            iter_norm = last_iteration / total_epochs
+            metrics_dict['iter_norm'].append(iter_norm)
+
+            # Entropy of prediction history
+            count_predictions_history = history_metrics_dict["hist_prediction"][token_index]
+            count_predictions_history[prediction] += 1
+            updated_history_metrics_dict["hist_prediction"].append(count_predictions_history)
+
+            frequencies_precition_history = count_predictions_history / total_epochs
+
+            log_of_frequencies = np.log(frequencies_precition_history)
+            log_of_frequencies[log_of_frequencies.isinf()] = 0
+
+            entropy_prediction_history = frequencies_precition_history * log_of_frequencies
+            
+            pe_hist_entropy = -np.sum(entropy_prediction_history, dim=-1)  # sum over all labels.
+            pe_hist_entropy = pe_hist_entropy / self.max_certainty
+            pe_hist_entropy[pe_hist_entropy == 0] = 0.0
+            metrics_dict['pehist'].append(pe_hist_entropy)
+
+            # MILD: memorization and forgetting metrics
+            mild_history = history_metrics_dict["hist_MILD"][token_index] # list of True/False (predictions in each past epoch)
+            prediction_correct = (prediction == gold_label).int()
+            mild_history_new = mild_history[:]
+            mild_history_new.append(prediction_correct)
+            updated_history_metrics_dict["hist_MILD"].append(mild_history_new)
+
+            mild_m = calculate_mild_m(mild_history_new)
+            mild_f = calculate_mild_f(mild_history_new)
             mild = mild_m - mild_f
-            mild_list.append(mild)
 
-        mild_f_tensor = torch.tensor(mild_f_list)
-        mild_m_tensor = torch.tensor(mild_m_list)
-        mild_tensor = torch.tensor(mild_list)
-        entropy = -torch.sum(torch.mul(softmax, torch.nan_to_num(torch.log(softmax))), dim=-1)
+            metrics_dict['mild'].append(mild)
+            metrics_dict['mild_f'].append(mild_f)
+            metrics_dict['mild_m'].append(mild_m)
 
-        # calculate cross entropy for each data point
-        cross_entropy = torch.nn.functional.nll_loss(torch.nan_to_num(torch.log(softmax)), gold_labels,
-                                                     reduction='none')
-        metrics_dict = {'confidence': confidence, 'BvSB': BvSB, 'msp': probability_of_predicted_label, 'correctness': correctness,
-                        'iter_norm': iter_norm, 'entropy': entropy, 'cross_entropy': cross_entropy,
-                        'variability': variability, 'pehist': pe_hist_entropy, 'mild_m': mild_m_tensor,
-                        'mild_f': mild_f_tensor, 'mild': mild_tensor}
+            # predictive entropy
+            entropy = -np.sum(softmax_token * np.nan_to_num(np.log(softmax_token)), dim=-1)
+            metrics_dict['entropy'].append(entropy)
 
-        # update history metrics
-        updated_history_metrics_dict = {}
-        updated_history_metrics_dict["last_prediction"] = pred
-        updated_history_metrics_dict["last_iteration"] = iteration
-        updated_history_metrics_dict["last_confidence_sum"] = confidence_sum
-        updated_history_metrics_dict["last_sq_difference_sum"] = sq_difference_sum
-        updated_history_metrics_dict["last_correctness_sum"] = correctness_sum
-        updated_history_metrics_dict["total_epochs"] = total_epochs
-        updated_history_metrics_dict["hist_prediction"] = pehist
-        updated_history_metrics_dict["hist_MILD"] = mild_history_new
-
+            # calculate cross entropy for the given data point
+            cross_entropy = - np.nan_to_num(np.log(softmax_token[gold_label]))
+            metrics_dict['cross_entropy'].append(cross_entropy)
+            
         return pred, metrics_dict, updated_history_metrics_dict
 
     def _convert_bioes_to_bio(self, label_indices):
