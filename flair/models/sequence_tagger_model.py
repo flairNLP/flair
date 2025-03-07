@@ -1474,11 +1474,13 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
         return torch.stack(scores)
 
-    def _calculate_metrics(self, history_metrics_dict, softmax, gold_labels):
-
+    def _calculate_metrics(self, history_metrics_dict, scores, gold_labels):
+        # scores: (num_layers, num_tokens, num_classes)
         pred, metrics_dict, updated_history_metrics_dict = super()._calculate_metrics(
-            history_metrics_dict, softmax[-1], gold_labels
+            history_metrics_dict, scores[-1], gold_labels
         )
+
+        softmax = F.softmax(features, dim=-1).cpu()
 
         # calculate and set pd metric here
         pd = []
