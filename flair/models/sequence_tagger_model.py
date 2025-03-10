@@ -342,11 +342,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 history_metrics_dict[metric].extend(metric_list)
 
         for metric in self.metrics_history_variables_list:
-            if metric == "hist_prediction" or metric == "hist_MILD":
-                history_metrics_dict[metric] = torch.stack(history_metrics_dict[metric], dim=0)
+            if metric == "hist_prediction" or metric == "hist_MILD": # these will be lists of lists
+                history_metrics_dict[metric] = history_metrics_dict[metric]
 
             else:
-                history_metrics_dict[metric] = torch.tensor(history_metrics_dict[metric], device=flair.device)
+                history_metrics_dict[metric] = history_metrics_dict[metric] # these will be lists
 
         return history_metrics_dict
 
@@ -381,8 +381,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     dp.set_metric('last_correctness_sum', 0)
                     dp.set_metric('last_iteration', 0)
                     dp.set_metric('total_epochs', 0)
-                    dp.set_metric("hist_prediction", torch.zeros(self.tagset_size, device=flair.device)) # distribution of the predictions in all past epochs
-                    dp.set_metric("hist_MILD", torch.zeros(1, device=flair.device)) # list of 1/0 (according to predictions in each past epoch). 1 - correct prediction, 0 - incorrect
+                    dp.set_metric("hist_prediction", [0] * self.tagset_size) # distribution of the predictions in all past epochs
+                    dp.set_metric("hist_MILD", [0]) # list of 1/0 (according to predictions in each past epoch). 1 - correct prediction, 0 - incorrect
 
     def _log_metrics(self, epoch_log_path, sentences, metrics_dict, history_metrics_dict, updated_history_metrics_dict,
                      pred, gold_labels, clean_labels):
@@ -410,28 +410,28 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                         elif metric == "hist_prediction" or metric == "hist_MILD":
                             continue
                         else:
-                            outfile.write(f"{str(round(history_metrics_dict[metric][i].item(), 4))}\t")
+                            outfile.write(f"{str(round(history_metrics_dict[metric][i], 4))}\t")
                     for metric in self.metrics_list:
-                        outfile.write(f"{str(round(metrics_dict[metric][i].item(), 4))}\t")
+                        outfile.write(f"{str(round(metrics_dict[metric][i], 4))}\t")
                     outfile.write("\n")
 
                     # set updated history metrics
-                    token.set_metric('last_prediction', updated_history_metrics_dict['last_prediction'][i].item())
+                    token.set_metric('last_prediction', updated_history_metrics_dict['last_prediction'][i])
                     token.set_metric('last_confidence_sum',
-                                     updated_history_metrics_dict['last_confidence_sum'][i].item())
+                                     updated_history_metrics_dict['last_confidence_sum'][i])
                     token.set_metric('last_sq_difference_sum',
-                                     updated_history_metrics_dict['last_sq_difference_sum'][i].item())
+                                     updated_history_metrics_dict['last_sq_difference_sum'][i])
                     token.set_metric('last_correctness_sum',
-                                     updated_history_metrics_dict['last_correctness_sum'][i].item())
-                    token.set_metric('last_iteration', updated_history_metrics_dict['last_iteration'][i].item())
-                    token.set_metric("total_epochs", updated_history_metrics_dict["total_epochs"][i].item())
+                                     updated_history_metrics_dict['last_correctness_sum'][i])
+                    token.set_metric('last_iteration', updated_history_metrics_dict['last_iteration'][i])
+                    token.set_metric("total_epochs", updated_history_metrics_dict["total_epochs"][i])
                     token.set_metric("hist_prediction", updated_history_metrics_dict["hist_prediction"][i])
                     token.set_metric("hist_MILD", updated_history_metrics_dict["hist_MILD"][i])
                     # new dp properties: last_iter; last_pred; last_conf, last_sq_sum   
 
                     for metric in self.metrics_save_list:
                         if metric != '':
-                            token.set_metric(metric, metrics_dict[metric][i].item())
+                            token.set_metric(metric, metrics_dict[metric][i])
                     i += 1
                 outfile.write('\n')
 
@@ -441,24 +441,25 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         updated_history_metrics_dict = {key: [] for key in self.metrics_history_variables_list}
 
         softmax = F.softmax(scores, dim=-1)
-        
+        pred = torch.argmax(softmax, dim=-1).cpu().detach().numpy()
+
         for token_index in range(scores.size(0)):
 
             # TODO: all globally needed variables computed first
 
-            softmax_token = softmax[token_index]
-            gold_label = gold_labels[token_index]
+            softmax_token = softmax[token_index].cpu().detach().numpy()
+            gold_label = gold_labels[token_index].cpu().detach().numpy()
 
-            top_2_indices_argmax = np.argsort(softmax_token.cpu().numpy())[::-1][:2] # argsort returns indices in ascending order
-            prediction = indices[0]
+            top_2_indices_argmax = np.argsort(softmax_token)[::-1][:2] # argsort returns indices in ascending order
+            prediction = top_2_indices_argmax[0]
             updated_history_metrics_dict["last_prediction"].append(prediction)
 
             total_epochs = history_metrics_dict["total_epochs"][token_index]
             total_epochs = total_epochs + 1
             updated_history_metrics_dict["total_epochs"].append(total_epochs)
 
-            probability_of_predicted_label = softmax_token[indices[0]]
-            probability_of_second_ranked_prediction = softmax_token[indices[1]]
+            probability_of_predicted_label = softmax_token[top_2_indices_argmax[0]]
+            probability_of_second_ranked_prediction = softmax_token[top_2_indices_argmax[1]]
             
             # Metric: Max softmax prob (calculate_loss)
             probability_of_true_label = softmax_token[gold_label]
@@ -470,7 +471,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             metrics_dict['BvSB'].append(BvSB)
 
 
-            # Confidence TODO: 
+            # Confidence 
             confidence_sum = history_metrics_dict['last_confidence_sum'][token_index] + probability_of_true_label
             confidence = confidence_sum / total_epochs
             metrics_dict['confidence'].append(confidence)
@@ -483,14 +484,14 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             updated_history_metrics_dict["last_sq_difference_sum"].append(sq_difference_sum)
 
             # Correctness
-            correctness_sum = history_metrics_dict['last_correctness_sum'] + (gold_label == prediction).bool()
+            correctness_sum = history_metrics_dict['last_correctness_sum'][token_index] + int(gold_label == prediction)
             correctness = correctness_sum / total_epochs
             metrics_dict['correctness'].append(correctness)
             updated_history_metrics_dict["last_correctness_sum"].append(correctness_sum)
 
             # Iteration Learned
             last_iteration = history_metrics_dict["last_iteration"][token_index]
-            prediction_changed = (prediction != history_metrics_dict["last_prediction"][token_index]).bool()
+            prediction_changed = (prediction != history_metrics_dict["last_prediction"][token_index])
 
             # epoch_id = total_epochs
             if prediction_changed:
@@ -506,21 +507,22 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             count_predictions_history[prediction] += 1
             updated_history_metrics_dict["hist_prediction"].append(count_predictions_history)
 
-            frequencies_precition_history = count_predictions_history / total_epochs
+            frequencies_prediction_history = [x / total_epochs for x in count_predictions_history]
 
-            log_of_frequencies = np.log(frequencies_precition_history)
-            log_of_frequencies[log_of_frequencies.isinf()] = 0
+            log_of_frequencies = np.log(frequencies_prediction_history)
+            log_of_frequencies[np.isinf(log_of_frequencies)] = 0
 
-            entropy_prediction_history = frequencies_precition_history * log_of_frequencies
+            entropy_prediction_history = frequencies_prediction_history * log_of_frequencies
             
-            pe_hist_entropy = -np.sum(entropy_prediction_history, dim=-1)  # sum over all labels.
+            pe_hist_entropy = -np.sum(entropy_prediction_history)  # sum over all labels.
             pe_hist_entropy = pe_hist_entropy / self.max_certainty
-            pe_hist_entropy[pe_hist_entropy == 0] = 0.0
+            if pe_hist_entropy == 0:
+                pe_hist_entropy = 0.0
             metrics_dict['pehist'].append(pe_hist_entropy)
 
             # MILD: memorization and forgetting metrics
             mild_history = history_metrics_dict["hist_MILD"][token_index] # list of True/False (predictions in each past epoch)
-            prediction_correct = (prediction == gold_label).int()
+            prediction_correct = int(prediction == gold_label)
             mild_history_new = mild_history[:]
             mild_history_new.append(prediction_correct)
             updated_history_metrics_dict["hist_MILD"].append(mild_history_new)
@@ -534,7 +536,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             metrics_dict['mild_m'].append(mild_m)
 
             # predictive entropy
-            entropy = -np.sum(softmax_token * np.nan_to_num(np.log(softmax_token)), dim=-1)
+            entropy = -np.sum(softmax_token * np.nan_to_num(np.log(softmax_token)), axis=-1)
             metrics_dict['entropy'].append(entropy)
 
             # calculate cross entropy for the given data point
