@@ -1460,7 +1460,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
             history_metrics_dict, scores[-1], gold_labels
         )
 
-        softmax = F.softmax(features, dim=-1).cpu()
+        softmax = F.softmax(scores, dim=-1).cpu()
 
         # calculate and set pd metric here
         pd = []
@@ -1477,12 +1477,12 @@ class EarlyExitSequenceTagger(SequenceTagger):
             total_correct.append(layer_metrics['total_agree_w_correct'])
             layer_entropy.append(layer_metrics['layer_entropy'])
 
-        metrics_dict["pd"] = torch.tensor(pd, device=torch.device("cpu"))
-        metrics_dict["fl"] = torch.tensor(fl, device=torch.device("cpu"))
-        metrics_dict["tac"] = torch.tensor(total_correct, device=torch.device("cpu"))
-        metrics_dict["tal"] = torch.tensor(total_last, device=torch.device("cpu"))
-        metrics_dict["le"] = torch.tensor(layer_entropy, device=torch.device("cpu"))
-
+        metrics_dict["pd"] = pd
+        metrics_dict["fl"] = fl
+        metrics_dict["tac"] = total_correct
+        metrics_dict["tal"] = total_last
+        metrics_dict["le"] = layer_entropy
+        
         return pred, metrics_dict, updated_history_metrics_dict
 
     def forward_loss(self, sentences: List[Sentence]) -> Tuple[torch.Tensor, int]:
@@ -1552,7 +1552,11 @@ class EarlyExitSequenceTagger(SequenceTagger):
         frequencies = frequencies / frequencies.sum()  # normalize frequencies
 
         layer_entropy = -torch.sum(torch.mul(frequencies, torch.nan_to_num(torch.log(frequencies))))  # which dimension?
+        layer_entropy = layer_entropy.item()
 
+        if layer_entropy == 0:
+            layer_entropy = 0.0
+        
         for i in range(self.n_layers - 1, -1, -1):  # iterate over the layers starting from the penultimate one
             if pred_labels[i] == gold_label:
                 fl = i  # pd will have the ID of the lowest layer predicting the training label
