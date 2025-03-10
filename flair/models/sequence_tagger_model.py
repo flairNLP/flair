@@ -390,7 +390,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         i = 0
 
         # BIO
-        history_predicted = self._convert_bioes_to_bio(history_metrics_dict['last_prediction'])
         with open(self.print_out_path / epoch_log_path, "a") as outfile:
             for sent_ind, sent in enumerate(sentences):
                 for token_ind, token in enumerate(sent):
@@ -406,7 +405,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     for metric in self.metrics_history_variables_list:
                         if metric == 'last_prediction':
                             outfile.write(
-                                f"{str(self.label_dictionary.get_item_for_index(history_predicted[i].item()))}\t")
+                                f"{str(self.label_dictionary.get_item_for_index(history_metrics_dict['last_prediction'][i]))}\t")
                         elif metric == "hist_prediction" or metric == "hist_MILD":
                             continue
                         else:
@@ -544,27 +543,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             metrics_dict['cross_entropy'].append(cross_entropy)
             
         return pred, metrics_dict, updated_history_metrics_dict
-
-    def _convert_bioes_to_bio(self, label_indices):
-
-        bio_labels_list = []
-
-        for ind in label_indices.tolist():
-            label = self.label_dictionary.get_item_for_index(ind)
-            if label.startswith('S-'):
-                bio_labels_list.append('B-' + label[2:])
-            elif label.startswith('E-'):
-                bio_labels_list.append('I-' + label[2:])
-            else:
-                bio_labels_list.append(label)
-
-        labels = torch.tensor(
-            [self.label_dictionary.get_idx_for_item(label) for label in bio_labels_list],
-            dtype=torch.long,
-            device=flair.device,
-        )
-
-        return labels
 
     def calculate_and_log_metrics(self, sentences, scores, observed_labels, clean_labels):
 
