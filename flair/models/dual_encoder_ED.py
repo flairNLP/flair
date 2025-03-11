@@ -468,8 +468,8 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
     def _prepare_sentences(self, sentences: List[Sentence],
                            max_characters_sentence = 2800,
-                           max_spans_per_sentence = 50, #100, #75,
-                           max_spans_per_batch = 100, #150,
+                           max_spans_per_sentence = 100, #50, #100, #75,
+                           max_spans_per_batch = 150, #100, #150,
                            max_characters_per_batch_with_context: Union[int, None] = 8000,
                            respect_full_stops = True,
                            batch_size: Union[int, None] = None,
@@ -921,7 +921,11 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         else:
             if negative_sampling_factor_before == "dyn":
                 # after some steps, set the negative_sampling_factor dynamically, depending on the nr of spans in the batch:
-                self._negative_sampling_factor = min(10, int(100/nr_spans))
+                calculated_factor = min(10, int(100/nr_spans))
+                if calculated_factor < 1:
+                    calculated_factor = 1
+                self._negative_sampling_factor = calculated_factor
+
             #delete_where_gold_already_nearest = True
 
         negative_labels, indices_where_gold_already_nearest = self._negative_sampling_fn(span_embeddings, labels)
