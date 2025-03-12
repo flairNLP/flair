@@ -28,20 +28,26 @@ from flair.training_utils import store_embeddings, Result
 log = logging.getLogger("flair")
 
 
-def calculate_mild_f(seq):
-    # seq = [0 if x == False else 1 for x in n.values ]
-    tmp = ''.join([str(int(item)) for item in seq])
-    tmp1 = [item for item in tmp.split('0') if item]
-    p1 = len(''.join(tmp1)) if len(tmp1) != 0 else 0
-    return p1
+def calculate_mild_f(prediction_correct_flags):
+    # prediction_correct_flags[i] is 1, if the prediction at epoch 1 was correct (0 if it was incorrect); 
+    #   example: [01101100]
+    # forgetting episode - when prediction_correct_flag goes from 1 to 0
+    #   example: forgetting episodes are '11' and '11'
+    flags_string = ''.join([str(int(item)) for item in prediction_correct_flags])
+    forgetting_list = [item for item in flags_string.split('0') if item] # get only forgetting episodes
+    F = len(''.join(forgetting_list)) if len(forgetting_list) != 0 else 0 # total 'duration/length' of forgetting episodes (going from 1 to 0); example: total length is 4
+    return F
 
 
-def calculate_mild_m(seq):
-    # seq = [0 if x == False else 1 for x in n.values ]
-    tmp = ''.join([str(int(item)) for item in seq])
-    tmp2 = [item for item in tmp.split('1') if item]
-    p2 = len(''.join(tmp2)) if len(tmp2) != 0 else 0
-    return p2
+def calculate_mild_m(prediction_correct_flags):
+    # prediction_correct_flags[i] is 1, if the prediction at epoch 1 was correct (0 if it was incorrect); 
+    #   example: [01101100]
+    # memorization episode - when prediction_correct_flag goes from 1 to 0
+    #   example: memorization episodes are '0' and '0'
+    flags_string = ''.join([str(int(item)) for item in prediction_correct_flags])
+    memorization_list = [item for item in flags_string.split('1') if item] # get only memorization episodes
+    M = len(''.join(memorization_list)) if len(memorization_list) != 0 else 0 # total 'duration/length' of memorization episodes (going from 0 to 1); example: total length is 2
+    return M
 
 
 class SequenceTagger(flair.nn.Classifier[Sentence]):
@@ -228,7 +234,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         self.calculate_sample_metrics = calculate_sample_metrics
 
-        # as a next step, this could be extended to all classifiers and implemented in DefaultClassifier too.
+        # set lists of metrics to log (metrics_list) and metrics info to save to datapoints (metrics_history_variables_list)
         if self.calculate_sample_metrics:
             self.metrics_list = ['confidence',
                                  'variability',
@@ -329,7 +335,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     # start of sample metrics functions
     def _get_history_metrics_for_batch(self, sentences):
-        # get metrics for each token in the batch from the previous epoch
+        # get metrics from the previous epoch for each token in the batch 
 
         history_metrics_dict = {}
 
@@ -351,6 +357,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         return history_metrics_dict
 
     def _init_metrics_logging(self, epoch_log_path, sentences):
+        # set file header; only if the epoch_log_path file hasn't been opened yet
         if not os.path.isfile(self.print_out_path / epoch_log_path):
             with open(self.print_out_path / epoch_log_path, "w") as outfile:
                 outfile.write("Text\t" +
@@ -389,10 +396,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         i = 0
 
-        # BIO
         with open(self.print_out_path / epoch_log_path, "a") as outfile:
             for sent_ind, sent in enumerate(sentences):
                 for token_ind, token in enumerate(sent):
+
+                    # printout token info
                     outfile.write(
                         f"{str(token.text)}\t"
                         + f"{str(sent.ind)}\t"
@@ -401,20 +409,24 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                         + f"{str(self.label_dictionary.get_item_for_index(gold_labels[i].item()))}\t"
                         + f"{str(self.label_dictionary.get_item_for_index(clean_labels[i].item()))}\t"
                         + f"{str(self.label_dictionary.get_item_for_index(gold_labels[i].item()) != self.label_dictionary.get_item_for_index(clean_labels[i].item()))}\t")
-
+                    
+                    # printout metric history to a file 
                     for metric in self.metrics_history_variables_list:
                         if metric == 'last_prediction':
                             outfile.write(
                                 f"{str(self.label_dictionary.get_item_for_index(history_metrics_dict['last_prediction'][i]))}\t")
                         elif metric == "hist_prediction" or metric == "hist_MILD":
+                            # don't print these because they are lists
                             continue
                         else:
                             outfile.write(f"{str(round(history_metrics_dict[metric][i], 4))}\t")
+
+                    # printout actual metrics to a file 
                     for metric in self.metrics_list:
                         outfile.write(f"{str(round(metrics_dict[metric][i], 4))}\t")
                     outfile.write("\n")
 
-                    # set updated history metrics
+                    # save updated metric history to the datapoint
                     token.set_metric('last_prediction', updated_history_metrics_dict['last_prediction'][i])
                     token.set_metric('last_confidence_sum',
                                      updated_history_metrics_dict['last_confidence_sum'][i])
@@ -426,8 +438,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                     token.set_metric("total_epochs", updated_history_metrics_dict["total_epochs"][i])
                     token.set_metric("hist_prediction", updated_history_metrics_dict["hist_prediction"][i])
                     token.set_metric("hist_MILD", updated_history_metrics_dict["hist_MILD"][i])
-                    # new dp properties: last_iter; last_pred; last_conf, last_sq_sum   
 
+                    # optional: save selected metrics to the datapoint
                     for metric in self.metrics_save_list:
                         if metric != '':
                             token.set_metric(metric, metrics_dict[metric][i])
@@ -436,31 +448,32 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
     def _calculate_metrics(self, history_metrics_dict, scores, gold_labels):
 
+        # Initialize metrics dictionary and new updated metrics history dictionary
         metrics_dict = {key: [] for key in self.metrics_list}
         updated_history_metrics_dict = {key: [] for key in self.metrics_history_variables_list}
 
         softmax = F.softmax(scores, dim=-1)
-        pred = torch.argmax(softmax, dim=-1).cpu().detach().numpy()
+        predicted_labels = torch.argmax(softmax, dim=-1).cpu().detach().numpy()
 
         for token_index in range(scores.size(0)):
-
-            # TODO: all globally needed variables computed first
+            # Calculate variables needed for all metrics
 
             softmax_token = softmax[token_index].cpu().detach().numpy()
             gold_label = gold_labels[token_index].cpu().detach().numpy()
 
             top_2_indices_argmax = np.argsort(softmax_token)[::-1][:2] # argsort returns indices in ascending order
             prediction = top_2_indices_argmax[0]
-            updated_history_metrics_dict["last_prediction"].append(prediction)
 
             total_epochs = history_metrics_dict["total_epochs"][token_index]
             total_epochs = total_epochs + 1
+
+            updated_history_metrics_dict["last_prediction"].append(prediction)
             updated_history_metrics_dict["total_epochs"].append(total_epochs)
 
             probability_of_predicted_label = softmax_token[top_2_indices_argmax[0]]
             probability_of_second_ranked_prediction = softmax_token[top_2_indices_argmax[1]]
             
-            # Metric: Max softmax prob (calculate_loss)
+            # Metric: Max softmax probability
             probability_of_true_label = softmax_token[gold_label]
             metrics_dict['msp'].append(probability_of_predicted_label)
 
@@ -492,7 +505,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             last_iteration = history_metrics_dict["last_iteration"][token_index]
             prediction_changed = (prediction != history_metrics_dict["last_prediction"][token_index])
 
-            # epoch_id = total_epochs
             if prediction_changed:
                 last_iteration = total_epochs
             
@@ -520,7 +532,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             metrics_dict['pehist'].append(pe_hist_entropy)
 
             # MILD: memorization and forgetting metrics
-            mild_history = history_metrics_dict["hist_MILD"][token_index] # list of True/False (predictions in each past epoch)
+            mild_history = history_metrics_dict["hist_MILD"][token_index] # list of True/False (whether the predictions in each past epoch are correct)
             prediction_correct = int(prediction == gold_label)
             mild_history_new = mild_history[:]
             mild_history_new.append(prediction_correct)
@@ -542,7 +554,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             cross_entropy = - np.nan_to_num(np.log(softmax_token[gold_label]))
             metrics_dict['cross_entropy'].append(cross_entropy)
             
-        return pred, metrics_dict, updated_history_metrics_dict
+        return predicted_labels, metrics_dict, updated_history_metrics_dict
 
     def calculate_and_log_metrics(self, sentences, scores, observed_labels, clean_labels):
 
@@ -1392,6 +1404,7 @@ class EarlyExitSequenceTagger(SequenceTagger):
         self.last_layer_only = last_layer_only
         self.print_all_predictions = print_all_predictions
 
+        # add layer metrics to the list of metrics to log  
         if self.calculate_sample_metrics:
             self.metrics_list.append('pd')
             self.metrics_list.append('fl')
@@ -1460,22 +1473,23 @@ class EarlyExitSequenceTagger(SequenceTagger):
             history_metrics_dict, scores[-1], gold_labels
         )
 
+        # softmax over the scores from all layers
         softmax = F.softmax(scores, dim=-1).cpu()
-
-        # calculate and set pd metric here
         pd = []
         fl = []
         total_last = []
         total_correct = []
         layer_entropy = []
 
+        # iterate over tokens and calculate layer metrics
         for i in range(softmax.size()[1]):
             layer_metrics = self._calculate_layer_metrics(softmax[:, i, :].cpu(), gold_labels[i].item())
             pd.append(layer_metrics['prediction_depth'])
-            fl.append(layer_metrics['first_layer'])  # todo: pass pred as an argument, since it's already calculated
+            fl.append(layer_metrics['first_layer'])
             total_last.append(layer_metrics['total_agree_w_last'])
             total_correct.append(layer_metrics['total_agree_w_correct'])
             layer_entropy.append(layer_metrics['layer_entropy'])
+
 
         metrics_dict["pd"] = pd
         metrics_dict["fl"] = fl
@@ -1536,9 +1550,11 @@ class EarlyExitSequenceTagger(SequenceTagger):
 
     def _calculate_layer_metrics(self, scores: torch.Tensor, gold_label: int) -> int:
         """
-        Calculates the prediction depth for a given (single) data point.
+        Calculates the layer metrics for a given (single) data point.
         :param scores: tensor with softmax or sigmoid scores of all layers
         """
+
+        # Initialize variables
         pd = self.n_layers
         final_pd = False
 
@@ -1547,26 +1563,35 @@ class EarlyExitSequenceTagger(SequenceTagger):
         total_agree_w_last = 0
         total_agree_w_correct = 0
 
+        # Calculate the predictions from each layer
         pred_labels = torch.argmax(scores, dim=-1)
+
+        # Calculate layer entropy 
         frequencies = torch.bincount(pred_labels, minlength=len(self.label_dictionary))
         frequencies = frequencies / frequencies.sum()  # normalize frequencies
 
-        layer_entropy = -torch.sum(torch.mul(frequencies, torch.nan_to_num(torch.log(frequencies))))  # which dimension?
+        layer_entropy = -torch.sum(torch.mul(frequencies, torch.nan_to_num(torch.log(frequencies)))) 
         layer_entropy = layer_entropy.item()
 
         if layer_entropy == 0:
             layer_entropy = 0.0
         
-        for i in range(self.n_layers - 1, -1, -1):  # iterate over the layers starting from the penultimate one
+        for i in range(self.n_layers - 1, -1, -1):  
+            # iterate over the layers starting from the penultimate one
             if pred_labels[i] == gold_label:
-                fl = i  # pd will have the ID of the lowest layer predicting the training label
-                total_agree_w_correct += 1
+                # fl (first layer): will have the ID of the lowest layer predicting the training label
+                fl = i  
+                # total_agree_w_correct: count how many layers aggre with the training label
+                total_agree_w_correct += 1 
 
-            if pred_labels[i] == pred_labels[-1]:
-                if not final_pd:  # if prediction is the same as the last layer
+            if pred_labels[i] == pred_labels[-1]: 
+                if not final_pd: 
+                    # if prediction is the same as the last layer, decrease pd (prediction depth)
                     pd -= 1
-                total_agree_w_last += 1
-            else:  # if prediction is not the same as the last layer, then pd sequence is broken and final pd is set
+                # total_agree_w_last: count how many layers aggre with the last layer's prediction
+                total_agree_w_last += 1  
+            else:  
+                # if the prediction is not the same as the last layer, then the pd sequence is broken and final pd value is set
                 final_pd = True
 
         return {'prediction_depth': pd, 'first_layer': fl, 'layer_entropy': layer_entropy,
