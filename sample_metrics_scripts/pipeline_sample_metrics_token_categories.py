@@ -183,7 +183,6 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
         reproject_embeddings=False,
         weighted_loss=False,
         print_all_predictions=False,
-        modified_loss=False,
         calculate_sample_metrics=True,
         metrics_mode=metrics_mode,
         metrics_save_list=[]

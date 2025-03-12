@@ -152,13 +152,9 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
                         print(binrange)
                     else:
                         binrange = (0, max_metric)
-                elif metric in ['le','cross_entropy','entropy']:
+                elif metric in ['le','cross_entropy','entropy','pehist']:
                     max_metric = 8
                     binwidth = 0.1
-                    binrange = (0,max_metric)
-                elif metric == 'pehist':
-                    max_metric = 0.1
-                    binwidth = 0.005
                     binrange = (0,max_metric)
                 else:
                     max_metric = df[metric].max()

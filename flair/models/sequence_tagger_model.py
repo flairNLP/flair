@@ -552,6 +552,8 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
             # calculate cross entropy for the given data point
             cross_entropy = - np.nan_to_num(np.log(softmax_token[gold_label]))
+            if cross_entropy == 0:
+                cross_entropy = 0.0
             metrics_dict['cross_entropy'].append(cross_entropy)
             
         return predicted_labels, metrics_dict, updated_history_metrics_dict
