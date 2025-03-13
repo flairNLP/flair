@@ -108,9 +108,21 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         return model
 
     @staticmethod
-    def _fetch_model(model_name):
-        # this seems to just return model name, not a model with that name
-        return model_name
+    def _fetch_model(model_identifier: str):
+        """
+        Returns a model path (e.g., Huggingface model hub id or other repo path) given a model identifier.
+
+        This method is typically overwritten in specific classes that inherit from Model to allow for easier access
+        to pre-specified models. For instance, in the SequenceTagger, the id "ner" maps to the HF path
+        "flair/ner-english".
+
+        Args:
+            model_identifier: a short string identifier of the model.
+
+        Returns:
+            Path to HuggingFace or HU repo
+        """
+        return model_identifier
 
     def save(self, model_file: Union[str, Path], checkpoint: bool = False) -> None:
         """Saves the current model to the provided file.
