@@ -94,7 +94,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
     @classmethod
     def _init_model_with_state_dict(cls, state: dict[str, Any], **kwargs):
-
         """Initialize the model from a state dictionary."""
         if "embeddings" in kwargs:
             embeddings = kwargs.pop("embeddings")
