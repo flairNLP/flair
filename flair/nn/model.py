@@ -108,9 +108,21 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         return model
 
     @staticmethod
-    def _fetch_model(model_name):
-        # this seems to just return model name, not a model with that name
-        return model_name
+    def _fetch_model(model_identifier: str):
+        """
+        Returns a model path (e.g., Huggingface model hub id or other repo path) given a model identifier.
+
+        This method is typically overwritten in specific classes that inherit from Model to allow for easier access
+        to pre-specified models. For instance, in the SequenceTagger, the id "ner" maps to the HF path
+        "flair/ner-english".
+
+        Args:
+            model_identifier: a short string identifier of the model.
+
+        Returns:
+            Path to HuggingFace or HU repo
+        """
+        return model_identifier
 
     def save(self, model_file: Union[str, Path], checkpoint: bool = False) -> None:
         """Saves the current model to the provided file.
@@ -143,16 +155,18 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             # get all non-abstract subclasses
             subclasses = list(get_non_abstract_subclasses(cls))
 
-            # try to fetch the model for each subclass. if fetching is possible, load model and return it
-            for model_cls in subclasses:
-                try:
-                    new_model_path = model_cls._fetch_model(model_path)
-                    if new_model_path != model_path:
-                        return model_cls.load(new_model_path)
-                except Exception as e:
-                    log.debug(e)
-                    # skip any invalid loadings, e.g. not found on HuggingFace hub
-                    continue
+            # If the model_path is a str, try to fetch model for each subclass.
+            # If fetching is possible, load model and return it.
+            if isinstance(model_path, str):
+                for model_cls in subclasses:
+                    try:
+                        new_model_path = model_cls._fetch_model(model_path)
+                        if new_model_path != model_path:
+                            return model_cls.load(new_model_path)
+                    except Exception as e:
+                        log.debug(e)
+                        # skip any invalid loadings, e.g. not found on HuggingFace hub
+                        continue
 
             # if the model cannot be fetched, load as a file
             try:

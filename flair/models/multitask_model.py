@@ -253,7 +253,7 @@ class MultitaskModel(flair.nn.Classifier):
         return self._label_type
 
     @staticmethod
-    def _fetch_model(model_name) -> str:
+    def _fetch_model(model_identifier) -> str:
         model_map = {}
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
@@ -266,8 +266,8 @@ class MultitaskModel(flair.nn.Classifier):
         model_map["zelda"] = "/".join([hu_path, "zelda", "v2", "zelda-v2.pt"])
 
         cache_dir = Path("models")
-        if model_name in model_map:
-            if model_name in ["hunflair", "hunflair-paper", "bioner"]:
+        if model_identifier in model_map:
+            if model_identifier in ["hunflair", "hunflair-paper", "bioner"]:
                 log.warning(
                     "HunFlair (version 1) is deprecated. Consider using HunFlair2 for improved extraction performance: "
                     "Classifier.load('hunflair2')."
@@ -275,9 +275,9 @@ class MultitaskModel(flair.nn.Classifier):
                     "information."
                 )
 
-            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
+            model_identifier = cached_path(model_map[model_identifier], cache_dir=cache_dir)
 
-        return model_name
+        return model_identifier
 
     @classmethod
     def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "MultitaskModel":
