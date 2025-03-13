@@ -151,12 +151,13 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             The loaded Flair model.
         """
         # if this class is abstract, go through all inheriting classes and try to fetch and load the model
-        if inspect.isabstract(cls):
+        if inspect.isabstract(cls) and isinstance(model_path, str):
             # get all non-abstract subclasses
             subclasses = list(get_non_abstract_subclasses(cls))
 
             # try to fetch the model for each subclass. if fetching is possible, load model and return it
             for model_cls in subclasses:
+
                 try:
                     new_model_path = model_cls._fetch_model(model_path)
                     if new_model_path != model_path:
