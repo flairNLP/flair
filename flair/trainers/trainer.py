@@ -8,6 +8,7 @@ import warnings
 from inspect import signature
 from pathlib import Path
 from typing import Optional, Union
+import math
 
 import numpy as np
 import torch
@@ -37,6 +38,7 @@ from flair.trainers.plugins import (
     WeightExtractorPlugin,
 )
 from flair.training_utils import EmbeddingStorageMode, identify_dynamic_embeddings, log_line, store_embeddings
+from flair.trainers.dynamic_batch_size_samplers import SingleLengthBatchSampler, MultiGPUSingleLengthBatchSampler, NUM_STEPS_PER_BATCH
 
 log = logging.getLogger("flair")
 
@@ -617,22 +619,25 @@ class ModelTrainer(Pluggable):
                         shuffle_data_this_epoch = False
 
                     if multi_gpu:
-                        distributed_sampler: DistributedSampler = DistributedSampler(
-                            train_data, shuffle=shuffle_data_this_epoch
+                        distributed_sampler = MultiGPUSingleLengthBatchSampler(
+                            max_tokens_per_batch_step=4096,
+                            min_sentences_per_batch_step=1
                         )
-                        distributed_sampler.set_epoch(epoch - 1)
+                        distributed_sampler.set_dataset(train_data)
+                        # distributed_sampler.set_epoch(epoch - 1)
                         batch_loader = DataLoader(
                             train_data,
-                            batch_size=mini_batch_size,
-                            shuffle=False,
-                            sampler=distributed_sampler,
+                            batch_sampler=distributed_sampler
                         )
                     else:
+                        sampler = SingleLengthBatchSampler(
+                            max_tokens_per_batch_step=4096,
+                            min_sentences_per_batch_step=1
+                        )
+                        sampler.set_dataset(train_data)
                         batch_loader = DataLoader(
                             train_data,
-                            batch_size=mini_batch_size,
-                            shuffle=shuffle_data_this_epoch,
-                            sampler=sampler,
+                            batch_sampler=sampler
                         )
 
                     self.model.train()
@@ -665,7 +670,7 @@ class ModelTrainer(Pluggable):
 
                         self.dispatch("before_training_batch", **batch_kw)
 
-                        batch_steps = self.get_batch_steps(batch, mini_batch_chunk_size=mini_batch_chunk_size)
+                        batch_steps = self.get_batch_steps(batch, mini_batch_chunk_size=math.ceil(len(batch) / NUM_STEPS_PER_BATCH))
 
                         # forward and backward for batch
                         for batch_step_no, batch_step in enumerate(batch_steps):
