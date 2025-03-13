@@ -28,22 +28,11 @@ class Result:
         self,
         main_score: float,
         detailed_results: str,
-        scores: dict,
         classification_report: Optional[dict] = None,
+        scores: Optional[dict] = None,
     ) -> None:
-        """Initialize Result object for model evaluation.
-
-        Args:
-            main_score: The primary evaluation metric
-            detailed_results: Detailed evaluation results as string
-            scores: Dictionary containing evaluation metrics including 'loss'
-            classification_report: Optional classification report dictionary
-
-        Raises:
-            ValueError: If scores does not contain 'loss' key
-        """
-        if "loss" not in scores:
-            raise ValueError("scores parameter must contain 'loss' key")
+        classification_report = classification_report if classification_report is not None else {}
+        assert scores is not None and "loss" in scores, "No loss provided."
 
         self.main_score: float = main_score
         self.scores = scores
@@ -51,7 +40,7 @@ class Result:
         self.classification_report = classification_report if classification_report is not None else {}
 
     @property
-    def loss(self) -> float:
+    def loss(self):
         return self.scores["loss"]
 
     def __str__(self) -> str:
