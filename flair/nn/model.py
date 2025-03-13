@@ -94,6 +94,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
     @classmethod
     def _init_model_with_state_dict(cls, state: dict[str, Any], **kwargs):
+
         """Initialize the model from a state dictionary."""
         if "embeddings" in kwargs:
             embeddings = kwargs.pop("embeddings")
@@ -151,21 +152,22 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             The loaded Flair model.
         """
         # if this class is abstract, go through all inheriting classes and try to fetch and load the model
-        if inspect.isabstract(cls) and isinstance(model_path, str):
+        if inspect.isabstract(cls):
             # get all non-abstract subclasses
             subclasses = list(get_non_abstract_subclasses(cls))
 
-            # try to fetch the model for each subclass. if fetching is possible, load model and return it
-            for model_cls in subclasses:
-
-                try:
-                    new_model_path = model_cls._fetch_model(model_path)
-                    if new_model_path != model_path:
-                        return model_cls.load(new_model_path)
-                except Exception as e:
-                    log.debug(e)
-                    # skip any invalid loadings, e.g. not found on HuggingFace hub
-                    continue
+            # If the model_path is a str, try to fetch model for each subclass.
+            # If fetching is possible, load model and return it.
+            if isinstance(model_path, str):
+                for model_cls in subclasses:
+                    try:
+                        new_model_path = model_cls._fetch_model(model_path)
+                        if new_model_path != model_path:
+                            return model_cls.load(new_model_path)
+                    except Exception as e:
+                        log.debug(e)
+                        # skip any invalid loadings, e.g. not found on HuggingFace hub
+                        continue
 
             # if the model cannot be fetched, load as a file
             try:
