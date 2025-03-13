@@ -158,7 +158,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         return self._label_type
 
     @staticmethod
-    def _fetch_model(model_name) -> str:
+    def _fetch_model(model_identifier) -> str:
         model_map = {}
 
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
@@ -166,10 +166,10 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
         model_map["relations"] = "/".join([hu_path, "relations", "relations-v11.pt"])
 
         cache_dir = Path("models")
-        if model_name in model_map:
-            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
+        if model_identifier in model_map:
+            model_identifier = cached_path(model_map[model_identifier], cache_dir=cache_dir)
 
-        return model_name
+        return model_identifier
 
     @classmethod
     def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "RelationExtractor":

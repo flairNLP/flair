@@ -829,9 +829,9 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
                     )
 
     @staticmethod
-    def _fetch_model(model_name: str) -> str:
-        if Path(model_name).exists():
-            return model_name
+    def _fetch_model(model_identifier: str) -> str:
+        if Path(model_identifier).exists():
+            return model_identifier
 
         bio_base_repo = "hunflair"
         hf_model_map = {
@@ -845,19 +845,19 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
             "species-linker-no-ab3p": f"{bio_base_repo}/sapbert-ncbi-taxonomy-no-ab3p",
         }
 
-        if model_name in hf_model_map:
-            model_name = hf_model_map[model_name]
+        if model_identifier in hf_model_map:
+            model_identifier = hf_model_map[model_identifier]
 
-            if not model_name.endswith("-no-ab3p") and importlib.util.find_spec("pyab3p") is None:
+            if not model_identifier.endswith("-no-ab3p") and importlib.util.find_spec("pyab3p") is None:
                 logger.warning(
                     "'pyab3p' is not found, switching to a model without abbreviation resolution. "
                     "This might impact the model performance. To reach full performance, please install"
                     "pyab3p by running:"
                     "   pip install pyab3p"
                 )
-                model_name += "-no-ab3p"
+                model_identifier += "-no-ab3p"
 
-        return hf_download(model_name)
+        return hf_download(model_identifier)
 
     @classmethod
     def _init_model_with_state_dict(cls, state: dict[str, Any], **kwargs) -> "EntityMentionLinker":
