@@ -34,7 +34,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
     def __init__(self) -> None:
         super().__init__()
-        
+
         # The model card can contain training parameters and metadata
         self.model_card: Optional[dict[str, Any]] = None
 
