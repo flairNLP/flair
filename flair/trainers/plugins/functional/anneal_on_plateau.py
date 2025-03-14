@@ -67,7 +67,7 @@ class AnnealingPlugin(TrainerPlugin):
         )
 
         # Load scheduler state if it exists
-        if hasattr(self.trainer.model, 'scheduler_state_dict') and self.trainer.model.scheduler_state_dict is not None:
+        if hasattr(self.trainer.model, "scheduler_state_dict") and self.trainer.model.scheduler_state_dict is not None:
             try:
                 log.info("Found saved scheduler state, loading it...")
                 self.scheduler.load_state_dict(self.trainer.model.scheduler_state_dict)
@@ -83,7 +83,7 @@ class AnnealingPlugin(TrainerPlugin):
         reduced_learning_rate: bool = self.scheduler.step(*validation_scores)
 
         # Save scheduler state after step
-        if hasattr(self.trainer.model, 'save_optimizer_state') and self.trainer.model.save_optimizer_state:
+        if hasattr(self.trainer.model, "save_optimizer_state") and self.trainer.model.save_optimizer_state:
             self.trainer.model.scheduler_state_dict = self.scheduler.state_dict()
 
         self.store_learning_rate()

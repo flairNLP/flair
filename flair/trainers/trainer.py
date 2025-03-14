@@ -503,7 +503,7 @@ class ModelTrainer(Pluggable):
 
         # load optimizer state if it exists
         optimizer_state_loaded = False
-        if hasattr(self.model, 'optimizer_state_dict') and self.model.optimizer_state_dict is not None:
+        if hasattr(self.model, "optimizer_state_dict") and self.model.optimizer_state_dict is not None:
             try:
                 self.optimizer.load_state_dict(self.model.optimizer_state_dict)
                 optimizer_state_loaded = True
@@ -579,9 +579,9 @@ class ModelTrainer(Pluggable):
             log.info(f' - mini_batch_size: "{mini_batch_size}"')
             log.info(f' - max_epochs: "{max_epochs}"')
             log.info(f' - shuffle: "{shuffle}"')
-            if optimizer_state_loaded:                
+            if optimizer_state_loaded:
                 log_line(log)
-                log.info("Optimizer state loaded from from previous training!")   
+                log.info("Optimizer state loaded from from previous training!")
             log_line(log)
             log.info("Plugins:")
             for plugin in plugins:
@@ -834,7 +834,7 @@ class ModelTrainer(Pluggable):
 
                 # if we do not use dev data for model selection, save final model
                 if save_final_model:
-                    self._save_model(base_path / "final-model.pt", save_optimizer_state==save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", save_optimizer_state == save_optimizer_state)
 
             except KeyboardInterrupt:
                 log_line(log)
@@ -1008,13 +1008,13 @@ class ModelTrainer(Pluggable):
             if save_optimizer_state:
                 # Save optimizer state
                 self.model.optimizer_state_dict = self.optimizer.state_dict()
-                
+
                 # Save scheduler state from active plugins
                 for plugin in self.plugins:
-                    if hasattr(plugin, 'scheduler'):
+                    if hasattr(plugin, "scheduler"):
                         self.model.scheduler_state_dict = plugin.scheduler.state_dict()
                         break  # Only save the first scheduler we find
-                    
+
             self.model.save(model_file)
         if torch.distributed.is_initialized():
             torch.distributed.barrier()

@@ -27,7 +27,7 @@ class CheckpointPlugin(TrainerPlugin):
                 f"was set"
             )
             model_name = "model_epoch_" + str(epoch) + ".pt"
-            
+
             # Use trainer's _save_model method - we have access to trainer through self.trainer
             self.trainer._save_model(self.base_path / model_name, save_optimizer_state=self.save_optimizer_state)
 
