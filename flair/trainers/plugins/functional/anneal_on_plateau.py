@@ -58,7 +58,7 @@ class AnnealingPlugin(TrainerPlugin):
         anneal_mode = "min" if train_with_dev else "max"
 
         # instantiate the scheduler
-        self.scheduler: AnnealOnPlateau = AnnealOnPlateau(
+        self.scheduler = AnnealOnPlateau(
             factor=self.anneal_factor,
             patience=self.patience,
             initial_extra_patience=self.initial_extra_patience,
@@ -66,12 +66,25 @@ class AnnealingPlugin(TrainerPlugin):
             optimizer=self.trainer.optimizer,
         )
 
+        # Load scheduler state if it exists
+        if hasattr(self.trainer.model, 'scheduler_state_dict') and self.trainer.model.scheduler_state_dict is not None:
+            try:
+                log.info("Found saved scheduler state, loading it...")
+                self.scheduler.load_state_dict(self.trainer.model.scheduler_state_dict)
+                log.info("Scheduler state loaded successfully!")
+            except Exception as e:
+                log.warning(f"Could not load scheduler state: {e}")
+
         self.store_learning_rate()
 
     @TrainerPlugin.hook
     def after_evaluation(self, current_model_is_best, validation_scores, **kw):
         """Scheduler step of AnnealOnPlateau."""
         reduced_learning_rate: bool = self.scheduler.step(*validation_scores)
+
+        # Save scheduler state after step
+        if hasattr(self.trainer.model, 'save_optimizer_state') and self.trainer.model.save_optimizer_state:
+            self.trainer.model.scheduler_state_dict = self.scheduler.state_dict()
 
         self.store_learning_rate()
 

@@ -42,8 +42,19 @@ class LinearSchedulerPlugin(TrainerPlugin):
         num_warmup_steps = int(num_train_steps * self.warmup_fraction)
 
         self.scheduler = LinearSchedulerWithWarmup(
-            num_train_steps=num_train_steps, num_warmup_steps=num_warmup_steps, optimizer=self.trainer.optimizer
+            num_train_steps=num_train_steps, 
+            num_warmup_steps=num_warmup_steps, 
+            optimizer=self.trainer.optimizer
         )
+
+        # Load scheduler state if it exists
+        if hasattr(self.trainer.model, 'scheduler_state_dict') and self.trainer.model.scheduler_state_dict is not None:
+            try:
+                log.info("Found saved scheduler state, loading it...")
+                self.scheduler.load_state_dict(self.trainer.model.scheduler_state_dict)
+                log.info("Scheduler state loaded successfully!")
+            except Exception as e:
+                log.warning(f"Could not load scheduler state: {e}")
 
         self.store_learning_rate()
 
@@ -60,6 +71,9 @@ class LinearSchedulerPlugin(TrainerPlugin):
         if not optimizer_was_run:
             return
         self.scheduler.step()
+        # Save scheduler state after step
+        if hasattr(self.trainer.model, 'save_optimizer_state') and self.trainer.model.save_optimizer_state:
+            self.trainer.model.scheduler_state_dict = self.scheduler.state_dict()
         self.store_learning_rate()
 
     def __str__(self) -> str:
