@@ -33,6 +33,8 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     """
 
     model_card: Optional[dict[str, Any]] = None
+    optimizer_state_dict: Optional[dict[str, Any]] = None
+    scheduler_state_dict: Optional[dict[str, Any]] = None
 
     @property
     @abstractmethod
