@@ -100,12 +100,10 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
         # Add optimizer state dict if it exists
         if hasattr(self, "optimizer_state_dict") and self.optimizer_state_dict is not None:
-            print("Found optimizer state dict in model, adding to state")
             state_dict["optimizer_state_dict"] = self.optimizer_state_dict
 
         # Add scheduler state dict if it exists
         if hasattr(self, "scheduler_state_dict") and self.scheduler_state_dict is not None:
-            print("Found scheduler state dict in model, adding to state")
             state_dict["scheduler_state_dict"] = self.scheduler_state_dict
 
         return state_dict
@@ -242,12 +240,12 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             if "model_card" in state:
                 model.model_card = state["model_card"]
 
-            # load optimizer state if it exists
+            # load optimizer state if it exists in the state dict
             if "optimizer_state_dict" in state:
                 log.debug(f"Found optimizer state in model file with keys: {state['optimizer_state_dict'].keys()}")
                 model.optimizer_state_dict = state["optimizer_state_dict"]
 
-            # load scheduler state if it exists
+            # load scheduler state if it exists in the state dict
             if "scheduler_state_dict" in state:
                 log.debug(f"Found scheduler state in model file with keys: {state['scheduler_state_dict'].keys()}")
                 model.scheduler_state_dict = state["scheduler_state_dict"]

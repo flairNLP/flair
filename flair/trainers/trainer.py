@@ -1017,7 +1017,7 @@ class ModelTrainer(Pluggable):
 
             self.model.save(model_file)
         if torch.distributed.is_initialized():
-            torch.distributed.barrier()
+            torch.distributed.barrier()  # Prevent any process from loading a model until writing is complete
 
     def _scale_gradients(self, constant):
         for param in self.model.parameters():
