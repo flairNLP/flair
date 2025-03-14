@@ -32,9 +32,17 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     Every new type of model must implement these methods.
     """
 
-    model_card: Optional[dict[str, Any]] = None
-    optimizer_state_dict: Optional[dict[str, Any]] = None
-    scheduler_state_dict: Optional[dict[str, Any]] = None
+    def __init__(self) -> None:
+        super().__init__()
+        
+        # The model card can contain training parameters and metadata
+        self.model_card: Optional[dict[str, Any]] = None
+
+        # Optimizer and scheduler states are only set during training when save_optimizer_state=True
+        # is passed to the ModelTrainer. These states allow resuming training from a checkpoint
+        # with the exact same optimizer and learning rate scheduler states.
+        self.optimizer_state_dict: Optional[dict[str, Any]] = None
+        self.scheduler_state_dict: Optional[dict[str, Any]] = None
 
     @property
     @abstractmethod
