@@ -514,51 +514,46 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
     def prepare_tensors(self, sentences: list[Sentence], device: Optional[torch.device] = None):
         if device is None:
             device = flair.device
+
+        # For document embeddings only, we can skip flair tokenization
+        if self.document_embedding and not self.token_embedding:
+            return self.__build_transformer_model_inputs(
+                sentences=sentences, offsets=None, sentence_lengths=None, flair_tokens=None, device=device
+            )
+
+        # For token embeddings, proceed with full tokenization
         flair_tokens, offsets, lengths = self.__gather_flair_tokens(sentences)
-
-        # random check some tokens to save performance.
-        if (self.needs_manual_ocr or self.tokenizer_needs_ocr_boxes) and not all(
-            [
-                flair_tokens[0][0].has_metadata("bbox"),
-                flair_tokens[0][-1].has_metadata("bbox"),
-                flair_tokens[-1][0].has_metadata("bbox"),
-                flair_tokens[-1][-1].has_metadata("bbox"),
-            ]
-        ):
-            raise ValueError(f"The embedding '{self.name}' requires the ocr 'bbox' set as metadata on all tokens.")
-
-        if self.feature_extractor is not None and not all(
-            [
-                sentences[0].has_metadata("image"),
-                sentences[-1].has_metadata("image"),
-            ]
-        ):
-            raise ValueError(f"The embedding '{self.name}' requires the 'image' set as metadata for all sentences.")
-
         return self.__build_transformer_model_inputs(sentences, offsets, lengths, flair_tokens, device)
 
     def __build_transformer_model_inputs(
         self,
         sentences: list[Sentence],
-        offsets: list[int],
-        sentence_lengths: list[int],
-        flair_tokens: list[list[Token]],
+        offsets: Optional[list[int]],
+        sentence_lengths: Optional[list[int]],
+        flair_tokens: Optional[list[list[Token]]],
         device: torch.device,
     ):
         tokenizer_kwargs: dict[str, Any] = {}
-        if self.tokenizer_needs_ocr_boxes:
-            tokenizer_kwargs["boxes"] = [[t.get_metadata("bbox") for t in tokens] for tokens in flair_tokens]
+
+        if flair_tokens is None:
+            # Document embedding path - tokenize raw text
+            texts = [sentence.text for sentence in sentences]
+            tokenizer_kwargs["text"] = texts
         else:
-            tokenizer_kwargs["is_split_into_words"] = True
+            # Token embedding path - use tokenized text
+            if self.tokenizer_needs_ocr_boxes:
+                tokenizer_kwargs["boxes"] = [[t.get_metadata("bbox") for t in tokens] for tokens in flair_tokens]
+            else:
+                tokenizer_kwargs["is_split_into_words"] = True
+            tokenizer_kwargs["text"] = [[t.text for t in tokens] for tokens in flair_tokens]
 
         batch_encoding = self.tokenizer(
-            [[t.text for t in tokens] for tokens in flair_tokens],
+            **tokenizer_kwargs,
             stride=self.stride,
             return_overflowing_tokens=self.allow_long_sentences,
             truncation=self.truncate,
             padding=PaddingStrategy.MAX_LENGTH if self.force_max_length else PaddingStrategy.LONGEST,
             return_tensors="pt",
-            **tokenizer_kwargs,
         )
 
         input_ids = batch_encoding["input_ids"].to(device, non_blocking=True)
@@ -579,11 +574,12 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 self.tokenizer.pad_token_id,
             )
             sub_token_lengths = (unpacked_ids != self.tokenizer.pad_token_id).sum(dim=1)
-            padded_tokens = [flair_tokens[i] for i in cpu_overflow_to_sample_mapping]
+            padded_tokens = [flair_tokens[i] for i in cpu_overflow_to_sample_mapping] if flair_tokens else None
         else:
             cpu_overflow_to_sample_mapping = None
             sub_token_lengths = (input_ids != self.tokenizer.pad_token_id).sum(dim=1)
             padded_tokens = flair_tokens
+
         if self.document_embedding and not (self.cls_pooling == "cls" and self.initial_cls_token):
             model_kwargs["sub_token_lengths"] = sub_token_lengths
 
@@ -611,6 +607,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             model_kwargs["bbox"] = batch_encoding["bbox"].to(device, non_blocking=True)
 
         if self.token_embedding or self.needs_manual_ocr:
+            assert sentence_lengths is not None  # for type checking
             model_kwargs["token_lengths"] = torch.tensor(sentence_lengths, device=device)
 
             if self.tokenizer.is_fast:
@@ -618,12 +615,13 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             else:
                 word_ids_list = _legacy_reconstruct_word_ids(
                     self,
-                    [[t.text for t in tokens] for tokens in flair_tokens],
+                    [[t.text for t in tokens] for tokens in flair_tokens] if flair_tokens else [],
                 )
                 # word_ids is only supported for fast rust tokenizers. Some models like "xlm-mlm-ende-1024" do not have
                 # a fast tokenizer implementation, hence we need to fall back to our own reconstruction of word_ids.
 
             if self.token_embedding:
+                assert offsets is not None  # for type checking
                 if self.allow_long_sentences:
                     new_offsets = []
                     new_lengths = []
@@ -645,7 +643,9 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                     device=device,
                 )
                 model_kwargs["word_ids"] = word_ids
+
             if self.needs_manual_ocr:
+                assert padded_tokens is not None  # for type checking
                 bbox = [
                     [(0, 0, 0, 0) if val is None else tokens[val].get_metadata("bbox") for val in _word_ids]
                     for _word_ids, tokens in zip(word_ids_list, padded_tokens)

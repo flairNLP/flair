@@ -545,12 +545,21 @@ class _PartOfSentence(DataPoint, ABC):
         return self
 
     def remove_labels(self, typename: str) -> None:
-        # labels also need to be deleted at Sentence object
-        for label in self.get_labels(typename):
-            self.sentence.annotation_layers[typename].remove(label)
-
-        # delete labels at object itself
+        # delete labels at object itself first
         super().remove_labels(typename)
+
+        # only access tokens if they've already been tokenized
+        if hasattr(self, "_tokens") and self._tokens is not None:
+            # labels also need to be deleted at all tokens
+            for token in self._tokens:
+                token.remove_labels(typename)
+
+            # labels also need to be deleted at all known spans
+            for span in self._known_spans.values():
+                span.remove_labels(typename)
+
+            # remove spans without labels
+            self._known_spans = {k: v for k, v in self._known_spans.items() if len(v.labels) > 0}
 
 
 class Token(_PartOfSentence):
@@ -818,7 +827,8 @@ class Sentence(DataPoint):
         """
         super().__init__()
 
-        self.tokens: list[Token] = []
+        self._tokens: Optional[list[Token]] = None
+        self._text: Optional[str] = None
 
         # private field for all known spans
         self._known_spans: dict[str, _PartOfSentence] = {}
@@ -829,11 +839,9 @@ class Sentence(DataPoint):
 
         # the tokenizer used for this sentence
         if isinstance(use_tokenizer, Tokenizer):
-            tokenizer = use_tokenizer
-
+            self._tokenizer = use_tokenizer
         elif isinstance(use_tokenizer, bool):
-            tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
-
+            self._tokenizer = SegtokTokenizer() if use_tokenizer else SpaceTokenizer()
         else:
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. Parameter should be bool or Tokenizer")
 
@@ -848,24 +856,45 @@ class Sentence(DataPoint):
         self._next_sentence: Optional[Sentence] = None
         self._position_in_dataset: Optional[tuple[Dataset, int]] = None
 
-        # if text is passed, instantiate sentence with tokens (words)
+        # if text is passed as string, store it (but don't tokenize yet)
         if isinstance(text, str):
-            text = Sentence._handle_problem_characters(text)
-            words = tokenizer.tokenize(text)
-        elif text and isinstance(text[0], Token):
-            for t in text:
-                self._add_token(t)
-            self.tokens[-1].whitespace_after = 0
-            return
+            self._text = Sentence._handle_problem_characters(text)
         else:
-            words = cast(list[str], text)
-            text = " ".join(words)
+            # if list of strings or tokens is passed, create tokens directly
+            self._tokens = []
+            for i, item in enumerate(text):
+                # create Token if string, otherwise use existing Token
+                token = Token(text=item) if isinstance(item, str) else item
+                token.whitespace_after = 0 if i == len(text) - 1 else 1
+                self._add_token(token)
+
+            # reconstruct text from tokens
+            if len(self._tokens) == 0:
+                self._text = ""
+            else:
+                self._text = (self._tokens[0].start_position - self._start_position) * " " + "".join(
+                    [t.text + t.whitespace_after * " " for t in self._tokens]
+                ).strip()
+
+        # log a warning if the dataset is empty
+        if self._text == "":
+            log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
+
+    def _tokenize_if_needed(self) -> None:
+        """Internal method that performs tokenization if the sentence has not yet been tokenized."""
+        if self._tokens is not None:
+            return
+
+        # tokenize the text
+        words = self._tokenizer.tokenize(self._text)
 
         # determine token positions and whitespace_after flag
         current_offset: int = 0
         previous_token: Optional[Token] = None
+        self._tokens = []
+
         for word in words:
-            word_start_position: int = text.index(word, current_offset)
+            word_start_position: int = self._text.index(word, current_offset)
             delta_offset: int = word_start_position - current_offset
 
             token: Token = Token(text=word, start_position=word_start_position)
@@ -878,16 +907,63 @@ class Sentence(DataPoint):
             previous_token = token
 
         # the last token has no whitespace after
-        if len(self) > 0:
-            self.tokens[-1].whitespace_after = 0
+        if len(self._tokens) > 0:
+            self._tokens[-1].whitespace_after = 0
 
-        # log a warning if the dataset is empty
-        if text == "":
-            log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
+    @property
+    def tokens(self) -> list[Token]:
+        """Gets the tokens of this sentence. Triggers tokenization if not yet tokenized."""
+        self._tokenize_if_needed()
+        return self._tokens
+
+    def __iter__(self):
+        """Allows iteration over tokens. Triggers tokenization if not yet tokenized."""
+        self._tokenize_if_needed()
+        return iter(self._tokens)
+
+    def __len__(self) -> int:
+        """Returns the number of tokens in this sentence. Triggers tokenization if not yet tokenized."""
+        self._tokenize_if_needed()
+        return len(self._tokens)
 
     @property
     def unlabeled_identifier(self):
         return f'Sentence[{len(self)}]: "{self.text}"'
+
+    @property
+    def text(self) -> str:
+        """Returns the original text of this sentence. Does not trigger tokenization."""
+        return self._text
+
+    def to_original_text(self) -> str:
+        """Returns the original text of this sentence."""
+        return self._text
+
+    def to_tagged_string(self, main_label: Optional[str] = None) -> str:
+        # For sentence-level labels, we don't need tokenization
+        if not self._tokens:
+            output = f'Sentence: "{self.text}"'
+            if self.labels:
+                output += self._printout_labels(main_label)
+            return output
+
+        # Only tokenize if we have token-level labels or spans to print
+        already_printed = [self]
+        output = super().__str__()
+
+        label_append = []
+        for label in self.get_labels(main_label):
+            if label.data_point in already_printed:
+                continue
+            label_append.append(
+                f'"{label.data_point.text}"{label.data_point._printout_labels(main_label=main_label, add_score=False)}'
+            )
+            already_printed.append(label.data_point)
+
+        if len(label_append) > 0:
+            output += f"{flair._arrow}[" + ", ".join(label_append) + "]"
+
+        return output
 
     def get_relations(self, label_type: Optional[str] = None) -> list[Relation]:
         relations: list[Relation] = []
@@ -951,11 +1027,13 @@ class Sentence(DataPoint):
             token.to(device, pin_memory)
 
     def clear_embeddings(self, embedding_names: Optional[list[str]] = None):
+        # clear sentence embeddings
         super().clear_embeddings(embedding_names)
 
-        # clear token embeddings
-        for token in self:
-            token.clear_embeddings(embedding_names)
+        # only clear token embeddings if already tokenized
+        if self._is_tokenized():
+            for token in self._tokens:
+                token.clear_embeddings(embedding_names)
 
     def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> list[Token]:
         sentence = self
@@ -986,29 +1064,6 @@ class Sentence(DataPoint):
 
     def __str__(self) -> str:
         return self.to_tagged_string()
-
-    def to_tagged_string(self, main_label: Optional[str] = None) -> str:
-        already_printed = [self]
-
-        output = super().__str__()
-
-        label_append = []
-        for label in self.get_labels(main_label):
-            if label.data_point in already_printed:
-                continue
-            label_append.append(
-                f'"{label.data_point.text}"{label.data_point._printout_labels(main_label=main_label, add_score=False)}'
-            )
-            already_printed.append(label.data_point)
-
-        if len(label_append) > 0:
-            output += f"{flair._arrow}[" + ", ".join(label_append) + "]"
-
-        return output
-
-    @property
-    def text(self) -> str:
-        return self.to_original_text()
 
     def to_tokenized_string(self) -> str:
         if self.tokenized is None:
@@ -1055,15 +1110,6 @@ class Sentence(DataPoint):
 
             last_token = token
         return self
-
-    def to_original_text(self) -> str:
-        # if sentence has no tokens, return empty string
-        if len(self) == 0:
-            return ""
-        # otherwise, return concatenation of tokens with the correct offsets
-        return (self[0].start_position - self.start_position) * " " + "".join(
-            [t.text + t.whitespace_after * " " for t in self.tokens]
-        ).strip()
 
     def to_dict(self, tag_type: Optional[str] = None) -> dict[str, Any]:
         return {
@@ -1233,19 +1279,21 @@ class Sentence(DataPoint):
         return []
 
     def remove_labels(self, typename: str):
-        # labels also need to be deleted at all tokens
-        for token in self:
-            token.remove_labels(typename)
-
-        # labels also need to be deleted at all known spans
-        for span in self._known_spans.values():
-            span.remove_labels(typename)
-
-        # remove spans without labels
-        self._known_spans = {k: v for k, v in self._known_spans.items() if len(v.labels) > 0}
-
-        # delete labels at object itself
+        # delete labels at object itself first
         super().remove_labels(typename)
+
+        # only access tokens if already tokenized
+        if self._is_tokenized():
+            # labels also need to be deleted at all tokens
+            for token in self._tokens:
+                token.remove_labels(typename)
+
+            # labels also need to be deleted at all known spans
+            for span in self._known_spans.values():
+                span.remove_labels(typename)
+
+    def _is_tokenized(self) -> bool:
+        return self._tokens is not None
 
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):
@@ -1375,7 +1423,7 @@ class Corpus(typing.Generic[T_co]):
     """The main object in Flair for holding a dataset used for training and testing.
 
     A corpus consists of three splits: A `train` split used for training, a `dev` split used for model selection
-    and/or early stopping and a `test` split used for testing. All three splits are optional, so it is possible
+    or early stopping and a `test` split used for testing. All three splits are optional, so it is possible
     to create a corpus only using one or two splits. If the option `sample_missing_splits` is set to True,
     missing splits will be randomly sampled from the training split.
     """
