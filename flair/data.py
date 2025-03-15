@@ -555,11 +555,11 @@ class _PartOfSentence(DataPoint, ABC):
                 token.remove_labels(typename)
 
             # labels also need to be deleted at all known spans
-            for span in self._known_spans.values():
+            for span in self.sentence._known_spans.values():
                 span.remove_labels(typename)
 
             # remove spans without labels
-            self._known_spans = {k: v for k, v in self._known_spans.items() if len(v.labels) > 0}
+            self.sentence._known_spans = {k: v for k, v in self.sentence._known_spans.items() if len(v.labels) > 0}
 
 
 class Token(_PartOfSentence):
@@ -659,6 +659,22 @@ class Token(_PartOfSentence):
             "end_pos": self.end_position,
             "labels": [label.to_dict() for label in self.get_labels(tag_type)],
         }
+
+    def remove_labels(self, typename: str) -> None:
+        # The Token is a special _PartOfSentence in that it may be initialized without a Sentence.
+        # Therefore, labels get removed only from the Sentence if it exists
+        if self.sentence:
+            # First remove the labels from the sentence's annotation layers
+            self.sentence.annotation_layers[typename] = [
+                label for label in self.sentence.annotation_layers.get(typename, [])
+                if label.data_point != self
+            ]
+            # If no labels left in this layer, remove the layer entirely
+            if not self.sentence.annotation_layers[typename]:
+                del self.sentence.annotation_layers[typename]
+
+        # Then remove labels from the token itself
+        super().remove_labels(typename)
 
 
 class Span(_PartOfSentence):
@@ -813,15 +829,28 @@ class Sentence(DataPoint):
         language_code: Optional[str] = None,
         start_position: int = 0,
     ) -> None:
+        """Create a sentence object by passing either a text or a list of tokens.
+
+        Args:
+            text: Either pass the text as a string, or provide an already tokenized text as either a list of strings or a list of :class:`Token` objects.
+            use_tokenizer: You can optionally specify a custom tokenizer to split the text into tokens. By default we use
+                :class:`flair.tokenization.SegtokTokenizer`. If `use_tokenizer` is set to False,
+                :class:`flair.tokenization.SpaceTokenizer` will be used instead. The tokenizer will be ignored,
+                if `text` refers to pretokenized tokens.
+            language_code: Language of the sentence. If not provided, `langdetect <https://pypi.org/project/langdetect/>`_
+                will be called when the language_code is accessed for the first time.
+            start_position: Start char offset of the sentence in the superordinate document.
+        """
         super().__init__()
 
         self._tokens: Optional[list[Token]] = None
-        self._text: Optional[str] = None
-
-        # private field for all known spans
-        self._known_spans: dict[str, _PartOfSentence] = {}
+        self._text: str = ""  # Change from Optional[str] to str with empty string default
+        
+        # private field for all known spans with explicit typing
+        self._known_spans: dict[str, Union[Span, Relation]] = {}
 
         self.language_code: Optional[str] = language_code
+
         self._start_position = start_position
 
         # the tokenizer used for this sentence
@@ -833,6 +862,8 @@ class Sentence(DataPoint):
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. Parameter should be bool or Tokenizer")
 
         self.tokenized: Optional[str] = None
+
+        # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
         # internal variables to denote position inside dataset
@@ -841,80 +872,66 @@ class Sentence(DataPoint):
         self._next_sentence: Optional[Sentence] = None
         self._position_in_dataset: Optional[tuple[Dataset, int]] = None
 
-        # if text is passed as string, store it (but don't tokenize yet)
-        if isinstance(text, str):
-            self._text = Sentence._handle_problem_characters(text)
-        else:
-            # if list of strings or tokens is passed, create tokens directly
+        # if list of strings or tokens is passed, create tokens directly
+        if not isinstance(text, str):
             self._tokens = []
-
+            
             # First construct the text from tokens to ensure proper text reconstruction
             if len(text) > 0:
-                if isinstance(text[0], Token):
-                    # For Token objects, use their text and whitespace information
+                # Type check the input list and cast
+                if all(isinstance(t, Token) for t in text):
+                    tokens = cast(list[Token], text)
                     reconstructed_text = ""
-                    for i, token in enumerate(text):
+                    for i, token in enumerate(tokens):
                         reconstructed_text += token.text
-                        if i < len(text) - 1:  # Add whitespace between tokens
+                        if i < len(tokens) - 1:  # Add whitespace between tokens
                             reconstructed_text += " " * token.whitespace_after
                     self._text = reconstructed_text
+                elif all(isinstance(t, str) for t in text):
+                    strings = cast(list[str], text)
+                    self._text = " ".join(strings)
                 else:
-                    # For strings, join with spaces
-                    self._text = " ".join(text)
+                    raise TypeError("All elements must be either Token or str")
 
             # Now add the tokens
+            current_position = 0
             for i, item in enumerate(text):
                 # create Token if string, otherwise use existing Token
-                token = Token(text=item) if isinstance(item, str) else item
-                token.whitespace_after = 0 if i == len(text) - 1 else 1
+                if isinstance(item, str):
+                    # For strings, create new Token with default whitespace
+                    token = Token(text=item)
+                    token.whitespace_after = 0 if i == len(text) - 1 else 1
+                elif isinstance(item, Token):
+                    # For existing Tokens, preserve their whitespace_after
+                    token = item
+                
+                # Set start position for the token
+                token.start_position = current_position
+                current_position += len(token.text) + token.whitespace_after
+                
                 self._add_token(token)
+                
+            # convention: the last token has no whitespace after
+            self.tokens[-1].whitespace_after = 0
+        else:
+            self._text = Sentence._handle_problem_characters(text)
 
         # log a warning if the dataset is empty
-        if not self._text:
+        if self._text == "":
             log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
 
-    def _add_token(self, token: Union[Token, str]):
-        if isinstance(token, Token):
-            assert token.sentence is None
-
-        if isinstance(token, str):
-            token = Token(token)
-        token = cast(Token, token)
-
-        # data with zero-width characters cannot be handled
-        if token.text == "":
-            return
-
-        # set token idx and sentence
-        token.sentence = self
-        token._internal_index = len(self.tokens) + 1
-
-        # set token start_position if not set
-        if token.start_position == 0 and token._internal_index > 1:
-            # Calculate position based on previous tokens and whitespace
-            previous_token = self.tokens[-1]
-            token.start_position = previous_token.end_position + previous_token.whitespace_after
-
-        # append token to sentence
-        self.tokens.append(token)
-
-        # register token annotations on sentence
-        for typename in token.annotation_layers:
-            for label in token.get_labels(typename):
-                if typename not in token.sentence.annotation_layers:
-                    token.sentence.annotation_layers[typename] = [Label(token, label.value, label.score)]
-                else:
-                    token.sentence.annotation_layers[typename].append(Label(token, label.value, label.score))
-
-    @property
+    @property 
     def tokens(self) -> list[Token]:
         """Gets the tokens of this sentence. Automatically triggers tokenization if not yet tokenized."""
         if self._tokens is None:
             self._tokenize()
+        if self._tokens is None:
+            raise ValueError("Tokens are None after tokenization - this indicates a bug in the tokenization process")
         return self._tokens
 
     def _tokenize(self) -> None:
         """Internal method that performs tokenization."""
+        
         # tokenize the text
         words = self._tokenizer.tokenize(self._text)
 
@@ -942,13 +959,11 @@ class Sentence(DataPoint):
 
     def __iter__(self):
         """Allows iteration over tokens. Triggers tokenization if not yet tokenized."""
-        self._tokenize_if_needed()
-        return iter(self._tokens)
+        return iter(self.tokens)
 
     def __len__(self) -> int:
         """Returns the number of tokens in this sentence. Triggers tokenization if not yet tokenized."""
-        self._tokenize_if_needed()
-        return len(self._tokens)
+        return len(self.tokens)
 
     @property
     def unlabeled_identifier(self):
@@ -1009,6 +1024,37 @@ class Sentence(DataPoint):
                 return token
         return None
 
+    def _add_token(self, token: Union[Token, str]):
+        if isinstance(token, Token):
+            assert token.sentence is None
+
+        if isinstance(token, str):
+            token = Token(token)
+        token = cast(Token, token)
+
+        # data with zero-width characters cannot be handled
+        if token.text == "":
+            return
+
+        # set token idx and sentence
+        token.sentence = self
+        token._internal_index = len(self.tokens) + 1
+
+        # append token to sentence
+        self.tokens.append(token)
+
+        # register token annotations on sentence
+        for typename in token.annotation_layers:
+            for label in token.get_labels(typename):
+                if typename not in token.sentence.annotation_layers:
+                    token.sentence.annotation_layers[typename] = [Label(token, label.value, label.score)]
+                else:
+                    token.sentence.annotation_layers[typename].append(Label(token, label.value, label.score))
+
+    @property
+    def embedding(self):
+        return self.get_embedding()
+
     def to(self, device: str, pin_memory: bool = False):
         # move sentence embeddings to device
         super().to(device=device, pin_memory=pin_memory)
@@ -1021,10 +1067,9 @@ class Sentence(DataPoint):
         # clear sentence embeddings
         super().clear_embeddings(embedding_names)
 
-        # only clear token embeddings if already tokenized
-        if self._is_tokenized():
-            for token in self._tokens:
-                token.clear_embeddings(embedding_names)
+        # clear token embeddings
+        for token in self.tokens:
+            token.clear_embeddings(embedding_names)
 
     def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> list[Token]:
         sentence = self
@@ -1126,12 +1171,6 @@ class Sentence(DataPoint):
             return Span(self.tokens[subscript])
         else:
             return self.tokens[subscript]
-
-    def __iter__(self):
-        return iter(self.tokens)
-
-    def __len__(self) -> int:
-        return len(self.tokens)
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -1276,7 +1315,7 @@ class Sentence(DataPoint):
         # only access tokens if already tokenized
         if self._is_tokenized():
             # labels also need to be deleted at all tokens
-            for token in self._tokens:
+            for token in self.tokens:
                 token.remove_labels(typename)
 
             # labels also need to be deleted at all known spans
@@ -1285,6 +1324,39 @@ class Sentence(DataPoint):
 
     def _is_tokenized(self) -> bool:
         return self._tokens is not None
+
+    def truncate(self, max_tokens: int) -> None:
+        """Truncates the sentence to a maximum number of tokens and updates all annotations accordingly."""
+        if len(self.tokens) <= max_tokens:
+            return
+
+        # Truncate tokens
+        self._tokens = self.tokens[:max_tokens]
+        
+        # Remove spans that reference removed tokens
+        self._known_spans = {
+            identifier: span 
+            for identifier, span in self._known_spans.items()
+            if isinstance(span, Span) and all(token.idx <= max_tokens for token in span.tokens)
+        }
+
+        # Remove relations that reference removed spans
+        self._known_spans = {
+            identifier: relation
+            for identifier, relation in self._known_spans.items()
+            if not isinstance(relation, Relation) or (
+                all(token.idx <= max_tokens for token in relation.first.tokens) and
+                all(token.idx <= max_tokens for token in relation.second.tokens)
+            )
+        }
+
+        # Clean up any labels that reference removed spans/relations
+        for typename in list(self.annotation_layers.keys()):
+            self.annotation_layers[typename] = [
+                label for label in self.annotation_layers[typename]
+                if (not isinstance(label.data_point, (Span, Relation)) or 
+                    label.data_point.unlabeled_identifier in self._known_spans)
+            ]
 
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):

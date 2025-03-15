@@ -207,7 +207,7 @@ class MongoDataset(FlairDataset):
                 sentence.add_label(self.tag_type, label)
 
             if self.max_tokens_per_doc > 0:
-                sentence.tokens = sentence.tokens[: min(len(sentence), self.max_tokens_per_doc)]
+                sentence.truncate(self.max_tokens_per_doc)
 
             return sentence
         return None
