@@ -268,11 +268,14 @@ class ClassificationDataset(FlairDataset):
         if text and (labels or self.allow_examples_without_labels):
             sentence = Sentence(text, use_tokenizer=tokenizer)
 
+            if 0 < self.truncate_to_max_tokens < len(sentence):
+                # Create new sentence with truncated text
+                truncated_text = " ".join(token.text for token in sentence.tokens[:self.truncate_to_max_tokens])
+                sentence = Sentence(truncated_text, use_tokenizer=tokenizer)
+
+            # Add the labels
             for label in labels:
                 sentence.add_label(self.label_type, label)
-
-            if sentence is not None and 0 < self.truncate_to_max_tokens < len(sentence):
-                sentence.tokens = sentence.tokens[: self.truncate_to_max_tokens]
 
             return sentence
         return None

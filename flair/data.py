@@ -813,18 +813,6 @@ class Sentence(DataPoint):
         language_code: Optional[str] = None,
         start_position: int = 0,
     ) -> None:
-        """Create a sentence object by passing either a text or a list of tokens.
-
-        Args:
-            text: Either pass the text as a string, or provide an already tokenized text as either a list of strings or a list of :class:`Token` objects.
-            use_tokenizer: You can optionally specify a custom tokenizer to split the text into tokens. By default we use
-                :class:`flair.tokenization.SegtokTokenizer`. If `use_tokenizer` is set to False,
-                :class:`flair.tokenization.SpaceTokenizer` will be used instead. The tokenizer will be ignored,
-                if `text` refers to pretokenized tokens.
-            language_code: Language of the sentence. If not provided, `langdetect <https://pypi.org/project/langdetect/>`_
-                will be called when the language_code is accessed for the first time.
-            start_position: Start char offset of the sentence in the superordinate document.
-        """
         super().__init__()
 
         self._tokens: Optional[list[Token]] = None
@@ -834,7 +822,6 @@ class Sentence(DataPoint):
         self._known_spans: dict[str, _PartOfSentence] = {}
 
         self.language_code: Optional[str] = language_code
-
         self._start_position = start_position
 
         # the tokenizer used for this sentence
@@ -846,8 +833,6 @@ class Sentence(DataPoint):
             raise AssertionError("Unexpected type of parameter 'use_tokenizer'. Parameter should be bool or Tokenizer")
 
         self.tokenized: Optional[str] = None
-
-        # some sentences represent a document boundary (but most do not)
         self.is_document_boundary: bool = False
 
         # internal variables to denote position inside dataset
@@ -862,29 +847,74 @@ class Sentence(DataPoint):
         else:
             # if list of strings or tokens is passed, create tokens directly
             self._tokens = []
+            
+            # First construct the text from tokens to ensure proper text reconstruction
+            if len(text) > 0:
+                if isinstance(text[0], Token):
+                    # For Token objects, use their text and whitespace information
+                    reconstructed_text = ""
+                    for i, token in enumerate(text):
+                        reconstructed_text += token.text
+                        if i < len(text) - 1:  # Add whitespace between tokens
+                            reconstructed_text += " " * token.whitespace_after
+                    self._text = reconstructed_text
+                else:
+                    # For strings, join with spaces
+                    self._text = " ".join(text)
+
+            # Now add the tokens
             for i, item in enumerate(text):
                 # create Token if string, otherwise use existing Token
                 token = Token(text=item) if isinstance(item, str) else item
                 token.whitespace_after = 0 if i == len(text) - 1 else 1
                 self._add_token(token)
 
-            # reconstruct text from tokens
-            if len(self._tokens) == 0:
-                self._text = ""
-            else:
-                self._text = (self._tokens[0].start_position - self._start_position) * " " + "".join(
-                    [t.text + t.whitespace_after * " " for t in self._tokens]
-                ).strip()
-
         # log a warning if the dataset is empty
-        if self._text == "":
+        if not self._text:
             log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
 
-    def _tokenize_if_needed(self) -> None:
-        """Internal method that performs tokenization if the sentence has not yet been tokenized."""
-        if self._tokens is not None:
+    def _add_token(self, token: Union[Token, str]):
+        if isinstance(token, Token):
+            assert token.sentence is None
+
+        if isinstance(token, str):
+            token = Token(token)
+        token = cast(Token, token)
+
+        # data with zero-width characters cannot be handled
+        if token.text == "":
             return
 
+        # set token idx and sentence
+        token.sentence = self
+        token._internal_index = len(self.tokens) + 1
+
+        # set token start_position if not set
+        if token.start_position == 0 and token._internal_index > 1:
+            # Calculate position based on previous tokens and whitespace
+            previous_token = self.tokens[-1]
+            token.start_position = previous_token.end_position + previous_token.whitespace_after
+
+        # append token to sentence
+        self.tokens.append(token)
+
+        # register token annotations on sentence
+        for typename in token.annotation_layers:
+            for label in token.get_labels(typename):
+                if typename not in token.sentence.annotation_layers:
+                    token.sentence.annotation_layers[typename] = [Label(token, label.value, label.score)]
+                else:
+                    token.sentence.annotation_layers[typename].append(Label(token, label.value, label.score))
+
+    @property 
+    def tokens(self) -> list[Token]:
+        """Gets the tokens of this sentence. Automatically triggers tokenization if not yet tokenized."""
+        if self._tokens is None:
+            self._tokenize()
+        return self._tokens
+
+    def _tokenize(self) -> None:
+        """Internal method that performs tokenization."""
         # tokenize the text
         words = self._tokenizer.tokenize(self._text)
 
@@ -909,12 +939,6 @@ class Sentence(DataPoint):
         # the last token has no whitespace after
         if len(self._tokens) > 0:
             self._tokens[-1].whitespace_after = 0
-
-    @property
-    def tokens(self) -> list[Token]:
-        """Gets the tokens of this sentence. Triggers tokenization if not yet tokenized."""
-        self._tokenize_if_needed()
-        return self._tokens
 
     def __iter__(self):
         """Allows iteration over tokens. Triggers tokenization if not yet tokenized."""
@@ -984,39 +1008,6 @@ class Sentence(DataPoint):
             if token.idx == token_id:
                 return token
         return None
-
-    def _add_token(self, token: Union[Token, str]):
-        if isinstance(token, Token):
-            assert token.sentence is None
-
-        if isinstance(token, str):
-            token = Token(token)
-        token = cast(Token, token)
-
-        # data with zero-width characters cannot be handled
-        if token.text == "":
-            return
-
-        # set token idx and sentence
-        token.sentence = self
-        token._internal_index = len(self.tokens) + 1
-        if token.start_position == 0 and token._internal_index > 1:
-            token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
-
-        # append token to sentence
-        self.tokens.append(token)
-
-        # register token annotations on sentence
-        for typename in token.annotation_layers:
-            for label in token.get_labels(typename):
-                if typename not in token.sentence.annotation_layers:
-                    token.sentence.annotation_layers[typename] = [Label(token, label.value, label.score)]
-                else:
-                    token.sentence.annotation_layers[typename].append(Label(token, label.value, label.score))
-
-    @property
-    def embedding(self):
-        return self.get_embedding()
 
     def to(self, device: str, pin_memory: bool = False):
         # move sentence embeddings to device
