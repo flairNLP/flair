@@ -847,7 +847,7 @@ class Sentence(DataPoint):
         else:
             # if list of strings or tokens is passed, create tokens directly
             self._tokens = []
-            
+
             # First construct the text from tokens to ensure proper text reconstruction
             if len(text) > 0:
                 if isinstance(text[0], Token):
@@ -906,7 +906,7 @@ class Sentence(DataPoint):
                 else:
                     token.sentence.annotation_layers[typename].append(Label(token, label.value, label.score))
 
-    @property 
+    @property
     def tokens(self) -> list[Token]:
         """Gets the tokens of this sentence. Automatically triggers tokenization if not yet tokenized."""
         if self._tokens is None:

@@ -270,7 +270,7 @@ class ClassificationDataset(FlairDataset):
 
             if 0 < self.truncate_to_max_tokens < len(sentence):
                 # Create new sentence with truncated text
-                truncated_text = " ".join(token.text for token in sentence.tokens[:self.truncate_to_max_tokens])
+                truncated_text = " ".join(token.text for token in sentence.tokens[: self.truncate_to_max_tokens])
                 sentence = Sentence(truncated_text, use_tokenizer=tokenizer)
 
             # Add the labels
