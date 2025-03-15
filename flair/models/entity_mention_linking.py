@@ -233,7 +233,7 @@ class BioSynEntityPreprocessor(EntityPreprocessor):
 
         entity_name = entity_name.strip()
 
-        # NOTE: Avoid emtpy string if mentions are just punctutations (e.g. `-` or `(`)
+        # NOTE: Avoid empty string if mentions are just punctuations (e.g. `-` or `(`)
         entity_name = original if len(entity_name) == 0 else entity_name
 
         return entity_name

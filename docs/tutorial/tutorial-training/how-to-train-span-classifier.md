@@ -7,7 +7,7 @@ This tutorial section show you how to train models using the [Span Classifier](#
 
 ## Training an entity linker (NEL) model with transformers
 
-For a state-of-the-art NER sytem you should fine-tune transformer embeddings, and use full document context
+For a state-of-the-art NER system you should fine-tune transformer embeddings, and use full document context
 (see our [FLERT](https://arxiv.org/abs/2011.06993) paper for details).
 
 Use the following script:
