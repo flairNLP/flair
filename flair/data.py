@@ -660,22 +660,6 @@ class Token(_PartOfSentence):
             "labels": [label.to_dict() for label in self.get_labels(tag_type)],
         }
 
-    def remove_labels(self, typename: str) -> None:
-        # The Token is a special _PartOfSentence in that it may be initialized without a Sentence.
-        # Therefore, labels get removed only from the Sentence if it exists
-        if self.sentence:
-            # First remove the labels from the sentence's annotation layers
-            self.sentence.annotation_layers[typename] = [
-                label for label in self.sentence.annotation_layers.get(typename, [])
-                if label.data_point != self
-            ]
-            # If no labels left in this layer, remove the layer entirely
-            if not self.sentence.annotation_layers[typename]:
-                del self.sentence.annotation_layers[typename]
-
-        # Then remove labels from the token itself
-        super().remove_labels(typename)
-
 
 class Span(_PartOfSentence):
     """This class represents one textual span consisting of Tokens."""
@@ -845,7 +829,7 @@ class Sentence(DataPoint):
 
         self._tokens: Optional[list[Token]] = None
         self._text: str = ""  # Change from Optional[str] to str with empty string default
-        
+
         # private field for all known spans with explicit typing
         self._known_spans: dict[str, Union[Span, Relation]] = {}
 
@@ -875,7 +859,7 @@ class Sentence(DataPoint):
         # if list of strings or tokens is passed, create tokens directly
         if not isinstance(text, str):
             self._tokens = []
-            
+
             # First construct the text from tokens to ensure proper text reconstruction
             if len(text) > 0:
                 # Type check the input list and cast
@@ -892,6 +876,8 @@ class Sentence(DataPoint):
                     self._text = " ".join(strings)
                 else:
                     raise TypeError("All elements must be either Token or str")
+            else:
+                self._text = ""
 
             # Now add the tokens
             current_position = 0
@@ -904,15 +890,16 @@ class Sentence(DataPoint):
                 elif isinstance(item, Token):
                     # For existing Tokens, preserve their whitespace_after
                     token = item
-                
+
                 # Set start position for the token
                 token.start_position = current_position
                 current_position += len(token.text) + token.whitespace_after
-                
+
                 self._add_token(token)
-                
-            # convention: the last token has no whitespace after
-            self.tokens[-1].whitespace_after = 0
+
+            if len(text) > 0:
+                # convention: the last token has no whitespace after
+                self.tokens[-1].whitespace_after = 0
         else:
             self._text = Sentence._handle_problem_characters(text)
 
@@ -920,7 +907,7 @@ class Sentence(DataPoint):
         if self._text == "":
             log.warning("Warning: An empty Sentence was created! Are there empty strings in your dataset?")
 
-    @property 
+    @property
     def tokens(self) -> list[Token]:
         """Gets the tokens of this sentence. Automatically triggers tokenization if not yet tokenized."""
         if self._tokens is None:
@@ -931,7 +918,7 @@ class Sentence(DataPoint):
 
     def _tokenize(self) -> None:
         """Internal method that performs tokenization."""
-        
+
         # tokenize the text
         words = self._tokenizer.tokenize(self._text)
 
@@ -1332,10 +1319,10 @@ class Sentence(DataPoint):
 
         # Truncate tokens
         self._tokens = self.tokens[:max_tokens]
-        
+
         # Remove spans that reference removed tokens
         self._known_spans = {
-            identifier: span 
+            identifier: span
             for identifier, span in self._known_spans.items()
             if isinstance(span, Span) and all(token.idx <= max_tokens for token in span.tokens)
         }
@@ -1344,18 +1331,22 @@ class Sentence(DataPoint):
         self._known_spans = {
             identifier: relation
             for identifier, relation in self._known_spans.items()
-            if not isinstance(relation, Relation) or (
-                all(token.idx <= max_tokens for token in relation.first.tokens) and
-                all(token.idx <= max_tokens for token in relation.second.tokens)
+            if not isinstance(relation, Relation)
+            or (
+                all(token.idx <= max_tokens for token in relation.first.tokens)
+                and all(token.idx <= max_tokens for token in relation.second.tokens)
             )
         }
 
         # Clean up any labels that reference removed spans/relations
         for typename in list(self.annotation_layers.keys()):
             self.annotation_layers[typename] = [
-                label for label in self.annotation_layers[typename]
-                if (not isinstance(label.data_point, (Span, Relation)) or 
-                    label.data_point.unlabeled_identifier in self._known_spans)
+                label
+                for label in self.annotation_layers[typename]
+                if (
+                    not isinstance(label.data_point, (Span, Relation))
+                    or label.data_point.unlabeled_identifier in self._known_spans
+                )
             ]
 
 
