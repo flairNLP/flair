@@ -523,6 +523,26 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         # For token embeddings, proceed with full tokenization
         flair_tokens, offsets, lengths = self.__gather_flair_tokens(sentences)
+
+        # random check some tokens to save performance.
+        if (self.needs_manual_ocr or self.tokenizer_needs_ocr_boxes) and not all(
+            [
+                flair_tokens[0][0].has_metadata("bbox"),
+                flair_tokens[0][-1].has_metadata("bbox"),
+                flair_tokens[-1][0].has_metadata("bbox"),
+                flair_tokens[-1][-1].has_metadata("bbox"),
+            ]
+        ):
+            raise ValueError(f"The embedding '{self.name}' requires the ocr 'bbox' set as metadata on all tokens.")
+
+        if self.feature_extractor is not None and not all(
+            [
+                sentences[0].has_metadata("image"),
+                sentences[-1].has_metadata("image"),
+            ]
+        ):
+            raise ValueError(f"The embedding '{self.name}' requires the 'image' set as metadata for all sentences.")
+
         return self.__build_transformer_model_inputs(sentences, offsets, lengths, flair_tokens, device)
 
     def __build_transformer_model_inputs(
