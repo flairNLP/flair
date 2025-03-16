@@ -205,3 +205,73 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
                 fig.tight_layout() 
                 fig.savefig(path+'histograms_'+metric+os.sep+metric+'_distribution_epoch_'+i+ext+'.png')
                 plt.close()
+
+
+def plot_category_membership_through_epochs(base_paths, corpus_name, seeds, dset = 'train', y_limit=2000, max_epochs=11):
+
+    exp_paths={}
+    exp_paths['EE'] = [f'{seed}_with_init-0.3/' for seed in seeds]
+    exp_paths['standard'] = [f'{seed}/' for seed in seeds]
+
+    plt.legend(markerscale=2)
+    plt.style.use('seaborn-v0_8-whitegrid')
+    seaborn_blue = '#4C72B0'
+    seaborn_orange = '#DD8452'
+    categories_counts = {}
+
+    for mode in ['EE','standard']:
+        print(mode)
+        filepath = f"{base_paths[mode]}/{corpus_name}/{exp_paths[mode][0]}/epoch_log_0.log"
+
+        if not os.path.exists(filepath):
+            start_index = 1
+        else:
+            start_index = 0
+
+        if dset == 'train':
+            ext = ''
+        else:
+            ext = '_'+dset
+
+        categories_counts[mode] = {cat['id']: {'clean':[], 'noisy':[]} for cat in CATEGORIES}
+
+        for i in [str(i) for i in range(start_index, max_epochs)]:
+
+            for exp_path in exp_paths[mode][:1]: 
+                ## plot metric distribution for only one seed - the first one
+                
+                path = f"{base_paths[mode]}/{corpus_name}/{exp_paths[mode][0]}/"
+                filepath = path+'epoch_log'+'_'+i+ext+'.log'
+
+                epoch_log_df = pd.read_csv(filepath,  delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
+
+                epoch_log_df[CORRECT_PREDICTION_FLAG_NAME] = epoch_log_df['predicted'] == epoch_log_df['noisy']
+
+                for category in CATEGORIES:
+                    category_id = category['id']
+                    if category['observed_label'] == 'O':
+                        category_epoch_log_df = epoch_log_df[(epoch_log_df[CORRECT_PREDICTION_FLAG_NAME] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']=='O')]
+                    else:
+                        category_epoch_log_df = epoch_log_df[(epoch_log_df[CORRECT_PREDICTION_FLAG_NAME] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']!='O')]
+
+                    count_clean, count_noisy = len(category_epoch_log_df[NOISE_FLAG_NAME].values) - sum(category_epoch_log_df[NOISE_FLAG_NAME].values), sum(category_epoch_log_df[NOISE_FLAG_NAME].values)
+
+                    categories_counts[mode][category_id]['clean'].append(count_clean)
+                    categories_counts[mode][category_id]['noisy'].append(count_noisy)            
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 6))
+    for category in CATEGORIES:
+        category_id = category['id']
+        axes[category['axes_indices']].plot(categories_counts['EE'][category_id]['clean'], color=seaborn_blue, linestyle='dashed', marker='o', label= 'EE: clean')
+        axes[category['axes_indices']].plot(categories_counts['EE'][category_id]['noisy'], color=seaborn_orange, linestyle='dashed', marker='o',label= 'EE: noisy')
+        axes[category['axes_indices']].plot(categories_counts['standard'][category_id]['clean'], color=seaborn_blue, linestyle='solid', marker='o', label= 'standard: clean')
+        axes[category['axes_indices']].plot(categories_counts['standard'][category_id]['noisy'], color=seaborn_orange, linestyle='solid', marker='o', label= 'standard: noisy')
+        axes[category['axes_indices']].set_title(category['name'])
+        axes[category['axes_indices']].legend(loc="upper right")
+        #axes[category['axes_indices']].set_xlim(binrange)
+        #axes[category['axes_indices']].set_ylim((0,y_limit))
+
+    fig.tight_layout()
+    fig.savefig(f"{base_paths['standard']}/{corpus_name}/lineplots_category_memberships_{corpus_name}.png")
+    plt.close()
+
