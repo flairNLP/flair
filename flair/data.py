@@ -545,21 +545,12 @@ class _PartOfSentence(DataPoint, ABC):
         return self
 
     def remove_labels(self, typename: str) -> None:
-        # delete labels at object itself first
+        # labels also need to be deleted at Sentence object
+        for label in self.get_labels(typename):
+            self.sentence.annotation_layers[typename].remove(label)
+
+        # delete labels at object itself
         super().remove_labels(typename)
-
-        # only access tokens if they've already been tokenized
-        if hasattr(self, "_tokens") and self._tokens is not None:
-            # labels also need to be deleted at all tokens
-            for token in self._tokens:
-                token.remove_labels(typename)
-
-            # labels also need to be deleted at all known spans
-            for span in self.sentence._known_spans.values():
-                span.remove_labels(typename)
-
-            # remove spans without labels
-            self.sentence._known_spans = {k: v for k, v in self.sentence._known_spans.items() if len(v.labels) > 0}
 
 
 class Token(_PartOfSentence):
@@ -1026,6 +1017,8 @@ class Sentence(DataPoint):
         # set token idx and sentence
         token.sentence = self
         token._internal_index = len(self.tokens) + 1
+        if token.start_position == 0 and token._internal_index > 1:
+            token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
 
         # append token to sentence
         self.tokens.append(token)
@@ -1054,9 +1047,10 @@ class Sentence(DataPoint):
         # clear sentence embeddings
         super().clear_embeddings(embedding_names)
 
-        # clear token embeddings
-        for token in self.tokens:
-            token.clear_embeddings(embedding_names)
+        # clear token embeddings if sentence is tokenized
+        if self._is_tokenized():
+            for token in self.tokens:
+                token.clear_embeddings(embedding_names)
 
     def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> list[Token]:
         sentence = self
@@ -1296,9 +1290,6 @@ class Sentence(DataPoint):
         return []
 
     def remove_labels(self, typename: str):
-        # delete labels at object itself first
-        super().remove_labels(typename)
-
         # only access tokens if already tokenized
         if self._is_tokenized():
             # labels also need to be deleted at all tokens
@@ -1308,6 +1299,9 @@ class Sentence(DataPoint):
             # labels also need to be deleted at all known spans
             for span in self._known_spans.values():
                 span.remove_labels(typename)
+
+        # delete labels at object itself first
+        super().remove_labels(typename)
 
     def _is_tokenized(self) -> bool:
         return self._tokens is not None

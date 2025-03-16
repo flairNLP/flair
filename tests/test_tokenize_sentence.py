@@ -555,3 +555,24 @@ def test_embeddings_tokenization():
     assert sentence_doc._tokens is None
     doc_embeddings.embed(sentence_doc)
     assert sentence_doc._tokens is None
+
+
+def test_remove_labels_keeps_untokenized():
+    # Create a sentence without triggering tokenization
+    sentence = Sentence("The quick brown fox jumps over the lazy dog")
+    sentence.add_label("pos", "ADJ")
+    assert not sentence._is_tokenized()  # Verify sentence starts untokenized
+
+    # Remove labels should not trigger tokenization
+    sentence.remove_labels("pos")
+    assert not sentence._is_tokenized()  # Sentence should still be untokenized
+
+
+def test_clear_embeddings_keeps_untokenized():
+    # Create a sentence without triggering tokenization
+    sentence = Sentence("The quick brown fox jumps over the lazy dog")
+    assert not sentence._is_tokenized()  # Verify sentence starts untokenized
+
+    # Clear embeddings should not trigger tokenization
+    sentence.clear_embeddings()
+    assert not sentence._is_tokenized()  # Sentence should still be untokenized
