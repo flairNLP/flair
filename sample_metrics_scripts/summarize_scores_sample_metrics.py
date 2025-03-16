@@ -13,21 +13,24 @@ CATEGORIES = [
         'name':'Correct prediction (observed label O)',
         'axes_indices':(0,0),
         'correct_prediction_flag':True,
-        'observed_label':'O'
+        'observed_label':'O',
+        'color':'#55a868'
     },
     {
         'id': '2',
         'name': 'Incorrect prediction (observed label O)',
         'axes_indices':(0,1),
         'correct_prediction_flag':False,
-        'observed_label':'O'
+        'observed_label':'O',
+        'color':'#c44e52'
     },                
     {
         'id':'3',
         'name':'Correct prediction (observed label non-O)',
         'axes_indices':(1,0),
         'correct_prediction_flag':True,
-        'observed_label':'non-O'
+        'observed_label':'non-O',
+        'color':'#55a868'
     },
 
     {
@@ -35,7 +38,8 @@ CATEGORIES = [
         'name':'Incorrect prediction (observed label non O)',
         'axes_indices':(1,1),
         'correct_prediction_flag':False,
-        'observed_label':'non-O'
+        'observed_label':'non-O',
+        'color':'#c44e52'
     }
 ]
 
@@ -207,7 +211,7 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
                 plt.close()
 
 
-def plot_category_membership_through_epochs(base_paths, corpus_name, seeds, dset = 'train', y_limit=2000, max_epochs=11):
+def plot_category_membership_through_epochs(base_paths, corpus_name, seeds, dset = 'train', max_epochs=11):
 
     exp_paths={}
     exp_paths['EE'] = [f'{seed}_with_init-0.3/' for seed in seeds]
@@ -233,32 +237,41 @@ def plot_category_membership_through_epochs(base_paths, corpus_name, seeds, dset
         else:
             ext = '_'+dset
 
-        categories_counts[mode] = {cat['id']: {'clean':[], 'noisy':[]} for cat in CATEGORIES}
+        # for each mode, category and sample type (clean or noisy): save a list with sample counts from all epochs
+        categories_counts[mode] = {cat['id']: {'clean':[], 'noisy':[]} for cat in CATEGORIES} 
 
         for i in [str(i) for i in range(start_index, max_epochs)]:
 
             for exp_path in exp_paths[mode][:1]: 
-                ## plot metric distribution for only one seed - the first one
+                ## temporary: plot for only one seed - the first one
                 
                 path = f"{base_paths[mode]}/{corpus_name}/{exp_paths[mode][0]}/"
                 filepath = path+'epoch_log'+'_'+i+ext+'.log'
-
                 epoch_log_df = pd.read_csv(filepath,  delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
 
                 epoch_log_df[CORRECT_PREDICTION_FLAG_NAME] = epoch_log_df['predicted'] == epoch_log_df['noisy']
 
                 for category in CATEGORIES:
                     category_id = category['id']
+
+                    # take the corresponding data subset
                     if category['observed_label'] == 'O':
                         category_epoch_log_df = epoch_log_df[(epoch_log_df[CORRECT_PREDICTION_FLAG_NAME] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']=='O')]
                     else:
                         category_epoch_log_df = epoch_log_df[(epoch_log_df[CORRECT_PREDICTION_FLAG_NAME] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']!='O')]
 
+                    # count clean and noisy samples
                     count_clean, count_noisy = len(category_epoch_log_df[NOISE_FLAG_NAME].values) - sum(category_epoch_log_df[NOISE_FLAG_NAME].values), sum(category_epoch_log_df[NOISE_FLAG_NAME].values)
 
                     categories_counts[mode][category_id]['clean'].append(count_clean)
                     categories_counts[mode][category_id]['noisy'].append(count_noisy)            
 
+    # Plot line plots with number of samples per-category. 
+    # y-axis: number of samples
+    # x-acis: epoch number
+    # dashed lines: EE runs
+    # solid lines: standard runs
+    # clean and noisy samples are in different colors
     fig, axes = plt.subplots(2, 2, figsize=(14, 6))
     for category in CATEGORIES:
         category_id = category['id']
@@ -267,10 +280,7 @@ def plot_category_membership_through_epochs(base_paths, corpus_name, seeds, dset
         axes[category['axes_indices']].plot(categories_counts['standard'][category_id]['clean'], color=seaborn_blue, linestyle='solid', marker='o', label= 'standard: clean')
         axes[category['axes_indices']].plot(categories_counts['standard'][category_id]['noisy'], color=seaborn_orange, linestyle='solid', marker='o', label= 'standard: noisy')
         axes[category['axes_indices']].set_title(category['name'])
-        axes[category['axes_indices']].legend(loc="upper right")
-        #axes[category['axes_indices']].set_xlim(binrange)
-        #axes[category['axes_indices']].set_ylim((0,y_limit))
-
+    axes[1,1].legend(loc="upper right")
     fig.tight_layout()
     fig.savefig(f"{base_paths['standard']}/{corpus_name}/lineplots_category_memberships_{corpus_name}.png")
     plt.close()
