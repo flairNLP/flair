@@ -285,3 +285,62 @@ def plot_category_membership_through_epochs(base_paths, corpus_name, seeds, dset
     fig.savefig(f"{base_paths['standard']}/{corpus_name}/lineplots_category_memberships_{corpus_name}.png")
     plt.close()
 
+
+    # Plot barplots of numbers of samples; per (observed) label type
+    # 4 stacked barplots (stack number of samples in pairs of complementary categories)
+    # (observed label O is left: category 1 or 2)
+    # (observed label non-O is right: category 3 or 4)
+    # x-axis: epoch number
+    # training modes (standard or EE) have bars with different opacity
+    # categories have different colors
+
+    fig, axes = plt.subplots(2, 2, figsize=(14, 6))
+    width = 0.25
+
+    bottom = np.zeros(10)
+    for cat1 in [CATEGORIES[0], CATEGORIES[1]]:
+        
+        p = axes[0,0].bar(x= range(10), height = categories_counts['standard'][cat1['id']]['clean'][:10] , width=width, color=cat1['color'], label='standard: category'+cat1['id'], bottom=bottom)
+        bottom += categories_counts['standard'][cat1['id']]['clean'][:10] 
+    bottom = np.zeros(10)
+    for cat1 in [CATEGORIES[0], CATEGORIES[1]]:
+        p = axes[0,0].bar(x= [c + width for c in range(10)], height = categories_counts['EE'][cat1['id']]['clean'][:10] , width=width, color=cat1['color'], label='EE: category'+cat1['id'], alpha=0.5, bottom=bottom)
+        bottom += categories_counts['EE'][cat1['id']]['clean'][:10] 
+    axes[0,0].set_title('Category 1/2 (Observed label O) - clean')
+
+    bottom = np.zeros(10)
+    for cat1 in [CATEGORIES[0], CATEGORIES[1]]:
+        p = axes[1,0].bar(x= range(10), height = categories_counts['standard'][cat1['id']]['noisy'][:10] , width=width, color=cat1['color'], label='standard: category'+cat1['id'], bottom=bottom)
+        bottom += categories_counts['standard'][cat1['id']]['noisy'][:10] 
+    bottom = np.zeros(10)
+    for cat1 in [CATEGORIES[0], CATEGORIES[1]]:
+        p = axes[1,0].bar(x= [c + width for c in range(10)], height = categories_counts['EE'][cat1['id']]['noisy'][:10]  , width=width, color=cat1['color'], label='EE: category'+cat1['id'], alpha=0.5, bottom=bottom)
+        bottom += categories_counts['EE'][cat1['id']]['noisy'][:10] 
+    axes[1,0].set_title('Category 1/2 (Observed label O) - noisy')
+
+
+    bottom = np.zeros(10)
+    for cat1 in [CATEGORIES[2], CATEGORIES[3]]:
+        p = axes[0,1].bar(x= range(10), height = categories_counts['standard'][cat1['id']]['clean'][:10] ,   width=width, color=cat1['color'], label='standard: category'+cat1['id'], bottom=bottom)
+        bottom += categories_counts['standard'][cat1['id']]['clean'][:10] 
+    bottom = np.zeros(10)
+    for cat1 in [CATEGORIES[2], CATEGORIES[3]]:
+        p = axes[0,1].bar(x= [c + width for c in range(10)], height = categories_counts['EE'][cat1['id']]['clean'][:10],   width=width, color=cat1['color'], label='EE: category'+cat1['id'], alpha=0.5, bottom=bottom)
+        bottom += categories_counts['EE'][cat1['id']]['clean'][:10] 
+    axes[0,1].set_title('Category 3/4 (Observed label non-O) - clean')
+
+
+    bottom = np.zeros(10)
+    for cat1 in [CATEGORIES[2], CATEGORIES[3]]:
+        p = axes[1,1].bar(x= range(10), height = categories_counts['standard'][cat1['id']]['noisy'][:10] ,   width=width, color=cat1['color'], label='standard: category'+cat1['id'], bottom=bottom)
+        bottom += categories_counts['standard'][cat1['id']]['noisy'][:10] 
+    bottom = np.zeros(10)
+    for cat1 in [CATEGORIES[2], CATEGORIES[3]]:
+        p = axes[1,1].bar(x= [c + width for c in range(10)], height = categories_counts['EE'][cat1['id']]['noisy'][:10] ,   width=width, color=cat1['color'], label='EE: category'+cat1['id'], alpha=0.5, bottom=bottom)
+        bottom += categories_counts['EE'][cat1['id']]['noisy'][:10] 
+    axes[1,1].set_title('Category 3/4 (Observed label non-O) - noisy')
+
+    handles, labels = axes[1,1].get_legend_handles_labels()
+    fig.legend(handles, labels, loc='lower center', ncol = 4, bbox_to_anchor = (0.5, 0),)
+    fig.savefig(f"{base_paths['standard']}/{corpus_name}/lineplots_category_memberships_version2_{corpus_name}.png")
+    plt.close()

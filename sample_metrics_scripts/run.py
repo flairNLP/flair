@@ -36,6 +36,7 @@ def run(config, gpu=0):
                 plot_metric_distributions(base_path=f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/",
                                           mode=mode, seeds=seeds, sample_metrics=config['sample_metrics'][mode],
                                           dset='train', max_epochs=int(config['parameters']['num_epochs']) + 1)
+            plot_category_membership_through_epochs(base_paths = config['paths']['baseline_paths'] , corpus_name = corpus_name, seeds= seeds,dset = 'train', max_epochs=11)
 
         # 2. Find optimal parameter sets for each sample metric, mode and category
 
