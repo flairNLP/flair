@@ -7,6 +7,40 @@ import csv
 
 categories_ids = ['1','2','3','4']
 
+CATEGORIES = [
+    { 
+        'id':'1',
+        'name':'Correct prediction (observed label O)',
+        'axes_indices':(0,0),
+        'correct_prediction_flag':True,
+        'observed_label':'O'
+    },
+    {
+        'id': '2',
+        'name': 'Incorrect prediction (observed label O)',
+        'axes_indices':(0,1),
+        'correct_prediction_flag':False,
+        'observed_label':'O'
+    },                
+    {
+        'id':'3',
+        'name':'Correct prediction (observed label non-O)',
+        'axes_indices':(1,0),
+        'correct_prediction_flag':True,
+        'observed_label':'non-O'
+    },
+
+    {
+        'id':'4',
+        'name':'Incorrect prediction (observed label non O)',
+        'axes_indices':(1,1),
+        'correct_prediction_flag':False,
+        'observed_label':'non-O'
+    }
+]
+
+CORRECT_PREDICTION_FLAG_NAME = 'correct_prediction_flag'
+NOISE_FLAG_NAME = 'noisy_flag'
 
 def summarize_test_scores(results_tables_path, corpus_name):
 
@@ -94,17 +128,12 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
 
     The histograms for noisy and clean samples are shown in different colors.
 
-    In addition, all memorized samples are printed out in a file: memorized_samples_with_memorization_epoch.csv
-    , where the memorization epoch is the epoch where the noisy label is predicted and after which the prediction doesn't change.
     '''
 
     if mode == 'EE':
         exp_paths = [f'{seed}_with_init-0.3/' for seed in seeds]
     else:
         exp_paths = [f'{seed}/' for seed in seeds]
-
-    flag_name = 'Correct prediction flag'
-    secondary_flag_name = 'Noise flag'
 
     plt.legend(markerscale=2)
 
@@ -138,11 +167,9 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
                 except:
                     continue
                 print(df.columns)
-                df[flag_name] = df['predicted'] == df['noisy']
+                df[CORRECT_PREDICTION_FLAG_NAME] = df['predicted'] == df['noisy']
 
-                df.rename(columns = {'noisy_flag':secondary_flag_name}, inplace=True)
-
-                print(df.groupby(secondary_flag_name).count())
+                print(df.groupby(NOISE_FLAG_NAME).count())
                 print(len(df))
                 if metric in ['pd','fl','tal','tac','mild','mild_f','mild_m']:
                     max_metric = df[metric].max()
@@ -164,30 +191,16 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
                 df.rename(columns = {'noisy':'label'}, inplace=True)
 
                 fig, axes = plt.subplots(2, 2, figsize=(14, 4))
-
-                #cat1
-                sns.histplot(df[(df[flag_name] == True)  & (df['label']=='O')] , x=metric, binwidth=binwidth, binrange=binrange, ax = axes[0,0], hue= secondary_flag_name)
-                axes[0,0].set_title('Epoch '+i+' - Correct prediction (observed label O)')
-                axes[0,0].set_xlim(binrange)
-                axes[0,0].set_ylim((0,y_limit))
-
-                #cat2
-                sns.histplot(df[(df[flag_name] == True) & (df['label'] != 'O') ] , x=metric, binwidth=binwidth, binrange=binrange, ax = axes[1,0], hue = secondary_flag_name)
-                axes[1,0].set_title('Epoch '+i+' - Correct prediction (observed label non-O)')
-                axes[1,0].set_xlim(binrange)
-                axes[1,0].set_ylim((0,y_limit))
-                
-                #cat3
-                sns.histplot(df[(df[flag_name] == False) & (df['label']=='O')] , x=metric, binwidth=binwidth, binrange=binrange, ax = axes[0,1], hue = secondary_flag_name)
-                axes[0,1].set_title('Epoch '+i+' - Incorrect prediction (observed label O)')
-                axes[0,1].set_xlim(binrange)
-                axes[0,1].set_ylim((0,y_limit))
-
-                #cat4
-                sns.histplot(df[(df[flag_name] == False) & (df['label'] != 'O') ] , x=metric, binwidth=binwidth, binrange=binrange, ax = axes[1,1], hue = secondary_flag_name)
-                axes[1,1].set_title('Epoch '+i+' - Incorrect prediction (observed label non O)')
-                axes[1,1].set_xlim(binrange)
-                axes[1,1].set_ylim((0,y_limit))
+                for category in CATEGORIES:
+                    #cat1
+                    if category['observed_label'] == 'O':
+                        dataset = df[(df[CORRECT_PREDICTION_FLAG_NAME] == category['correct_prediction_flag']) & (df['label'] == 'O') ]
+                    else:
+                        dataset = df[(df[CORRECT_PREDICTION_FLAG_NAME] == category['correct_prediction_flag']) & (df['label'] != 'O') ]
+                    sns.histplot( dataset, x=metric, binwidth=binwidth, binrange=binrange, ax = axes[category['axes_indices']], hue= NOISE_FLAG_NAME)
+                    axes[category['axes_indices']].set_title('Epoch '+i+' - '+category['name'])
+                    axes[category['axes_indices']].set_xlim(binrange)
+                    axes[category['axes_indices']].set_ylim((0,y_limit))
 
                 fig.tight_layout() 
                 fig.savefig(path+'histograms_'+metric+os.sep+metric+'_distribution_epoch_'+i+ext+'.png')
