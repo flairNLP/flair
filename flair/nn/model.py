@@ -851,8 +851,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             if not isinstance(sentences, list):
                 sentences = [sentences]
 
-            print("sentences", sentences)
-
             if isinstance(sentences[0], Sentence):
                 Sentence.set_context_for_sentences(typing.cast(list[Sentence], sentences))
 
