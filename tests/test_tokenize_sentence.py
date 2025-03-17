@@ -17,6 +17,7 @@ from flair.tokenization import (
     SpaceTokenizer,
     SpacyTokenizer,
     TokenizerWrapper,
+    StaccatoTokenizer,
 )
 from flair.embeddings import TransformerWordEmbeddings, TransformerDocumentEmbeddings
 
@@ -576,3 +577,137 @@ def test_clear_embeddings_keeps_untokenized():
     # Clear embeddings should not trigger tokenization
     sentence.clear_embeddings()
     assert not sentence._is_tokenized()  # Sentence should still be untokenized
+
+
+def test_create_sentence_with_staccato_tokenizer():
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=StaccatoTokenizer())
+
+    assert len(sentence.tokens) == 4
+    assert sentence.tokens[0].text == "I"
+    assert sentence.tokens[1].text == "love"
+    assert sentence.tokens[2].text == "Berlin"
+    assert sentence.tokens[3].text == "."
+
+
+def test_staccato_tokenizer_with_numbers_and_punctuation():
+    sentence = Sentence("It's 03-16-2025", use_tokenizer=StaccatoTokenizer())
+
+    assert len(sentence.tokens) == 8
+    assert [token.text for token in sentence.tokens] == ["It", "'", "s", "03", "-", "16", "-", "2025"]
+
+
+def test_staccato_tokenizer_with_multilingual_text():
+    # Test Russian
+    russian_sentence = Sentence("Привет, мир! Это тест 123.", use_tokenizer=StaccatoTokenizer())
+    assert [token.text for token in russian_sentence.tokens] == ["Привет", ",", "мир", "!", "Это", "тест", "123", "."]
+
+    # Test Chinese
+    chinese_sentence = Sentence("你好，世界！123", use_tokenizer=StaccatoTokenizer())
+    assert [token.text for token in chinese_sentence.tokens] == ["你", "好", "，", "世", "界", "！", "123"]
+
+    # Test Japanese
+    japanese_sentence = Sentence("こんにちは世界！テスト123", use_tokenizer=StaccatoTokenizer())
+    assert [token.text for token in japanese_sentence.tokens] == ["こんにちは", "世", "界", "！", "テスト", "123"]
+
+    # Test Arabic
+    arabic_sentence = Sentence("مرحبا بالعالم! 123", use_tokenizer=StaccatoTokenizer())
+    assert [token.text for token in arabic_sentence.tokens] == ["مرحبا", "بالعالم", "!", "123"]
+
+
+def test_sentence_retokenize():
+    # Create a sentence with default tokenization
+    sentence = Sentence("01-03-2025 New York")
+
+    # Add span labels
+    sentence.get_span(1, 3).add_label("ner", "LOC")
+    sentence.get_span(0, 1).add_label("ner", "DATE")
+
+    # Verify initial state
+    assert len(sentence) == 3
+    spans = sentence.get_spans("ner")
+    assert len(spans) == 2
+    assert spans[0].text == "01-03-2025"
+    assert spans[1].text == "New York"
+
+    # Retokenize with StaccatoTokenizer
+    sentence.retokenize(StaccatoTokenizer())
+
+    # Verify the sentence has more tokens after retokenization
+    assert len(sentence) == 7
+
+    # Verify the spans are preserved
+    spans = sentence.get_spans("ner")
+    assert len(spans) == 2
+    assert spans[0].text == "01-03-2025"
+    assert spans[1].text == "New York"
+
+    # Verify the labels are preserved
+    assert [label.value for label in spans[0].labels] == ["DATE"]
+    assert [label.value for label in spans[1].labels] == ["LOC"]
+
+
+def test_retokenize_with_complex_spans():
+    # Test with more complex text and overlapping spans
+    sentence = Sentence("John Smith-Johnson visited New York City on January 15th, 2023.")
+
+    # Add span labels
+    sentence.get_span(0, 2).add_label("ner", "PERSON")  # John Smith-Johnson
+    sentence.get_span(3, 6).add_label("ner", "LOC")  # New York City
+    sentence.get_span(7, 11).add_label("ner", "DATE")  # January 15th, 2023
+
+    # Verify initial state
+    assert len(sentence) == 12
+    spans = sentence.get_spans("ner")
+    assert len(spans) == 3
+    assert spans[0].text == "John Smith-Johnson"
+    assert spans[1].text == "New York City"
+    assert spans[2].text == "January 15th, 2023"
+
+    # Retokenize with StaccatoTokenizer
+    sentence.retokenize(StaccatoTokenizer())
+    assert len(sentence) == 15
+
+    # Verify spans are preserved
+    spans = sentence.get_spans("ner")
+    assert len(spans) == 3
+    assert spans[0].text == "John Smith-Johnson"
+    assert spans[1].text == "New York City"
+    assert spans[2].text == "January 15th, 2023"
+
+
+def test_retokenize_preserves_sentence_labels():
+    # Test that sentence-level labels are preserved
+    sentence = Sentence("This is a positive review.")
+    sentence.add_label("sentiment", "POSITIVE")
+
+    # Verify initial state
+    assert len(sentence.labels) == 1
+    assert sentence.labels[0].value == "POSITIVE"
+
+    # Retokenize
+    sentence.retokenize(StaccatoTokenizer())
+
+    # Verify sentence label is preserved
+    assert len(sentence.labels) == 1
+    assert sentence.labels[0].value == "POSITIVE"
+
+
+def test_retokenize_multiple_times():
+    # Test retokenizing multiple times
+    sentence = Sentence("01-03-2025 New York")
+    sentence.get_span(0, 1).add_label("ner", "DATE")
+    sentence.get_span(1, 3).add_label("ner", "LOC")
+
+    # First retokenization
+    sentence.retokenize(StaccatoTokenizer())
+    assert len(sentence) == 7
+
+    # Second retokenization with a different tokenizer
+    sentence.retokenize(SpaceTokenizer())
+    assert len(sentence) == 3
+
+    # Verify spans are still preserved
+    spans = sentence.get_spans("ner")
+    assert len(spans) == 2
+    assert spans[0].text == "01-03-2025"
+    assert spans[1].text == "New York"

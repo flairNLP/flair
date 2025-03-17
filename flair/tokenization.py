@@ -307,3 +307,72 @@ class SciSpacyTokenizer(Tokenizer):
     @property
     def name(self) -> str:
         return self.__class__.__name__ + "_" + self.model.meta["name"] + "_" + self.model.meta["version"]
+
+
+class StaccatoTokenizer(Tokenizer):
+    """
+    A string-based tokenizer that splits text into tokens based on the following rules:
+    - Punctuation characters are split into individual tokens
+    - Sequences of numbers are kept together as single tokens
+    - Kanji characters are split into individual tokens
+    - Uninterrupted sequences of letters (Latin, Cyrillic, etc.) and kana are preserved as single tokens
+    """
+
+    def __init__(self):
+        super().__init__()
+        # Define patterns for different character types
+        self.punctuation = r"[^\w\s]"  # Non-alphanumeric, non-whitespace
+        self.digits = r"\d+"  # One or more digits
+        self.kanji = r"[\u4e00-\u9fff]"  # Kanji characters
+
+        # Unicode ranges for various alphabets and scripts
+        # This includes Latin, Cyrillic, Greek, Hebrew, Arabic, etc.
+        self.alphabets = [
+            r"[a-zA-Z]+",  # Latin
+            r"[\u0400-\u04FF\u0500-\u052F]+",  # Cyrillic and Cyrillic Supplement
+            r"[\u0370-\u03FF\u1F00-\u1FFF]+",  # Greek and Coptic
+            r"[\u0590-\u05FF]+",  # Hebrew
+            r"[\u0600-\u06FF\u0750-\u077F]+",  # Arabic
+            r"[\u0E00-\u0E7F]+",  # Thai
+            r"[\u3040-\u309F]+",  # Hiragana
+            r"[\u30A0-\u30FF]+",  # Katakana
+            r"[\uAC00-\uD7AF]+",  # Hangul (Korean)
+            # Add more scripts as needed
+        ]
+
+        # Combined pattern for tokenization
+        self.alphabet_pattern = "|".join(self.alphabets)
+
+    def tokenize(self, text: str) -> list[str]:
+        """
+        Tokenize the input text according to the defined rules.
+
+        Args:
+            text: The input text to tokenize
+
+        Returns:
+            A list of tokens
+        """
+        # Create a pattern that matches:
+        # 1. Punctuation characters
+        # 2. Number sequences
+        # 3. Kanji characters individually
+        # 4. Letter sequences from various scripts
+        pattern = f"({self.punctuation}|{self.digits}|{self.kanji})"
+
+        # First split by punctuation, numbers, and kanji
+        raw_tokens = []
+        parts = re.split(pattern, text)
+
+        # Filter out empty strings
+        for part in parts:
+            if part:
+                # If part is punctuation, number, or kanji, add it directly
+                if re.fullmatch(pattern, part):
+                    raw_tokens.append(part)
+                else:
+                    # For other text, split by whitespace
+                    subparts = part.split()
+                    raw_tokens.extend(subparts)
+
+        return raw_tokens

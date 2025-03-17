@@ -328,6 +328,7 @@ class MultiFileColumnCorpus(Corpus):
         default_whitespace_after: int = 1,
         every_sentence_is_independent: bool = False,
         documents_as_sentences: bool = False,
+        use_tokenizer: Union[bool, Tokenizer] = None,  # New parameter
         **corpusargs,
     ) -> None:
         r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -347,6 +348,7 @@ class MultiFileColumnCorpus(Corpus):
             label_name_map: Optionally map tag names to different schema.
             banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
         """
+
         # get train data
         train: Optional[Dataset] = (
             ConcatDataset(
@@ -439,6 +441,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
         autofind_splits: bool = True,
         name: Optional[str] = None,
         comment_symbol="# ",
+        use_tokenizer: Union[bool, Tokenizer] = None,  # New parameter
         **corpusargs,
     ) -> None:
         r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -468,6 +471,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
             test_files=[test_file] if test_file else [],
             name=name if data_folder is None else str(data_folder),
             comment_symbol=comment_symbol,
+            use_tokenizer=use_tokenizer,  # Pass the tokenizer
             **corpusargs,
         )
 
@@ -511,7 +515,6 @@ class ColumnDataset(FlairDataset):
         """
         path_to_column_file = Path(path_to_column_file)
         assert path_to_column_file.exists()
-        self.path_to_column_file = path_to_column_file
         self.column_delimiter = re.compile(column_delimiter)
         self.comment_symbol = comment_symbol
         self.document_separator_token = document_separator_token
@@ -521,11 +524,18 @@ class ColumnDataset(FlairDataset):
         self.default_whitespace_after = default_whitespace_after
         self.documents_as_sentences = documents_as_sentences
 
+        # all these are newly added to make the reloading for re-tokenized files work
+        self.column_name_map = column_name_map
+        self.skip_first_line = skip_first_line
+        self.encoding = encoding
+
         if documents_as_sentences and not document_separator_token:
             log.error(
                 "document_as_sentences was set to True, but no document_separator_token was provided. Please set"
                 "a value for document_separator_token in order to enable the document_as_sentence functionality."
             )
+
+        self.path_to_column_file = path_to_column_file
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
@@ -1455,6 +1465,7 @@ class CLEANCONLL(ColumnCorpus):
         self,
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
+        use_tokenizer: Union[bool, Tokenizer] = None,  # New parameter
         **corpusargs,
     ) -> None:
         """Initialize the CleanCoNLL corpus.
@@ -1494,6 +1505,7 @@ class CLEANCONLL(ColumnCorpus):
             encoding="utf-8",
             in_memory=in_memory,
             document_separator_token="-DOCSTART-",
+            use_tokenizer=use_tokenizer,  # Pass the tokenizer
             **corpusargs,
         )
 

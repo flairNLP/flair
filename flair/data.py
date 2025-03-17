@@ -219,10 +219,12 @@ class Label:
     """
 
     def __init__(self, data_point: "DataPoint", value: str, score: float = 1.0, **metadata) -> None:
+        self.data_point = data_point
         self._value = value
         self._score = score
-        self.data_point: DataPoint = data_point
         self.metadata = metadata
+        # Add a new attribute to store the typename
+        self._typename = None
         super().__init__()
 
     def set_value(self, value: str, score: float = 1.0):
@@ -273,6 +275,29 @@ class Label:
     @property
     def unlabeled_identifier(self):
         return f"{self.data_point.unlabeled_identifier}"
+
+    @property
+    def typename(self) -> str:
+        """
+        Returns the label type name this label belongs to.
+        This is determined by looking up the label in the data point's label dictionary.
+        """
+        if self._typename is not None:
+            return self._typename
+
+        # Find the typename by checking which label type this label belongs to
+        if self.data_point is not None:
+            for type_name, labels in self.data_point._labels.items():
+                if self in labels:
+                    self._typename = type_name
+                    return type_name
+
+        return None
+
+    # Add a setter for typename to be used when creating the label
+    @typename.setter
+    def typename(self, value: str) -> None:
+        self._typename = value
 
 
 class DataPoint:
@@ -362,6 +387,7 @@ class DataPoint:
             A pointer to itself (DataPoint object, now with an added label).
         """
         label = Label(self, value, score, **metadata)
+        label.typename = typename
 
         if typename not in self.annotation_layers:
             self.annotation_layers[typename] = [label]
@@ -371,7 +397,9 @@ class DataPoint:
         return self
 
     def set_label(self, typename: str, value: str, score: float = 1.0, **metadata):
-        self.annotation_layers[typename] = [Label(self, value, score, **metadata)]
+        label = Label(self, value, score, **metadata)
+        label.typename = typename
+        self.annotation_layers[typename] = [label]
         return self
 
     def remove_labels(self, typename: str) -> None:
@@ -1342,6 +1370,93 @@ class Sentence(DataPoint):
                     or label.data_point.unlabeled_identifier in self._known_spans
                 )
             ]
+
+    def retokenize(self, tokenizer):
+        """
+        Retokenizes the sentence using the provided tokenizer while preserving span labels.
+
+        Args:
+            tokenizer: The tokenizer to use for retokenization
+
+        Example::
+
+            # Create a sentence with default tokenization
+            sentence = Sentence("01-03-2025 New York")
+
+            # Add span labels
+            sentence.get_span(1, 3).add_label('ner', "LOC")
+            sentence.get_span(0, 1).add_label('ner', "DATE")
+
+            # Retokenize with a different tokenizer while preserving labels
+            sentence.retokenize(StaccatoTokenizer())
+        """
+        # Store the original text
+        original_text = self.to_original_text()
+
+        # Save all span-level labels with their text spans and character positions
+        span_labels = {}
+        for label_type in list(self.annotation_layers.keys()):
+            spans = self.get_spans(label_type)
+            if spans:
+                if label_type not in span_labels:
+                    span_labels[label_type] = []
+
+                for span in spans:
+                    # Store the span text, character positions, and its labels
+                    span_labels[label_type].append(
+                        (
+                            span.text,
+                            span.start_position,
+                            span.end_position,
+                            [label.value for label in span.labels],
+                            [label.score for label in span.labels],
+                        )
+                    )
+
+                # Remove all labels of this type
+                self.remove_labels(label_type)
+
+        # Create a new sentence with the same text but using the new tokenizer
+        new_sentence = Sentence(original_text, use_tokenizer=tokenizer)
+
+        # Replace the tokens in the current sentence with the tokens from the new sentence
+        self.tokens.clear()
+        for token in new_sentence.tokens:
+            self.tokens.append(token)
+            # Update the token's sentence reference to point to this sentence
+            token.sentence = self
+
+        # Reapply span labels based on character positions
+        for label_type, spans in span_labels.items():
+            for span_text, start_pos, end_pos, label_values, label_scores in spans:
+                # Find tokens that are fully or partially contained within the span
+                token_indices = []
+
+                for i, token in enumerate(self.tokens):
+                    # Check if token is within or overlaps with the span
+                    # A token is part of the span if:
+                    # 1. It starts within the span, or
+                    # 2. It ends within the span, or
+                    # 3. It completely contains the span
+                    token_start = token.start_position
+                    token_end = token.end_position
+
+                    if (
+                        (token_start >= start_pos and token_start < end_pos)
+                        or (token_end > start_pos and token_end <= end_pos)  # Token starts within span
+                        or (token_start <= start_pos and token_end >= end_pos)  # Token ends within span
+                    ):  # Token contains span
+                        token_indices.append(i)
+
+                # If we found tokens covering this span
+                if token_indices:
+                    span_start = min(token_indices)
+                    span_end = max(token_indices) + 1
+
+                    # Create the span and add labels
+                    span = self.get_span(span_start, span_end)
+                    for value, score in zip(label_values, label_scores):
+                        span.add_label(label_type, value, score)
 
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):
