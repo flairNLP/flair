@@ -188,8 +188,8 @@ class ParallelTextDataset(FlairDataset):
         target_sentence = Sentence(target_line, use_tokenizer=self.use_tokenizer)
 
         if self.max_tokens_per_doc > 0:
-            source_sentence.tokens = source_sentence.tokens[: self.max_tokens_per_doc]
-            target_sentence.tokens = target_sentence.tokens[: self.max_tokens_per_doc]
+            source_sentence.truncate(self.max_tokens_per_doc)
+            target_sentence.truncate(self.max_tokens_per_doc)
 
         return TextPair(source_sentence, target_sentence)
 
@@ -420,8 +420,8 @@ class DataPairDataset(FlairDataset):
         second_sentence = Sentence(second_element, use_tokenizer=self.use_tokenizer)
 
         if self.max_tokens_per_doc > 0:
-            first_sentence.tokens = first_sentence.tokens[: self.max_tokens_per_doc]
-            second_sentence.tokens = second_sentence.tokens[: self.max_tokens_per_doc]
+            first_sentence.truncate(self.max_tokens_per_doc)
+            second_sentence.truncate(self.max_tokens_per_doc)
 
         data_pair = TextPair(first_sentence, second_sentence)
 
@@ -673,9 +673,9 @@ class DataTripleDataset(FlairDataset):
         third_sentence = Sentence(third_element, use_tokenizer=self.use_tokenizer)
 
         if self.max_tokens_per_doc > 0:
-            first_sentence.tokens = first_sentence.tokens[: self.max_tokens_per_doc]
-            second_sentence.tokens = second_sentence.tokens[: self.max_tokens_per_doc]
-            third_sentence.tokens = third_sentence.tokens[: self.max_tokens_per_doc]
+            first_sentence.truncate(self.max_tokens_per_doc)
+            second_sentence.truncate(self.max_tokens_per_doc)
+            third_sentence.truncate(self.max_tokens_per_doc)
 
         data_triple = TextTriple(first_sentence, second_sentence, third_sentence)
 
