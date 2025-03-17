@@ -804,15 +804,14 @@ button.search-button {
 <h1>flair.tokenization.SegtokTokenizer<a class="headerlink" href="#flair-tokenization-segtoktokenizer" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.tokenization.SegtokTokenizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">SegtokTokenizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">additional_split_characters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L77-L127"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">SegtokTokenizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">additional_split_characters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L77-L126"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p>
 <p>Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.</p>
 <p>For further details see: <a class="github reference external" href="https://github.com/fnl/segtok">fnl/segtok</a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.SegtokTokenizer.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">additional_split_characters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L83-L97"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initializes the SegtokTokenizer with an optional parameter for additional characters that should always
-be split.</p>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">additional_split_characters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L83-L96"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initializes the SegtokTokenizer.</p>
 <p>The default behavior uses simple rules to split text into tokens. If you want to ensure that certain characters
 always become their own token, you can change default behavior by setting the <code class="docutils literal notranslate"><span class="pre">additional_split_characters</span></code>
 parameter.</p>
@@ -829,7 +828,7 @@ additional_split_characters = [’§’]</p>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.tokenization.SegtokTokenizer.__init__" title="flair.tokenization.SegtokTokenizer.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([additional_split_characters])</p></td>
-<td><p>Initializes the SegtokTokenizer with an optional parameter for additional characters that should always be split.</p></td>
+<td><p>Initializes the SegtokTokenizer.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.tokenization.SegtokTokenizer.run_tokenize" title="flair.tokenization.SegtokTokenizer.run_tokenize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">run_tokenize</span></code></a>(text)</p></td>
 <td><p></p></td>
@@ -849,7 +848,7 @@ additional_split_characters = [’§’]</p>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.SegtokTokenizer.tokenize">
-<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L111-L114"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer.tokenize" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L110-L113"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer.tokenize" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
@@ -859,7 +858,7 @@ additional_split_characters = [’§’]</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.SegtokTokenizer.run_tokenize">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L116-L127"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer.run_tokenize" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L115-L126"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.SegtokTokenizer.run_tokenize" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>

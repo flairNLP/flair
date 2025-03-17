@@ -8,7 +8,7 @@
 
    .. autosummary::
    
-      ModelTrainer
       LanguageModelTrainer
+      ModelTrainer
       TextCorpus
    

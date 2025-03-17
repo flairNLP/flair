@@ -53,8 +53,8 @@
     <link rel="icon" href="../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="flair.nn.LockedDropout" href="generated/flair.nn.LockedDropout.html" />
-    <link rel="prev" title="flair.models.MultitaskModel" href="generated/flair.models.MultitaskModel.html" />
+    <link rel="next" title="flair.nn.Classifier" href="generated/flair.nn.Classifier.html" />
+    <link rel="prev" title="flair.models.WordTagger" href="generated/flair.models.WordTagger.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -723,14 +723,14 @@ button.search-button {
 <li class="toctree-l2"><a class="reference internal" href="flair.embeddings.html">flair.embeddings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flair.models.html">flair.models</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">flair.nn</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.LockedDropout.html">flair.nn.LockedDropout</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.WordDropout.html">flair.nn.WordDropout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.Classifier.html">flair.nn.Classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.DeepNCMDecoder.html">flair.nn.DeepNCMDecoder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.DefaultClassifier.html">flair.nn.DefaultClassifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.LabelVerbalizerDecoder.html">flair.nn.LabelVerbalizerDecoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.LockedDropout.html">flair.nn.LockedDropout</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.Model.html">flair.nn.Model</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.PrototypicalDecoder.html">flair.nn.PrototypicalDecoder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.DeepNCMDecoder.html">flair.nn.DeepNCMDecoder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.LabelVerbalizerDecoder.html">flair.nn.LabelVerbalizerDecoder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.nn.WordDropout.html">flair.nn.WordDropout</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="flair.splitter.html">flair.splitter</a></li>
@@ -802,29 +802,29 @@ button.search-button {
 <h1>flair.nn<a class="headerlink" href="#flair-nn" title="Link to this heading">#</a></h1>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.nn.LockedDropout.html#flair.nn.LockedDropout" title="flair.nn.LockedDropout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LockedDropout</span></code></a></p></td>
-<td><p>Implementation of locked (or variational) dropout.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.nn.WordDropout.html#flair.nn.WordDropout" title="flair.nn.WordDropout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WordDropout</span></code></a></p></td>
-<td><p>Implementation of word dropout.</p></td>
-</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.nn.Classifier.html#flair.nn.Classifier" title="flair.nn.Classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Classifier</span></code></a></p></td>
 <td><p>Abstract base class for all Flair models that do classification.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.nn.DefaultClassifier.html#flair.nn.DefaultClassifier" title="flair.nn.DefaultClassifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultClassifier</span></code></a></p></td>
-<td><p>Default base class for all Flair models that do classification.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.nn.Model.html#flair.nn.Model" title="flair.nn.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code></a></p></td>
-<td><p>Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.nn.PrototypicalDecoder.html#flair.nn.PrototypicalDecoder" title="flair.nn.PrototypicalDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PrototypicalDecoder</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder" title="flair.nn.DeepNCMDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeepNCMDecoder</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder" title="flair.nn.DeepNCMDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeepNCMDecoder</span></code></a></p></td>
 <td><p>Deep Nearest Class Mean (DeepNCM) Classifier for text classification tasks.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.nn.DefaultClassifier.html#flair.nn.DefaultClassifier" title="flair.nn.DefaultClassifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultClassifier</span></code></a></p></td>
+<td><p>Default base class for all Flair models that do classification.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.nn.LabelVerbalizerDecoder.html#flair.nn.LabelVerbalizerDecoder" title="flair.nn.LabelVerbalizerDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelVerbalizerDecoder</span></code></a></p></td>
 <td><p>A class for decoding labels using the idea of siamese networks / bi-encoders.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.nn.LockedDropout.html#flair.nn.LockedDropout" title="flair.nn.LockedDropout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LockedDropout</span></code></a></p></td>
+<td><p>Implementation of locked (or variational) dropout.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.nn.Model.html#flair.nn.Model" title="flair.nn.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code></a></p></td>
+<td><p>Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.nn.PrototypicalDecoder.html#flair.nn.PrototypicalDecoder" title="flair.nn.PrototypicalDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PrototypicalDecoder</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.nn.WordDropout.html#flair.nn.WordDropout" title="flair.nn.WordDropout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WordDropout</span></code></a></p></td>
+<td><p>Implementation of word dropout.</p></td>
 </tr>
 </tbody>
 </table>

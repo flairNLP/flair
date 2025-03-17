@@ -812,17 +812,18 @@ button.search-button {
 <h1>flair.datasets.biomedical.HUNER_DISEASE<a class="headerlink" href="#flair-datasets-biomedical-huner-disease" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.HUNER_DISEASE">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.biomedical.</span></span><span class="sig-name descname"><span class="pre">HUNER_DISEASE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/biomedical.py#L4992-L4996"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.HUNER_DISEASE" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.datasets.biomedical.</span></span><span class="sig-name descname"><span class="pre">HUNER_DISEASE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/biomedical.py#L4990-L4994"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.HUNER_DISEASE" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.datasets.biomedical.HunerMultiCorpus.html#flair.datasets.biomedical.HunerMultiCorpus" title="flair.datasets.biomedical.HunerMultiCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">HunerMultiCorpus</span></code></a></p>
 <p>Union of all HUNER disease data sets.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.HUNER_DISEASE.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/biomedical.py#L4995-L4996"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.HUNER_DISEASE.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Constructor method to initialize a <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>. You can define the train, dev and test split
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/biomedical.py#L4993-L4994"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.HUNER_DISEASE.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initialize a Corpus.</p>
+<p>You can define the train, dev and test split
 by passing the corresponding Dataset object to the constructor. At least one split should be defined.
 If the option <cite>sample_missing_splits</cite> is set to True, missing splits will be randomly sampled from the
-train split.</p>
-<p>In most cases, you will not use the constructor yourself. Rather, you will create a corpus using one of our
+train split.
+In most cases, you will not use the constructor yourself. Rather, you will create a corpus using one of our
 helper methods that read common NLP filetypes. For instance, you can use
 <a class="reference internal" href="flair.datasets.sequence_labeling.ColumnCorpus.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.datasets.sequence_labeling.ColumnCorpus</span></code></a> to read CoNLL-formatted files directly into
 a <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p>
@@ -845,7 +846,7 @@ missing splits are not sampled and left empty. Default: True.</p></li>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.biomedical.HUNER_DISEASE.__init__" title="flair.datasets.biomedical.HUNER_DISEASE.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([sentence_splitter])</p></td>
-<td><p>Constructor method to initialize a <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p></td>
+<td><p>Initialize a Corpus.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
 <td><p>Generates uniform label noise distribution in the chosen dataset split.</p></td>

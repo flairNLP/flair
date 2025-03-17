@@ -53,7 +53,7 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="flair.trainers" href="flair.trainers.html" />
+    <link rel="next" title="flair.set_proxies" href="flair.set_proxies.html" />
     <link rel="prev" title="flair.models" href="flair.models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -718,18 +718,18 @@ button.search-button {
 <li class="toctree-l1"><a class="reference internal" href="../../tutorial/index.html">Tutorials</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">API</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="../flair.html">flair</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="flair.cache_root.html">flair.cache_root</a></li>
-<li class="toctree-l3"><a class="reference internal" href="flair.device.html">flair.device</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flair.__version__.html">flair.__version__</a></li>
-<li class="toctree-l3"><a class="reference internal" href="flair.logger.html">flair.logger</a></li>
-<li class="toctree-l3"><a class="reference internal" href="flair.set_seed.html">flair.set_seed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flair.cache_root.html">flair.cache_root</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flair.data.html">flair.data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flair.datasets.html">flair.datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flair.device.html">flair.device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flair.logger.html">flair.logger</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flair.models.html">flair.models</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">flair.nn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flair.set_proxies.html">flair.set_proxies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flair.set_seed.html">flair.set_seed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flair.trainers.html">flair.trainers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flair.visual.html">flair.visual</a></li>
-<li class="toctree-l3"><a class="reference internal" href="flair.datasets.html">flair.datasets</a></li>
-<li class="toctree-l3"><a class="reference internal" href="flair.set_proxies.html">flair.set_proxies</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../flair.data.html">flair.data</a></li>
@@ -810,94 +810,32 @@ button.search-button {
 <p class="rubric">Classes</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="flair.nn.LockedDropout.html#flair.nn.LockedDropout" title="flair.nn.LockedDropout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LockedDropout</span></code></a>([dropout_rate, batch_first, ...])</p></td>
-<td><p>Implementation of locked (or variational) dropout.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="flair.nn.WordDropout.html#flair.nn.WordDropout" title="flair.nn.WordDropout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WordDropout</span></code></a>([dropout_rate, inplace])</p></td>
-<td><p>Implementation of word dropout.</p></td>
-</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="flair.nn.Classifier.html#flair.nn.Classifier" title="flair.nn.Classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Classifier</span></code></a>(*args, **kwargs)</p></td>
 <td><p>Abstract base class for all Flair models that do classification.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="flair.nn.DefaultClassifier.html#flair.nn.DefaultClassifier" title="flair.nn.DefaultClassifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultClassifier</span></code></a>(embeddings, ...[, ...])</p></td>
-<td><p>Default base class for all Flair models that do classification.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="flair.nn.Model.html#flair.nn.Model" title="flair.nn.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code></a>(*args, **kwargs)</p></td>
-<td><p>Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="flair.nn.PrototypicalDecoder.html#flair.nn.PrototypicalDecoder" title="flair.nn.PrototypicalDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PrototypicalDecoder</span></code></a>(num_prototypes, ...[, ...])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder" title="flair.nn.DeepNCMDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeepNCMDecoder</span></code></a>(label_dictionary, embeddings_size)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="flair.nn.DeepNCMDecoder.html#flair.nn.DeepNCMDecoder" title="flair.nn.DeepNCMDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeepNCMDecoder</span></code></a>(label_dictionary, embeddings_size)</p></td>
 <td><p>Deep Nearest Class Mean (DeepNCM) Classifier for text classification tasks.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="flair.nn.DefaultClassifier.html#flair.nn.DefaultClassifier" title="flair.nn.DefaultClassifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DefaultClassifier</span></code></a>(embeddings, ...[, ...])</p></td>
+<td><p>Default base class for all Flair models that do classification.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="flair.nn.LabelVerbalizerDecoder.html#flair.nn.LabelVerbalizerDecoder" title="flair.nn.LabelVerbalizerDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LabelVerbalizerDecoder</span></code></a>(label_embedding, ...)</p></td>
 <td><p>A class for decoding labels using the idea of siamese networks / bi-encoders.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="flair.nn.LockedDropout.html#flair.nn.LockedDropout" title="flair.nn.LockedDropout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LockedDropout</span></code></a>([dropout_rate, batch_first, ...])</p></td>
+<td><p>Implementation of locked (or variational) dropout.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="flair.nn.Model.html#flair.nn.Model" title="flair.nn.Model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="flair.nn.PrototypicalDecoder.html#flair.nn.PrototypicalDecoder" title="flair.nn.PrototypicalDecoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PrototypicalDecoder</span></code></a>(num_prototypes, ...[, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="flair.nn.WordDropout.html#flair.nn.WordDropout" title="flair.nn.WordDropout"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WordDropout</span></code></a>([dropout_rate, inplace])</p></td>
+<td><p>Implementation of word dropout.</p></td>
+</tr>
 </tbody>
 </table>
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.nn.LockedDropout">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">LockedDropout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L4-L31"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LockedDropout" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>Implementation of locked (or variational) dropout.</p>
-<p>Randomly drops out entire parameters in embedding space.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.LockedDropout.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L16-L27"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LockedDropout.forward" title="Link to this definition">#</a></dt>
-<dd><p>Define the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.LockedDropout.extra_repr">
-<span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L29-L31"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LockedDropout.extra_repr" title="Link to this definition">#</a></dt>
-<dd><p>Return the extra representation of the module.</p>
-<p>To print customized extra information, you should re-implement
-this method in your own modules. Both single-line and multi-line
-strings are acceptable.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.nn.WordDropout">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">WordDropout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L34-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.WordDropout" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>Implementation of word dropout.</p>
-<p>Randomly drops out entire words (or characters) in embedding space.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.WordDropout.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L45-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.WordDropout.forward" title="Link to this definition">#</a></dt>
-<dd><p>Define the computation performed at every call.</p>
-<p>Should be overridden by all subclasses.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Although the recipe for forward pass needs to be defined within
-this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
-instead of this since the former takes care of running the
-registered hooks while the latter silently ignores them.</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.WordDropout.extra_repr">
-<span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L54-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.WordDropout.extra_repr" title="Link to this definition">#</a></dt>
-<dd><p>Return the extra representation of the module.</p>
-<p>To print customized extra information, you should re-implement
-this method in your own modules. Both single-line and multi-line
-strings are acceptable.</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.nn.Classifier">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">Classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L268-L597"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Classifier" title="Link to this definition">#</a></dt>
@@ -989,6 +927,99 @@ instead of only the predicted class.</p></li>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">DeepNCMDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_encoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_update_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'online'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L126-L337"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DeepNCMDecoder" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Deep Nearest Class Mean (DeepNCM) Classifier for text classification tasks.</p>
+<p>This model combines deep learning with the Nearest Class Mean (NCM) approach.
+It uses document embeddings to represent text, optionally applies an encoder,
+and classifies based on the nearest class prototype in the embedded space.</p>
+<p>The model supports various methods for updating class prototypes during training,
+making it adaptable to different learning scenarios.</p>
+<p>This implementation is based on the research paper:
+Guerriero, S., Caputo, B., &amp; Mensink, T. (2018). DeepNCM: Deep Nearest Class Mean Classifiers.
+In International Conference on Learning Representations (ICLR) 2018 Workshop.
+URL: <a class="reference external" href="https://openreview.net/forum?id=rkPLZ4JPM">https://openreview.net/forum?id=rkPLZ4JPM</a></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder.num_prototypes">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_prototypes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.nn.DeepNCMDecoder.num_prototypes" title="Link to this definition">#</a></dt>
+<dd><p>The number of class prototypes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder.update_prototypes">
+<span class="sig-name descname"><span class="pre">update_prototypes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L249-L272"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DeepNCMDecoder.update_prototypes" title="Link to this definition">#</a></dt>
+<dd><p>Apply accumulated updates to class prototypes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedded</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_tensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L274-L290"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DeepNCMDecoder.forward" title="Link to this definition">#</a></dt>
+<dd><p>Forward pass of the decoder, which calculates the scores as prototype distances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>embedded</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Embedded representations of the input sentences.</p></li>
+<li><p><strong>label_tensor</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span>) – True labels for the input sentences as a tensor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Scores as a tensor of distances to class prototypes.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder.get_prototype">
+<span class="sig-name descname"><span class="pre">get_prototype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L292-L309"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DeepNCMDecoder.get_prototype" title="Link to this definition">#</a></dt>
+<dd><p>Get the prototype vector for a given class name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>class_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The name of the class whose prototype vector is requested.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The prototype vector for the given class.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the class name is not found in the label dictionary.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder.get_closest_prototypes">
+<span class="sig-name descname"><span class="pre">get_closest_prototypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_vector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L311-L337"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DeepNCMDecoder.get_closest_prototypes" title="Link to this definition">#</a></dt>
+<dd><p>Get the k closest prototype vectors to the given input vector using the configured distance metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_vector</strong> (<em>torch.Tensor</em>) – The input vector to compare against prototypes.</p></li>
+<li><p><strong>top_k</strong> (<em>int</em>) – The number of closest prototypes to return (default is 5).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Each tuple contains (class_name, distance).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[tuple[str, float]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="flair.nn.DefaultClassifier">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">DefaultClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_embedding_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">locked_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inverse_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_on_gold_pairs_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">should_embed_sentence</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L600-L1026"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DefaultClassifier" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.nn.Classifier.html#flair.nn.Classifier" title="flair.nn.model.Classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Classifier</span></code></a>[<a class="reference internal" href="flair.data.DT.html#flair.data.DT" title="flair.data.DT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DT</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="flair.data.DT.html#flair.data.DT" title="flair.data.DT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DT</span></code></a>, <a class="reference internal" href="flair.data.DT2.html#flair.data.DT2" title="flair.data.DT2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DT2</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
@@ -1049,6 +1080,127 @@ Only set to ‘cpu’ or ‘gpu’ if you wish to not only predict, but also kee
 <dd class="field-odd"><p>The loaded Flair model.</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">LabelVerbalizerDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L340-L431"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>A class for decoding labels using the idea of siamese networks / bi-encoders. This can be used for all classification tasks in flair.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label_encoder</strong> (<em>flair.embeddings.TokenEmbeddings</em>) – The label encoder used to encode the labels into an embedding.</p></li>
+<li><p><strong>label_dictionary</strong> (<a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><em>flair.data.Dictionary</em></a>) – The label dictionary containing the mapping between labels and indices.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.label_encoder">
+<span class="sig-name descname"><span class="pre">label_encoder</span></span><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.label_encoder" title="Link to this definition">#</a></dt>
+<dd><p>The label encoder used to encode the labels into an embedding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>flair.embeddings.TokenEmbeddings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.label_dictionary">
+<span class="sig-name descname"><span class="pre">label_dictionary</span></span><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.label_dictionary" title="Link to this definition">#</a></dt>
+<dd><p>The label dictionary containing the mapping between labels and indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary">flair.data.Dictionary</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">forward(self,</span> <span class="pre">label_embeddings</span></span></dt>
+<dd><p>torch.Tensor, context_embeddings: torch.Tensor) -&gt; torch.Tensor:
+Takes the label embeddings and context embeddings as input and returns a tensor of label scores.</p>
+</dd></dl>
+
+<p class="rubric">Examples</p>
+<p>label_dictionary = corpus.make_label_dictionary(“ner”)
+label_encoder = TransformerWordEmbeddings(‘bert-base-ucnased’)
+label_verbalizer_decoder = LabelVerbalizerDecoder(label_encoder, label_dictionary)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.verbalize_labels">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">verbalize_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L371-L407"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.verbalize_labels" title="Link to this definition">#</a></dt>
+<dd><p>Takes a label dictionary and returns a list of sentences with verbalized labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>label_dictionary</strong> (<a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><em>flair.data.Dictionary</em></a>) – The label dictionary to verbalize.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of sentences with verbalized labels.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>label_dictionary = corpus.make_label_dictionary(“ner”)
+verbalized_labels = LabelVerbalizerDecoder.verbalize_labels(label_dictionary)
+print(verbalized_labels)
+[Sentence: “begin person”, Sentence: “inside person”, Sentence: “end person”, Sentence: “single org”, …]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L409-L431"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.forward" title="Link to this definition">#</a></dt>
+<dd><p>Forward pass of the label verbalizer decoder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inputs</strong> (<em>torch.Tensor</em>) – The input tensor.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The scores of the decoder.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>RuntimeError</strong> – If an unknown decoding type is specified.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="flair.nn.LockedDropout">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">LockedDropout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L4-L31"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LockedDropout" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Implementation of locked (or variational) dropout.</p>
+<p>Randomly drops out entire parameters in embedding space.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.nn.LockedDropout.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L16-L27"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LockedDropout.forward" title="Link to this definition">#</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.nn.LockedDropout.extra_repr">
+<span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L29-L31"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LockedDropout.extra_repr" title="Link to this definition">#</a></dt>
+<dd><p>Return the extra representation of the module.</p>
+<p>To print customized extra information, you should re-implement
+this method in your own modules. Both single-line and multi-line
+strings are acceptable.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1183,184 +1335,32 @@ registered hooks while the latter silently ignores them.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">DeepNCMDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_encoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_update_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'online'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L126-L337"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DeepNCMDecoder" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="flair.nn.WordDropout">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">WordDropout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L34-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.WordDropout" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>Deep Nearest Class Mean (DeepNCM) Classifier for text classification tasks.</p>
-<p>This model combines deep learning with the Nearest Class Mean (NCM) approach.
-It uses document embeddings to represent text, optionally applies an encoder,
-and classifies based on the nearest class prototype in the embedded space.</p>
-<p>The model supports various methods for updating class prototypes during training,
-making it adaptable to different learning scenarios.</p>
-<p>This implementation is based on the research paper:
-Guerriero, S., Caputo, B., &amp; Mensink, T. (2018). DeepNCM: Deep Nearest Class Mean Classifiers.
-In International Conference on Learning Representations (ICLR) 2018 Workshop.
-URL: <a class="reference external" href="https://openreview.net/forum?id=rkPLZ4JPM">https://openreview.net/forum?id=rkPLZ4JPM</a></p>
-<dl class="py property">
-<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder.num_prototypes">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_prototypes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.nn.DeepNCMDecoder.num_prototypes" title="Link to this definition">#</a></dt>
-<dd><p>The number of class prototypes.</p>
+<p>Implementation of word dropout.</p>
+<p>Randomly drops out entire words (or characters) in embedding space.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.nn.WordDropout.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L45-L52"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.WordDropout.forward" title="Link to this definition">#</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder.update_prototypes">
-<span class="sig-name descname"><span class="pre">update_prototypes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L249-L272"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DeepNCMDecoder.update_prototypes" title="Link to this definition">#</a></dt>
-<dd><p>Apply accumulated updates to class prototypes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedded</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_tensor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L274-L290"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DeepNCMDecoder.forward" title="Link to this definition">#</a></dt>
-<dd><p>Forward pass of the decoder, which calculates the scores as prototype distances.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>embedded</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Embedded representations of the input sentences.</p></li>
-<li><p><strong>label_tensor</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span>) – True labels for the input sentences as a tensor.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Scores as a tensor of distances to class prototypes.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder.get_prototype">
-<span class="sig-name descname"><span class="pre">get_prototype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L292-L309"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DeepNCMDecoder.get_prototype" title="Link to this definition">#</a></dt>
-<dd><p>Get the prototype vector for a given class name.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>class_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The name of the class whose prototype vector is requested.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The prototype vector for the given class.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>torch.Tensor</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If the class name is not found in the label dictionary.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.DeepNCMDecoder.get_closest_prototypes">
-<span class="sig-name descname"><span class="pre">get_closest_prototypes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_vector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L311-L337"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.DeepNCMDecoder.get_closest_prototypes" title="Link to this definition">#</a></dt>
-<dd><p>Get the k closest prototype vectors to the given input vector using the configured distance metric.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>input_vector</strong> (<em>torch.Tensor</em>) – The input vector to compare against prototypes.</p></li>
-<li><p><strong>top_k</strong> (<em>int</em>) – The number of closest prototypes to return (default is 5).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Each tuple contains (class_name, distance).</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>list[tuple[str, float]]</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">LabelVerbalizerDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L340-L431"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
-<p>A class for decoding labels using the idea of siamese networks / bi-encoders. This can be used for all classification tasks in flair.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>label_encoder</strong> (<em>flair.embeddings.TokenEmbeddings</em>) – The label encoder used to encode the labels into an embedding.</p></li>
-<li><p><strong>label_dictionary</strong> (<a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><em>flair.data.Dictionary</em></a>) – The label dictionary containing the mapping between labels and indices.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.label_encoder">
-<span class="sig-name descname"><span class="pre">label_encoder</span></span><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.label_encoder" title="Link to this definition">#</a></dt>
-<dd><p>The label encoder used to encode the labels into an embedding.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>flair.embeddings.TokenEmbeddings</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.label_dictionary">
-<span class="sig-name descname"><span class="pre">label_dictionary</span></span><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.label_dictionary" title="Link to this definition">#</a></dt>
-<dd><p>The label dictionary containing the mapping between labels and indices.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary">flair.data.Dictionary</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py">
-<span class="sig-name descname"><span class="pre">forward(self,</span> <span class="pre">label_embeddings</span></span></dt>
-<dd><p>torch.Tensor, context_embeddings: torch.Tensor) -&gt; torch.Tensor:
-Takes the label embeddings and context embeddings as input and returns a tensor of label scores.</p>
-</dd></dl>
-
-<p class="rubric">Examples</p>
-<p>label_dictionary = corpus.make_label_dictionary(“ner”)
-label_encoder = TransformerWordEmbeddings(‘bert-base-ucnased’)
-label_verbalizer_decoder = LabelVerbalizerDecoder(label_encoder, label_dictionary)</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.verbalize_labels">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">verbalize_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_dictionary</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L371-L407"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.verbalize_labels" title="Link to this definition">#</a></dt>
-<dd><p>Takes a label dictionary and returns a list of sentences with verbalized labels.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>label_dictionary</strong> (<a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><em>flair.data.Dictionary</em></a>) – The label dictionary to verbalize.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</span></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A list of sentences with verbalized labels.</p>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<p>label_dictionary = corpus.make_label_dictionary(“ner”)
-verbalized_labels = LabelVerbalizerDecoder.verbalize_labels(label_dictionary)
-print(verbalized_labels)
-[Sentence: “begin person”, Sentence: “inside person”, Sentence: “end person”, Sentence: “single org”, …]</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.nn.LabelVerbalizerDecoder.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/decoder.py#L409-L431"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.LabelVerbalizerDecoder.forward" title="Link to this definition">#</a></dt>
-<dd><p>Forward pass of the label verbalizer decoder.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<em>torch.Tensor</em>) – The input tensor.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The scores of the decoder.</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – If an unknown decoding type is specified.</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="flair.nn.WordDropout.extra_repr">
+<span class="sig-name descname"><span class="pre">extra_repr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/dropout.py#L54-L56"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.WordDropout.extra_repr" title="Link to this definition">#</a></dt>
+<dd><p>Return the extra representation of the module.</p>
+<p>To print customized extra information, you should re-implement
+this method in your own modules. Both single-line and multi-line
+strings are acceptable.</p>
 </dd></dl>
 
 </dd></dl>

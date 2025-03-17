@@ -8,12 +8,12 @@
 
    .. autosummary::
    
-      LockedDropout
-      WordDropout
       Classifier
+      DeepNCMDecoder
       DefaultClassifier
+      LabelVerbalizerDecoder
+      LockedDropout
       Model
       PrototypicalDecoder
-      DeepNCMDecoder
-      LabelVerbalizerDecoder
+      WordDropout
    

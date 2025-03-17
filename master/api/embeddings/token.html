@@ -53,7 +53,7 @@
     <link rel="icon" href="../../_static/favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="flair.embeddings.token.TransformerWordEmbeddings" href="generated/flair.embeddings.token.TransformerWordEmbeddings.html" />
+    <link rel="next" title="flair.embeddings.token.BytePairEmbeddings" href="generated/flair.embeddings.token.BytePairEmbeddings.html" />
     <link rel="prev" title="flair.embeddings.legacy.ELMoEmbeddings" href="generated/flair.embeddings.legacy.ELMoEmbeddings.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -803,29 +803,17 @@ button.search-button {
 <h1>flair.embeddings.token<a class="headerlink" href="#flair-embeddings-token" title="Link to this heading">#</a></h1>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.embeddings.token.TransformerWordEmbeddings.html#flair.embeddings.token.TransformerWordEmbeddings" title="flair.embeddings.token.TransformerWordEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.embeddings.token.BytePairEmbeddings.html#flair.embeddings.token.BytePairEmbeddings" title="flair.embeddings.token.BytePairEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></a></p></td>
 <td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.embeddings.token.StackedEmbeddings.html#flair.embeddings.token.StackedEmbeddings" title="flair.embeddings.token.StackedEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StackedEmbeddings</span></code></a></p></td>
-<td><p>A stack of embeddings, used if you need to combine several different embedding types.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.embeddings.token.WordEmbeddings.html#flair.embeddings.token.WordEmbeddings" title="flair.embeddings.token.WordEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></a></p></td>
-<td><p>Standard static word embeddings, such as GloVe or FastText.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.embeddings.token.CharacterEmbeddings.html#flair.embeddings.token.CharacterEmbeddings" title="flair.embeddings.token.CharacterEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CharacterEmbeddings</span></code></a></p></td>
 <td><p>Character embeddings of words, as proposed in Lample et al., 2016.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.embeddings.token.FlairEmbeddings.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></a></p></td>
-<td><p>Contextual string embeddings of words, as proposed in Akbik et al., 2018.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.embeddings.token.PooledFlairEmbeddings.html#flair.embeddings.token.PooledFlairEmbeddings" title="flair.embeddings.token.PooledFlairEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></a></p></td>
-<td><p></p></td>
-</tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.embeddings.token.FastTextEmbeddings.html#flair.embeddings.token.FastTextEmbeddings" title="flair.embeddings.token.FastTextEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FastTextEmbeddings</span></code></a></p></td>
 <td><p>FastText Embeddings with oov functionality.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.embeddings.token.OneHotEmbeddings.html#flair.embeddings.token.OneHotEmbeddings" title="flair.embeddings.token.OneHotEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneHotEmbeddings</span></code></a></p></td>
-<td><p>One-hot encoded embeddings.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.embeddings.token.FlairEmbeddings.html#flair.embeddings.token.FlairEmbeddings" title="flair.embeddings.token.FlairEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FlairEmbeddings</span></code></a></p></td>
+<td><p>Contextual string embeddings of words, as proposed in Akbik et al., 2018.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.embeddings.token.HashEmbeddings.html#flair.embeddings.token.HashEmbeddings" title="flair.embeddings.token.HashEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HashEmbeddings</span></code></a></p></td>
 <td><p>Standard embeddings with Hashing Trick.</p></td>
@@ -833,11 +821,23 @@ button.search-button {
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.embeddings.token.MuseCrosslingualEmbeddings.html#flair.embeddings.token.MuseCrosslingualEmbeddings" title="flair.embeddings.token.MuseCrosslingualEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MuseCrosslingualEmbeddings</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.embeddings.token.BytePairEmbeddings.html#flair.embeddings.token.BytePairEmbeddings" title="flair.embeddings.token.BytePairEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BytePairEmbeddings</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.embeddings.token.NILCEmbeddings.html#flair.embeddings.token.NILCEmbeddings" title="flair.embeddings.token.NILCEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NILCEmbeddings</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.embeddings.token.NILCEmbeddings.html#flair.embeddings.token.NILCEmbeddings" title="flair.embeddings.token.NILCEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NILCEmbeddings</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.embeddings.token.OneHotEmbeddings.html#flair.embeddings.token.OneHotEmbeddings" title="flair.embeddings.token.OneHotEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OneHotEmbeddings</span></code></a></p></td>
+<td><p>One-hot encoded embeddings.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.embeddings.token.PooledFlairEmbeddings.html#flair.embeddings.token.PooledFlairEmbeddings" title="flair.embeddings.token.PooledFlairEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PooledFlairEmbeddings</span></code></a></p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.embeddings.token.StackedEmbeddings.html#flair.embeddings.token.StackedEmbeddings" title="flair.embeddings.token.StackedEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StackedEmbeddings</span></code></a></p></td>
+<td><p>A stack of embeddings, used if you need to combine several different embedding types.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.embeddings.token.TransformerWordEmbeddings.html#flair.embeddings.token.TransformerWordEmbeddings" title="flair.embeddings.token.TransformerWordEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TransformerWordEmbeddings</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.embeddings.token.WordEmbeddings.html#flair.embeddings.token.WordEmbeddings" title="flair.embeddings.token.WordEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WordEmbeddings</span></code></a></p></td>
+<td><p>Standard static word embeddings, such as GloVe or FastText.</p></td>
 </tr>
 </tbody>
 </table>
