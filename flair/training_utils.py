@@ -388,7 +388,6 @@ def store_embeddings(
         storage_mode: store in either CPU or GPU memory, or delete them if set to 'none'
         dynamic_embeddings: these are always deleted. If not passed, they are identified automatically.
     """
-
     if isinstance(data_points, Dataset):
         data_points = list(_iter_dataset(data_points))
 

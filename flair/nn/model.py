@@ -715,11 +715,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
     def _filter_data_point(self, data_point: DT) -> bool:
         """Specify if a data point should be kept.
 
-        That way you can remove for example empty texts. Per default all datapoints that have length zero
+        That way you can remove for example empty texts. Per default all datapoints that have empty text
         will be removed.
         Return true if the data point should be kept and false if it should be removed.
         """
-        return len(data_point) > 0
+        return bool(data_point.text.strip())
 
     @abstractmethod
     def _get_embedding_for_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
@@ -850,10 +850,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             return data_points
 
         # filter empty sentences
-        sentences = [sentence for sentence in typing.cast(list[Sentence], data_points) if len(sentence) > 0]
+        sentences = [sentence for sentence in typing.cast(list[Sentence], data_points) if sentence.text.strip()]
 
-        # reverse sort all sequences by their length
-        reordered_sentences = sorted(sentences, key=len, reverse=True)
+        # sort by text length (characters) instead of token length
+        reordered_sentences = sorted(sentences, key=lambda s: len(s.text), reverse=True)
 
         return typing.cast(list[DT], reordered_sentences)
 
@@ -883,8 +883,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             label_name = self.label_type if self.label_type is not None else "label"
 
         with torch.no_grad():
-            if not sentences:
-                return sentences
 
             if not isinstance(sentences, list):
                 sentences = [sentences]
@@ -918,7 +916,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 batch = [dp for dp in batch if self._filter_data_point(dp)]
 
                 # stop if all sentences are empty
-                if not batch:
+                if len(batch) == 0:
                     continue
 
                 data_points = self._get_data_points_for_batch(batch)
@@ -932,7 +930,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 scores = self._mask_scores(scores, data_points)
 
                 # if anything could possibly be predicted
-                if len(data_points) > 0:
+                if data_points:
                     # remove previously predicted labels of this type
                     for sentence in data_points:
                         sentence.remove_labels(label_name)
