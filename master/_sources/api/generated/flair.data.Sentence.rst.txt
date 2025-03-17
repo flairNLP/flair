@@ -46,6 +46,7 @@
       ~Sentence.to_plain_string
       ~Sentence.to_tagged_string
       ~Sentence.to_tokenized_string
+      ~Sentence.truncate
    
    
 
@@ -62,6 +63,7 @@
       ~Sentence.start_position
       ~Sentence.tag
       ~Sentence.text
+      ~Sentence.tokens
       ~Sentence.unlabeled_identifier
    
    
