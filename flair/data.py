@@ -1389,11 +1389,12 @@ class Corpus(typing.Generic[T_co]):
         sample_missing_splits: Union[bool, str] = True,
         random_seed: Optional[int] = None,
     ) -> None:
-        """Constructor method to initialize a :class:`Corpus`. You can define the train, dev and test split
+        """Initialize a Corpus.
+
+        You can define the train, dev and test split
         by passing the corresponding Dataset object to the constructor. At least one split should be defined.
         If the option `sample_missing_splits` is set to True, missing splits will be randomly sampled from the
         train split.
-
         In most cases, you will not use the constructor yourself. Rather, you will create a corpus using one of our
         helper methods that read common NLP filetypes. For instance, you can use
         :class:`flair.datasets.sequence_labeling.ColumnCorpus` to read CoNLL-formatted files directly into
@@ -1679,11 +1680,7 @@ class Corpus(typing.Generic[T_co]):
         return label_count
 
     def __str__(self) -> str:
-        return "Corpus: %d train + %d dev + %d test sentences" % (
-            _len_dataset(self.train) if self.train else 0,
-            _len_dataset(self.dev) if self.dev else 0,
-            _len_dataset(self.test) if self.test else 0,
-        )
+        return f"Corpus: {_len_dataset(self.train) if self.train else 0} train + {_len_dataset(self.dev) if self.dev else 0} dev + {_len_dataset(self.test) if self.test else 0} test sentences"
 
     def make_label_dictionary(
         self, label_type: str, min_count: int = -1, add_unk: bool = False, add_dev_test: bool = False
