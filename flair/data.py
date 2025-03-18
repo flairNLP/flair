@@ -1184,7 +1184,6 @@ class Sentence(DataPoint):
 
     @staticmethod
     def _handle_problem_characters(text: str) -> str:
-        text = Sentence.__remove_zero_width_characters(text)
         text = Sentence.__restore_windows_1252_characters(text)
         return text
 
