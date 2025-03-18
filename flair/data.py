@@ -224,7 +224,7 @@ class Label:
         self._score = score
         self.metadata = metadata
         # Add a new attribute to store the typename
-        self._typename = None
+        self._typename: Optional[str] = None
         super().__init__()
 
     def set_value(self, value: str, score: float = 1.0):
@@ -277,7 +277,7 @@ class Label:
         return f"{self.data_point.unlabeled_identifier}"
 
     @property
-    def typename(self) -> str:
+    def typename(self) -> Optional[str]:
         """
         Returns the label type name this label belongs to.
         This is determined by looking up the label in the data point's label dictionary.
@@ -286,8 +286,9 @@ class Label:
             return self._typename
 
         # Find the typename by checking which label type this label belongs to
+        # Note: this should rarely if ever be triggered, as labels are usually added via the DataPoint.add_label() method
         if self.data_point is not None:
-            for type_name, labels in self.data_point._labels.items():
+            for type_name, labels in self.data_point.annotation_layers.items():
                 if self in labels:
                     self._typename = type_name
                     return type_name
