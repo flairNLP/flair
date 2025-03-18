@@ -18,6 +18,7 @@ from flair.tokenization import (
     SpacyTokenizer,
     TokenizerWrapper,
 )
+from flair.embeddings import TransformerWordEmbeddings, TransformerDocumentEmbeddings
 
 
 def test_create_sentence_on_empty_string():
@@ -492,3 +493,86 @@ def test_line_separator_is_ignored():
 
 def no_op_tokenizer(text: str) -> list[str]:
     return [text]
+
+
+def test_lazy_tokenization():
+    # Test 1: Verify that sentences are not tokenized upon creation
+    sentence = Sentence("The quick brown fox jumps over the lazy dog")
+    assert sentence._tokens is None
+
+    # Test 2: Verify that printing doesn't trigger tokenization on a sentence without token-labels
+    str(sentence)  # Call str() to trigger printing
+    assert sentence._tokens is None
+
+    # Test 2b: Verify that adding token labels triggers tokenization
+    sentence_with_token_label = Sentence("The quick brown fox jumps over the lazy dog")
+    sentence_with_token_label[1].add_label("POS", "ADJECTIVE")
+    assert sentence_with_token_label._tokens is not None
+
+    # Test 2c: Verify that adding sentence labels does not trigger tokenization
+    sentence_with_sent_label = Sentence("The quick brown fox jumps over the lazy dog")
+    sentence_with_sent_label.add_label("POS", "VERB")
+    assert sentence_with_sent_label._tokens is None
+
+    # Test 3: Verify that iteration triggers tokenization
+    sentence_iter = Sentence("The quick brown fox jumps over the lazy dog")
+    assert sentence_iter._tokens is None
+    for token in sentence_iter:
+        pass
+    assert sentence_iter._tokens is not None
+
+    # Test 4: Verify that len() triggers tokenization
+    sentence_len = Sentence("The quick brown fox jumps over the lazy dog")
+    assert sentence_len._tokens is None
+    _ = len(sentence_len)
+    assert sentence_len._tokens is not None
+
+    # Test 5: Verify that accessing tokens property triggers tokenization
+    sentence_tokens = Sentence("The quick brown fox jumps over the lazy dog")
+    assert sentence_tokens._tokens is None
+    _ = sentence_tokens.tokens
+    assert sentence_tokens._tokens is not None
+
+    # Test 6: Verify that accessing text property does not trigger tokenization
+    sentence_text = Sentence("The quick brown fox jumps over the lazy dog")
+    assert sentence_text._tokens is None
+    _ = sentence_text.text
+    assert sentence_text._tokens is None
+
+
+@pytest.mark.integration
+def test_embeddings_tokenization():
+    # Test 7: Verify that token-level embeddings triggers tokenization
+    sentence_word = Sentence("The quick brown fox jumps over the lazy dog")
+    word_embeddings = TransformerWordEmbeddings("distilbert-base-uncased")
+    assert sentence_word._tokens is None
+    word_embeddings.embed(sentence_word)
+    assert sentence_word._tokens is not None
+
+    # Test 8: Verify that sentence-level embeddings do not trigger tokenization
+    sentence_doc = Sentence("The quick brown fox jumps over the lazy dog")
+    doc_embeddings = TransformerDocumentEmbeddings("distilbert-base-uncased")
+    assert sentence_doc._tokens is None
+    doc_embeddings.embed(sentence_doc)
+    assert sentence_doc._tokens is None
+
+
+def test_remove_labels_keeps_untokenized():
+    # Create a sentence without triggering tokenization
+    sentence = Sentence("The quick brown fox jumps over the lazy dog")
+    sentence.add_label("pos", "ADJ")
+    assert not sentence._is_tokenized()  # Verify sentence starts untokenized
+
+    # Remove labels should not trigger tokenization
+    sentence.remove_labels("pos")
+    assert not sentence._is_tokenized()  # Sentence should still be untokenized
+
+
+def test_clear_embeddings_keeps_untokenized():
+    # Create a sentence without triggering tokenization
+    sentence = Sentence("The quick brown fox jumps over the lazy dog")
+    assert not sentence._is_tokenized()  # Verify sentence starts untokenized
+
+    # Clear embeddings should not trigger tokenization
+    sentence.clear_embeddings()
+    assert not sentence._is_tokenized()  # Sentence should still be untokenized

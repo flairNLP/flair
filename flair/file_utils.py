@@ -192,7 +192,7 @@ def unpack_file(file: Path, unpack_to: Path, mode: Optional[str] = None, keep: b
             # Extract all the contents of zip file in current directory
             zipObj.extractall(unpack_to)
 
-    elif mode == "targz" or (mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")):
+    elif mode == "targz" or ((mode is None and str(file).endswith("tar.gz")) or str(file).endswith("tgz")):
         import tarfile
 
         with tarfile.open(file, "r:gz") as tarObj:
