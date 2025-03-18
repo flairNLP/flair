@@ -75,8 +75,7 @@ class ModelTrainer(Pluggable):
     }
 
     def __init__(self, model: flair.nn.Model, corpus: Corpus) -> None:
-        """Initialize a model trainer by passing a :class:`flair.nn.Model` (the architecture you want to train) and a
-        :class:`flair.data.Corpus` (the labeled data you use to train and evaluate the model).
+        """Initialize a model trainer.
 
         Args:
             model: The model that you want to train. The model should inherit from :class:`flair.nn.Model`. So for
