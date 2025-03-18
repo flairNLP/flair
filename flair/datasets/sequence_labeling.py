@@ -5659,10 +5659,22 @@ class NER_DANISH_DANSK(ColumnCorpus):
                     # Load the specific split from HuggingFace
                     ds = load_dataset("chcaa/dansk-ner")[split if split != "validation" else "dev"]
 
+                    # Serialize the dataset to JSON for debugging
+                    debug_json_path = base_path / f"{split}_debug.json"
+                    import json
+
+                    # Convert dataset to a list of dictionaries and save with nice formatting
+                    dataset_for_json = [
+                        {"text": item["text"], "tokens": item["tokens"], "ents": item["ents"]} for item in ds
+                    ]
+
+                    with open(debug_json_path, "w", encoding="utf-8") as f_debug:
+                        json.dump(dataset_for_json, f_debug, ensure_ascii=False, indent=2)
+
                     # Convert to CoNLL format
                     with open(conll_path, "w", encoding="utf-8") as f_out:
                         for example in ds:
-                            text = example["text"].strip()  # Remove trailing whitespace
+                            text = example["text"]  # Don't strip the text
                             tokens = example["tokens"]
                             ents = example["ents"]
 
@@ -5689,15 +5701,16 @@ class NER_DANISH_DANSK(ColumnCorpus):
                                         else:
                                             tags[i] = f"I-{ent_label}"
 
-                            # Write tokens and tags, skipping empty tokens
+                            # Write tokens and tags
                             for token, tag in zip(tokens, tags):
-                                token_text = text[token["start"] : token["end"]].strip()
-                                if token_text:  # Only write non-empty tokens
+                                token_text = text[token["start"] : token["end"]]  # Don't strip the token
+                                if token_text:  # Still skip empty tokens
+                                    # Replace newlines with space in output to maintain CoNLL format
+                                    token_text = token_text.replace("\n", " ")
                                     f_out.write(f"{token_text}\t{tag}\n")
 
-                            # Empty line between sentences (but not at the end of the file)
-                            if any(tokens):  # Only write newline if we wrote any tokens
-                                f_out.write("\n")
+                            # Empty line between sentences
+                            f_out.write("\n")
 
                 except Exception as e:
                     print(f"Error downloading or converting dataset: {e}")
