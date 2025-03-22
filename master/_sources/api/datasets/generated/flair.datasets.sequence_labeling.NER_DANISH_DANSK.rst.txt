@@ -1,0 +1,40 @@
+﻿flair.datasets.sequence\_labeling.NER\_DANISH\_DANSK
+====================================================
+
+.. currentmodule:: flair.datasets.sequence_labeling
+
+.. autoclass:: NER_DANISH_DANSK
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NER_DANISH_DANSK.__init__
+      ~NER_DANISH_DANSK.add_label_noise
+      ~NER_DANISH_DANSK.downsample
+      ~NER_DANISH_DANSK.filter_empty_sentences
+      ~NER_DANISH_DANSK.filter_long_sentences
+      ~NER_DANISH_DANSK.get_all_sentences
+      ~NER_DANISH_DANSK.get_label_distribution
+      ~NER_DANISH_DANSK.make_label_dictionary
+      ~NER_DANISH_DANSK.make_tag_dictionary
+      ~NER_DANISH_DANSK.make_vocab_dictionary
+      ~NER_DANISH_DANSK.obtain_statistics
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~NER_DANISH_DANSK.dev
+      ~NER_DANISH_DANSK.test
+      ~NER_DANISH_DANSK.train
+   
+   
