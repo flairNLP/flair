@@ -23,6 +23,7 @@ class BaseEmbeddingsTest:
         "🤟 🤟  🤟 hüllo",
         "🤟hallo 🤟 🤟 🤟 🤟",
         "🤟",
+        "Hello \u2029 my \ufe0f name is \u200c Chris \u200b Kamphuis, and I \ufeff live in \u200c the \u2028 Netherlands.",
         "\uF8F9",
     ]
 
