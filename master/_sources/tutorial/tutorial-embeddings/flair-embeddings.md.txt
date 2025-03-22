@@ -120,7 +120,7 @@ Words are now embedded using a concatenation of three different embeddings. This
 
 We also developed a pooled variant of the [`FlairEmbeddings`](#flair.embeddings.token.FlairEmbeddings). These embeddings differ in that they *constantly evolve over time*, even at prediction time (i.e. after training is complete). This means that the same words in the same sentence at two different points in time may have different embeddings.
 
-[`PooledFlairEmbeddings`](#flair.embeddings.token.PooledFlairEmbeddings) manage a 'global' representation of each distinct word by using a pooling operation of all past occurences. More details on how this works may be found in [Akbik et al. (2019)](https://www.aclweb.org/anthology/N19-1078/).
+[`PooledFlairEmbeddings`](#flair.embeddings.token.PooledFlairEmbeddings) manage a 'global' representation of each distinct word by using a pooling operation of all past occurrences. More details on how this works may be found in [Akbik et al. (2019)](https://www.aclweb.org/anthology/N19-1078/).
 
 You can instantiate and use [`PooledFlairEmbeddings`](#flair.embeddings.token.PooledFlairEmbeddings) like [`FlairEmbeddings`](#flair.embeddings.token.FlairEmbeddings):
 
