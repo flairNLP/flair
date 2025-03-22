@@ -29,6 +29,7 @@
       ~Label.metadata_str
       ~Label.score
       ~Label.shortstring
+      ~Label.typename
       ~Label.unlabeled_identifier
       ~Label.value
    

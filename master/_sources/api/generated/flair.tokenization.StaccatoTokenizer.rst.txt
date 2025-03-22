@@ -1,0 +1,29 @@
+﻿flair.tokenization.StaccatoTokenizer
+====================================
+
+.. currentmodule:: flair.tokenization
+
+.. autoclass:: StaccatoTokenizer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~StaccatoTokenizer.__init__
+      ~StaccatoTokenizer.tokenize
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~StaccatoTokenizer.name
+   
+   

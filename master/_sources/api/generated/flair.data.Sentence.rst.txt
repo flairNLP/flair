@@ -36,6 +36,7 @@
       ~Sentence.next_sentence
       ~Sentence.previous_sentence
       ~Sentence.remove_labels
+      ~Sentence.retokenize
       ~Sentence.right_context
       ~Sentence.set_context_for_sentences
       ~Sentence.set_embedding
