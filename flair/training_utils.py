@@ -155,7 +155,7 @@ class WeightExtractor:
 
 
 class AnnealOnPlateau:
-    """A learningrate sheduler for annealing on plateau.
+    """A learningrate scheduler for annealing on plateau.
 
     This class is a modification of
     torch.optim.lr_scheduler.ReduceLROnPlateau that enables
