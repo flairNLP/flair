@@ -92,7 +92,7 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         )
 
     @staticmethod
-    def _fetch_model(model_name) -> str:
+    def _fetch_model(model_identifier) -> str:
         model_map = {}
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
@@ -123,10 +123,10 @@ class TextClassifier(flair.nn.DefaultClassifier[Sentence, Sentence]):
         model_map["communicative-functions"] = "/".join([hu_path, "comfunc", "communicative-functions.pt"])
 
         cache_dir = Path("models")
-        if model_name in model_map:
-            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
+        if model_identifier in model_map:
+            model_identifier = cached_path(model_map[model_identifier], cache_dir=cache_dir)
 
-        return model_name
+        return model_identifier
 
     @property
     def label_type(self):
