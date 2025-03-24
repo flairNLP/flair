@@ -223,7 +223,7 @@ def document_max_pooling(sentence_hidden_states: torch.Tensor, sentence_lengths:
 
 def map_tokens_to_subtokens(subtoken_offsets, token_offsets, verbose: bool = False, subtokens=None, tokens=None):
 
-    mapping = []
+    mapping: list[Optional[int]] = []
     for subtoken_id, subtoken in enumerate(subtoken_offsets):
 
         # subtokens of length 0 should not be mapped to anything
@@ -702,6 +702,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
                 if self.use_raw_text_as_input:
                     word_ids_list = []
+                    assert flair_tokens  # assert that this is not None for mypy type checking
                     for sentence_no, sentence_tokens in enumerate(flair_tokens):
 
                         subtoken_offsets = batch_encoding["offset_mapping"][sentence_no]
@@ -728,8 +729,6 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 )
                 # word_ids is only supported for fast rust tokenizers. Some models like "xlm-mlm-ende-1024" do not have
                 # a fast tokenizer implementation, hence we need to fall back to our own reconstruction of word_ids.
-
-            # print(word_ids_list)
 
             if self.token_embedding:
                 assert offsets is not None  # for type checking
