@@ -157,10 +157,10 @@ def get_score_from_df(dataset, metric, epoch, noise_flag_name, total_num_noisy):
 
     return {'f05':f05, 'f1':f1,'f2':f2, 'thresholds':thresholds, 'direction':direction}
 
-def output_config(category, metric, f_type, epoch, threshold, direction, mode, config):
+def output_config(category, metric, f_type, epoch, threshold, direction, mode, config, corpus_name):
 
     # create config path
-    config_path = config['paths']['configs_path'][mode]        
+    config_path = config['paths']['configs_path'][mode] + os.sep + corpus_name       
     config_path += os.sep + 'category'+category['id'] + os.sep + metric + os.sep + f_type 
 
     if not os.path.exists(config_path):
@@ -197,9 +197,7 @@ def output_config(category, metric, f_type, epoch, threshold, direction, mode, c
         "modify_category3":False,
         "modify_category4":False,
     },
-    "corpora" : [
-        "noise_crowd"
-    ],
+    "corpora" : config['corpora'],
     "seeds":config['seeds']
     }
 
@@ -219,7 +217,7 @@ def output_config(category, metric, f_type, epoch, threshold, direction, mode, c
         json.dump(base_config, fp, indent=4)
 
 
-    if category['id'] == 2 or category['id'] == 4:
+    if int(category['id']) == 2 or int(category['id']) == 4:
         # add current category modification parameters with 'relabel' option
         # *only for categories 2 and 4 (because we have an alternative label there: the predicted one)
         base_config['parameters']['modify_category'+category['id']] = {
@@ -233,10 +231,10 @@ def output_config(category, metric, f_type, epoch, threshold, direction, mode, c
         with open(config_path + os.sep + 'relabel.config', 'w') as fp:
             json.dump(base_config, fp, indent=4)
 
-def write_output(file, metric, f_types, score, epoch, threshold, direction, category, mode, config):
+def write_output(file, metric, f_types, score, epoch, threshold, direction, category, mode, config, corpus_name):
     f_type_str = '_'.join(f_types) if isinstance(f_types, list) else f_types
     file.write(f"{metric}, {f_type_str}, {score}, {epoch}, {threshold}, {direction}\n")
-    output_config(category, metric, f_type_str, epoch, threshold, direction, mode, config)
+    output_config(category, metric, f_type_str, epoch, threshold, direction, mode, config, corpus_name)
 
 
 def optimize_F1s(config, corpus_name):
@@ -454,13 +452,13 @@ def optimize_F1s(config, corpus_name):
                         if epochs[i] == epochs[k] and thresholds[i] == thresholds[k] and directions[i] == directions[k]:
                             # all three parameter sets are the same 
                             # (only f05 score is printed out)
-                            write_output(optimize_F1s_output_file, metric, F_SCORE_NAMES, scores[0], epochs[0], thresholds[0], directions[0], category, mode, config)
+                            write_output(optimize_F1s_output_file, metric, F_SCORE_NAMES, scores[0], epochs[0], thresholds[0], directions[0], category, mode, config, corpus_name)
                         else:
                             # two parameter sets are the same, one is different
-                            write_output(optimize_F1s_output_file, metric, [F_SCORE_NAMES[i], F_SCORE_NAMES[j]], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config)
-                            write_output(optimize_F1s_output_file, metric, F_SCORE_NAMES[k], scores[k], epochs[k], thresholds[k], directions[k], category, mode, config)
+                            write_output(optimize_F1s_output_file, metric, [F_SCORE_NAMES[i], F_SCORE_NAMES[j]], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config, corpus_name)
+                            write_output(optimize_F1s_output_file, metric, F_SCORE_NAMES[k], scores[k], epochs[k], thresholds[k], directions[k], category, mode, config, corpus_name)
                         break
                 else:
                     # all three parameter sets are different
                     for i in list(indices):
-                        write_output(optimize_F1s_output_file, metric, F_SCORE_NAMES[i], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config)
+                        write_output(optimize_F1s_output_file, metric, F_SCORE_NAMES[i], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config, corpus_name)
