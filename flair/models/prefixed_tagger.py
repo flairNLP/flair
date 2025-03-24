@@ -320,19 +320,19 @@ class PrefixedSequenceTagger(SequenceTagger):
         return [self.augmentation_strategy.augment_sentence(sentence, annotation_layers) for sentence in sentences]
 
     @staticmethod
-    def _fetch_model(model_name) -> str:
+    def _fetch_model(model_identifier) -> str:
         huggingface_model_map = {"hunflair2": "hunflair/hunflair2-ner", "bioner": "hunflair/hunflair2-ner"}
 
         # check if model name is a valid local file
-        if Path(model_name).exists():
-            model_path = model_name
+        if Path(model_identifier).exists():
+            model_path = model_identifier
 
         # check if model name is a pre-configured hf model
-        elif model_name in huggingface_model_map:
-            hf_model_name = huggingface_model_map[model_name]
+        elif model_identifier in huggingface_model_map:
+            hf_model_name = huggingface_model_map[model_identifier]
             return hf_download(hf_model_name)
 
         else:
-            model_path = hf_download(model_name)
+            model_path = hf_download(model_identifier)
 
         return model_path

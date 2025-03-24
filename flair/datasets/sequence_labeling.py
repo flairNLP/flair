@@ -841,10 +841,7 @@ class ColumnDataset(FlairDataset):
     def __line_completes_sentence(self, line: str) -> bool:
 
         if self.documents_as_sentences and self.document_separator_token:
-            if line.startswith(self.document_separator_token):
-                return True
-            else:
-                return False
+            return line.startswith(self.document_separator_token)
 
         sentence_completed = line.isspace() or line == ""
         return sentence_completed
@@ -5570,9 +5567,10 @@ class NER_BAVARIAN_WIKI(ColumnCorpus):
             # Add sentence boundary marker
             modified_split_filename = data_path / f"bar-wiki-{split}.tsv"
             if not modified_split_filename.is_file():
-                f_out = open(modified_split_filename, "w", encoding="utf-8")
-
-                with open(original_split_filename, encoding="utf-8") as f_p:
+                with (
+                    open(modified_split_filename, "w", encoding="utf-8") as f_out,
+                    open(original_split_filename, encoding="utf-8") as f_p,
+                ):
                     for line in f_p:
                         line = line.strip()
                         if line.startswith("# newdoc id = "):
@@ -5581,7 +5579,6 @@ class NER_BAVARIAN_WIKI(ColumnCorpus):
                         if line.startswith("# "):
                             continue
                         f_out.write(f"{line}\n")
-                f_out.close()
 
         columns = {0: "text", 1: "ner"}
 
@@ -5619,5 +5616,111 @@ class NER_BAVARIAN_WIKI(ColumnCorpus):
             comment_symbol="# ",
             document_separator_token="-DOCSTART-",
             label_name_map=label_name_map,
+            **corpusargs,
+        )
+
+
+class NER_DANISH_DANSK(ColumnCorpus):
+    """Danish NER dataset from the chcaa/dansk-ner HuggingFace dataset."""
+
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        **corpusargs,
+    ) -> None:
+        """Initialize the dansk-ner corpus.
+
+        Args:
+            base_path: Path to the corpus on your machine
+            in_memory: If True, keeps dataset in memory giving speedups in training
+            corpusargs: Additional arguments for corpus initialization
+        """
+        if base_path is None:
+            base_path = Path(flair.cache_root) / "datasets" / "ner_danish_dansk"
+        else:
+            base_path = Path(base_path)
+
+        # Create the corpus directory if it doesn't exist
+        base_path.mkdir(parents=True, exist_ok=True)
+
+        # Download dataset from HuggingFace and convert to CoNLL format
+        for split in ["train", "test", "validation"]:
+            conll_path = base_path / f"{split}.tsv"
+
+            # Only download and convert if file doesn't exist
+            if not conll_path.exists():
+                try:
+                    from datasets import load_dataset
+
+                    # Load the specific split from HuggingFace
+                    ds = load_dataset("chcaa/dansk-ner")[split if split != "validation" else "dev"]
+
+                    # Serialize the dataset to JSON for debugging
+                    debug_json_path = base_path / f"{split}_debug.json"
+                    import json
+
+                    # Convert dataset to a list of dictionaries and save with nice formatting
+                    dataset_for_json = [
+                        {"text": item["text"], "tokens": item["tokens"], "ents": item["ents"]} for item in ds
+                    ]
+
+                    with open(debug_json_path, "w", encoding="utf-8") as f_debug:
+                        json.dump(dataset_for_json, f_debug, ensure_ascii=False, indent=2)
+
+                    # Convert to CoNLL format
+                    with open(conll_path, "w", encoding="utf-8") as f_out:
+                        for example in ds:
+                            text = example["text"]  # Don't strip the text
+                            tokens = example["tokens"]
+                            ents = example["ents"]
+
+                            # Create token-level tags (default to 'O')
+                            tags = ["O"] * len(tokens)
+
+                            # Assign BIO tags based on entity positions
+                            for ent in ents:
+                                start_char = ent["start"]
+                                end_char = ent["end"]
+                                ent_label = ent["label"]
+
+                                # Find tokens that overlap with this entity
+                                for i, token in enumerate(tokens):
+                                    token_start = token["start"]
+                                    token_end = token["end"]
+
+                                    # If token overlaps with entity
+                                    if token_start >= start_char and token_end <= end_char:
+                                        # First token gets B- prefix
+                                        if token_start == start_char:
+                                            tags[i] = f"B-{ent_label}"
+                                        # Subsequent tokens get I- prefix
+                                        else:
+                                            tags[i] = f"I-{ent_label}"
+
+                            # Write tokens and tags
+                            for token, tag in zip(tokens, tags):
+                                token_text = text[token["start"] : token["end"]]  # Don't strip the token
+                                if token_text:  # Still skip empty tokens
+                                    # Replace newlines with space in output to maintain CoNLL format
+                                    token_text = token_text.replace("\n", " ")
+                                    f_out.write(f"{token_text}\t{tag}\n")
+
+                            # Empty line between sentences
+                            f_out.write("\n")
+
+                except Exception as e:
+                    print(f"Error downloading or converting dataset: {e}")
+                    raise
+
+        # Initialize corpus using the converted files
+        super().__init__(
+            base_path,
+            column_format={0: "text", 1: "ner"},
+            train_file="train.tsv",
+            test_file="test.tsv",
+            dev_file="validation.tsv",
+            column_delimiter="\t",
+            in_memory=in_memory,
             **corpusargs,
         )

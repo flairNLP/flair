@@ -665,7 +665,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         )
 
     @staticmethod
-    def _fetch_model(model_name) -> str:
+    def _fetch_model(model_identifier) -> str:
         # core Flair models on Huggingface ModelHub
         huggingface_model_map = {
             "ner": "flair/ner-english",
@@ -762,21 +762,21 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         cache_dir = Path("models")
 
         # check if model name is a valid local file
-        if Path(model_name).exists():
-            model_path = model_name
+        if Path(model_identifier).exists():
+            model_path = model_identifier
 
         # check if model key is remapped to HF key - if so, print out information
-        elif model_name in huggingface_model_map:
+        elif model_identifier in huggingface_model_map:
             # get mapped name
-            hf_model_name = huggingface_model_map[model_name]
+            hf_model_name = huggingface_model_map[model_identifier]
 
             model_path = hf_download(hf_model_name)
 
         # if not, check if model key is remapped to direct download location. If so, download model
-        elif model_name in hu_model_map:
-            model_path = cached_path(hu_model_map[model_name], cache_dir=cache_dir)
+        elif model_identifier in hu_model_map:
+            model_path = cached_path(hu_model_map[model_identifier], cache_dir=cache_dir)
 
-            if model_name.startswith("hunflair-"):
+            if model_identifier.startswith("hunflair-"):
                 log.warning(
                     "HunFlair (version 1) is deprecated. Consider using HunFlair2 for improved extraction performance: "
                     "Classifier.load('hunflair2')."
@@ -786,7 +786,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # for all other cases (not local file or special download location), use HF model hub
         else:
-            model_path = hf_download(model_name)
+            model_path = hf_download(model_identifier)
 
         return model_path
 

@@ -115,9 +115,21 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         return model
 
     @staticmethod
-    def _fetch_model(model_name):
-        # this seems to just return model name, not a model with that name
-        return model_name
+    def _fetch_model(model_identifier: str):
+        """
+        Returns a model path (e.g., Huggingface model hub id or other repo path) given a model identifier.
+
+        This method is typically overwritten in specific classes that inherit from Model to allow for easier access
+        to pre-specified models. For instance, in the SequenceTagger, the id "ner" maps to the HF path
+        "flair/ner-english".
+
+        Args:
+            model_identifier: a short string identifier of the model.
+
+        Returns:
+            Path to HuggingFace or HU repo
+        """
+        return model_identifier
 
     def save(self, model_file: Union[str, Path], checkpoint: bool = False) -> None:
         """Saves the current model to the provided file.
@@ -150,16 +162,18 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             # get all non-abstract subclasses
             subclasses = list(get_non_abstract_subclasses(cls))
 
-            # try to fetch the model for each subclass. if fetching is possible, load model and return it
-            for model_cls in subclasses:
-                try:
-                    new_model_path = model_cls._fetch_model(model_path)
-                    if new_model_path != model_path:
-                        return model_cls.load(new_model_path)
-                except Exception as e:
-                    log.debug(e)
-                    # skip any invalid loadings, e.g. not found on HuggingFace hub
-                    continue
+            # If the model_path is a str, try to fetch model for each subclass.
+            # If fetching is possible, load model and return it.
+            if isinstance(model_path, str):
+                for model_cls in subclasses:
+                    try:
+                        new_model_path = model_cls._fetch_model(model_path)
+                        if new_model_path != model_path:
+                            return model_cls.load(new_model_path)
+                    except Exception as e:
+                        log.debug(e)
+                        # skip any invalid loadings, e.g. not found on HuggingFace hub
+                        continue
 
             # if the model cannot be fetched, load as a file
             try:
@@ -695,11 +709,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
     def _filter_data_point(self, data_point: DT) -> bool:
         """Specify if a data point should be kept.
 
-        That way you can remove for example empty texts. Per default all datapoints that have length zero
+        That way you can remove for example empty texts. Per default all datapoints that have empty text
         will be removed.
         Return true if the data point should be kept and false if it should be removed.
         """
-        return len(data_point) > 0
+        return bool(data_point.text.strip())
 
     @abstractmethod
     def _get_embedding_for_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
@@ -830,10 +844,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             return data_points
 
         # filter empty sentences
-        sentences = [sentence for sentence in typing.cast(list[Sentence], data_points) if len(sentence) > 0]
+        sentences = [sentence for sentence in typing.cast(list[Sentence], data_points) if sentence.text.strip()]
 
-        # reverse sort all sequences by their length
-        reordered_sentences = sorted(sentences, key=len, reverse=True)
+        # sort by text length (characters) instead of token length
+        reordered_sentences = sorted(sentences, key=lambda s: len(s.text), reverse=True)
 
         return typing.cast(list[DT], reordered_sentences)
 
@@ -863,8 +877,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             label_name = self.label_type if self.label_type is not None else "label"
 
         with torch.no_grad():
-            if not sentences:
-                return sentences
 
             if not isinstance(sentences, list):
                 sentences = [sentences]
@@ -898,7 +910,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 batch = [dp for dp in batch if self._filter_data_point(dp)]
 
                 # stop if all sentences are empty
-                if not batch:
+                if len(batch) == 0:
                     continue
 
                 data_points = self._get_data_points_for_batch(batch)
@@ -912,7 +924,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 scores = self._mask_scores(scores, data_points)
 
                 # if anything could possibly be predicted
-                if len(data_points) > 0:
+                if data_points:
                     # remove previously predicted labels of this type
                     for sentence in data_points:
                         sentence.remove_labels(label_name)
