@@ -703,7 +703,6 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 if self.use_raw_text_as_input:
                     word_ids_list = []
                     for sentence_no, sentence_tokens in enumerate(flair_tokens):
-                        tokens = [t.text for t in sentence_tokens]
 
                         subtoken_offsets = batch_encoding["offset_mapping"][sentence_no]
 
@@ -713,32 +712,13 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                             token_offsets.append((offset, offset + len(token.text)))
                             offset += len(token.text) + token.whitespace_after
 
-                        verbose = True
-                        subtokens = []
-                        if verbose:
-                            subtokens = self.tokenizer.convert_ids_to_tokens(input_ids.tolist()[sentence_no])
-                            # old_mapping = batch_encoding.word_ids(sentence_no)
-
                         mapping = map_tokens_to_subtokens(
                             subtoken_offsets=subtoken_offsets,
                             token_offsets=token_offsets,
-                            subtokens=subtokens,
-                            tokens=tokens,
-                            verbose=verbose,
                         )
 
                         word_ids_list.append(mapping)
 
-                        # we need to find other causes of divergence - other causes?
-                        if mapping.count(None) > 2 or True:
-                            print("---")
-                            print("tokens = ", tokens)
-                            print("subtokens = ", subtokens)
-                            print("subtoken_offsets = ", subtoken_offsets)
-                            print("token_offsets = ", token_offsets)
-                            print(mapping)
-                            # print(old_mapping)  # why is the old mapping incorrect?
-                            print("---")
                 else:
                     word_ids_list = [batch_encoding.word_ids(i) for i in range(input_ids.size()[0])]
             else:
@@ -748,6 +728,8 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 )
                 # word_ids is only supported for fast rust tokenizers. Some models like "xlm-mlm-ende-1024" do not have
                 # a fast tokenizer implementation, hence we need to fall back to our own reconstruction of word_ids.
+
+            # print(word_ids_list)
 
             if self.token_embedding:
                 assert offsets is not None  # for type checking

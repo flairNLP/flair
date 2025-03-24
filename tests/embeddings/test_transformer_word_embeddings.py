@@ -374,3 +374,28 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         mapping = map_tokens_to_subtokens(subtoken_offsets=subtoken_offsets, token_offsets=token_offsets)
 
         assert [None, 0, 1, 2, 3, 4, 5, 6, 7, None] == mapping
+
+        ### Test Case 4: Suboptimal tokenization caused by limited vocabulary without whitespace
+        # text = "number of public-diplomacy officers"
+
+        # Token and subtoken offsets
+        # tokens = ['number', 'of', 'public', '-', 'diplomacy', 'officers']
+        token_offsets = [(0, 6), (7, 9), (10, 16), (16, 17), (17, 26), (27, 35)]
+
+        # new_subtokens = ['[CLS]', '▁number', '▁of', '▁public', '-', 'diploma', 'cy', '▁officers', '[SEP]']
+        # old_subtokens = ['[CLS]', '▁number', '▁of', '▁public', '▁-', '▁diplomacy', '▁officers', '[SEP]']
+        subtoken_offsets = tensor([[0, 0], [0, 6], [6, 9], [9, 16], [16, 17], [17, 24], [24, 26], [26, 35], [0, 0]])
+
+        assert [None, 0, 1, 2, 3, 4, 5, 6, 7, None] == mapping
+
+        ### Test Case 5: Suboptimal tokenization in which two tokenizer words become one subtoken ("wan" "na" -> "wanna")
+        # text = "I gotta have it"
+
+        # Token and subtoken offsets
+        # tokens = ['I', 'got', 'ta', 'have', 'it']
+        token_offsets = [(0, 1), (2, 5), (5, 7), (8, 12), (13, 15)]
+
+        # new subtokens = ['[CLS]', '▁I', '▁gotta', '▁have', '▁it', '[SEP]']
+        # old subtokens = ['[CLS]', '▁I', '▁got', '▁ta', '▁have', '▁it', '[SEP]']
+        subtoken_offsets = tensor([[0, 0], [0, 1], [1, 7], [7, 12], [12, 15], [0, 0]])
+        assert [None, 0, 1, 2, 3, 4, 5, 6, 7, None] == mapping
