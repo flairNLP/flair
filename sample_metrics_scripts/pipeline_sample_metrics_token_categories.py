@@ -74,24 +74,38 @@ def run_standard_baseline(seed, corpus_name, config, max_epochs):
 
     tag_type = 'ner'
 
+    if 'document_separator_token' in config['parameters']:
+        if config['parameters']['document_separator_token'] != False:
+            document_separator_token = config['parameters']['document_separator_token']
+        else:
+            document_separator_token = None
+    else:
+        document_separator_token = "-DOCSTART-"
+
     conll_corpus = ColumnCorpus(
         data_folder="./",
         column_format={0: "text", 1: tag_type + "_clean", 2: tag_type},  # if we work with nessie (two-column) format
-        document_separator_token="-DOCSTART-",  # EST
+        document_separator_token=document_separator_token,  # EST
         train_file=train_filename,
         dev_file=dev_filename,
         test_file=test_filename,
         column_delimiter='\t'
     )
 
+
     tag_dictionary = conll_corpus.make_label_dictionary(label_type=tag_type, add_unk=False)
+    
+    if 'use_context' in config['parameters']:
+        use_context = config['parameters']['use_context']
+    else:
+        use_context = True
 
     embeddings = TransformerWordEmbeddings(
         model=config["parameters"]["model"],
         layers="-1",
         subtoken_pooling="first",
         fine_tune=True,
-        use_context=True,  # EST
+        use_context=use_context,  # EST
     )
 
     tagger = SequenceTagger(
@@ -150,10 +164,18 @@ def run_EE_baseline(seed, corpus_name, config, max_epochs):
 
     tag_type = 'ner'
 
+    if 'document_separator_token' in config['parameters']:
+        if config['parameters']['document_separator_token'] != False:
+            document_separator_token = config['parameters']['document_separator_token']
+        else:
+            document_separator_token = None
+    else:
+        document_separator_token = "-DOCSTART-"
+
     conll_corpus = ColumnCorpus(
         data_folder="./",
         column_format={0: "text", 1: "ner_clean", 2: "ner"},  # if we work with nessie (two-column) format
-        document_separator_token="-DOCSTART-",  # EST
+        document_separator_token=document_separator_token,  # EST
         train_file=train_filename,
         dev_file=dev_filename,
         test_file=test_filename,
@@ -579,10 +601,18 @@ def copy_new_tag_to_original(dataset, tag_column='ner', new_tag_column='ner_new'
 def run_experiment(seed, config, category_configs, corpus_name, tag_type, category_id, paths_to_baselines, output_path):
     train_filename, dev_filename, test_filename = get_data_paths(config, corpus_name)
 
+    if 'document_separator_token' in config['parameters']:
+        if config['parameters']['document_separator_token'] != False:
+            document_separator_token = config['parameters']['document_separator_token']
+        else:
+            document_separator_token = None
+    else:
+        document_separator_token = "-DOCSTART-"
+
     conll_corpus = ColumnCorpus(
         data_folder="./",
         column_format={0: "text", 1: "ner_clean", 2: "ner"},  # if we work with nessie (two-column) format
-        document_separator_token="-DOCSTART-",  # EST
+        document_separator_token=document_separator_token,  # EST
         train_file=train_filename,
         dev_file=dev_filename,
         test_file=test_filename,
@@ -680,13 +710,18 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
     if True:
         # model_reinit is always True for now
         # if config["parameters"]["model_reinit"] or config["parameters"]["seq_tagger_mode"] == 'EE': 
+    
+        if 'use_context' in config['parameters']:
+            use_context = config['parameters']['use_context']
+        else:
+            use_context = True
 
         embeddings = TransformerWordEmbeddings(
             model=config["parameters"]["model"],
             layers="-1",
             subtoken_pooling="first",
             fine_tune=True,
-            use_context=True,  # EST
+            use_context=use_context,  # EST
         )
         if category_id != 'O' and mask_flag == True:
             tag_dictionary.add_item('MASK')
