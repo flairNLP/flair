@@ -198,8 +198,9 @@ class MultitaskModel(flair.nn.Classifier):
             # Add metrics so they will be available to _publish_eval_result.
             for avg_type in ("micro avg", "macro avg"):
                 for metric_type in ("f1-score", "precision", "recall"):
-                    if (result.classification_report.get(avg_type) and 
-                        result.classification_report[avg_type].get(metric_type)):
+                    if result.classification_report.get(avg_type) and result.classification_report[avg_type].get(
+                        metric_type
+                    ):
                         scores[(task_id, avg_type, metric_type)] = result.classification_report[avg_type][metric_type]
 
         scores["loss"] = loss.item() / len(batch_split)
