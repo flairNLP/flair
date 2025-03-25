@@ -203,6 +203,11 @@ class MultitaskModel(flair.nn.Classifier):
                     ):
                         scores[(task_id, avg_type, metric_type)] = result.classification_report[avg_type][metric_type]
 
+            # The above metrics only apply to classification tasks. For regression
+            # tasks add mse.
+            if result.scores.get("mse"):
+                scores[(task_id, "mse")] = result.scores["mse"]
+
         scores["loss"] = loss.item() / len(batch_split)
 
         return Result(
