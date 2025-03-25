@@ -112,7 +112,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         self.predict_spans = self._determine_if_span_prediction_problem(self.label_dictionary)
 
         self.tagset_size = len(self.label_dictionary)
-        log.info(f"SequenceTagger predicts: {self.label_dictionary}")
+        log.info(f"- Predicts {len(self.label_dictionary)} classes: {self.label_dictionary.get_items()[:20]}")
 
         # ----- Embeddings -----
         self.embeddings = embeddings
