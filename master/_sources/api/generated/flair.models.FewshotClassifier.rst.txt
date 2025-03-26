@@ -92,7 +92,6 @@
       ~FewshotClassifier.dump_patches
       ~FewshotClassifier.label_type
       ~FewshotClassifier.license_info
-      ~FewshotClassifier.model_card
       ~FewshotClassifier.tars_embeddings
       ~FewshotClassifier.training
    

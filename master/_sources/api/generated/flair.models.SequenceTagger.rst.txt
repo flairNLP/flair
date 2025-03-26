@@ -87,7 +87,6 @@
       ~SequenceTagger.dump_patches
       ~SequenceTagger.label_type
       ~SequenceTagger.license_info
-      ~SequenceTagger.model_card
       ~SequenceTagger.training
    
    

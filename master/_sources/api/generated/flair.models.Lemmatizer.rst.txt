@@ -90,7 +90,6 @@
       ~Lemmatizer.dump_patches
       ~Lemmatizer.label_type
       ~Lemmatizer.license_info
-      ~Lemmatizer.model_card
       ~Lemmatizer.training
    
    

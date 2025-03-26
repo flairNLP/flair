@@ -805,20 +805,20 @@ button.search-button {
 <h1>flair.nn.Model<a class="headerlink" href="#flair-nn-model" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.nn.Model">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L29-L300"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.nn.</span></span><span class="sig-name descname"><span class="pre">Model</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L29-L336"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="flair.data.DT.html#flair.data.DT" title="flair.data.DT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DT</span></code></a>], <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Abstract base class for all downstream task models in Flair, such as SequenceTagger and TextClassifier.</p>
 <p>Every new type of model must implement these methods.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.nn.Model.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/y#L476-L518"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L35-L45"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
 </dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#flair.nn.Model.__init__" title="flair.nn.Model.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(*args, **kwargs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.nn.Model.__init__" title="flair.nn.Model.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</p></td>
 <td><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_module</span></code>(name, module)</p></td>
@@ -1006,19 +1006,11 @@ button.search-button {
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.nn.Model.license_info" title="flair.nn.Model.license_info"><code class="xref py py-obj docutils literal notranslate"><span class="pre">license_info</span></code></a></p></td>
 <td><p>Get the license information for this model.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#flair.nn.Model.model_card" title="flair.nn.Model.model_card"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_card</span></code></a></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#flair.nn.Model.training" title="flair.nn.Model.training"><code class="xref py py-obj docutils literal notranslate"><span class="pre">training</span></code></a></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">training</span></code></p></td>
 <td><p></p></td>
 </tr>
 </tbody>
 </table>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.nn.Model.model_card">
-<span class="sig-name descname"><span class="pre">model_card</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code><span class="pre">]]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#flair.nn.Model.model_card" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.nn.Model.label_type">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.nn.Model.label_type" title="Link to this definition">#</a></dt>
@@ -1027,7 +1019,7 @@ button.search-button {
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.nn.Model.forward_loss">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_points</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L43-L49"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.forward_loss" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_points</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L53-L59"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.forward_loss" title="Link to this definition">#</a></dt>
 <dd><p>Performs a forward pass and returns a loss tensor for backpropagation.</p>
 <p>Implement this to enable training.</p>
 <dl class="field-list simple">
@@ -1039,7 +1031,7 @@ button.search-button {
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.nn.Model.evaluate">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_storage_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_evaluation_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('micro</span> <span class="pre">avg',</span> <span class="pre">'f1-score')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_label_dictionary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L51-L86"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.evaluate" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_storage_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mini_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_evaluation_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">('micro</span> <span class="pre">avg',</span> <span class="pre">'f1-score')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gold_label_dictionary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L61-L96"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.evaluate" title="Link to this definition">#</a></dt>
 <dd><p>Evaluates the model. Returns a Result object containing evaluation results and a loss value.</p>
 <p>Implement this to enable evaluation.</p>
 <dl class="field-list simple">
@@ -1069,7 +1061,7 @@ recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.nn.Model.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L127-L141"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.save" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">checkpoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L163-L177"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.save" title="Link to this definition">#</a></dt>
 <dd><p>Saves the current model to the provided file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1092,7 +1084,7 @@ recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.nn.Model.load">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L161-L251"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.load" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L197-L287"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.load" title="Link to this definition">#</a></dt>
 <dd><p>Loads a Flair model from the given file or state dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1109,17 +1101,12 @@ recomputed, ‘cpu’ means all embeddings are stored on CPU, or ‘gpu’ means
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.nn.Model.print_model_card">
-<span class="sig-name descname"><span class="pre">print_model_card</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L253-L300"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.print_model_card" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">print_model_card</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/nn/model.py#L289-L336"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.nn.Model.print_model_card" title="Link to this definition">#</a></dt>
 <dd><p>This method produces a log message that includes all recorded parameters the model was trained with.</p>
 <p>The model card includes information such as the Flair, PyTorch and Transformers versions used during training,
 and the training parameters.</p>
 <p>Only available for models trained with with Flair &gt;= 0.9.1.</p>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="flair.nn.Model.training">
-<span class="sig-name descname"><span class="pre">training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#flair.nn.Model.training" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 

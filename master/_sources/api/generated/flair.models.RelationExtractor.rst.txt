@@ -85,7 +85,6 @@
       ~RelationExtractor.dump_patches
       ~RelationExtractor.label_type
       ~RelationExtractor.license_info
-      ~RelationExtractor.model_card
       ~RelationExtractor.multi_label_threshold
       ~RelationExtractor.training
    

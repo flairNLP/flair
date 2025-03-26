@@ -85,7 +85,6 @@
       ~TextTripleClassifier.dump_patches
       ~TextTripleClassifier.label_type
       ~TextTripleClassifier.license_info
-      ~TextTripleClassifier.model_card
       ~TextTripleClassifier.multi_label_threshold
       ~TextTripleClassifier.training
    

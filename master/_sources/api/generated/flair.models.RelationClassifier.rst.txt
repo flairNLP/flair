@@ -89,7 +89,6 @@
       ~RelationClassifier.dump_patches
       ~RelationClassifier.label_type
       ~RelationClassifier.license_info
-      ~RelationClassifier.model_card
       ~RelationClassifier.multi_label_threshold
       ~RelationClassifier.zero_tag_value
       ~RelationClassifier.training

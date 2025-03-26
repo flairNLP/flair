@@ -94,7 +94,6 @@
       ~TARSClassifier.dump_patches
       ~TARSClassifier.label_type
       ~TARSClassifier.license_info
-      ~TARSClassifier.model_card
       ~TARSClassifier.static_label_type
       ~TARSClassifier.tars_embeddings
       ~TARSClassifier.training

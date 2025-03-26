@@ -85,7 +85,6 @@
       ~TextClassifier.dump_patches
       ~TextClassifier.label_type
       ~TextClassifier.license_info
-      ~TextClassifier.model_card
       ~TextClassifier.multi_label_threshold
       ~TextClassifier.training
    
