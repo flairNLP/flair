@@ -140,6 +140,24 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
+    @property
+    def license_info(self) -> str:
+        """Get the license information for this model."""
+        if self.model_card is None:
+            return "No license information available"
+        return self.model_card.get("license_info", "No license information available")
+
+    @license_info.setter
+    def license_info(self, value: Optional[str]):
+        """Set the license information for this model."""
+        if self.model_card is None:
+            self.model_card = {}
+        if value is None:
+            # Remove license info if it exists
+            self.model_card.pop("license_info", None)
+        else:
+            self.model_card["license_info"] = value
+
     @classmethod
     def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "Model":
         """Loads a Flair model from the given file or state dictionary.
@@ -211,10 +229,21 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             if "__cls__" in state:
                 state.pop("__cls__")
 
+            log.info("--------------------------------------------------")
+            log.info(f"- Loading {cls.__name__}")
+
             model = cls._init_model_with_state_dict(state)
 
-            if "model_card" in state:
-                model.model_card = state["model_card"]
+            # Print license information
+            log.info("--------------------------------------------------")
+            model_card = state.get("model_card", None)
+            if model_card is not None:
+                model.model_card = model_card
+                license_info = model_card.get("license_info", "No license information available")
+                log.info(f"- Model license: {license_info}")
+            else:
+                log.info("- Model license: No license information available")
+            log.info("--------------------------------------------------")
 
             model.eval()
             model.to(flair.device)
@@ -229,25 +258,39 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
         Only available for models trained with with Flair >= 0.9.1.
         """
-        if hasattr(self, "model_card"):
+        model_card = getattr(self, "model_card", None)  # Returns None if attribute doesn't exist or is None
+
+        if model_card is not None:
             param_out = "\n------------------------------------\n"
             param_out += "--------- Flair Model Card ---------\n"
             param_out += "------------------------------------\n"
-            param_out += "- this Flair model was trained with:\n"
-            param_out += f"-- Flair version {self.model_card['flair_version']}\n"
-            param_out += f"-- PyTorch version {self.model_card['pytorch_version']}\n"
-            if "transformers_version" in self.model_card:
-                param_out += f"-- Transformers version {self.model_card['transformers_version']}\n"
-            param_out += "------------------------------------\n"
 
-            param_out += "------- Training Parameters: -------\n"
-            param_out += "------------------------------------\n"
-            training_params = "\n".join(
-                f'-- {param} = {self.model_card["training_parameters"][param]}'
-                for param in self.model_card["training_parameters"]
-            )
-            param_out += training_params + "\n"
-            param_out += "------------------------------------\n"
+            # Only print version information if it exists
+            if any(key in model_card for key in ["flair_version", "pytorch_version", "transformers_version"]):
+                param_out += "- this Flair model was trained with:\n"
+                if "flair_version" in model_card:
+                    param_out += f"-- Flair version {model_card['flair_version']}\n"
+                if "pytorch_version" in model_card:
+                    param_out += f"-- PyTorch version {model_card['pytorch_version']}\n"
+                if "transformers_version" in model_card:
+                    param_out += f"-- Transformers version {model_card['transformers_version']}\n"
+                param_out += "------------------------------------\n"
+
+            # Print license info if it exists
+            if "license_info" in model_card:
+                param_out += f"-- License: {model_card['license_info']}\n"
+                param_out += "------------------------------------\n"
+
+            # Print training parameters if they exist
+            if "training_parameters" in model_card:
+                param_out += "------- Training Parameters: -------\n"
+                param_out += "------------------------------------\n"
+                training_params = "\n".join(
+                    f'-- {param} = {model_card["training_parameters"][param]}'
+                    for param in model_card["training_parameters"]
+                )
+                param_out += training_params + "\n"
+                param_out += "------------------------------------\n"
 
             log.info(param_out)
         else:
