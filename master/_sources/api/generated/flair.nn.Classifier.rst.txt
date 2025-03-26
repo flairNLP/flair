@@ -84,6 +84,7 @@
       ~Classifier.call_super_init
       ~Classifier.dump_patches
       ~Classifier.label_type
+      ~Classifier.license_info
       ~Classifier.model_card
       ~Classifier.training
    

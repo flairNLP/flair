@@ -84,6 +84,7 @@
       ~TokenClassifier.call_super_init
       ~TokenClassifier.dump_patches
       ~TokenClassifier.label_type
+      ~TokenClassifier.license_info
       ~TokenClassifier.model_card
       ~TokenClassifier.multi_label_threshold
       ~TokenClassifier.training

@@ -82,6 +82,7 @@
       ~Model.call_super_init
       ~Model.dump_patches
       ~Model.label_type
+      ~Model.license_info
       ~Model.model_card
       ~Model.training
    

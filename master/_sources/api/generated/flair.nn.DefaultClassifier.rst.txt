@@ -84,6 +84,7 @@
       ~DefaultClassifier.call_super_init
       ~DefaultClassifier.dump_patches
       ~DefaultClassifier.label_type
+      ~DefaultClassifier.license_info
       ~DefaultClassifier.model_card
       ~DefaultClassifier.multi_label_threshold
       ~DefaultClassifier.training

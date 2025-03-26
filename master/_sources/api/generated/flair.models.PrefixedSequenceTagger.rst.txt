@@ -87,6 +87,7 @@
       ~PrefixedSequenceTagger.call_super_init
       ~PrefixedSequenceTagger.dump_patches
       ~PrefixedSequenceTagger.label_type
+      ~PrefixedSequenceTagger.license_info
       ~PrefixedSequenceTagger.model_card
       ~PrefixedSequenceTagger.training
    

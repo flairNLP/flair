@@ -84,6 +84,7 @@
       ~TextPairClassifier.call_super_init
       ~TextPairClassifier.dump_patches
       ~TextPairClassifier.label_type
+      ~TextPairClassifier.license_info
       ~TextPairClassifier.model_card
       ~TextPairClassifier.multi_label_threshold
       ~TextPairClassifier.training
