@@ -88,8 +88,27 @@ class MultitaskModel(flair.nn.Classifier):
         sentences,
         **predictargs,
     ):
+
+        if not isinstance(sentences, list):
+            sentences = [sentences]
+
+        # if not specified, set embedding storage mode to "cpu" to ensure that embeddings are reused
+        remove_embeddings_after_prediction = False
+        if "embedding_storage_mode" not in predictargs:
+            predictargs["embedding_storage_mode"] = "cpu"
+            remove_embeddings_after_prediction = True
+
+        # predict for each task separately
         for task in self.tasks.values():
             task.predict(sentences, **predictargs)
+
+        # if embeddings were stored only to be reused for prediction, they can be removed after
+        if remove_embeddings_after_prediction:
+            for sentence in sentences:
+                sentence.clear_embeddings()
+
+
+
 
     @staticmethod
     def split_batch_to_task_ids(
