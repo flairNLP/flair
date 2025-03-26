@@ -32,7 +32,17 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     Every new type of model must implement these methods.
     """
 
-    model_card: Optional[dict[str, Any]] = None
+    def __init__(self) -> None:
+        super().__init__()
+
+        # The model card can contain training parameters and metadata
+        self.model_card: Optional[dict[str, Any]] = None
+
+        # Optimizer and scheduler states are only set during training when save_optimizer_state=True
+        # is passed to the ModelTrainer. These states allow resuming training from a checkpoint
+        # with the exact same optimizer and learning rate scheduler states.
+        self.optimizer_state_dict: Optional[dict[str, Any]] = None
+        self.scheduler_state_dict: Optional[dict[str, Any]] = None
 
     @property
     @abstractmethod
@@ -86,9 +96,25 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         raise NotImplementedError
 
     def _get_state_dict(self) -> dict:
-        """Returns the state dictionary for this model."""
+        """Returns the state dictionary for this model.
+
+        The state dictionary contains:
+        - "state_dict": The model's parameters state dictionary
+        - "__cls__": The class name of the model for loading
+        - "optimizer_state_dict": The optimizer's state dictionary (if it exists)
+        - "scheduler_state_dict": The scheduler's state dictionary (if it exists)
+        - "model_card": Training parameters and metadata (if set)
+        """
         # Always include the name of the Model class for which the state dict holds
         state_dict = {"state_dict": self.state_dict(), "__cls__": self.__class__.__name__}
+
+        # Add optimizer state dict if it exists
+        if hasattr(self, "optimizer_state_dict") and self.optimizer_state_dict is not None:
+            state_dict["optimizer_state_dict"] = self.optimizer_state_dict
+
+        # Add scheduler state dict if it exists
+        if hasattr(self, "scheduler_state_dict") and self.scheduler_state_dict is not None:
+            state_dict["scheduler_state_dict"] = self.scheduler_state_dict
 
         return state_dict
 
@@ -104,6 +130,16 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         model = cls(**kwargs)
 
         model.load_state_dict(state["state_dict"])
+
+        # load optimizer state if it exists in the state dict
+        if "optimizer_state_dict" in state:
+            log.debug(f"Found optimizer state in model file with keys: {state['optimizer_state_dict'].keys()}")
+            model.optimizer_state_dict = state["optimizer_state_dict"]
+
+        # load scheduler state if it exists in the state dict
+        if "scheduler_state_dict" in state:
+            log.debug(f"Found scheduler state in model file with keys: {state['scheduler_state_dict'].keys()}")
+            model.scheduler_state_dict = state["scheduler_state_dict"]
 
         return model
 
