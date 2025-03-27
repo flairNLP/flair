@@ -64,7 +64,7 @@ single multitask model and corpus out of them. These are then passed to the mode
 When you run this script, it should print a training log like always, just with the difference that at the end of each epoch,
 both tasks are evaluated on the dev split: 
 
-```console
+```
 2025-03-26 22:29:16,187 ----------------------------------------------------------------------------------------------------
 2025-03-26 22:29:16,187 EPOCH 1 done: loss 1.3350 - lr: 0.000049
 2025-03-26 22:29:16,525 Task_0 - TokenClassifier - loss: 0.28858715295791626 - f1-score (micro avg)  0.9292
