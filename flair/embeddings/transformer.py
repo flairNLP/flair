@@ -172,12 +172,12 @@ def fill_mean_token_embeddings(
     all_token_embeddings.scatter_add_(
         1,
         word_ids.clamp(min=0).unsqueeze(-1).expand(-1, -1, embedding_dim),
-        sentence_hidden_states * mask.unsqueeze(-1).float(),
+        sentence_hidden_states * mask.unsqueeze(-1).to(all_token_embeddings.dtype),
     )
 
     # calculate the mean of subtokens
     subtoken_counts = torch.zeros_like(all_token_embeddings[:, :, 0])
-    subtoken_counts.scatter_add_(1, word_ids.clamp(min=0), mask.float())
+    subtoken_counts.scatter_add_(1, word_ids.clamp(min=0), mask.to(subtoken_counts.dtype))
     all_token_embeddings = torch.where(
         subtoken_counts.unsqueeze(-1) > 0,
         all_token_embeddings / subtoken_counts.unsqueeze(-1),
