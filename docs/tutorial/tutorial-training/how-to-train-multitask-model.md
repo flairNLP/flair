@@ -17,14 +17,14 @@ Our first multitask example is a single model that predicts part-of-speech tags 
 token-level prediction tasks that are syntactic and therefore closely related.
 
 The following script loads a single embedding for both tasks, but loads two separate training corpora. From these separate
-training corpora, it creates two label dictionaries and instantiates two prediction models (both TokenClassifier):
+training corpora, it creates two label dictionaries and instantiates two prediction models (both [TokenClassifier](#flair.models.TokenClassifier)):
 
 ```python
 from flair.embeddings import TransformerWordEmbeddings
 from flair.datasets import UD_ENGLISH, CONLL_2000
 from flair.models import TokenClassifier
-from flair.nn.multitask import make_multitask_model_and_corpus
 from flair.trainers import ModelTrainer
+from flair.nn.multitask import make_multitask_model_and_corpus
 
 # --- Embeddings that are shared by both models --- #
 shared_embedding = TransformerWordEmbeddings("distilbert-base-uncased",
@@ -58,7 +58,7 @@ trainer = ModelTrainer(multitask_model, multicorpus)
 trainer.fine_tune(f"resources/taggers/multitask_test")
 ```
 
-The key is the function [`make_multitask_model_and_corpus`](#flair.nn.multitask import make_multitask_model_and_corpus), which takes these individual models and corpora and creates a 
+The key is the function [`make_multitask_model_and_corpus`](#flair.nn.multitask.make_multitask_model_and_corpus), which takes these individual models and corpora and creates a 
 single multitask model and corpus out of them. These are then passed to the model trainer as usual. 
 
 When you run this script, it should print a training log like always, just with the difference that at the end of each epoch,
@@ -126,20 +126,20 @@ Chunks are:
 
 ## Example 2: A token and a document-level task
 
-In some cases, you may want to train a multitask model using TransformerWordEmbeddings (token-level embeddings) 
-and TransformerDocumentEmbeddings (text-level embeddings). For instance, you may want to train a model that can both
+In some cases, you may want to train a multitask model using [TransformerWordEmbeddings](#flair.embeddings.TransformerWordEmbeddings) (token-level embeddings) 
+and [TransformerDocumentEmbeddings](#flair.embeddings.TransformerDocumentEmbeddings) (text-level embeddings). For instance, you may want to train a model that can both
 detect topics and entities in online news articles. 
 
-The code is similar to example 1, but you need more general TransformerEmbeddings that can produce both token- and text-level
-embeddings. You also need two different model classes: A TextClassifier for predicting topics and a TokenClassifier for
+The code is similar to example 1, but you need more general [TransformerEmbeddings](#flair.embeddings.TransformerEmbeddings) that can produce both token- and text-level
+embeddings. You also need two different model classes: A [TextClassifier](#flair.models.TextClassifier) for predicting topics and a [TokenClassifier](#flair.models.TokenClassifier) for
 prediction NER tags: 
 
 ```python
 from flair.embeddings import TransformerEmbeddings
 from flair.datasets import AGNEWS, CLEANCONLL
 from flair.models import TokenClassifier, TextClassifier
-from flair.nn.multitask import make_multitask_model_and_corpus
 from flair.trainers import ModelTrainer
+from flair.nn.multitask import make_multitask_model_and_corpus
 
 # --- Embeddings that are shared by both models --- #
 # use a transformer that can do both: sentence-embedding and word-embedding
