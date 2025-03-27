@@ -107,9 +107,6 @@ class MultitaskModel(flair.nn.Classifier):
             for sentence in sentences:
                 sentence.clear_embeddings()
 
-
-
-
     @staticmethod
     def split_batch_to_task_ids(
         sentences: Union[list[Sentence], Sentence], all_tasks: bool = False
