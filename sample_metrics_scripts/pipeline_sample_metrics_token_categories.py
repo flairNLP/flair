@@ -25,6 +25,11 @@ from flair.data import Dictionary
 from collections import Counter
 import itertools
 import sklearn
+import logging
+
+logger_experiment = logging.getLogger(__name__)
+logger_experiment.setLevel(level="INFO")
+
 
 category_conditions = {
     '1': (True, True),  # pred == observed, observed == O
@@ -467,7 +472,7 @@ def calculate_f1_between_columns(dataset, column1, column2, label_dictionary):
             "\n\nBy class:\n" + classification_report
     )
 
-    print(detailed_result)
+    logger_experiment.info(detailed_result)
 
     # Create and populate score object for logging with all evaluation values, plus the loss
     scores: Dict[Union[Tuple[str, ...], str], Any] = {}
@@ -538,13 +543,13 @@ def mask_category(dataset, tag_column='ner', new_tag_column='ner_new', predictio
     new_tag_column_bio = f'{new_tag_column}_bio'
     for sent in dataset:
         # debug
-        print(sent.text)
-        print('predicted')
-        print(sent.get_labels(prediction_bio_column))
-        print('ner')
-        print(sent.get_labels(tag_column))
+        logger_experiment.debug(sent.text)
+        logger_experiment.debug('predicted')
+        logger_experiment.debug(sent.get_labels(prediction_bio_column))
+        logger_experiment.debug('ner')
+        logger_experiment.debug(sent.get_labels(tag_column))
         for token in sent:
-            print(
+            logger_experiment.debug(
                 f"{token.text} {token.get_label(prediction_bio_column).value} {token.get_label(tag_column_bio).value}")
         flag = False
         for token in sent:
@@ -649,7 +654,7 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
 
         for category_config in category_configs:
 
-            print(category_config)
+            logger_experiment.debug(category_config)
 
             if category_config['modification'] == 'mask':
                 mask_flag = True
@@ -682,8 +687,8 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
                                                                                threshold=current_threshold,
                                                                                direction=current_direction,
                                                                                category_id=current_id)
-                print('number of tokens changed:', tokens_changed)
-                print('number of consecutive tokens changed:', tokens_changed_additionally)
+                logger_experiment.debug('number of tokens changed:', tokens_changed)
+                logger_experiment.debug('number of consecutive tokens changed:', tokens_changed_additionally)
 
             elif category_config['modification'] == 'mask':
                 mask_category(conll_corpus.train, tag_column=tag_type, prediction_bio_column='predicted_bio',
@@ -787,7 +792,7 @@ def main(config, gpu=0):
 
     for cat_id in category_conditions:
         category_config = config["parameters"]['modify_category' + cat_id]
-        print(category_config)
+        logger_experiment.debug(category_config)
         if category_config is not False:
             category_ids.append(cat_id)
             category_config['id'] = cat_id

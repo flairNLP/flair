@@ -4,6 +4,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import csv
+from optimize_metric_parameters import *
+import logging
+
+logger_experiment = logging.getLogger(__name__)
+logger_experiment.setLevel(level="INFO")
 
 
 CATEGORIES = [
@@ -70,7 +75,7 @@ def summarize_test_scores(results_tables_path, corpus_name, resources_path,   ca
                     results_path = os.path.join(experiment_path, metric, f_type, modif)
                     if os.path.exists(results_path+os.sep+dataset):
 
-                        print(results_path)
+                        logger_experiment.debug(results_path)
                         noise_shares = []
                     
                         for seed_path in os.listdir(results_path+os.sep+dataset):
@@ -80,11 +85,11 @@ def summarize_test_scores(results_tables_path, corpus_name, resources_path,   ca
                                     lines = f.read().strip().split('\n')
                                     noise = lines[0].split(' ')[0]
                                     noise_shares.append(float(noise))
-                                    print(noise_shares)
+                                    logger_experiment.debug(noise_shares)
                         test_results_fname = results_path+os.sep+dataset+os.sep+'test_results.tsv'
                         if os.path.isfile(test_results_fname):
                             results_df = pd.read_csv(test_results_fname, delimiter='\t', header=0)
-                            print(results_df[['mean']].values)
+                            logger_experiment.debug(results_df[['mean']].values)
                             score = float(results_df[['mean']].values[0])
                             stdev = float(results_df[['std']].values[0])
                             optimize_F1s_output.write(f"{'_'.join(metric.split('_')[1:])}, {f_type}, {modif}, {np.mean(noise_shares):.3f}, {round(score, 4):.3f}, {round(stdev, 4):.3f}\n")
@@ -103,7 +108,7 @@ def merge_tables(results_tables_path, modes, categories_ids):
             base_path1 = f'{results_tables_path}/{mode}_mode'
 
             data1 = pd.read_csv(base_path1+os.sep+'optimal_F1s_category'+category+'.csv',header = 0, index_col=[0,1])
-            print(data1)
+            logger_experiment.debug(data1)
 
             if full_data is None:
                 full_data = pd.merge(data1, data2, left_index=True, right_index=True)
@@ -164,7 +169,7 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
                 path = base_path + exp_path
 
                 filepath = path+'epoch_log'+'_'+i+ext+'.log'
-                print(filepath)
+                logger_experiment.debug(filepath)
                 if not os.path.exists(path+'histograms_'+metric):
                     os.mkdir(path+'histograms_'+metric)
 
@@ -172,17 +177,17 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
                     df = pd.read_csv(filepath,  delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
                 except:
                     continue
-                print(df.columns)
+                logger_experiment.debug(df.columns)
                 df[CORRECT_PREDICTION_FLAG_NAME] = df['predicted'] == df['noisy']
 
-                print(df.groupby(NOISE_FLAG_NAME).count())
-                print(len(df))
+                logger_experiment.debug(df.groupby(NOISE_FLAG_NAME).count())
+                logger_experiment.debug(len(df))
                 if metric in ['pd','fl','tal','tac','mild','mild_f','mild_m']:
                     max_metric = df[metric].max()
                     binwidth = 1
                     if metric == 'mild':
                         binrange = (-max_metric, max_metric)
-                        print(binrange)
+                        logger_experiment.debug(binrange)
                     else:
                         binrange = (0, max_metric)
                 elif metric in ['le','cross_entropy','entropy','pehist']:
@@ -226,7 +231,7 @@ def plot_category_membership_through_epochs(base_paths, corpus_name, seeds, dset
     categories_counts = {}
 
     for mode in ['EE','standard']:
-        print(mode)
+        logger_experiment.debug(mode)
         filepath = f"{base_paths[mode]}/{corpus_name}/{exp_paths[mode][0]}/epoch_log_0.log"
 
         if not os.path.exists(filepath):
