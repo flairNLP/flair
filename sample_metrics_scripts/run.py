@@ -124,4 +124,6 @@ if __name__ == "__main__":
     with open(args.config) as json_file:
         config = json.load(json_file)
 
+    config['config_filepath'] = os.path.splitext(json_file.name)[0].split(os.sep)[-1]
+
     run(config, args.gpu)
