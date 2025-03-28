@@ -1,0 +1,1045 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Train a Multitask Model &#8212; Flair Documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=87118c37" />
+    <link rel="stylesheet" type="text/css" href="../../_static/github_style.css?v=1093691d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/main.css?v=aa1137ec" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/header.css?v=b4ed79de" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/footer.css?v=6c87b456" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/version-switcher.css?v=0d4c8916" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/sidebar.css?v=c65ae207" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/tutorial.css?v=a09ac9ee" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/api.css?v=67816a88" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/legal-notice.css?v=d7312f38" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/search.css?v=4a9c00e7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script src="../../_static/documentation_options.js?v=fb952d1c"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/tutorial-training/how-to-train-multitask-model';</script>
+    <link rel="icon" href="../../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Tutorial 3: Embeddings" href="../tutorial-embeddings/index.html" />
+    <link rel="prev" title="Train a Span Classifier" href="how-to-train-span-classifier.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/flair_logo_white.svg" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../../_static/flair_logo_white.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
+</script></div>
+      
+        <div class="navbar-item">
+<script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       latest (dev) 
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.15.1/index.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.15.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.15.0/index.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.15.0
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/index.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.14.0
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/index.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/index.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
+    </div>
+  </div>
+`);
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../api/index.html">
+                        API
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../contributing/index.html">
+                        Contributing
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item"><div onclick="toggleDarkMode()" class="dark-mode-toggle" onload="applyTheme()">
+    <svg width="37.009" height="37.009" viewBox="0 0 9.739 9.739" xml:space="preserve" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(-398.68 -8.4525)">
+            <path d="m408.15 13.739a4.6164 4.6164 0 1 1-5.0216-5.0216 3.5905 3.5905 0 0 0 5.0216 5.0216z" class="stroke-moon" stroke-linecap="round" stroke-linejoin="round" stroke-width=".52917"/>
+        </g>
+    </svg>
+    <svg
+            width="37.00899"
+            height="37.00899"
+            viewBox="0 0 9.7390452 9.7390456"
+            version="1.1"
+            id="svg1"
+            inkscape:version="1.3.2 (091e20e, 2023-11-25)"
+            sodipodi:docname="sun.svg"
+            xml:space="preserve"
+            xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+            xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+            xmlns="http://www.w3.org/2000/svg"
+            xmlns:svg="http://www.w3.org/2000/svg">
+        <sodipodi:namedview
+                id="namedview1"
+                pagecolor="#505050"
+                bordercolor="#eeeeee"
+                borderopacity="1"
+                inkscape:showpageshadow="0"
+                inkscape:pageopacity="0"
+                inkscape:pagecheckerboard="0"
+                inkscape:deskcolor="#505050"
+                inkscape:document-units="px"
+                inkscape:zoom="0.58541666"
+                inkscape:cx="-392.02847"
+                inkscape:cy="250.24911"
+                inkscape:window-width="1920"
+                inkscape:window-height="1011"
+                inkscape:window-x="0"
+                inkscape:window-y="0"
+                inkscape:window-maximized="1"
+                inkscape:current-layer="layer1" />
+        <defs
+                id="defs1">
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="367.98785"
+                    height="99.33934"
+                    id="rect47" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect48" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="382.71518"
+                    height="121.78854"
+                    id="rect49" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect50" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect51" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="385.43823"
+                    height="103.11166"
+                    id="rect52" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect58" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="553.33203"
+                    height="91.591812"
+                    id="rect59" />
+            <rect
+                    x="203.51459"
+                    y="1150.095"
+                    width="433.75299"
+                    height="97.631157"
+                    id="rect60" />
+        </defs>
+        <g
+                inkscape:label="Layer 1"
+                inkscape:groupmode="layer"
+                id="layer1"
+                transform="translate(-398.67735,-8.3326298)">
+            <path
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    d="m 403.54688,8.5869696 v 1.0650423 m 0,7.1002811 v 1.065043 m 3.26346,-7.8786503 -0.75307,0.7530733 m -5.02079,5.020787 -0.75307,0.753074 m 7.87865,-3.263467 h -1.06504 m -7.10029,0 h -1.06504 m 7.87865,3.263467 -0.75307,-0.753074 m -5.02079,-5.020787 -0.75307,-0.7530733"
+                    id="path1-90"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+            <circle
+                    cx="403.54688"
+                    cy="13.202152"
+                    r="1.7750704"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-miterlimit="10"
+                    stroke-width="32"
+                    id="circle1"
+                    style="stroke:#ffffff;stroke-width:0.50868;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+    </svg>
+</div>
+<script defer>
+    function applyTheme() {
+        const theme = localStorage.getItem("theme-color");
+        if (theme === "dark") {
+           document.body.classList.add("dark-mode");
+        } else if (theme === "light") {
+           document.body.classList.remove("dark-mode");
+        } else {
+            if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+                document.body.classList.add("dark-mode");
+                localStorage.setItem("theme-color", "dark");
+            } else {
+                document.body.classList.remove("dark-mode");
+                localStorage.setItem("theme-color", "light");
+            }
+        }
+    }
+
+    function matchPreferredScheme (e) {
+        localStorage.setItem("theme-color", e.matches ? "dark" : "light");
+        applyTheme();
+    }
+
+    window.addEventListener('load', applyTheme);
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', matchPreferredScheme);
+    function toggleDarkMode() {
+        const theme = localStorage.getItem("theme-color");
+        localStorage.setItem("theme-color", theme === "dark" ? "light" : "dark");
+        applyTheme();
+    }
+</script></div>
+        
+          <div class="navbar-item">
+<script>
+ const toggleMenu = () => {
+  const elem = document.querySelector(".version-switcher__container");
+  if (elem.classList.contains("open")) {
+   elem.classList.remove("open");
+  } else {
+   elem.classList.add("open");
+  }
+ }
+document.write(`
+  <div class="version-switcher__container dropdown">
+    <button onclick="toggleMenu()" id="versionswitcherbutton" type="button" role="button" class="version-switcher__button btn btn-sm navbar-btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="listbox" aria-controls="versionswitcherlist" aria-label="Version switcher list">
+       latest (dev) 
+    </button>
+    <div id="versionswitcherlist" class="version-switcher__menu dropdown-menu list-group-flush py-0" role="listbox" aria-labelledby="versionswitcherbutton">
+    <!-- dropdown will be populated by javascript on page load -->
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.15.1/index.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.15.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.15.0/index.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.15.0
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.14.0/index.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.14.0
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.1/index.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.1
+          
+        
+        </span>
+          </a>
+      
+      
+          <a class="list-group-item list-group-item-action py-1" href="../../../v0.13.0/index.html" data-version-name="dev" data-version="devdocs">
+          <span>
+        v0.13.0
+          
+        
+        </span>
+          </a>
+      
+    </div>
+  </div>
+`);
+ document.querySelector('footer.bd-footer')
+</script>
+<style>
+button.search-button {
+ background-image: url("../../_static/magnifying_glass_dark.svg") !important;
+}
+</style></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../intro.html">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-basics/index.html">Tutorial 1: Basic Tagging</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tutorial 2: Training models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="how-model-training-works.html">How model training works in Flair</a></li>
+<li class="toctree-l3"><a class="reference internal" href="train-vs-fine-tune.html">Training vs fine-tuning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-load-prepared-dataset.html">How to load a prepared dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-load-custom-dataset.html">How to load a custom dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-train-sequence-tagger.html">Train a sequence tagger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-train-text-classifier.html">Train a Text Classifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="how-to-train-span-classifier.html">Train a Span Classifier</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Train a Multitask Model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-embeddings/index.html">Tutorial 3: Embeddings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial-hunflair2/index.html">Tutorial: HunFlair2</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/index.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../contributing/index.html">Contributing</a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Tutorials</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Tutorial 2: Training models</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Train a Multitask Model</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+
+
+  <section id="train-a-multitask-model">
+<h1>Train a Multitask Model<a class="headerlink" href="#train-a-multitask-model" title="Link to this heading">#</a></h1>
+<p>In some cases, you might want to train a single model that can complete multiple tasks. For instance, you might want to
+train a model that can do both part-of-speech tagging and syntactic chunking. Or a model that can predict both entities
+and relations.</p>
+<p>In such cases, you typically have a single language model as backbone and multiple prediction heads with task-specific
+prediction logic. The potential advantage is twofold:</p>
+<ol class="arabic simple">
+<li><p>Instead of having two separate language models for two tasks, you have a single model, making it more compact if you keep it in memory.</p></li>
+<li><p>The language model will simultaneously learn from the training data of both tasks. This may result in higher accuracy for both tasks if they are semantically close. (In practice however, such effects are rarely observed.)</p></li>
+</ol>
+<section id="example-1-two-token-level-tasks">
+<h2>Example 1: Two token-level tasks<a class="headerlink" href="#example-1-two-token-level-tasks" title="Link to this heading">#</a></h2>
+<p>Our first multitask example is a single model that predicts part-of-speech tags and syntactic chunks. Both tasks are
+token-level prediction tasks that are syntactic and therefore closely related.</p>
+<p>The following script loads a single embedding for both tasks, but loads two separate training corpora. From these separate
+training corpora, it creates two label dictionaries and instantiates two prediction models (both <a class="reference internal" href="../../api/generated/flair.models.TokenClassifier.html#flair.models.TokenClassifier" title="flair.models.TokenClassifier"><span class="xref myst py py-class">TokenClassifier</span></a>):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerWordEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">UD_ENGLISH</span><span class="p">,</span> <span class="n">CONLL_2000</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">TokenClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn.multitask</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_multitask_model_and_corpus</span>
+
+<span class="c1"># --- Embeddings that are shared by both models --- #</span>
+<span class="n">shared_embedding</span> <span class="o">=</span> <span class="n">TransformerWordEmbeddings</span><span class="p">(</span><span class="s2">&quot;distilbert-base-uncased&quot;</span><span class="p">,</span>
+                                             <span class="kp">fine_tune</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># --- Task 1: Part-of-Speech tagging --- #</span>
+<span class="n">corpus_1</span> <span class="o">=</span> <span class="n">UD_ENGLISH</span><span class="p">()</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+
+<span class="n">model_1</span> <span class="o">=</span> <span class="n">TokenClassifier</span><span class="p">(</span><span class="n">shared_embedding</span><span class="p">,</span>
+                         <span class="n">label_dictionary</span><span class="o">=</span><span class="n">corpus_1</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="s2">&quot;pos&quot;</span><span class="p">),</span>
+                         <span class="kp">label_type</span><span class="o">=</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
+
+<span class="c1"># -- Task 2: Syntactic Chunking -- #</span>
+<span class="n">corpus_2</span> <span class="o">=</span> <span class="n">CONLL_2000</span><span class="p">()</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+
+<span class="n">model_2</span> <span class="o">=</span> <span class="n">TokenClassifier</span><span class="p">(</span><span class="n">shared_embedding</span><span class="p">,</span>
+                          <span class="n">label_dictionary</span><span class="o">=</span><span class="n">corpus_2</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="s2">&quot;np&quot;</span><span class="p">),</span>
+                          <span class="kp">label_type</span><span class="o">=</span><span class="s2">&quot;np&quot;</span><span class="p">,</span>
+                          <span class="p">)</span>
+
+<span class="c1"># -- Define mapping (which tagger should train on which model) -- #</span>
+<span class="n">multitask_model</span><span class="p">,</span> <span class="n">multicorpus</span> <span class="o">=</span> <span class="n">make_multitask_model_and_corpus</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="n">model_1</span><span class="p">,</span> <span class="n">corpus_1</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">model_2</span><span class="p">,</span> <span class="n">corpus_2</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># -- Create model trainer and train -- #</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">multitask_model</span><span class="p">,</span> <span class="n">multicorpus</span><span class="p">)</span>
+<span class="n">trainer</span><span class="o">.</span><span class="kp">fine_tune</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;resources/taggers/multitask_test&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The key is the function <code class="docutils literal notranslate"><span class="pre">make_multitask_model_and_corpus</span></code>, which takes these individual models and corpora and creates a
+single multitask model and corpus out of them. These are then passed to the model trainer as usual.</p>
+<p>When you run this script, it should print a training log like always, just with the difference that at the end of each epoch,
+both tasks are evaluated on the dev split:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">2025</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">26</span> <span class="mi">22</span><span class="p">:</span><span class="mi">29</span><span class="p">:</span><span class="mi">16</span><span class="p">,</span><span class="mi">187</span> <span class="o">----------------------------------------------------------------------------------------------------</span>
+<span class="mi">2025</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">26</span> <span class="mi">22</span><span class="p">:</span><span class="mi">29</span><span class="p">:</span><span class="mi">16</span><span class="p">,</span><span class="mi">187</span> <span class="n">EPOCH</span> <span class="mi">1</span> <span class="n">done</span><span class="p">:</span> <span class="n">loss</span> <span class="mf">1.3350</span> <span class="o">-</span> <span class="n">lr</span><span class="p">:</span> <span class="mf">0.000049</span>
+<span class="mi">2025</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">26</span> <span class="mi">22</span><span class="p">:</span><span class="mi">29</span><span class="p">:</span><span class="mi">16</span><span class="p">,</span><span class="mi">525</span> <span class="n">Task_0</span> <span class="o">-</span> <span class="n">TokenClassifier</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">0.28858715295791626</span> <span class="o">-</span> <span class="n">f1</span><span class="o">-</span><span class="n">score</span> <span class="p">(</span><span class="n">micro</span> <span class="n">avg</span><span class="p">)</span>  <span class="mf">0.9292</span>
+<span class="mi">2025</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">26</span> <span class="mi">22</span><span class="p">:</span><span class="mi">29</span><span class="p">:</span><span class="mi">16</span><span class="p">,</span><span class="mi">776</span> <span class="n">Task_1</span> <span class="o">-</span> <span class="n">TokenClassifier</span> <span class="o">-</span> <span class="n">loss</span><span class="p">:</span> <span class="mf">7.221250534057617</span> <span class="o">-</span> <span class="n">f1</span><span class="o">-</span><span class="n">score</span> <span class="p">(</span><span class="n">micro</span> <span class="n">avg</span><span class="p">)</span>  <span class="mf">0.9077</span>
+<span class="mi">2025</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">26</span> <span class="mi">22</span><span class="p">:</span><span class="mi">29</span><span class="p">:</span><span class="mi">16</span><span class="p">,</span><span class="mi">777</span> <span class="n">DEV</span> <span class="p">:</span> <span class="n">loss</span> <span class="mf">3.7549188137054443</span> <span class="o">-</span> <span class="n">f1</span><span class="o">-</span><span class="n">score</span> <span class="p">(</span><span class="n">micro</span> <span class="n">avg</span><span class="p">)</span>  <span class="mf">0.9184</span>
+<span class="mi">2025</span><span class="o">-</span><span class="mi">03</span><span class="o">-</span><span class="mi">26</span> <span class="mi">22</span><span class="p">:</span><span class="mi">29</span><span class="p">:</span><span class="mi">16</span><span class="p">,</span><span class="mi">783</span> <span class="o">----------------------------------------------------------------------------------------------------</span>
+</pre></div>
+</div>
+<section id="prediction">
+<h3>Prediction<a class="headerlink" href="#prediction" title="Link to this heading">#</a></h3>
+<p>A trained model can be loaded and used for prediction like any other model. However, it will make predictions for all
+tasks it was trained with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultitaskModel</span>
+
+<span class="c1"># load the trained multitask model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">MultitaskModel</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s2">&quot;resources/taggers/multitask_test/final-model.pt&quot;</span><span class="p">)</span>
+
+<span class="c1"># create example sentence</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s2">&quot;Mr Smith loves New York&quot;</span><span class="p">)</span>
+
+<span class="c1"># predict (this triggers prediction of all tasks in the multitask model)</span>
+<span class="n">model</span><span class="o">.</span><span class="kp">predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+
+<span class="c1"># print the sentence with POS and chunk tags</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+
+<span class="c1"># inspect the POS tags only</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Part of speech tags are: &quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="s1">&#39;pos&#39;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">data_point</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&quot; </span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="c1"># inspect the chunks only</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Chunks are: &quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="kp">get_labels</span><span class="p">(</span><span class="s1">&#39;np&#39;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">data_point</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s1">&quot; </span><span class="si">{</span><span class="n">label</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will print:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Sentence[5]: &quot;Mr Smith loves New York&quot; → [&quot;Mr&quot;/NNP, &quot;Mr Smith&quot;/NP, &quot;Smith&quot;/NNP, &quot;loves&quot;/VBZ, &quot;loves&quot;/VP, &quot;New&quot;/NNP, &quot;New York&quot;/NP, &quot;York&quot;/NNP]
+
+Part of speech tags are: 
+&quot;Mr&quot; NNP
+&quot;Smith&quot; NNP
+&quot;loves&quot; VBZ
+&quot;New&quot; NNP
+&quot;York&quot; NNP
+
+Chunks are: 
+&quot;Mr Smith&quot; NP
+&quot;loves&quot; VP
+&quot;New York&quot; NP
+</pre></div>
+</div>
+</section>
+</section>
+<section id="example-2-a-token-and-a-document-level-task">
+<h2>Example 2: A token and a document-level task<a class="headerlink" href="#example-2-a-token-and-a-document-level-task" title="Link to this heading">#</a></h2>
+<p>In some cases, you may want to train a multitask model using <a class="reference internal" href="#flair.embeddings.transformer.TransformerWordEmbeddings"><span class="xref myst">TransformerWordEmbeddings</span></a> (token-level embeddings)
+and <a class="reference internal" href="#flair.embeddings.transformer.TransformerDocumentEmbeddings"><span class="xref myst">TransformerDocumentEmbeddings</span></a> (text-level embeddings). For instance, you may want to train a model that can both
+detect topics and entities in online news articles.</p>
+<p>The code is similar to example 1, but you need more general <a class="reference internal" href="../../api/embeddings/generated/flair.embeddings.transformer.TransformerEmbeddings.html#flair.embeddings.transformer.TransformerEmbeddings" title="flair.embeddings.transformer.TransformerEmbeddings"><span class="xref myst py py-class">TransformerEmbeddings</span></a> that can produce both token- and text-level
+embeddings. You also need two different model classes: A <a class="reference internal" href="../../api/generated/flair.models.TextClassifier.html#flair.models.TextClassifier" title="flair.models.TextClassifier"><span class="xref myst py py-class">TextClassifier</span></a> for predicting topics and a <a class="reference internal" href="../../api/generated/flair.models.TokenClassifier.html#flair.models.TokenClassifier" title="flair.models.TokenClassifier"><span class="xref myst py py-class">TokenClassifier</span></a> for
+prediction NER tags:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.embeddings</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerEmbeddings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.datasets</span><span class="w"> </span><span class="kn">import</span> <span class="n">AGNEWS</span><span class="p">,</span> <span class="n">CLEANCONLL</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">TokenClassifier</span><span class="p">,</span> <span class="n">TextClassifier</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.trainers</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelTrainer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.nn.multitask</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_multitask_model_and_corpus</span>
+
+<span class="c1"># --- Embeddings that are shared by both models --- #</span>
+<span class="c1"># use a transformer that can do both: sentence-embedding and word-embedding</span>
+<span class="n">shared_embedding</span> <span class="o">=</span> <span class="n">TransformerEmbeddings</span><span class="p">(</span><span class="s2">&quot;distilbert-base-uncased&quot;</span><span class="p">,</span>
+                                         <span class="kp">fine_tune</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                         <span class="n">is_token_embedding</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                         <span class="n">is_document_embedding</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># --- Task 1: Newswire topics, use a TextClassifier for this task --- #</span>
+<span class="n">corpus_1</span> <span class="o">=</span> <span class="n">AGNEWS</span><span class="p">()</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+
+<span class="n">model_1</span> <span class="o">=</span> <span class="n">TextClassifier</span><span class="p">(</span><span class="n">shared_embedding</span><span class="p">,</span>
+                         <span class="n">label_dictionary</span><span class="o">=</span><span class="n">corpus_1</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="s2">&quot;topic&quot;</span><span class="p">),</span>
+                         <span class="kp">label_type</span><span class="o">=</span><span class="s2">&quot;topic&quot;</span><span class="p">)</span>
+
+<span class="c1"># -- Task 2: Named entities on newswire data, use a TokenClassifier for this task --- #</span>
+<span class="n">corpus_2</span> <span class="o">=</span> <span class="n">CLEANCONLL</span><span class="p">()</span><span class="o">.</span><span class="kp">downsample</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+
+<span class="n">model_2</span> <span class="o">=</span> <span class="n">TokenClassifier</span><span class="p">(</span><span class="n">shared_embedding</span><span class="p">,</span>
+                          <span class="n">label_dictionary</span><span class="o">=</span><span class="n">corpus_2</span><span class="o">.</span><span class="kp">make_label_dictionary</span><span class="p">(</span><span class="s2">&quot;ner&quot;</span><span class="p">),</span>
+                          <span class="kp">label_type</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">,</span>
+                          <span class="p">)</span>
+
+<span class="c1"># -- Define mapping (which tagger should train on which model) -- #</span>
+<span class="n">multitask_model</span><span class="p">,</span> <span class="n">multicorpus</span> <span class="o">=</span> <span class="n">make_multitask_model_and_corpus</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="p">(</span><span class="n">model_1</span><span class="p">,</span> <span class="n">corpus_1</span><span class="p">),</span>
+        <span class="p">(</span><span class="n">model_2</span><span class="p">,</span> <span class="n">corpus_2</span><span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># -- Create model trainer and train -- #</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">multitask_model</span><span class="p">,</span> <span class="n">multicorpus</span><span class="p">)</span>
+<span class="n">trainer</span><span class="o">.</span><span class="kp">fine_tune</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;resources/taggers/multitask_news_data&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="id1">
+<h3>Prediction<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>Similar to example 1, you can load and predict tags for both classes with a single predict call:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">flair.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sentence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">flair.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultitaskModel</span>
+
+<span class="c1"># load the trained multitask model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">MultitaskModel</span><span class="o">.</span><span class="kp">load</span><span class="p">(</span><span class="s2">&quot;resources/taggers/multitask_news_data/final-model.pt&quot;</span><span class="p">)</span>
+
+<span class="c1"># create example sentence</span>
+<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s2">&quot;IBM made a lot of profit.&quot;</span><span class="p">)</span>
+
+<span class="n">model</span><span class="o">.</span><span class="kp">predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+
+<span class="c1"># print the sentence with predicted topic and entity tag</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This prints:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Sentence[7]: &quot;IBM made a lot of profit.&quot; → Business (0.8645) → [&quot;IBM&quot;/ORG]
+</pre></div>
+</div>
+<p>Showing that the topic “Business” and the entity “IBM” were detected in this sentence.</p>
+</section>
+</section>
+</section>
+
+
+
+                </article>
+              
+              
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2023 Alan Akbik.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><a href="../../legal-notice/index.html">Legal notice</a></div>
+      
+        <div class="footer-item"><a href="https://twitter.com/alan_akbik" target="_blank">Twitter/X</a></div>
+      
+        <div class="footer-item"><a href="https://www.linkedin.com/in/alan-akbik-9859b1122/" target="_blank">LinkedIn</a></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
