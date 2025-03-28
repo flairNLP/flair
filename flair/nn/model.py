@@ -981,7 +981,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             if return_loss:
                 if unknown_labels:
                     log.info(
-                        f"During evaluation, encountered labels that are not in the label dictionary:\n{data_points_w_unknown_labels}"
+                        f"During evaluation, encountered labels that are not in the label dictionary:\n{unknown_labels}"
                     )
                     if not self.printed_labels:
                         log.warning(f"Labels in label dictionary:\n{self.label_dictionary.get_items()}")
