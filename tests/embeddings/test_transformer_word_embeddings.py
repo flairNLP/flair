@@ -4,10 +4,12 @@ import warnings
 import pytest
 import torch
 from PIL import Image
+from torch import tensor
 from transformers.utils import is_detectron2_available
 
 from flair.data import BoundingBox, Dictionary, Sentence
 from flair.embeddings import TransformerJitWordEmbeddings, TransformerWordEmbeddings
+from flair.embeddings.transformer import map_tokens_to_subtokens
 from flair.models import SequenceTagger
 from tests.embedding_test_utils import BaseEmbeddingsTest
 
@@ -323,3 +325,77 @@ class TestTransformerWordEmbeddings(BaseEmbeddingsTest):
         for sent_a, sent_b in zip(normal_sentences, onnx_sentences):
             for token_a, token_b in zip(sent_a, sent_b):
                 assert torch.isclose(token_a.get_embedding(), token_b.get_embedding(), atol=1e-6).all()
+
+    def test_token_subtoken_mapping(self):
+        ### Test Case 1: Normal text
+        # text = "BEST DENTIST EVER -"
+
+        # Token and subtoken offsets
+        # tokens = ["[FLERT]", "BEST", "DENTIST", "EVER", "-", "[FLERT]"]
+        token_offsets = [(0, 7), (8, 12), (13, 20), (21, 25), (26, 27), (27, 34)]
+
+        # subtokens = ["[CLS]", "[FLERT]", "▁BEST", "▁D", "ENT", "IST", "▁EVER", "▁-", "[FLERT]", "[SEP]", ]
+        subtoken_offsets = tensor(
+            [[0, 0], [0, 7], [8, 12], [12, 14], [14, 17], [17, 20], [20, 25], [25, 27], [27, 34], [0, 0]]
+        )
+
+        mapping = map_tokens_to_subtokens(subtoken_offsets=subtoken_offsets, token_offsets=token_offsets)
+
+        assert [None, 0, 1, 2, 2, 2, 3, 4, 5, None] == mapping
+
+        ### Test Case 2: Differing tokenizations
+        # text = "So don't be afraid"
+
+        # Token and subtoken offsets
+        # tokens = ["[FLERT]", "So", "do", "n't", "be", "afraid", "[FLERT]"]
+        token_offsets = [(0, 7), (8, 10), (11, 13), (13, 16), (17, 19), (20, 26), (26, 33)]
+
+        # subtokens = ["[CLS]", "[FLERT]", "▁So", "▁don", "'", "t", "▁be", "▁afraid", "[FLERT]", "[SEP]"]
+        subtoken_offsets = tensor(
+            [[0, 0], [0, 7], [8, 10], [10, 14], [14, 15], [15, 16], [16, 19], [19, 26], [26, 33], [0, 0]]
+        )
+
+        mapping = map_tokens_to_subtokens(subtoken_offsets=subtoken_offsets, token_offsets=token_offsets)
+
+        assert [None, 0, 1, 2, 3, 3, 4, 5, 6, None] == mapping
+
+        ### Test Case 3: Text with punctuation and no whitespaces
+        # text = "this and/or that,"
+
+        # Token and subtoken offsets
+        # tokens = ["[FLERT]", "this", "and", "/", "or", "that", ",", "[FLERT]"]
+        token_offsets = [(0, 7), (8, 12), (13, 16), (16, 17), (17, 19), (20, 24), (24, 25), (25, 32)]
+
+        # subtokens = ["[CLS]", "[FLERT]", "▁this", "▁and", "/", "or", "▁that", ",", "[FLERT]", "[SEP]"]
+        subtoken_offsets = tensor(
+            [[0, 0], [0, 7], [8, 12], [12, 16], [16, 17], [17, 19], [19, 24], [24, 25], [25, 32], [0, 0]]
+        )
+
+        mapping = map_tokens_to_subtokens(subtoken_offsets=subtoken_offsets, token_offsets=token_offsets)
+
+        assert [None, 0, 1, 2, 3, 4, 5, 6, 7, None] == mapping
+
+        ### Test Case 4: Suboptimal tokenization caused by limited vocabulary without whitespace
+        # text = "number of public-diplomacy officers"
+
+        # Token and subtoken offsets
+        # tokens = ['number', 'of', 'public', '-', 'diplomacy', 'officers']
+        token_offsets = [(0, 6), (7, 9), (10, 16), (16, 17), (17, 26), (27, 35)]
+
+        # new_subtokens = ['[CLS]', '▁number', '▁of', '▁public', '-', 'diploma', 'cy', '▁officers', '[SEP]']
+        # old_subtokens = ['[CLS]', '▁number', '▁of', '▁public', '▁-', '▁diplomacy', '▁officers', '[SEP]']
+        subtoken_offsets = tensor([[0, 0], [0, 6], [6, 9], [9, 16], [16, 17], [17, 24], [24, 26], [26, 35], [0, 0]])
+
+        assert [None, 0, 1, 2, 3, 4, 5, 6, 7, None] == mapping
+
+        ### Test Case 5: Suboptimal tokenization in which two tokenizer words become one subtoken ("wan" "na" -> "wanna")
+        # text = "I gotta have it"
+
+        # Token and subtoken offsets
+        # tokens = ['I', 'got', 'ta', 'have', 'it']
+        token_offsets = [(0, 1), (2, 5), (5, 7), (8, 12), (13, 15)]
+
+        # new subtokens = ['[CLS]', '▁I', '▁gotta', '▁have', '▁it', '[SEP]']
+        # old subtokens = ['[CLS]', '▁I', '▁got', '▁ta', '▁have', '▁it', '[SEP]']
+        subtoken_offsets = tensor([[0, 0], [0, 1], [1, 7], [7, 12], [12, 15], [0, 0]])
+        assert [None, 0, 1, 2, 3, 4, 5, 6, 7, None] == mapping
