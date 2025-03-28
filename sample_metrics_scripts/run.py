@@ -92,11 +92,12 @@ def run(config, gpu=0):
         for dirpath, _, filenames in os.walk(config_path):
             if any(s in dirpath for s in config['categories']):
                 for f in filenames:
-                    config_filepath = os.path.abspath(os.path.join(dirpath, f))
-                    logger_experiment.info(f"Running experiment from {config_filepath}")
+                    config_filepath = os.path.relpath(os.path.join(dirpath, f))
 
                     with open(config_filepath) as json_file:
                         experiment_config = json.load(json_file)
+                    logger_experiment.info(f"Running category modification experiment... \n\t\tFrom config: {config_filepath}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}\n")
+
                     # here the experiment is ran for all noise types listed in the config file
                     main(experiment_config, gpu)
                     logger_experiment.info(f"Finished experiment from {config_filepath}")
@@ -112,6 +113,7 @@ def run(config, gpu=0):
         # 5. Merge the optimal parameter sets from 2. and the summarized test scores from 4.
         merge_tables(f"{config['paths']['results_tables_path']}/{corpus_name}", config['parameters']['modes'], categories_ids = categories_ids)
 
+    logger_experiment.info(f"Finished all experiments and summarized scores.")
 
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser()
