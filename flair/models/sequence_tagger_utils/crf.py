@@ -1,6 +1,7 @@
 import torch
 
 import flair
+from flair.data import Dictionary
 
 START_TAG: str = "<START>"
 STOP_TAG: str = "<STOP>"
@@ -14,7 +15,7 @@ class CRF(torch.nn.Module):
     but also on previous seen annotations.
     """
 
-    def __init__(self, tag_dictionary, tagset_size: int, init_from_state_dict: bool) -> None:
+    def __init__(self, tag_dictionary: Dictionary, tagset_size: int, init_from_state_dict: bool) -> None:
         """Initialize the Conditional Random Field.
 
         Args:

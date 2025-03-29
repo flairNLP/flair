@@ -870,11 +870,24 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         # pass data points through network to get encoded data point tensor
         data_point_tensor = self._encode_data_points(sentences, data_points)
 
-        # decode, passing label tensor if needed, such as for prototype updates
+        # Get sequence lengths for CRF decoder if the method exists
+        sequence_lengths = None
+        if hasattr(self, '_get_sequence_lengths_for_batch'):
+            sequence_lengths = self._get_sequence_lengths_for_batch(sentences)
+
+        # Prepare kwargs for decoder
+        decoder_kwargs = {}
+        
+        # Add label_tensor to kwargs if decoder accepts it
         if "label_tensor" in inspect.signature(self.decoder.forward).parameters:
-            scores = self.decoder(data_point_tensor, label_tensor=label_tensor)
-        else:
-            scores = self.decoder(data_point_tensor)
+            decoder_kwargs["label_tensor"] = label_tensor
+        
+        # Add sequence_lengths to kwargs if decoder accepts it and it's available
+        if "sequence_lengths" in inspect.signature(self.decoder.forward).parameters and sequence_lengths is not None:
+            decoder_kwargs["sequence_lengths"] = sequence_lengths
+
+        # Call decoder with collected kwargs
+        scores = self.decoder(data_point_tensor, **decoder_kwargs)
 
         # an optional masking step (no masking in most cases)
         scores = self._mask_scores(scores, data_points)
@@ -883,6 +896,16 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         return self._calculate_loss(scores, label_tensor)
 
     def _calculate_loss(self, scores: torch.Tensor, labels: torch.Tensor) -> tuple[torch.Tensor, int]:
+        """Calculate loss using either standard loss functions or CRF loss if CRFDecoder is used."""
+        # Check if we're using the CRFDecoder
+        if isinstance(scores, tuple) and len(scores) == 3:
+            from flair.models.sequence_tagger_utils.crf_decoder import CRFDecoder
+            if isinstance(self.decoder, CRFDecoder):
+                # If so, use ViterbiLoss directly
+                loss = self.decoder.viterbi_loss(scores, labels)
+                return loss, labels.size(0)
+        
+        # Otherwise, use standard loss function
         return self.loss_function(scores, labels), labels.size(0)
 
     def _sort_data(self, data_points: list[DT]) -> list[DT]:
@@ -967,10 +990,47 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 if not data_points:
                     continue
 
-                # pass data points through network and decode
+                # Get sequence lengths if available
+                sequence_lengths = None
+                if hasattr(self, '_get_sequence_lengths_for_batch'):
+                    sequence_lengths = self._get_sequence_lengths_for_batch(batch)
+
+                # Prepare kwargs for decoder
+                decoder_kwargs = {}
+                if "sequence_lengths" in inspect.signature(self.decoder.forward).parameters and sequence_lengths is not None:
+                    decoder_kwargs["sequence_lengths"] = sequence_lengths
+
+                # Pass data points through network and decode
                 data_point_tensor = self._encode_data_points(batch, data_points)
-                scores = self.decoder(data_point_tensor)
+                scores = self.decoder(data_point_tensor, **decoder_kwargs)
                 scores = self._mask_scores(scores, data_points)
+
+                # Handle CRFDecoder decoding
+                from flair.models.sequence_tagger_utils.crf_decoder import CRFDecoder
+                if isinstance(scores, tuple) and isinstance(self.decoder, CRFDecoder):
+                    # If using CRFDecoder, directly use its decode method
+                    predicted_tags, all_tags = self.decoder.decode(
+                        scores, 
+                        return_probabilities_for_all_classes,
+                        data_points
+                    )
+                    
+                    # Add the predicted tags to the data points
+                    for data_point, tags in zip(data_points, predicted_tags):
+                        for tag, score in tags:
+                            if tag != "O":  # Skip "O" tags
+                                data_point.add_label(typename=label_name, value=tag, score=score)
+                    
+                    # If requested, add all tags
+                    if return_probabilities_for_all_classes and all_tags:
+                        for data_point, point_all_tags in zip(data_points, all_tags):
+                            for token_tags in point_all_tags:
+                                for label in token_tags:
+                                    if label.value != "O":  # Skip "O" tags
+                                        data_point.add_label(typename=label_name, value=label.value, score=label.score)
+                    
+                    # Skip the regular prediction logic
+                    continue
 
                 # if anything could possibly be predicted
                 if data_points:
@@ -1101,3 +1161,26 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
         from typing import cast
 
         return cast("DefaultClassifier", super().load(model_path=model_path))
+
+    def _get_sequence_lengths_for_batch(self, sentences: list[DT]) -> torch.IntTensor:
+        """Get the lengths of all sequences in the batch.
+        
+        This is used by decoders that need sequence length information, such as CRF.
+        
+        Args:
+            sentences: Batch of sentences
+            
+        Returns:
+            Tensor containing the length of each sequence in the batch
+        """
+        # For text classifiers, each sentence is a single sequence
+        if isinstance(sentences[0], Sentence) and not hasattr(sentences[0], 'tokens'):
+            return torch.ones(len(sentences), dtype=torch.int, device=flair.device)
+        
+        # For sequence taggers, get the actual token length
+        lengths = torch.tensor(
+            [len(sentence.tokens) for sentence in sentences],
+            dtype=torch.int,
+            device=flair.device
+        )
+        return lengths

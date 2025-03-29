@@ -46,7 +46,7 @@ class ViterbiLoss(torch.nn.Module):
         # scores_at_targets[range(features.shape[0]), lengths.values -1]
         # Squeeze crf scores matrices in 1-dim shape and gather scores at targets by matrix indices
         scores_at_targets = torch.gather(features.view(batch_size, seq_len, -1), 2, targets_matrix_indices)
-        scores_at_targets = pack_padded_sequence(scores_at_targets, lengths, batch_first=True)[0]
+        scores_at_targets = pack_padded_sequence(scores_at_targets, lengths, batch_first=True, enforce_sorted=False)[0]
         transitions_to_stop = transitions[
             np.repeat(self.stop_tag, features.shape[0]),
             [target[length - 1] for target, length in zip(targets, lengths)],
