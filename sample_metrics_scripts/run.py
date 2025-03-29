@@ -9,76 +9,76 @@ import datetime
 from pathlib import Path
 import socket
 
-def output_configs(config, category_table_path, cat_id, mode):
+def output_configs(config, category_table_path, cat_id, mode, metrics_list):
     data = pd.read_csv(category_table_path, header = 0, index_col=[0,1])
     data.columns = data.columns.str.strip()
     experiment_configs = []
 
     for ind, row in data.iterrows():
+        if str(ind[0]).strip() in metrics_list:
+            print(row['epoch'])
 
-        print(row['epoch'])
+            # define the base config properties
+            base_config = {
 
-        # define the base config properties
-        base_config = {
-
-        "experiment_name": "relabel_cat"+cat_id,
-        
-        "paths": {
-            "resources_path": f"{config['paths']['resources_path']}/relabel_cat{cat_id}/",
-            "data_path":config['paths']['data_path'],
-            "train_filename_extension" :config['paths']['train_filename_extension'],
-            "dev_filename_extension" :config['paths']['dev_filename_extension'],
-            "test_filename_extension" :config['paths']['test_filename_extension'],
-            "baseline_paths":{
-                "EE":config['paths']['baseline_paths']['EE'],
-                "standard":config['paths']['baseline_paths']['standard'],
+            "experiment_name": "relabel_cat"+cat_id,
+            
+            "paths": {
+                "resources_path": f"{config['paths']['resources_path']}/relabel_cat{cat_id}/",
+                "data_path":config['paths']['data_path'],
+                "train_filename_extension" :config['paths']['train_filename_extension'],
+                "dev_filename_extension" :config['paths']['dev_filename_extension'],
+                "test_filename_extension" :config['paths']['test_filename_extension'],
+                "baseline_paths":{
+                    "EE":config['paths']['baseline_paths']['EE'],
+                    "standard":config['paths']['baseline_paths']['standard'],
+                }
+            },
+            "parameters": {
+                "batch_size":config['parameters']['batch_size'],
+                "learning_rate":config['parameters']['learning_rate'],
+                "num_epochs":config['parameters']['num_epochs'],
+                "model":config['parameters']['model'],
+                "monitor_test":config['parameters']['monitor_test'],
+                "scheduler":config['parameters']['scheduler'],
+                "metrics_mode":config['parameters']['metrics_mode'],
+                "model_reinit":config['parameters']['model_reinit'],
+                "decoder_init":config['parameters']['decoder_init'],
+                "modify_category1":False,
+                "modify_category2":False,
+                "modify_category3":False,
+                "modify_category4":False,
+            },
+            "corpora" : config['corpora'],
+            "seeds":config['seeds']
             }
-        },
-        "parameters": {
-            "batch_size":config['parameters']['batch_size'],
-            "learning_rate":config['parameters']['learning_rate'],
-            "num_epochs":config['parameters']['num_epochs'],
-            "model":config['parameters']['model'],
-            "monitor_test":config['parameters']['monitor_test'],
-            "scheduler":config['parameters']['scheduler'],
-            "metrics_mode":config['parameters']['metrics_mode'],
-            "model_reinit":config['parameters']['model_reinit'],
-            "decoder_init":config['parameters']['decoder_init'],
-            "modify_category1":False,
-            "modify_category2":False,
-            "modify_category3":False,
-            "modify_category4":False,
-        },
-        "corpora" : config['corpora'],
-        "seeds":config['seeds']
-        }
 
 
-        base_config['parameters']['seq_tagger_mode'] = mode
+            base_config['parameters']['seq_tagger_mode'] = mode
 
-        # add current category modification parameters with 'mask' option
-        base_config['parameters']['modify_category'+cat_id] = {
-                                                        'epoch_change': str(row['epoch']).strip(),
-                                                        'metric':str(ind[0]).strip(),
-                                                        'f_type':ind[1].strip(),
-                                                        'threshold':str(row['threshold']).strip(),
-                                                        'direction':row['direction'],
-                                                        'modification':'mask'
-                                                        }
-        experiment_configs.append(base_config)
-        
-        if int(cat_id) == 2 or int(cat_id) == 4:
-            # add current category modification parameters with 'relabel' option
-            # *only for categories 2 and 4 (because we have an alternative label there: the predicted one)
+            # add current category modification parameters with 'mask' option
             base_config['parameters']['modify_category'+cat_id] = {
-                                                        'epoch_change': str(row['epoch']).strip(),
-                                                        'metric':str(ind[0]).strip(),
-                                                        'f_type':ind[1].strip(),
-                                                        'threshold':str(row['threshold']).strip(),
-                                                        'direction':row['direction'].strip(),
-                                                        'modification':'relabel'
-                                                        }
+                                                            'epoch_change': str(row['epoch']).strip(),
+                                                            'metric':str(ind[0]).strip(),
+                                                            'f_type':ind[1].strip(),
+                                                            'threshold':str(row['threshold']).strip(),
+                                                            'direction':row['direction'],
+                                                            'modification':'mask'
+                                                            }
             experiment_configs.append(base_config)
+            
+            if int(cat_id) == 2 or int(cat_id) == 4:
+                # add current category modification parameters with 'relabel' option
+                # *only for categories 2 and 4 (because we have an alternative label there: the predicted one)
+                base_config['parameters']['modify_category'+cat_id] = {
+                                                            'epoch_change': str(row['epoch']).strip(),
+                                                            'metric':str(ind[0]).strip(),
+                                                            'f_type':ind[1].strip(),
+                                                            'threshold':str(row['threshold']).strip(),
+                                                            'direction':row['direction'].strip(),
+                                                            'modification':'relabel'
+                                                            }
+                experiment_configs.append(base_config)
     return experiment_configs
     
 
@@ -123,13 +123,15 @@ def run(config, gpu=0):
     flair.device = torch.device("cuda:" + str(gpu))
     seeds = [int(seed) for seed in config['seeds']]
     corpora = config['corpora']
-
-    for corpus_name in corpora:
-
-        # 1. Run baseline for each mode: standard fine-tuning and early-exit fine-tuning
-        for mode in config['parameters']['modes']:
+    
+    for mode in config['parameters']['modes']:
+        if not os.path.exists(config['paths']['parameter_settings_tables_path'][mode]):
+            corpus_name = config['source_corpus']
+            print(corpus_name)
+            # 1. Run baseline for each mode: standard fine-tuning and early-exit fine-tuning
             temp_f1_scores = []
             if not os.path.exists(f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/{seeds[0]}") and not os.path.exists(f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/{seeds[0]}_with_init-{config['parameters']['decoder_init']['lr']}"):
+                # both source and downstream corpora baseline paths are in the same folder
                 logger_experiment.info(f"Running baseline for {corpus_name}, {mode} mode")
                 for seed in seeds:
                     logger_experiment.info(f"Running seed {seed}")
@@ -145,32 +147,33 @@ def run(config, gpu=0):
                     f.write(f"{label} \t{np.mean(temp_f1_scores)!s} \t {np.std(temp_f1_scores)!s} \n")
                 logger_experiment.info(f"Baseline for {corpus_name}, {mode} mode for seeds {seeds} finished")
 
-        # Optional: plot histograms of metrics for baseline runs, for each seed
-        if config['plot_histograms']:
-            logger_experiment.info(f"Plotting histograms and lineplot for {corpus_name} corpus")
-            for mode in config['parameters']['modes']:
-                plot_metric_distributions(base_path=f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/",
-                                          mode=mode, seeds=seeds, sample_metrics=config['sample_metrics'][mode],
-                                          dset='train', max_epochs=int(config['parameters']['num_epochs']) + 1)
-            plot_category_membership_through_epochs(base_paths = config['paths']['baseline_paths'] , corpus_name = corpus_name, seeds= seeds,dset = 'train', max_epochs=11)
+            # Optional: plot histograms of metrics for baseline runs, for each seed
+            if config['plot_histograms']:
+                logger_experiment.info(f"Plotting histograms and lineplot for {corpus_name} corpus")
+                for mode in config['parameters']['modes']:
+                    plot_metric_distributions(base_path=f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/",
+                                            mode=mode, seeds=seeds, sample_metrics=config['sample_metrics'][mode],
+                                            dset='train', max_epochs=int(config['parameters']['num_epochs']) + 1)
+                plot_category_membership_through_epochs(base_paths = config['paths']['baseline_paths'] , corpus_name = corpus_name, seeds= seeds,dset = 'train', max_epochs=11)
 
-        # 2. Find optimal parameter sets for each sample metric, mode and category
-        logger_experiment.info(f"Optimizing F scores for {corpus_name}; saving to csv files and generating config json files")
-        optimize_F1s(config, corpus_name=corpus_name)
+            # 2. Find optimal parameter sets for each sample metric, mode and category
+            logger_experiment.info(f"Optimizing F scores for {corpus_name}; saving to csv files and generating config json files")
+            optimize_F1s(config, corpus_name=corpus_name)
 
     # 3. Run experiment (relabel or mask each category) based on the optimal parameter sets from 2. 
     for mode in config['parameters']['modes']:
         parameter_settings_path = config['paths']['parameter_settings_tables_path'][mode]
         logger_experiment.info(f"Running experiment for {mode} mode.")
+        metrics_list = config['sample_metrics'][mode]
 
         for cat in config['categories']:
             category_table_path = f"{parameter_settings_path}/optimal_F1s_{cat}.csv"
             logger_experiment.info(f"Read parameter settings for {cat} from {category_table_path}.")
-            experiment_configs = output_configs(config, category_table_path, cat[-1], mode)
+            experiment_configs = output_configs(config, category_table_path, cat[-1], mode, metrics_list)
 
             for experiment_config in experiment_configs:
 
-                logger_experiment.info(f"Running category modification experiment... \n\t\tFor metric: {experiment_config['parameters']['modify_'+cat]['metric']}\n\t\tFor f_type: {experiment_config['parameters']['modify_'+cat]['f_type']}\n\t\tFor modification: {experiment_config['parameters']['modify_'+cat]['modification']}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}\n")
+                logger_experiment.info(f"Running category modification experiment... \n\t\tFor metric: {experiment_config['parameters']['modify_'+cat]['metric']}\n\t\tFor f_type: {experiment_config['parameters']['modify_'+cat]['f_type']}\n\t\tFor modification: {experiment_config['parameters']['modify_'+cat]['modification']}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}")
 
                 # here the experiment is ran for all noise types listed in the config file
                 main(experiment_config, gpu)
@@ -185,8 +188,7 @@ def run(config, gpu=0):
         summarize_test_scores(config['paths']['results_tables_path'], corpus_name, resources_path=config['paths']['resources_path'], categories_ids = categories_ids)
 
         # 5. Merge the optimal parameter sets from 2. and the summarized test scores from 4.
-        merge_tables(f"{config['paths']['results_tables_path']}/{corpus_name}", config['parameters']['modes'], categories_ids = categories_ids)
-
+        merge_tables(f"{config['paths']['results_tables_path']}/{corpus_name}", config['paths']['parameter_settings_tables_path'], config['parameters']['modes'], categories_ids = categories_ids)
     logger_experiment.info(f"Finished all experiments and summarized scores.")
 
 if __name__ == "__main__":

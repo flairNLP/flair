@@ -28,8 +28,9 @@
         "modes": ["EE", "standard"],
         "decoder_init":{"lr":"0.3", "num_epochs":"10"}
     },
+    "source_corpus": "noise_crowd",
     "corpora": [
-        "noise_crowd"
+        "noise_llm"
     ],
     "seeds": [
         "100"

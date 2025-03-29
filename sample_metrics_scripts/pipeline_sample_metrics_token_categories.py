@@ -808,46 +808,41 @@ def main(config, gpu=0):
     else:
         category_id = '0'
 
-    flag_run_baseline = False if len(paths_to_baselines) > 0 else True
-
-    if category_id == '0' and flag_run_baseline:
-        experiment_path = f'{config["paths"]["resources_path"]}baseline/{seq_tagger_mode}/'  # for now, only one seq tagger mode is allowed.
-    else:
-        experiment_path = config["paths"][
-                              "resources_path"] + "category" + category_id + os.sep + f"{seq_tagger_mode}_{category_configs[0]['metric']}" + os.sep + \
+    experiment_path = config["paths"]["resources_path"] + "category" + category_id + os.sep + f"{seq_tagger_mode}_{category_configs[0]['metric']}" + os.sep + \
                           category_configs[0]['f_type'] + os.sep + category_configs[0]['modification'] + os.sep
 
     seeds = [int(seed) for seed in config['seeds']]
     tag_type = "ner"
 
-    if not os.path.exists(experiment_path):
-        os.makedirs(experiment_path)
+    if category_id != '0':
+        if not os.path.exists(experiment_path):
+            os.makedirs(experiment_path)
 
-    with open(experiment_path + "config.json", "w", encoding='utf-8') as f:
-        json.dump(config, f)
+        with open(experiment_path + "config.json", "w", encoding='utf-8') as f:
+            json.dump(config, f)
 
     for corpus_name in corpora:
         output_path = experiment_path + corpus_name
+        
+        flag_run_baseline = True 
 
+        if len(paths_to_baselines) > 0 and os.path.exists(f"{config['paths']['baseline_paths'][seq_tagger_mode]}/{corpus_name}/test_results.tsv"): # here we assume that the baseline was ran for all seeds and for the correct seeds.
+            # if a valid baseline path is not provided, then run the baseline
+            flag_run_baseline = False
+            
         temp_f1_scores = []
-
-        baseline_modes = [config['parameters'][
-                              'seq_tagger_mode']]  ## change this later to allow e.g. PD for category 1 and confidence for category 2
-
-        paths_to_baselines_seed = {}
+        temp_baseline_f1_scores = []
 
         for seed in seeds:
 
             if flag_run_baseline:
-                for mode in baseline_modes:
-                    if category_id == '0':
-                        max_epochs = int(config['parameters']['num_epochs'])
-                    else:
-                        max_epochs = int(category_configs[-1]['epoch_change'])
-                    paths_to_baselines_seed[mode], baseline_score = run_baseline(mode, seed, corpus_name, config,
-                                                                                 max_epochs)
-            else:
-                paths_to_baselines_seed = {k: f'{paths_to_baselines[k]}' for k in baseline_modes}
+                if category_id == '0':
+                    max_epochs = int(config['parameters']['num_epochs'])
+                else:
+                    max_epochs = int(category_configs[-1]['epoch_change'])
+                path_to_baselines_seed, baseline_score = run_baseline(seq_tagger_mode, seed, corpus_name, config,
+                                                                                max_epochs)
+                temp_baseline_f1_scores.append(baseline_score)
 
             if category_id != '0':
                 score = run_experiment(seed, config, category_configs, corpus_name, tag_type, category_id,
@@ -863,6 +858,12 @@ def main(config, gpu=0):
             f.write("params\tmean\tstd\n")
             label = "f1"
             f.write(f"{label} \t{np.mean(temp_f1_scores)!s} \t {np.std(temp_f1_scores)!s} \n")
+
+        if flag_run_baseline:
+            with open(paths_to_baselines[seq_tagger_mode] + os.sep + corpus_name+os.sep+"test_results.tsv", "w", encoding='utf-8') as f:
+                f.write("params\tmean\tstd\n")
+                label = "f1"
+                f.write(f"{label} \t{np.mean(temp_baseline_f1_scores)!s} \t {np.std(temp_baseline_f1_scores)!s} \n")
 
 
 if __name__ == "__main__":

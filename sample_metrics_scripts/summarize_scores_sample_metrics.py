@@ -96,24 +96,25 @@ def summarize_test_scores(results_tables_path, corpus_name, resources_path,   ca
                             #optimize_F1s_output.write(f"{metric.split('_')[1:]}, {f_type}, {modif}, {0}, {0}\n")
 
 
-def merge_tables(results_tables_path, modes, categories_ids):
+def merge_tables(results_tables_path, parameter_settings_tables_path, modes, categories_ids):
 
     for category in categories_ids:
 
-        data2 = pd.read_csv(results_tables_path+os.sep+'test_scores'+os.sep+'category'+category+'_test_scores.csv',header = 0, index_col=[0,1, 2])
+        test_scores_df = pd.read_csv(results_tables_path+os.sep+'test_scores'+os.sep+'category'+category+'_test_scores.csv',header = 0, index_col=[0,1, 2])
 
         full_data = None
         for mode in modes:
 
             base_path1 = f'{results_tables_path}/{mode}_mode'
 
-            data1 = pd.read_csv(base_path1+os.sep+'optimal_F1s_category'+category+'.csv',header = 0, index_col=[0,1])
-            logger_experiment.debug(data1)
+            parameter_settings_df = pd.read_csv(parameter_settings_tables_path[mode]+os.sep+'optimal_F1s_category'+category+'.csv',header = 0, index_col=[0,1])
+
+            logger_experiment.debug(parameter_settings_df)
 
             if full_data is None:
-                full_data = pd.merge(data1, data2, left_index=True, right_index=True)
+                full_data = pd.merge(parameter_settings_df, test_scores_df, left_index=True, right_index=True)
             else:
-                full_data = pd.concat([full_data, pd.merge(data1, data2, left_index=True, right_index=True)], axis = 0)
+                full_data = pd.concat([full_data, pd.merge(parameter_settings_df, test_scores_df, left_index=True, right_index=True)], axis = 0)
 
         final_tables_path = results_tables_path+os.sep+'final_tables'
 
