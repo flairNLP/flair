@@ -10,9 +10,9 @@
             "EE":"test_sample_metrics/resources/noisebench/baseline/EE",
             "standard":"test_sample_metrics/resources/noisebench/baseline/standard"
         },
-        "configs_path":{
-            "EE":"test_sample_metrics/configs_EE",
-            "standard":"test_sample_metrics/configs"
+        "parameter_settings_tables_path":{
+            "EE":"test_sample_metrics/sample_metrics_results/noise_crowd/EE_mode",
+            "standard":"test_sample_metrics/sample_metrics_results/noise_crowd/standard_mode"
         },
         "results_tables_path":"test_sample_metrics/sample_metrics_results"
     },

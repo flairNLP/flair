@@ -9,6 +9,80 @@ import datetime
 from pathlib import Path
 import socket
 
+def output_configs(config, category_table_path, cat_id, mode):
+    data = pd.read_csv(category_table_path, header = 0, index_col=[0,1])
+    data.columns = data.columns.str.strip()
+    experiment_configs = []
+
+    for ind, row in data.iterrows():
+
+        print(row['epoch'])
+
+        # define the base config properties
+        base_config = {
+
+        "experiment_name": "relabel_cat"+cat_id,
+        
+        "paths": {
+            "resources_path": f"{config['paths']['resources_path']}/relabel_cat{cat_id}/",
+            "data_path":config['paths']['data_path'],
+            "train_filename_extension" :config['paths']['train_filename_extension'],
+            "dev_filename_extension" :config['paths']['dev_filename_extension'],
+            "test_filename_extension" :config['paths']['test_filename_extension'],
+            "baseline_paths":{
+                "EE":config['paths']['baseline_paths']['EE'],
+                "standard":config['paths']['baseline_paths']['standard'],
+            }
+        },
+        "parameters": {
+            "batch_size":config['parameters']['batch_size'],
+            "learning_rate":config['parameters']['learning_rate'],
+            "num_epochs":config['parameters']['num_epochs'],
+            "model":config['parameters']['model'],
+            "monitor_test":config['parameters']['monitor_test'],
+            "scheduler":config['parameters']['scheduler'],
+            "metrics_mode":config['parameters']['metrics_mode'],
+            "model_reinit":config['parameters']['model_reinit'],
+            "decoder_init":config['parameters']['decoder_init'],
+            "modify_category1":False,
+            "modify_category2":False,
+            "modify_category3":False,
+            "modify_category4":False,
+        },
+        "corpora" : config['corpora'],
+        "seeds":config['seeds']
+        }
+
+
+        base_config['parameters']['seq_tagger_mode'] = mode
+
+        # add current category modification parameters with 'mask' option
+        base_config['parameters']['modify_category'+cat_id] = {
+                                                        'epoch_change': str(row['epoch']).strip(),
+                                                        'metric':str(ind[0]).strip(),
+                                                        'f_type':ind[1].strip(),
+                                                        'threshold':str(row['threshold']).strip(),
+                                                        'direction':row['direction'],
+                                                        'modification':'mask'
+                                                        }
+        experiment_configs.append(base_config)
+        
+        if int(cat_id) == 2 or int(cat_id) == 4:
+            # add current category modification parameters with 'relabel' option
+            # *only for categories 2 and 4 (because we have an alternative label there: the predicted one)
+            base_config['parameters']['modify_category'+cat_id] = {
+                                                        'epoch_change': str(row['epoch']).strip(),
+                                                        'metric':str(ind[0]).strip(),
+                                                        'f_type':ind[1].strip(),
+                                                        'threshold':str(row['threshold']).strip(),
+                                                        'direction':row['direction'].strip(),
+                                                        'modification':'relabel'
+                                                        }
+            experiment_configs.append(base_config)
+    return experiment_configs
+    
+
+
 def setup_logging(config):
     servername = socket.gethostname()
     device = torch.cuda.current_device()
@@ -86,21 +160,21 @@ def run(config, gpu=0):
 
     # 3. Run experiment (relabel or mask each category) based on the optimal parameter sets from 2. 
     for mode in config['parameters']['modes']:
-        config_path = config['paths']['configs_path'][mode]
-        logger_experiment.info(f"Running experiment for {mode} mode. Read configs from {config_path}.")
+        parameter_settings_path = config['paths']['parameter_settings_tables_path'][mode]
+        logger_experiment.info(f"Running experiment for {mode} mode.")
 
-        for dirpath, _, filenames in os.walk(config_path):
-            if any(s in dirpath for s in config['categories']):
-                for f in filenames:
-                    config_filepath = os.path.relpath(os.path.join(dirpath, f))
+        for cat in config['categories']:
+            category_table_path = f"{parameter_settings_path}/optimal_F1s_{cat}.csv"
+            logger_experiment.info(f"Read parameter settings for {cat} from {category_table_path}.")
+            experiment_configs = output_configs(config, category_table_path, cat[-1], mode)
 
-                    with open(config_filepath) as json_file:
-                        experiment_config = json.load(json_file)
-                    logger_experiment.info(f"Running category modification experiment... \n\t\tFrom config: {config_filepath}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}\n")
+            for experiment_config in experiment_configs:
 
-                    # here the experiment is ran for all noise types listed in the config file
-                    main(experiment_config, gpu)
-                    logger_experiment.info(f"Finished experiment from {config_filepath}")
+                logger_experiment.info(f"Running category modification experiment... \n\t\tFor metric: {experiment_config['parameters']['modify_'+cat]['metric']}\n\t\tFor f_type: {experiment_config['parameters']['modify_'+cat]['f_type']}\n\t\tFor modification: {experiment_config['parameters']['modify_'+cat]['modification']}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}\n")
+
+                # here the experiment is ran for all noise types listed in the config file
+                main(experiment_config, gpu)
+                logger_experiment.info(f"Finished experiment")
 
 
     categories_ids = [cat[-1] for cat in config['categories']]

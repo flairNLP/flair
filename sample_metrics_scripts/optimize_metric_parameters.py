@@ -234,7 +234,7 @@ def output_config(category, metric, f_type, epoch, threshold, direction, mode, c
 def write_output(file, metric, f_types, score, epoch, threshold, direction, category, mode, config, corpus_name):
     f_type_str = '_'.join(f_types) if isinstance(f_types, list) else f_types
     file.write(f"{metric}, {f_type_str}, {score}, {epoch}, {threshold}, {direction}\n")
-    output_config(category, metric, f_type_str, epoch, threshold, direction, mode, config, corpus_name)
+    # output_config(category, metric, f_type_str, epoch, threshold, direction, mode, config, corpus_name)
 
 
 def optimize_F1s(config, corpus_name):
