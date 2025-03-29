@@ -102,21 +102,41 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
     def _get_data_points_from_sentence(self, sentence: Sentence) -> list[Token]:
         # special handling during training if this is a span prediction problem
         if self.training and self.span_prediction_problem:
-            for token in sentence.tokens:
-                token.set_label(self.label_type, "O")
+
+            # Simplified Check: If the first token has a non-'O' label, assume conversion is done.
+            needs_conversion = True
+            if sentence.tokens:
+                first_token_label = sentence.tokens[0].get_label(self.label_type)
+                # If a label exists and it's not 'O', conversion is likely done.
+                if first_token_label and first_token_label.value != 'O':
+                     needs_conversion = False
+
+            if needs_conversion:
+                # Reset token labels to 'O'
+                for token in sentence.tokens:
+                    token.set_label(self.label_type, "O")
+
+                # Apply BIOES/BIO tags based on spans
                 for span in sentence.get_spans(self.label_type):
                     span_label = span.get_label(self.label_type).value
-                    if len(span) == 1:
-                        if self.span_encoding == "BIOES":
+
+                    # --- Simplified BIO/BIOES Tagging ---
+                    if not span.tokens: continue # Skip empty spans if they somehow occur
+
+                    # 1. Apply standard BIO tags
+                    span.tokens[0].set_label(self.label_type, "B-" + span_label)
+                    for i in range(1, len(span.tokens)):
+                        span.tokens[i].set_label(self.label_type, "I-" + span_label)
+
+                    # 2. Adjust for BIOES encoding if necessary
+                    if self.span_encoding == "BIOES":
+                        if len(span.tokens) == 1:
+                            # Single-token span becomes S-
                             span.tokens[0].set_label(self.label_type, "S-" + span_label)
-                        elif self.span_encoding == "BIO":
-                            span.tokens[0].set_label(self.label_type, "B-" + span_label)
-                    else:
-                        for token in span.tokens:
-                            token.set_label(self.label_type, "I-" + span_label)
-                        span.tokens[0].set_label(self.label_type, "B-" + span_label)
-                        if self.span_encoding == "BIOES":
+                        else:
+                            # Multi-token span: last token becomes E-
                             span.tokens[-1].set_label(self.label_type, "E-" + span_label)
+                    # --- End of Simplified Tagging ---
 
         return sentence.tokens
 
