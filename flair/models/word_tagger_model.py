@@ -103,25 +103,36 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         # special handling during training if this is a span prediction problem
         if self.training and self.span_prediction_problem:
 
-            # Simplified Check: If the first token has a non-'O' label, assume conversion is done.
-            needs_conversion = True
-            if sentence.tokens:
-                first_token_label = sentence.tokens[0].get_label(self.label_type)
-                # If a label exists and it's not 'O', conversion is likely done.
-                if first_token_label and first_token_label.value != 'O':
-                     needs_conversion = False
-
-            if needs_conversion:
-                # Reset token labels to 'O'
+            # --- Initial Check: Does the sentence contain any spans for this label type? ---
+            relevant_spans = sentence.get_spans(self.label_type)
+            if not relevant_spans:
+                # If no spans exist, ensure all tokens are labeled 'O' and skip further processing.
                 for token in sentence.tokens:
                     token.set_label(self.label_type, "O")
 
-                # Apply BIOES/BIO tags based on spans
-                for span in sentence.get_spans(self.label_type):
-                    span_label = span.get_label(self.label_type).value
+                return sentence.tokens # Return early as no BIES conversion is needed
+            # --- End Initial Span Check ---
 
-                    # --- Simplified BIO/BIOES Tagging ---
-                    if not span.tokens: continue # Skip empty spans if they somehow occur
+            # --- Conversion Check (based on first token of first span) ---
+            needs_conversion = True
+            # Check the first token of the first span
+            first_span = relevant_spans[0]
+            if first_span.tokens: # Ensure the span is not empty
+                first_token = first_span.tokens[0]
+                label = first_token.get_label(self.label_type)
+                # If the first token has a B- or S- tag, assume conversion is done
+                if label and label.value.startswith(('B-', 'S-')):
+                    needs_conversion = False
+            # --- End of Simplified Check ---
+
+            if needs_conversion:
+                # Reset all token labels to 'O' before applying BIES tags from spans
+                for token in sentence.tokens:
+                    token.set_label(self.label_type, "O")
+
+                # Apply BIOES/BIO tags based on the spans we found earlier
+                for span in relevant_spans: # Use the fetched spans
+                    span_label = span.get_label(self.label_type).value
 
                     # 1. Apply standard BIO tags
                     span.tokens[0].set_label(self.label_type, "B-" + span_label)
@@ -136,7 +147,6 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
                         else:
                             # Multi-token span: last token becomes E-
                             span.tokens[-1].set_label(self.label_type, "E-" + span_label)
-                    # --- End of Simplified Tagging ---
 
         return sentence.tokens
 
