@@ -148,28 +148,28 @@ class Dictionary:
             raise IndexError
 
     def get_idx_for_items(self, items: list[str]) -> list[int]:
-        """Retrieves the integer IDs for a list of string items.
-
-        Args:
-            items (list[str]): A list of string items.
-
-        Returns:
-            list[int]: A list of corresponding integer IDs. Uses 0 for unknown items
-                       if `add_unk` is True.
-
-        Raises:
-            IndexError: If any item is not found and `add_unk` is False.
-        """
-        if not hasattr(self, "item2idx_not_encoded"):
-            d = {key.decode("UTF-8"): value for key, value in self.item2idx.items()}
-            self.item2idx_not_encoded = defaultdict(int, d)
-
+        """Retrieves the integer IDs for a list of string items. (No cache version)"""
         if not items:
             return []
-        results = itemgetter(*items)(self.item2idx_not_encoded)
-        if isinstance(results, int):
-            return [results]
-        return list(results)
+
+        indices: list[int] = []
+        unk_idx = 0  # Assuming <unk> is index 0 if add_unk is True
+
+        for item in items:
+            item_bytes = item.encode("utf-8")
+            idx = self.item2idx.get(item_bytes)  # Look up bytes directly
+
+            if idx is not None:
+                indices.append(idx)
+            elif self.add_unk:
+                indices.append(unk_idx)  # Append 0 for <unk>
+            else:
+                # Raise error if not found and add_unk is False
+                log.error(f"Item '{item}' not found in dictionary (add_unk=False).")
+                # ... (error logging) ...
+                raise IndexError(f"Item '{item}' not found in dictionary.")
+
+        return indices
 
     def get_items(self) -> list[str]:
         """Returns a list of all items in the dictionary in order of their IDs."""
