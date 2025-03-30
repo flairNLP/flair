@@ -7,6 +7,7 @@ from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 
 # header for 'weights.txt'
 WEIGHT_NAME = 1
@@ -118,37 +119,40 @@ class Plotter:
 
         figsize = (4 * columns, 3 * rows)
 
-        fig = plt.figure()
-        f, axarr = plt.subplots(rows, columns, figsize=figsize)
+        fig, axarr = plt.subplots(rows, columns, figsize=figsize)
+
+        assert (
+            isinstance(axarr, np.ndarray) and axarr.ndim == 2
+        ), "Expected axarr to be a 2D numpy array based on rows/columns calculation."
 
         c = 0
         r = 0
         for name, values in weights.items():
-            # plot i
-            axarr[r, c].set_title(name, fontsize=6)
+            ax: Axes = axarr[r, c]
+            ax.set_title(name, fontsize=6)
             for _, v in values.items():
-                axarr[r, c].plot(np.arange(0, len(v)), v, linewidth=0.35)
-            axarr[r, c].set_yticks([])
-            axarr[r, c].set_xticks([])
+                ax.plot(np.arange(0, len(v)), v, linewidth=0.35)
+            ax.set_yticks([])
+            ax.set_xticks([])
             c += 1
             if c == columns:
                 c = 0
                 r += 1
 
-        while r != rows and c != columns:
-            axarr[r, c].set_yticks([])
-            axarr[r, c].set_xticks([])
-            c += 1
-            if c == columns:
-                c = 0
-                r += 1
+        while r < rows:
+            while c < columns:
+                ax = axarr[r, c]
+                ax.set_yticks([])
+                ax.set_xticks([])
+                c += 1
+            c = 0
+            r += 1
 
-        # save plots
-        f.subplots_adjust(hspace=0.5)
+        fig.subplots_adjust(hspace=0.5)
         plt.tight_layout(pad=1.0)
         path = file_name.parent / "weights.png"
         plt.savefig(path, dpi=300)
-        log.info(f"Weights plots are saved in {path}")  # to let user know the path of the save plots
+        log.info(f"Weights plots are saved in {path}")
         plt.close(fig)
 
     def plot_training_curves(self, file_name: Union[str, Path], plot_values: list[str] = ["loss", "F1"]):
