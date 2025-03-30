@@ -100,7 +100,37 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
         return prediction_data_point.get_embedding(names)
 
     def _get_data_points_from_sentence(self, sentence: Sentence) -> list[Token]:
-        # special handling during training if this is a span prediction problem
+        """Retrieves the relevant data points (Tokens) from a Sentence.
+
+        If this model predicts spans (i.e., `self.span_prediction_problem` is True)
+        and is currently in training mode (`self.training` is True), this method
+        performs an essential preprocessing step: it converts Span-level labels
+        present in the input `sentence` into Token-level BIOES/BIO tags.
+        For example, a Span "Berlin" labeled as "LOC" might be converted into
+        Token labels B-LOC for "Ber" and E-LOC for "lin" (depending on the
+        `self.span_encoding` setting and tokenization).
+
+        This conversion is crucial for training the model to predict token-level tags.
+        To improve efficiency during multi-epoch training with cached datasets,
+        this method includes an optimization: it checks if the conversion has likely
+        already occurred in a previous epoch. If evidence of prior conversion is
+        found (by checking the tag of the first token of the first span), the
+        expensive conversion process is skipped for that sentence in the current epoch.
+
+        Sentences without any relevant spans for the `self.label_type` are handled
+        efficiently by ensuring all their tokens are explicitly labeled 'O' (if not
+        already) and skipping the conversion checks altogether.
+
+        Args:
+            sentence (Sentence): The input sentence object, potentially containing
+                Span-level labels that need conversion.
+
+        Returns:
+            list[Token]: A list of the Token objects constituting the sentence.
+                If span conversion occurred, these tokens will now have BIOES/BIO
+                tags assigned as labels under `self.label_type`.
+        """
+        # Special handling only during training and only if predicting spans (BIOES/BIO tags)
         if self.training and self.span_prediction_problem:
 
             # --- Initial Check: Does the sentence contain any spans for this label type? ---
@@ -110,18 +140,18 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
                 for token in sentence.tokens:
                     token.set_label(self.label_type, "O")
 
-                return sentence.tokens # Return early as no BIES conversion is needed
+                return sentence.tokens  # Return early as no BIES conversion is needed
             # --- End Initial Span Check ---
 
             # --- Conversion Check (based on first token of first span) ---
             needs_conversion = True
             # Check the first token of the first span
             first_span = relevant_spans[0]
-            if first_span.tokens: # Ensure the span is not empty
+            if first_span.tokens:  # Ensure the span is not empty
                 first_token = first_span.tokens[0]
                 label = first_token.get_label(self.label_type)
                 # If the first token has a B- or S- tag, assume conversion is done
-                if label and label.value.startswith(('B-', 'S-')):
+                if label and label.value.startswith(("B-", "S-")):
                     needs_conversion = False
             # --- End of Simplified Check ---
 
@@ -131,26 +161,47 @@ class TokenClassifier(flair.nn.DefaultClassifier[Sentence, Token]):
                     token.set_label(self.label_type, "O")
 
                 # Apply BIOES/BIO tags based on the spans we found earlier
-                for span in relevant_spans: # Use the fetched spans
+                for span in relevant_spans:  # Use the fetched spans
                     span_label = span.get_label(self.label_type).value
 
-                    # 1. Apply standard BIO tags
+                    # Apply standard BIO tags first.
                     span.tokens[0].set_label(self.label_type, "B-" + span_label)
                     for i in range(1, len(span.tokens)):
                         span.tokens[i].set_label(self.label_type, "I-" + span_label)
 
-                    # 2. Adjust for BIOES encoding if necessary
+                    # Adjust for BIOES encoding if necessary.
                     if self.span_encoding == "BIOES":
                         if len(span.tokens) == 1:
-                            # Single-token span becomes S-
+                            # Single token spans become 'S-'.
                             span.tokens[0].set_label(self.label_type, "S-" + span_label)
                         else:
-                            # Multi-token span: last token becomes E-
+                            # Last token of multi-token spans become 'E-'.
                             span.tokens[-1].set_label(self.label_type, "E-" + span_label)
 
+        # Return the list of tokens, potentially with updated BIOES/BIO labels.
         return sentence.tokens
 
     def _post_process_batch_after_prediction(self, batch, label_name):
+        """Post-processes predicted token-level labels for a batch of sentences.
+
+        If this model predicts spans (i.e., `self.span_prediction_problem` is True),
+        this method reconstructs Span objects from the predicted token-level
+        BIOES/BIO tags assigned by the `predict` method. It identifies sequences
+        of B-, I-, E-, S- tags to form contiguous spans and assigns the
+        corresponding entity type as a Span-level label.
+
+        The original token-level BIOES/BIO prediction labels (identified by
+        `label_name`) are typically removed from the Tokens after spans are created.
+
+        This method modifies the Sentence objects within the `batch` in-place.
+
+        Args:
+            batch (list[Sentence]): The batch of sentences whose predicted
+                token-level labels need post-processing.
+            label_name (str): The label type name used for the temporary
+                token-level BIOES/BIO predictions during the `predict` step.
+                This is usually 'predicted' unless specified otherwise.
+        """
         if self.span_prediction_problem:
             for sentence in batch:
                 # internal variables
