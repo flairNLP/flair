@@ -380,25 +380,25 @@ def test_print_sentence_plain(tasks_base_path):
     sentence = corpus.train[0]
     sentence.infer_space_after()
     assert (
-            sentence.to_tokenized_string() == 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in '
-                                              "einer Weise aufgetreten , "
-                                              'die alles andere als überzeugend war " .'
+        sentence.to_tokenized_string() == 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in '
+        "einer Weise aufgetreten , "
+        'die alles andere als überzeugend war " .'
     )
     assert (
-            sentence.to_plain_string() == 'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer '
-                                          "Weise aufgetreten, die "
-                                          'alles andere als überzeugend war".'
+        sentence.to_plain_string() == 'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer '
+        "Weise aufgetreten, die "
+        'alles andere als überzeugend war".'
     )
 
     sentence = corpus.train[1]
     sentence.infer_space_after()
     assert (
-            sentence.to_tokenized_string() == "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
-                                              "Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
+        sentence.to_tokenized_string() == "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
+        "Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
     )
     assert (
-            sentence.to_plain_string() == "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
-                                          "Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf."
+        sentence.to_plain_string() == "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
+        "Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf."
     )
 
 
@@ -613,6 +613,7 @@ def test_create_sentence_difficult_encoding():
     )
     sentence = Sentence(text, use_tokenizer=StaccatoTokenizer())
     assert len(sentence) == 40
+
 
 def test_sentence_retokenize():
     # Create a sentence with default tokenization
