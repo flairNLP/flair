@@ -316,18 +316,20 @@ class StaccatoTokenizer(Tokenizer):
     - Sequences of numbers are kept together as single tokens
     - Kanji characters are split into individual tokens
     - Uninterrupted sequences of letters (Latin, Cyrillic, etc.) and kana are preserved as single tokens
+    - Whitespace and common zero-width characters are ignored.
     """
 
     def __init__(self):
         super().__init__()
         # Define patterns for different character types
-        self.punctuation = r"[^\w\s]"  # Non-alphanumeric, non-whitespace
+        # Punctuation/Symbols: Non-alphanumeric, non-whitespace, excluding common zero-width characters and BOM
+        self.punctuation = r"[^\w\s\uFE00-\uFE0F\u200B-\u200D\u2060-\u206F\uFEFF]"
         self.digits = r"\d+"  # One or more digits
         self.kanji = r"[\u4e00-\u9fff]"  # Kanji characters
 
         # Unicode ranges for various alphabets and scripts
-        # This includes Latin, Cyrillic, Greek, Hebrew, Arabic, etc.
-        self.alphabets = [
+        # This includes Latin, Cyrillic, Greek, Hebrew, Arabic, Japanese Kana, Korean Hangul, etc.
+        alphabets_list = [
             r"[a-zA-Z]+",  # Latin
             r"[\u0400-\u04FF\u0500-\u052F]+",  # Cyrillic and Cyrillic Supplement
             r"[\u0370-\u03FF\u1F00-\u1FFF]+",  # Greek and Coptic
@@ -337,42 +339,32 @@ class StaccatoTokenizer(Tokenizer):
             r"[\u3040-\u309F]+",  # Hiragana
             r"[\u30A0-\u30FF]+",  # Katakana
             r"[\uAC00-\uD7AF]+",  # Hangul (Korean)
-            # Add more scripts as needed
+            # Add more script ranges here if needed
         ]
+        self.alphabet_pattern = "|".join(alphabets_list)
 
-        # Combined pattern for tokenization
-        self.alphabet_pattern = "|".join(self.alphabets)
+        # Combined pattern for re.findall:
+        # Captures letter sequences OR digit sequences OR Kanji OR punctuation/symbols
+        combined_pattern = f"({self.alphabet_pattern})|({self.digits})|({self.kanji})|({self.punctuation})"
+        # Pre-compile the regex for efficiency
+        self.token_pattern = re.compile(combined_pattern)
 
     def tokenize(self, text: str) -> list[str]:
         """
-        Tokenize the input text according to the defined rules.
+        Tokenize the input text using re.findall to extract valid tokens.
 
         Args:
             text: The input text to tokenize
 
         Returns:
-            A list of tokens
+            A list of tokens (strings)
         """
-        # Create a pattern that matches:
-        # 1. Punctuation characters
-        # 2. Number sequences
-        # 3. Kanji characters individually
-        # 4. Letter sequences from various scripts
-        pattern = f"({self.punctuation}|{self.digits}|{self.kanji})"
+        # Find all matches for the defined token patterns
+        matches = self.token_pattern.findall(text)
 
-        # First split by punctuation, numbers, and kanji
-        raw_tokens = []
-        parts = re.split(pattern, text)
+        # re.findall returns a list of tuples, where each tuple corresponds to the capturing groups.
+        # For a match, only one group will be non-empty. We extract that non-empty group.
+        # Example match: ('word', '', '', '') or ('', '123', '', '') or ('', '', '好', '') or ('', '', '', '.')
+        tokens = [next(filter(None, match_tuple)) for match_tuple in matches]
 
-        # Filter out empty strings
-        for part in parts:
-            if part:
-                # If part is punctuation, number, or kanji, add it directly
-                if re.fullmatch(pattern, part):
-                    raw_tokens.append(part)
-                else:
-                    # For other text, split by whitespace
-                    subparts = part.split()
-                    raw_tokens.extend(subparts)
-
-        return raw_tokens
+        return tokens

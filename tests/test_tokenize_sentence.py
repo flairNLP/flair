@@ -48,29 +48,6 @@ def test_create_sentence_with_extra_whitespace():
     assert sentence.get_token(4).text == "."
 
 
-@pytest.mark.skip(reason="Fix these issues for StaccatoTokenizer in future PR")
-def test_create_sentence_difficult_encoding():
-    text = "so out of the norm ❤ ️ enjoyed every moment️"
-    sentence = Sentence(text)
-    assert len(sentence) == 9
-
-    text = (
-        "equivalently , accumulating the logs as :( 6 ) sl = 1N ∑ t = 1Nlogp "
-        "( Ll | xt \u200b , θ ) where "
-        "p ( Ll | xt \u200b , θ ) represents the class probability output"
-    )
-    sentence = Sentence(text)
-    assert len(sentence) == 37
-
-    text = "This guy needs his own show on Discivery Channel ! ﻿"
-    sentence = Sentence(text)
-    assert len(sentence) == 10
-
-    text = "n't have new vintages."
-    sentence = Sentence(text, use_tokenizer=True)
-    assert len(sentence) == 5
-
-
 def test_create_sentence_word_by_word():
     token1: Token = Token("Munich")
     token2: Token = Token("and")
@@ -403,25 +380,25 @@ def test_print_sentence_plain(tasks_base_path):
     sentence = corpus.train[0]
     sentence.infer_space_after()
     assert (
-        sentence.to_tokenized_string() == 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in '
-        "einer Weise aufgetreten , "
-        'die alles andere als überzeugend war " .'
+            sentence.to_tokenized_string() == 'Schartau sagte dem " Tagesspiegel " vom Freitag , Fischer sei " in '
+                                              "einer Weise aufgetreten , "
+                                              'die alles andere als überzeugend war " .'
     )
     assert (
-        sentence.to_plain_string() == 'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer '
-        "Weise aufgetreten, die "
-        'alles andere als überzeugend war".'
+            sentence.to_plain_string() == 'Schartau sagte dem "Tagesspiegel" vom Freitag, Fischer sei "in einer '
+                                          "Weise aufgetreten, die "
+                                          'alles andere als überzeugend war".'
     )
 
     sentence = corpus.train[1]
     sentence.infer_space_after()
     assert (
-        sentence.to_tokenized_string() == "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
-        "Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
+            sentence.to_tokenized_string() == "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
+                                              "Möbelvertreter , als er einen fliegenden Händler aus dem Libanon traf ."
     )
     assert (
-        sentence.to_plain_string() == "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
-        "Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf."
+            sentence.to_plain_string() == "Firmengründer Wolf Peter Bree arbeitete Anfang der siebziger Jahre als "
+                                          "Möbelvertreter, als er einen fliegenden Händler aus dem Libanon traf."
     )
 
 
@@ -615,6 +592,27 @@ def test_staccato_tokenizer_with_multilingual_text():
     arabic_sentence = Sentence("مرحبا بالعالم! 123", use_tokenizer=StaccatoTokenizer())
     assert [token.text for token in arabic_sentence.tokens] == ["مرحبا", "بالعالم", "!", "123"]
 
+
+def test_create_sentence_difficult_encoding():
+    text = "so out of the norm ❤ ️ enjoyed every moment️"
+    sentence = Sentence(text, use_tokenizer=StaccatoTokenizer())
+    assert len(sentence) == 9
+
+    text = "This guy needs his own show on Discivery Channel ! ﻿"
+    sentence = Sentence(text, use_tokenizer=StaccatoTokenizer())
+    assert len(sentence) == 10
+
+    text = "n't have new vintages."
+    sentence = Sentence(text, use_tokenizer=True)
+    assert len(sentence) == 5
+
+    text = (
+        "equivalently , accumulating the logs as :( 6 ) sl = 1N ∑ t = 1Nlogp "
+        "( Ll | xt \u200b , θ ) where "
+        "p ( Ll | xt \u200b , θ ) represents the class probability output"
+    )
+    sentence = Sentence(text, use_tokenizer=StaccatoTokenizer())
+    assert len(sentence) == 40
 
 def test_sentence_retokenize():
     # Create a sentence with default tokenization
