@@ -365,6 +365,6 @@ class StaccatoTokenizer(Tokenizer):
         # re.findall returns a list of tuples, where each tuple corresponds to the capturing groups.
         # For a match, only one group will be non-empty. We extract that non-empty group.
         # Example match: ('word', '', '', '') or ('', '123', '', '') or ('', '', '好', '') or ('', '', '', '.')
-        tokens = [next(filter(None, match_tuple)) for match_tuple in matches]
+        tokens: list[str] = [next(filter(None, match_tuple)) for match_tuple in matches]
 
         return tokens
