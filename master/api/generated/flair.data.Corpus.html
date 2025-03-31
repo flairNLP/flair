@@ -824,17 +824,66 @@ button.search-button {
 <h1>flair.data.Corpus<a class="headerlink" href="#flair-data-corpus" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.data.Corpus">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'corpus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1585-L2140"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Corpus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'corpus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1939-L2524"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="flair.data.T_co.html#flair.data.T_co" title="flair.data.T_co"><code class="xref py py-obj docutils literal notranslate"><span class="pre">T_co</span></code></a>]</p>
-<p>The main object in Flair for holding a dataset used for training and testing.</p>
+<p>The main container for holding train, dev, and test datasets for a task.</p>
 <p>A corpus consists of three splits: A <cite>train</cite> split used for training, a <cite>dev</cite> split used for model selection
 or early stopping and a <cite>test</cite> split used for testing. All three splits are optional, so it is possible
 to create a corpus only using one or two splits. If the option <cite>sample_missing_splits</cite> is set to True,
-missing splits will be randomly sampled from the training split.</p>
+missing splits will be randomly sampled from the training split.
+Provides methods for sampling, filtering, and creating dictionaries.</p>
+<dl class="simple">
+<dt>Generics:</dt><dd><p>T_co: The covariant type of DataPoint in the datasets (e.g., Sentence).</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.data.Corpus.train">
+<span class="sig-name descname"><span class="pre">train</span></span><a class="headerlink" href="#flair.data.Corpus.train" title="Link to this definition">#</a></dt>
+<dd><p>Training data split.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Dataset[T_co]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.data.Corpus.dev">
+<span class="sig-name descname"><span class="pre">dev</span></span><a class="headerlink" href="#flair.data.Corpus.dev" title="Link to this definition">#</a></dt>
+<dd><p>Development (validation) data split.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Dataset[T_co]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.data.Corpus.test">
+<span class="sig-name descname"><span class="pre">test</span></span><a class="headerlink" href="#flair.data.Corpus.test" title="Link to this definition">#</a></dt>
+<dd><p>Testing data split.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Dataset[T_co]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.data.Corpus.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#flair.data.Corpus.name" title="Link to this definition">#</a></dt>
+<dd><p>Name of the corpus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Corpus.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'corpus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1594-L1657"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize a Corpus.</p>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'corpus'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_missing_splits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1958-L2022"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initializes a Corpus, potentially sampling missing dev/test splits from train.</p>
 <p>You can define the train, dev and test split
 by passing the corresponding Dataset object to the constructor. At least one split should be defined.
 If the option <cite>sample_missing_splits</cite> is set to True, missing splits will be randomly sampled from the
@@ -846,13 +895,14 @@ a <a class="reference internal" href="#flair.data.Corpus" title="flair.data.Corp
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T_co</span></code>, covariant=True)]]</span>) – The split you use for model training.</p></li>
-<li><p><strong>dev</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T_co</span></code>, covariant=True)]]</span>) – A holdout split typically used for model selection or early stopping.</p></li>
-<li><p><strong>test</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">T_co</span></code>, covariant=True)]]</span>) – The final test data to compute the score of the model.</p></li>
-<li><p><strong>name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – A name that identifies the corpus.</p></li>
-<li><p><strong>sample_missing_splits</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – If set to True, missing splits are sampled from train. If set to False,
-missing splits are not sampled and left empty. Default: True.</p></li>
-<li><p><strong>random_seed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – Set a random seed to control the sampling of missing splits.</p></li>
+<li><p><strong>train</strong> (<em>Optional</em><em>[</em><em>Dataset</em><em>[</em><em>T_co</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Training data. Defaults to None.</p></li>
+<li><p><strong>dev</strong> (<em>Optional</em><em>[</em><em>Dataset</em><em>[</em><em>T_co</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Development data. Defaults to None.</p></li>
+<li><p><strong>test</strong> (<em>Optional</em><em>[</em><em>Dataset</em><em>[</em><em>T_co</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Testing data. Defaults to None.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Corpus name. Defaults to “corpus”.</p></li>
+<li><p><strong>sample_missing_splits</strong> (<em>Union</em><em>[</em><em>bool</em><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Policy for handling missing splits.
+True (default): sample dev(10%)/test(10%) from train. False: keep None.
+“only_dev”: sample only dev. “only_test”: sample only test.</p></li>
+<li><p><strong>random_seed</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – Seed for reproducible sampling. Defaults to None.</p></li>
 </ul>
 </dd>
 </dl>
@@ -862,10 +912,10 @@ missing splits are not sampled and left empty. Default: True.</p></li>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Corpus.__init__" title="flair.data.Corpus.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([train, dev, test, name, ...])</p></td>
-<td><p>Initialize a Corpus.</p></td>
+<td><p>Initializes a Corpus, potentially sampling missing dev/test splits from train.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Corpus.add_label_noise" title="flair.data.Corpus.add_label_noise"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code></a>(label_type, labels[, ...])</p></td>
-<td><p>Generates uniform label noise distribution in the chosen dataset split.</p></td>
+<td><p>Adds artificial label noise to a specified split (in-place).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Corpus.downsample" title="flair.data.Corpus.downsample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">downsample</span></code></a>([percentage, downsample_train, ...])</p></td>
 <td><p>Randomly downsample the corpus to the given percentage (by removing data points).</p></td>
@@ -883,10 +933,10 @@ missing splits are not sampled and left empty. Default: True.</p></li>
 <td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Corpus.make_label_dictionary" title="flair.data.Corpus.make_label_dictionary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_label_dictionary</span></code></a>(label_type[, ...])</p></td>
-<td><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p></td>
+<td><p>Creates a Dictionary for a specific label type from the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Corpus.make_tag_dictionary" title="flair.data.Corpus.make_tag_dictionary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_tag_dictionary</span></code></a>(tag_type)</p></td>
-<td><p>Create a tag dictionary of a given label type.</p></td>
+<td><p>DEPRECATED: Creates tag dictionary ensuring 'O', '&lt;START&gt;', '&lt;STOP&gt;'.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Corpus.make_vocab_dictionary" title="flair.data.Corpus.make_vocab_dictionary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_vocab_dictionary</span></code></a>([max_tokens, min_freq])</p></td>
 <td><p>Creates a <a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a> of all tokens contained in the corpus.</p></td>
@@ -899,38 +949,38 @@ missing splits are not sampled and left empty. Default: True.</p></li>
 <p class="rubric">Attributes</p>
 <table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Corpus.dev" title="flair.data.Corpus.dev"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dev</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id1" title="flair.data.Corpus.dev"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dev</span></code></a></p></td>
 <td><p>The dev split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Corpus.test" title="flair.data.Corpus.test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#id2" title="flair.data.Corpus.test"><code class="xref py py-obj docutils literal notranslate"><span class="pre">test</span></code></a></p></td>
 <td><p>The test split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Corpus.train" title="flair.data.Corpus.train"><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.data.Corpus.train"><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code></a></p></td>
 <td><p>The training split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py property">
-<dt class="sig sig-object py" id="flair.data.Corpus.train">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">train</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dataset</span><span class="p"><span class="pre">[</span></span><span class="pre">T_co</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#flair.data.Corpus.train" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="id0">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">train</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dataset</span><span class="p"><span class="pre">[</span></span><span class="pre">T_co</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
 <dd><p>The training split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="flair.data.Corpus.dev">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dev</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dataset</span><span class="p"><span class="pre">[</span></span><span class="pre">T_co</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#flair.data.Corpus.dev" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="id1">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dev</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dataset</span><span class="p"><span class="pre">[</span></span><span class="pre">T_co</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id1" title="Link to this definition">#</a></dt>
 <dd><p>The dev split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="flair.data.Corpus.test">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dataset</span><span class="p"><span class="pre">[</span></span><span class="pre">T_co</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#flair.data.Corpus.test" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="id2">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Dataset</span><span class="p"><span class="pre">[</span></span><span class="pre">T_co</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id2" title="Link to this definition">#</a></dt>
 <dd><p>The test split as a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code> object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Corpus.downsample">
-<span class="sig-name descname"><span class="pre">downsample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downsample_train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downsample_dev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downsample_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1674-L1707"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.downsample" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">downsample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downsample_train</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downsample_dev</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downsample_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2039-L2072"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.downsample" title="Link to this definition">#</a></dt>
 <dd><p>Randomly downsample the corpus to the given percentage (by removing data points).</p>
 <p>This method is an in-place operation, meaning that the Corpus object itself is modified by removing
 data points. It additionally returns a pointer to itself for use in method chaining.</p>
@@ -945,37 +995,37 @@ should be downsampled. Default value is 0.1, meaning it gets downsampled to 10%.
 <li><p><strong>random_seed</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span>) – An optional random seed to make downsampling reproducible.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a></span></p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns self for chaining.</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A pointer to itself for optional use in method chaining.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.data.Corpus" title="flair.data.Corpus">Corpus</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Corpus.filter_empty_sentences">
-<span class="sig-name descname"><span class="pre">filter_empty_sentences</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1709-L1721"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.filter_empty_sentences" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">filter_empty_sentences</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2074-L2086"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.filter_empty_sentences" title="Link to this definition">#</a></dt>
 <dd><p>A method that filters all sentences consisting of 0 tokens.</p>
 <p>This is an in-place operation that directly modifies the Corpus object itself by removing these sentences.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Corpus.filter_long_sentences">
-<span class="sig-name descname"><span class="pre">filter_long_sentences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_charlength</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1723-L1739"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.filter_long_sentences" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">filter_long_sentences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_charlength</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2088-L2103"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.filter_long_sentences" title="Link to this definition">#</a></dt>
 <dd><p>A method that filters all sentences for which the plain text is longer than a specified number of characters.</p>
 <p>This is an in-place operation that directly modifies the Corpus object itself by removing these sentences.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>max_charlength</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The maximum permissible character length of a sentence.</p>
+<dd class="field-odd"><p><strong>max_charlength</strong> (<em>int</em>) – Maximum allowed character length.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Corpus.make_vocab_dictionary">
-<span class="sig-name descname"><span class="pre">make_vocab_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1775-L1798"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.make_vocab_dictionary" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">make_vocab_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2140-L2163"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.make_vocab_dictionary" title="Link to this definition">#</a></dt>
 <dd><p>Creates a <a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a> of all tokens contained in the corpus.</p>
 <p>By defining <cite>max_tokens</cite> you can set the maximum number of tokens that should be contained in the dictionary.
 If there are more than <cite>max_tokens</cite> tokens in the corpus, the most frequent tokens are added first.
@@ -990,18 +1040,18 @@ means that there is no maximum in this regard).</p></li>
 of “-1” means that there is no limitation in this regard).</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a></span></p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Vocabulary Dictionary mapping tokens to IDs (includes &lt;unk&gt;).</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A <a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a> of all unique tokens in the corpus.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary">Dictionary</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Corpus.obtain_statistics">
-<span class="sig-name descname"><span class="pre">obtain_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretty_print</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1822-L1844"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.obtain_statistics" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">obtain_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretty_print</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2190-L2212"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.obtain_statistics" title="Link to this definition">#</a></dt>
 <dd><p>Print statistics about the corpus, including the length of the sentences and the labels in the corpus.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1027,8 +1077,8 @@ returned as a single line. Default: True.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Corpus.make_label_dictionary">
-<span class="sig-name descname"><span class="pre">make_label_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_unk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_dev_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1896-L1998"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.make_label_dictionary" title="Link to this definition">#</a></dt>
-<dd><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p>
+<span class="sig-name descname"><span class="pre">make_label_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_unk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_dev_test</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2281-L2387"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.make_label_dictionary" title="Link to this definition">#</a></dt>
+<dd><p>Creates a Dictionary for a specific label type from the corpus.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1045,36 +1095,46 @@ split, but also from dev and test. This is only necessary if some labels never a
 appear in one of the other splits.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a></span></p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary mapping label values to IDs.</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A Dictionary of all unique labels in the corpus.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary">Dictionary</a></p>
 </dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="flair.data.Corpus.add_label_noise">
-<span class="sig-name descname"><span class="pre">add_label_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_share</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'train'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_transition_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2000-L2091"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.add_label_noise" title="Link to this definition">#</a></dt>
-<dd><p>Generates uniform label noise distribution in the chosen dataset split.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>label_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the type of labels for which the noise should be simulated.</p></li>
-<li><p><strong>labels</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – an array with unique labels of said type (retrievable from label dictionary).</p></li>
-<li><p><strong>noise_share</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – the desired share of noise in the train split.</p></li>
-<li><p><strong>split</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – in which dataset split the noise is to be simulated.</p></li>
-<li><p><strong>noise_transition_matrix</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]]]</span>) – provides pre-defined probabilities for label flipping based on the initial
-label value (relevant for class-dependent label noise simulation).</p></li>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If <cite>label_type</cite> is not found.</p></li>
+<li><p><strong>AssertionError</strong> – If no data splits are available to scan.</p></li>
 </ul>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="flair.data.Corpus.add_label_noise">
+<span class="sig-name descname"><span class="pre">add_label_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_share</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'train'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_transition_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2389-L2483"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.add_label_noise" title="Link to this definition">#</a></dt>
+<dd><p>Adds artificial label noise to a specified split (in-place).</p>
+<p>Stores original labels under <cite>{label_type}_clean</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label_type</strong> (<em>str</em>) – Target label type.</p></li>
+<li><p><strong>labels</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – List of all possible valid labels for the type.</p></li>
+<li><p><strong>noise_share</strong> (<em>float</em><em>, </em><em>optional</em>) – Target proportion for uniform noise (0.0-1.0).
+Ignored if matrix is given. Defaults to 0.2.</p></li>
+<li><p><strong>split</strong> (<em>str</em><em>, </em><em>optional</em>) – Split to modify (‘train’, ‘dev’, ‘test’). Defaults to “train”.</p></li>
+<li><p><strong>noise_transition_matrix</strong> (<em>Optional</em><em>[</em><em>dict</em><em>[</em><em>str</em><em>, </em><em>list</em><em>[</em><em>float</em><em>]</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Matrix for class-dependent noise. Defaults to None (use uniform noise).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Corpus.get_label_distribution">
-<span class="sig-name descname"><span class="pre">get_label_distribution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2093-L2105"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.get_label_distribution" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_label_distribution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2485-L2497"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.get_label_distribution" title="Link to this definition">#</a></dt>
 <dd><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p>
 <p>This allows you to get an idea of which label appears how often in the Corpus.</p>
 <dl class="field-list simple">
@@ -1086,7 +1146,7 @@ label value (relevant for class-dependent label noise simulation).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Corpus.get_all_sentences">
-<span class="sig-name descname"><span class="pre">get_all_sentences</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2107-L2120"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.get_all_sentences" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_all_sentences</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2499-L2512"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.get_all_sentences" title="Link to this definition">#</a></dt>
 <dd><p>Returns all sentences (spanning all three splits) in the <a class="reference internal" href="#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1100,21 +1160,11 @@ label value (relevant for class-dependent label noise simulation).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Corpus.make_tag_dictionary">
-<span class="sig-name descname"><span class="pre">make_tag_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tag_type</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2122-L2140"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.make_tag_dictionary" title="Link to this definition">#</a></dt>
-<dd><p>Create a tag dictionary of a given label type.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>tag_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – the label type to gather the tag labels</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a></span></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A Dictionary containing the labeled tags, including “O” and “&lt;START&gt;” and “&lt;STOP&gt;”</p>
-</dd>
-</dl>
+<span class="sig-name descname"><span class="pre">make_tag_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tag_type</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2514-L2524"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Corpus.make_tag_dictionary" title="Link to this definition">#</a></dt>
+<dd><p>DEPRECATED: Creates tag dictionary ensuring ‘O’, ‘&lt;START&gt;’, ‘&lt;STOP&gt;’.
+:rtype: <span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a></span></p>
 <div class="deprecated">
-<p><span class="versionmodified deprecated">Deprecated since version 0.8: </span>Use ‘make_label_dictionary’ instead.</p>
+<p><span class="versionmodified deprecated">Deprecated since version 0.8: </span>Use ‘make_label_dictionary(add_unk=False)’ instead.</p>
 </div>
 </dd></dl>
 

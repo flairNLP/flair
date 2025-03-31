@@ -824,65 +824,64 @@ button.search-button {
 <h1>flair.data.DataPoint<a class="headerlink" href="#flair-data-datapoint" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.data.DataPoint">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">DataPoint</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L304-L494"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>This is the parent class of all data points in Flair.</p>
-<p>Examples for data points are Token, Sentence, Image, etc.
-Each DataPoint must be embeddable (hence the abstract property embedding() and methods to() and clear_embeddings()).
-Also, each DataPoint may have Labels in several layers of annotation (hence the functions add_label(), get_labels()
-and the property ‘label’)</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">DataPoint</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L413-L688"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for all data points in Flair (e.g., Token, Sentence, Image).</p>
+<p>Defines core functionalities like holding embeddings, managing labels across
+different annotation layers, and providing basic positional/textual info.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L313-L316"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L420-L424"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initializes a DataPoint with empty annotation/embedding/metadata storage.</p>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.__init__" title="flair.data.DataPoint.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</p></td>
-<td><p></p></td>
+<td><p>Initializes a DataPoint with empty annotation/embedding/metadata storage.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.add_label" title="flair.data.DataPoint.add_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label</span></code></a>(typename, value[, score])</p></td>
-<td><p>Adds a label to the <a class="reference internal" href="#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a> by internally creating a <a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a> object.</p></td>
+<td><p>Adds a new label to a specific annotation layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.add_metadata" title="flair.data.DataPoint.add_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_metadata</span></code></a>(key, value)</p></td>
-<td><p></p></td>
+<td><p>Adds a key-value pair to the data point's metadata.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.clear_embeddings" title="flair.data.DataPoint.clear_embeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear_embeddings</span></code></a>([embedding_names])</p></td>
-<td><p></p></td>
+<td><p>Removes stored embeddings to free memory.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.get_each_embedding" title="flair.data.DataPoint.get_each_embedding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_each_embedding</span></code></a>([embedding_names])</p></td>
-<td><p></p></td>
+<td><p>Retrieves a list of individual embedding tensors.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.get_embedding" title="flair.data.DataPoint.get_embedding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_embedding</span></code></a>([names])</p></td>
-<td><p></p></td>
+<td><p>Retrieves embeddings, concatenating if multiple names are given or if names is None.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.get_label" title="flair.data.DataPoint.get_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label</span></code></a>([label_type, zero_tag_value])</p></td>
-<td><p></p></td>
+<td><p>Retrieves the primary label for a given type, or a default 'O' label.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.get_labels" title="flair.data.DataPoint.get_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_labels</span></code></a>([typename])</p></td>
-<td><p>Returns all labels of this datapoint belonging to a specific annotation layer.</p></td>
+<td><p>Retrieves all labels for a specific annotation layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.get_metadata" title="flair.data.DataPoint.get_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_metadata</span></code></a>(key)</p></td>
-<td><p></p></td>
+<td><p>Retrieves metadata associated with the given key.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.has_label" title="flair.data.DataPoint.has_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_label</span></code></a>(type)</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.has_label" title="flair.data.DataPoint.has_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_label</span></code></a>(typename)</p></td>
+<td><p>Checks if the data point has at least one label for the given annotation type.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.has_metadata" title="flair.data.DataPoint.has_metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_metadata</span></code></a>(key)</p></td>
-<td><p></p></td>
+<td><p>Checks if the data point has metadata for the given key.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.remove_labels" title="flair.data.DataPoint.remove_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_labels</span></code></a>(typename)</p></td>
-<td><p></p></td>
+<td><p>Removes all labels associated with a specific annotation layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.set_embedding" title="flair.data.DataPoint.set_embedding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_embedding</span></code></a>(name, vector)</p></td>
-<td><p></p></td>
+<td><p>Stores an embedding tensor under a given name.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.set_label" title="flair.data.DataPoint.set_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_label</span></code></a>(typename, value[, score])</p></td>
-<td><p></p></td>
+<td><p>Sets the label(s) for an annotation layer, overwriting any existing ones.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.to" title="flair.data.DataPoint.to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to</span></code></a>(device[, pin_memory])</p></td>
-<td><p></p></td>
+<td><p>Moves all stored embedding tensors to the specified device.</p></td>
 </tr>
 </tbody>
 </table>
@@ -890,85 +889,129 @@ and the property ‘label’)</p>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.embedding" title="flair.data.DataPoint.embedding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">embedding</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Provides the primary embedding representation of the data point.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.end_position" title="flair.data.DataPoint.end_position"><code class="xref py py-obj docutils literal notranslate"><span class="pre">end_position</span></code></a></p></td>
-<td><p></p></td>
+<td><p>The ending character offset (exclusive) within the original text.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.labels" title="flair.data.DataPoint.labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">labels</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Returns a list of all labels from all annotation layers.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.score" title="flair.data.DataPoint.score"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Shortcut property for the score of the <em>first</em> label added.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.start_position" title="flair.data.DataPoint.start_position"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_position</span></code></a></p></td>
-<td><p></p></td>
+<td><p>The starting character offset within the original text.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.tag" title="flair.data.DataPoint.tag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tag</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Shortcut property for the value of the <em>first</em> label added.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataPoint.text" title="flair.data.DataPoint.text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">text</span></code></a></p></td>
-<td><p></p></td>
+<td><p>The textual representation of this data point.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataPoint.unlabeled_identifier" title="flair.data.DataPoint.unlabeled_identifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unlabeled_identifier</span></code></a></p></td>
-<td><p></p></td>
+<td><p>A string identifier for the data point itself, without label info.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataPoint.embedding">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#flair.data.DataPoint.embedding" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Provides the primary embedding representation of the data point.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.set_embedding">
-<span class="sig-name descname"><span class="pre">set_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L323-L324"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.set_embedding" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">set_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L432-L439"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.set_embedding" title="Link to this definition">#</a></dt>
+<dd><p>Stores an embedding tensor under a given name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name to identify this embedding (e.g., “word”, “flair”).</p></li>
+<li><p><strong>vector</strong> (<em>torch.Tensor</em>) – The embedding tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.get_embedding">
-<span class="sig-name descname"><span class="pre">get_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L326-L339"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.get_embedding" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">get_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L441-L464"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.get_embedding" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves embeddings, concatenating if multiple names are given or if names is None.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>names</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Specific embedding names to retrieve.
+If None, concatenates all stored embeddings sorted by name. Defaults to None.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A single tensor representing the requested embedding(s).</dt><dd><p>Returns an empty tensor if no relevant embeddings are found.</p>
+</dd>
+</dl>
+</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+<dd class="field-odd"><p>torch.Tensor</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.get_each_embedding">
-<span class="sig-name descname"><span class="pre">get_each_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L341-L348"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.get_each_embedding" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">get_each_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L466-L482"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.get_each_embedding" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves a list of individual embedding tensors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>embedding_names</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – If provided, filters by these names.
+Otherwise, returns all stored embeddings. Defaults to None.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of embedding tensors, sorted by name.</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span></p>
+<dd class="field-odd"><p>list[torch.Tensor]</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.to">
-<span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L350-L356"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.to" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+<span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L484-L497"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.to" title="Link to this definition">#</a></dt>
+<dd><p>Moves all stored embedding tensors to the specified device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>device</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>torch.device</em><em>]</em>) – Target device (e.g., ‘cpu’, ‘cuda:0’).</p></li>
+<li><p><strong>pin_memory</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True and moving to CUDA, attempts to pin memory.
+Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.clear_embeddings">
-<span class="sig-name descname"><span class="pre">clear_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L358-L364"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.clear_embeddings" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+<span class="sig-name descname"><span class="pre">clear_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L499-L511"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.clear_embeddings" title="Link to this definition">#</a></dt>
+<dd><p>Removes stored embeddings to free memory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>embedding_names</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Specific names to remove.
+If None, removes all embeddings. Defaults to None.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.has_label">
-<span class="sig-name descname"><span class="pre">has_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L366-L367"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.has_label" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">has_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L513-L515"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.has_label" title="Link to this definition">#</a></dt>
+<dd><p>Checks if the data point has at least one label for the given annotation type.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
@@ -977,8 +1020,9 @@ and the property ‘label’)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.add_metadata">
-<span class="sig-name descname"><span class="pre">add_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L369-L370"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.add_metadata" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">add_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L517-L519"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.add_metadata" title="Link to this definition">#</a></dt>
+<dd><p>Adds a key-value pair to the data point’s metadata.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
@@ -987,18 +1031,29 @@ and the property ‘label’)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.get_metadata">
-<span class="sig-name descname"><span class="pre">get_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L372-L373"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.get_metadata" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">get_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L521-L533"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.get_metadata" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves metadata associated with the given key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – The metadata key.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The metadata value.</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></span></p>
+<dd class="field-odd"><p>Any</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>KeyError</strong> – If the key is not found.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.has_metadata">
-<span class="sig-name descname"><span class="pre">has_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L375-L376"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.has_metadata" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">has_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L535-L537"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.has_metadata" title="Link to this definition">#</a></dt>
+<dd><p>Checks if the data point has metadata for the given key.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
@@ -1007,66 +1062,96 @@ and the property ‘label’)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.add_label">
-<span class="sig-name descname"><span class="pre">add_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L378-L398"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.add_label" title="Link to this definition">#</a></dt>
-<dd><p>Adds a label to the <a class="reference internal" href="#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a> by internally creating a <a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a> object.</p>
+<span class="sig-name descname"><span class="pre">add_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L539-L559"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.add_label" title="Link to this definition">#</a></dt>
+<dd><p>Adds a new label to a specific annotation layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>typename</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – A string that identifies the layer of annotation, such as “ner” for named entity labels or “sentiment” for sentiment labels</p></li>
-<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – A string that sets the value of the label.</p></li>
-<li><p><strong>score</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Optional value setting the confidence level of the label (between 0 and 1). If not set, a default confidence of 1 is used.</p></li>
-<li><p><strong>**metadata</strong> – Additional metadata information.</p></li>
+<li><p><strong>typename</strong> (<em>str</em>) – Name of the annotation layer (e.g., “ner”, “sentiment”).</p></li>
+<li><p><strong>value</strong> (<em>str</em>) – String value of the label (e.g., “PERSON”, “POSITIVE”).</p></li>
+<li><p><strong>score</strong> (<em>float</em><em>, </em><em>optional</em>) – Confidence score (0.0-1.0). Defaults to 1.0.</p></li>
+<li><p><strong>**metadata</strong> – Additional keyword arguments stored as metadata on the Label.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a></span></p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns self for chaining.</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A pointer to itself (DataPoint object, now with an added label).</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.data.DataPoint" title="flair.data.DataPoint">DataPoint</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.set_label">
-<span class="sig-name descname"><span class="pre">set_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L400-L404"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.set_label" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">set_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L561-L576"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.set_label" title="Link to this definition">#</a></dt>
+<dd><p>Sets the label(s) for an annotation layer, overwriting any existing ones.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>typename</strong> (<em>str</em>) – The name of the annotation layer.</p></li>
+<li><p><strong>value</strong> (<em>str</em>) – The string value of the new label.</p></li>
+<li><p><strong>score</strong> (<em>float</em><em>, </em><em>optional</em>) – Confidence score (0.0-1.0). Defaults to 1.0.</p></li>
+<li><p><strong>**metadata</strong> – Additional keyword arguments for the new Label’s metadata.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Returns self for chaining.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.data.DataPoint" title="flair.data.DataPoint">DataPoint</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.remove_labels">
-<span class="sig-name descname"><span class="pre">remove_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L406-L408"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.remove_labels" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+<span class="sig-name descname"><span class="pre">remove_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L578-L585"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.remove_labels" title="Link to this definition">#</a></dt>
+<dd><p>Removes all labels associated with a specific annotation layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>typename</strong> (<em>str</em>) – The name of the annotation layer to clear.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.get_label">
-<span class="sig-name descname"><span class="pre">get_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_tag_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'O'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L410-L413"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.get_label" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">get_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_tag_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'O'</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L587-L599"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.get_label" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves the primary label for a given type, or a default ‘O’ label.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>label_type</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – The annotation layer name. Defaults to None (uses first overall label).</p></li>
+<li><p><strong>zero_tag_value</strong> (<em>str</em><em>, </em><em>optional</em>) – Value for the default label if none found. Defaults to “O”.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The primary label, or a default label with score 0.0.</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a></span></p>
+<dd class="field-odd"><p><a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label">Label</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataPoint.get_labels">
-<span class="sig-name descname"><span class="pre">get_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L415-L430"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.get_labels" title="Link to this definition">#</a></dt>
-<dd><p>Returns all labels of this datapoint belonging to a specific annotation layer.</p>
-<p>For instance, if a data point has been labeled with <cite>“sentiment”</cite>-labels, you can call this function as
-<cite>get_labels(“sentiment”)</cite> to return a list of all sentiment labels.</p>
+<span class="sig-name descname"><span class="pre">get_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L601-L614"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataPoint.get_labels" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves all labels for a specific annotation layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>typename</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – The string identifier of the annotation layer, like “sentiment” or “ner”.</p>
+<dd class="field-odd"><p><strong>typename</strong> (<em>Optional</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – The layer name. If None, returns all labels
+from all layers. Defaults to None.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a>]</span></p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of Label objects, or empty list if none found.</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A list of <a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a> objects belonging to this annotation layer for this data point.</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label">Label</a>]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1074,37 +1159,44 @@ and the property ‘label’)</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataPoint.labels">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label"><span class="pre">Label</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#flair.data.DataPoint.labels" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Returns a list of all labels from all annotation layers.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataPoint.unlabeled_identifier">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unlabeled_identifier</span></span><a class="headerlink" href="#flair.data.DataPoint.unlabeled_identifier" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unlabeled_identifier</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.data.DataPoint.unlabeled_identifier" title="Link to this definition">#</a></dt>
+<dd><p>A string identifier for the data point itself, without label info.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataPoint.start_position">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_position</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.data.DataPoint.start_position" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>The starting character offset within the original text.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataPoint.end_position">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">end_position</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.data.DataPoint.end_position" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>The ending character offset (exclusive) within the original text.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataPoint.text">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">text</span></span><a class="headerlink" href="#flair.data.DataPoint.text" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">text</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.data.DataPoint.text" title="Link to this definition">#</a></dt>
+<dd><p>The textual representation of this data point.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataPoint.tag">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tag</span></span><a class="headerlink" href="#flair.data.DataPoint.tag" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.data.DataPoint.tag" title="Link to this definition">#</a></dt>
+<dd><p>Shortcut property for the value of the <em>first</em> label added.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataPoint.score">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">score</span></span><a class="headerlink" href="#flair.data.DataPoint.score" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">score</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#flair.data.DataPoint.score" title="Link to this definition">#</a></dt>
+<dd><p>Shortcut property for the score of the <em>first</em> label added.</p>
+</dd></dl>
 
 </dd></dl>
 

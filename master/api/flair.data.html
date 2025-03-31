@@ -822,13 +822,13 @@ button.search-button {
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.BoundingBox.html#flair.data.BoundingBox" title="flair.data.BoundingBox"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BoundingBox</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Represents a bounding box with left, top, right, and bottom coordinates.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.ConcatFlairDataset.html#flair.data.ConcatFlairDataset" title="flair.data.ConcatFlairDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConcatFlairDataset</span></code></a></p></td>
-<td><p>Dataset as a concatenation of multiple datasets.</p></td>
+<td><p>Concatenates multiple datasets, adding a multitask_id label to each sentence.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Corpus</span></code></a></p></td>
-<td><p>The main object in Flair for holding a dataset used for training and testing.</p></td>
+<td><p>The main container for holding train, dev, and test datasets for a task.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.DT.html#flair.data.DT" title="flair.data.DT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DT</span></code></a></p></td>
 <td><p>Type variable.</p></td>
@@ -840,67 +840,67 @@ button.search-button {
 <td><p>Type variable.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.DataPair.html#flair.data.DataPair" title="flair.data.DataPair"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataPair</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Represents a pair of DataPoints, often used for sentence-pair tasks.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.DataPoint.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataPoint</span></code></a></p></td>
-<td><p>This is the parent class of all data points in Flair.</p></td>
+<td><p>Abstract base class for all data points in Flair (e.g., Token, Sentence, Image).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.DataTriple.html#flair.data.DataTriple" title="flair.data.DataTriple"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataTriple</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Represents a triplet of DataPoints.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.Dictionary.html#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dictionary</span></code></a></p></td>
-<td><p>This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings.</p></td>
+<td><p>This class holds a dictionary that maps strings to unique integer IDs.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.EntityCandidate.html#flair.data.EntityCandidate" title="flair.data.EntityCandidate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EntityCandidate</span></code></a></p></td>
-<td><p>A Concept as part of a knowledgebase or ontology.</p></td>
+<td><p>Represents a potential candidate entity from a knowledge base for entity linking.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.FlairDataset.html#flair.data.FlairDataset" title="flair.data.FlairDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FlairDataset</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Abstract base class for Flair datasets, adding an in-memory check.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.Image.html#flair.data.Image" title="flair.data.Image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Image</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Represents an image as a data point, holding image data or a URL.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.Label.html#flair.data.Label" title="flair.data.Label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Label</span></code></a></p></td>
-<td><p>This class represents a label.</p></td>
+<td><p>Represents a label assigned to a DataPoint (e.g., Token, Span, Sentence).</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.MultiCorpus.html#flair.data.MultiCorpus" title="flair.data.MultiCorpus"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiCorpus</span></code></a></p></td>
-<td><p></p></td>
+<td><p>A Corpus composed of multiple individual Corpus objects, often for multi-task learning.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.Relation.html#flair.data.Relation" title="flair.data.Relation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Relation</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Represents a directed relationship between two Spans in the same Sentence.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sentence</span></code></a></p></td>
-<td><p>A Sentence is a central object in Flair that represents either a single sentence or a whole text.</p></td>
+<td><p>A central data structure representing a sentence or text passage as Tokens.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.Span.html#flair.data.Span" title="flair.data.Span"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Span</span></code></a></p></td>
-<td><p>This class represents one textual span consisting of Tokens.</p></td>
+<td><p>Represents a contiguous sequence of Tokens within a Sentence.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.T_co.html#flair.data.T_co" title="flair.data.T_co"><code class="xref py py-obj docutils literal notranslate"><span class="pre">T_co</span></code></a></p></td>
 <td><p>Type variable.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.TextPair.html#flair.data.TextPair" title="flair.data.TextPair"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TextPair</span></code></a></p></td>
-<td><p>alias of <a class="reference internal" href="generated/flair.data.DataPair.html#flair.data.DataPair" title="flair.data.DataPair"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPair</span></code></a>[<a class="reference internal" href="generated/flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>, <a class="reference internal" href="generated/flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</p></td>
+<td><p>Type alias for a DataPair consisting of two Sentences.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.TextTriple.html#flair.data.TextTriple" title="flair.data.TextTriple"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TextTriple</span></code></a></p></td>
-<td><p>alias of <a class="reference internal" href="generated/flair.data.DataTriple.html#flair.data.DataTriple" title="flair.data.DataTriple"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataTriple</span></code></a>[<a class="reference internal" href="generated/flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>, <a class="reference internal" href="generated/flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>, <a class="reference internal" href="generated/flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sentence</span></code></a>]</p></td>
+<td><p>Type alias for a DataTriple consisting of three Sentences.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.Token.html#flair.data.Token" title="flair.data.Token"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Token</span></code></a></p></td>
-<td><p>This class represents one word in a tokenized sentence.</p></td>
+<td><p>Represents a single token (word, punctuation) within a Sentence.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data._PartOfSentence.html#flair.data._PartOfSentence" title="flair.data._PartOfSentence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_PartOfSentence</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Abstract base for data points within a Sentence (Token, Span, Relation).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data._iter_dataset.html#flair.data._iter_dataset" title="flair.data._iter_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_iter_dataset</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Iterates over a Dataset yielding single data points.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data._len_dataset.html#flair.data._len_dataset" title="flair.data._len_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_len_dataset</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Calculates the length (number of data points) in a Dataset.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="generated/flair.data.get_spans_from_bio.html#flair.data.get_spans_from_bio" title="flair.data.get_spans_from_bio"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_spans_from_bio</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Decodes a sequence of BIOES/BIO tags into labeled spans with scores.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.data.randomly_split_into_two_datasets.html#flair.data.randomly_split_into_two_datasets" title="flair.data.randomly_split_into_two_datasets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">randomly_split_into_two_datasets</span></code></a></p></td>
-<td><p>Shuffles a dataset and splits into two subsets.</p></td>
+<td><p>Shuffles and splits a dataset into two Subsets.</p></td>
 </tr>
 </tbody>
 </table>

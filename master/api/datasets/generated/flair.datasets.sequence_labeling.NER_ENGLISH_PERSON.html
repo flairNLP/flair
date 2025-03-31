@@ -836,7 +836,7 @@ button.search-button {
 <td><p>Initialize the PERSON_NER corpus for person names.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
-<td><p>Generates uniform label noise distribution in the chosen dataset split.</p></td>
+<td><p>Adds artificial label noise to a specified split (in-place).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">downsample</span></code>([percentage, downsample_train, ...])</p></td>
 <td><p>Randomly downsample the corpus to the given percentage (by removing data points).</p></td>
@@ -854,10 +854,10 @@ button.search-button {
 <td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_label_dictionary</span></code>(label_type[, ...])</p></td>
-<td><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p></td>
+<td><p>Creates a Dictionary for a specific label type from the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_tag_dictionary</span></code>(tag_type)</p></td>
-<td><p>Create a tag dictionary of a given label type.</p></td>
+<td><p>DEPRECATED: Creates tag dictionary ensuring 'O', '&lt;START&gt;', '&lt;STOP&gt;'.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_vocab_dictionary</span></code>([max_tokens, min_freq])</p></td>
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>

@@ -824,60 +824,79 @@ button.search-button {
 <h1>flair.data._PartOfSentence<a class="headerlink" href="#flair-data-partofsentence" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.data._PartOfSentence">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">_PartOfSentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L557-L582"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data._PartOfSentence" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">_PartOfSentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L751-L793"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data._PartOfSentence" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.data.DataPoint.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base for data points within a Sentence (Token, Span, Relation).</p>
+<p>Ensures labels added to these parts are also registered in the parent Sentence.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.data._PartOfSentence.sentence">
+<span class="sig-name descname"><span class="pre">sentence</span></span><a class="headerlink" href="#flair.data._PartOfSentence.sentence" title="Link to this definition">#</a></dt>
+<dd><p>The parent Sentence object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="flair.data.Sentence.html#flair.data.Sentence" title="flair.data.Sentence">Sentence</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data._PartOfSentence.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L558-L560"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data._PartOfSentence.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L760-L767"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data._PartOfSentence.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initializes _PartOfSentence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sentence</strong> – The parent sentence, can be None initially for Token.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data._PartOfSentence.__init__" title="flair.data._PartOfSentence.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(sentence)</p></td>
-<td><p></p></td>
+<td><p>Initializes _PartOfSentence.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data._PartOfSentence.add_label" title="flair.data._PartOfSentence.add_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label</span></code></a>(typename, value[, score])</p></td>
-<td><p>Adds a label to the <a class="reference internal" href="flair.data.DataPoint.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a> by internally creating a <a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a> object.</p></td>
+<td><p>Adds a label, propagating it to the parent Sentence's layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_metadata</span></code>(key, value)</p></td>
-<td><p></p></td>
+<td><p>Adds a key-value pair to the data point's metadata.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear_embeddings</span></code>([embedding_names])</p></td>
-<td><p></p></td>
+<td><p>Removes stored embeddings to free memory.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_each_embedding</span></code>([embedding_names])</p></td>
-<td><p></p></td>
+<td><p>Retrieves a list of individual embedding tensors.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_embedding</span></code>([names])</p></td>
-<td><p></p></td>
+<td><p>Retrieves embeddings, concatenating if multiple names are given or if names is None.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label</span></code>([label_type, zero_tag_value])</p></td>
-<td><p></p></td>
+<td><p>Retrieves the primary label for a given type, or a default 'O' label.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_labels</span></code>([typename])</p></td>
-<td><p>Returns all labels of this datapoint belonging to a specific annotation layer.</p></td>
+<td><p>Retrieves all labels for a specific annotation layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_metadata</span></code>(key)</p></td>
-<td><p></p></td>
+<td><p>Retrieves metadata associated with the given key.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_label</span></code>(type)</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_label</span></code>(typename)</p></td>
+<td><p>Checks if the data point has at least one label for the given annotation type.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_metadata</span></code>(key)</p></td>
-<td><p></p></td>
+<td><p>Checks if the data point has metadata for the given key.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data._PartOfSentence.remove_labels" title="flair.data._PartOfSentence.remove_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_labels</span></code></a>(typename)</p></td>
-<td><p></p></td>
+<td><p>Removes labels of a type, also removing them from the parent Sentence layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_embedding</span></code>(name, vector)</p></td>
-<td><p></p></td>
+<td><p>Stores an embedding tensor under a given name.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data._PartOfSentence.set_label" title="flair.data._PartOfSentence.set_label"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_label</span></code></a>(typename, value[, score])</p></td>
-<td><p></p></td>
+<td><p>Sets a label (overwriting), propagating the change to the parent Sentence.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to</span></code>(device[, pin_memory])</p></td>
-<td><p></p></td>
+<td><p>Moves all stored embedding tensors to the specified device.</p></td>
 </tr>
 </tbody>
 </table>
@@ -885,59 +904,58 @@ button.search-button {
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">embedding</span></code></p></td>
-<td><p></p></td>
+<td><p>Provides the primary embedding representation of the data point.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">end_position</span></code></p></td>
-<td><p></p></td>
+<td><p>The ending character offset (exclusive) within the original text.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">labels</span></code></p></td>
-<td><p></p></td>
+<td><p>Returns a list of all labels from all annotation layers.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score</span></code></p></td>
-<td><p></p></td>
+<td><p>Shortcut property for the score of the <em>first</em> label added.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_position</span></code></p></td>
-<td><p></p></td>
+<td><p>The starting character offset within the original text.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tag</span></code></p></td>
-<td><p></p></td>
+<td><p>Shortcut property for the value of the <em>first</em> label added.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">text</span></code></p></td>
-<td><p></p></td>
+<td><p>The textual representation of this data point.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unlabeled_identifier</span></code></p></td>
-<td><p></p></td>
+<td><p>A string identifier for the data point itself, without label info.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data._PartOfSentence.add_label">
-<span class="sig-name descname"><span class="pre">add_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L562-L564"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data._PartOfSentence.add_label" title="Link to this definition">#</a></dt>
-<dd><p>Adds a label to the <a class="reference internal" href="flair.data.DataPoint.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a> by internally creating a <a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a> object.</p>
+<span class="sig-name descname"><span class="pre">add_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L769-L773"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data._PartOfSentence.add_label" title="Link to this definition">#</a></dt>
+<dd><p>Adds a label, propagating it to the parent Sentence’s layer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>typename</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – A string that identifies the layer of annotation, such as “ner” for named entity labels or “sentiment” for sentiment labels</p></li>
-<li><p><strong>value</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – A string that sets the value of the label.</p></li>
-<li><p><strong>score</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Optional value setting the confidence level of the label (between 0 and 1). If not set, a default confidence of 1 is used.</p></li>
-<li><p><strong>**metadata</strong> – Additional metadata information.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A pointer to itself (DataPoint object, now with an added label).</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.data._PartOfSentence" title="flair.data._PartOfSentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">_PartOfSentence</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data._PartOfSentence.set_label">
-<span class="sig-name descname"><span class="pre">set_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L566-L574"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data._PartOfSentence.set_label" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">set_label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L775-L784"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data._PartOfSentence.set_label" title="Link to this definition">#</a></dt>
+<dd><p>Sets a label (overwriting), propagating the change to the parent Sentence.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.data._PartOfSentence" title="flair.data._PartOfSentence"><code class="xref py py-class docutils literal notranslate"><span class="pre">_PartOfSentence</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data._PartOfSentence.remove_labels">
-<span class="sig-name descname"><span class="pre">remove_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L576-L582"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data._PartOfSentence.remove_labels" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">remove_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L786-L793"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data._PartOfSentence.remove_labels" title="Link to this definition">#</a></dt>
+<dd><p>Removes labels of a type, also removing them from the parent Sentence layer.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>

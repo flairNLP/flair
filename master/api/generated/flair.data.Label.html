@@ -824,24 +824,88 @@ button.search-button {
 <h1>flair.data.Label<a class="headerlink" href="#flair-data-label" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.data.Label">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L214-L301"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Label" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Label</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L310-L410"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Label" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>This class represents a label.</p>
-<p>Each label has a value and optionally a confidence score. The score needs to be between 0.0 and 1.0.
-Default value for the score is 1.0.</p>
+<p>Represents a label assigned to a DataPoint (e.g., Token, Span, Sentence).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.data.Label.data_point">
+<span class="sig-name descname"><span class="pre">data_point</span></span><a class="headerlink" href="#flair.data.Label.data_point" title="Link to this definition">#</a></dt>
+<dd><p>The data point this label is attached to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="flair.data.DataPoint.html#flair.data.DataPoint" title="flair.data.DataPoint">DataPoint</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.data.Label.value">
+<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#flair.data.Label.value" title="Link to this definition">#</a></dt>
+<dd><p>The string value of the label (e.g., “PERSON”, “POSITIVE”).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.data.Label.score">
+<span class="sig-name descname"><span class="pre">score</span></span><a class="headerlink" href="#flair.data.Label.score" title="Link to this definition">#</a></dt>
+<dd><p>The confidence score of the label (0.0 to 1.0).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.data.Label.metadata">
+<span class="sig-name descname"><span class="pre">metadata</span></span><a class="headerlink" href="#flair.data.Label.metadata" title="Link to this definition">#</a></dt>
+<dd><p>A dictionary for storing arbitrary additional metadata.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="flair.data.Label.typename">
+<span class="sig-name descname"><span class="pre">typename</span></span><a class="headerlink" href="#flair.data.Label.typename" title="Link to this definition">#</a></dt>
+<dd><p>The name of the annotation layer (set via <cite>DataPoint.add_label</cite>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Label.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L221-L228"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Label.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">metadata</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L321-L336"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Label.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initializes a Label.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_point</strong> (<a class="reference internal" href="flair.data.DataPoint.html#flair.data.DataPoint" title="flair.data.DataPoint"><em>DataPoint</em></a>) – The data point this label describes.</p></li>
+<li><p><strong>value</strong> (<em>str</em>) – The label’s string value.</p></li>
+<li><p><strong>score</strong> (<em>float</em><em>, </em><em>optional</em>) – The confidence score (0.0-1.0). Defaults to 1.0.</p></li>
+<li><p><strong>**metadata</strong> – Arbitrary keyword arguments stored as metadata.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Label.__init__" title="flair.data.Label.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(data_point, value[, score])</p></td>
-<td><p></p></td>
+<td><p>Initializes a Label.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Label.set_value" title="flair.data.Label.set_value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_value</span></code></a>(value[, score])</p></td>
-<td><p></p></td>
+<td><p>Updates the value and score of the label.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Label.to_dict" title="flair.data.Label.to_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dict</span></code></a>()</p></td>
 <td><p></p></td>
@@ -857,41 +921,44 @@ Default value for the score is 1.0.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Label.metadata_str" title="flair.data.Label.metadata_str"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metadata_str</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Label.score" title="flair.data.Label.score"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score</span></code></a></p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id1" title="flair.data.Label.score"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score</span></code></a></p></td>
+<td><p>The confidence score of the label (between 0.0 and 1.0).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Label.shortstring" title="flair.data.Label.shortstring"><code class="xref py py-obj docutils literal notranslate"><span class="pre">shortstring</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Label.typename" title="flair.data.Label.typename"><code class="xref py py-obj docutils literal notranslate"><span class="pre">typename</span></code></a></p></td>
-<td><p>Returns the label type name this label belongs to.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id2" title="flair.data.Label.typename"><code class="xref py py-obj docutils literal notranslate"><span class="pre">typename</span></code></a></p></td>
+<td><p>The name of the annotation layer this label belongs to (e.g., &quot;ner&quot;).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Label.unlabeled_identifier" title="flair.data.Label.unlabeled_identifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unlabeled_identifier</span></code></a></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Label.value" title="flair.data.Label.value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">value</span></code></a></p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.data.Label.value"><code class="xref py py-obj docutils literal notranslate"><span class="pre">value</span></code></a></p></td>
+<td><p>The string value of the label.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Label.set_value">
-<span class="sig-name descname"><span class="pre">set_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L230-L232"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Label.set_value" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">set_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L338-L341"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Label.set_value" title="Link to this definition">#</a></dt>
+<dd><p>Updates the value and score of the label.</p>
+</dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="flair.data.Label.value">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.data.Label.value" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="id0">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
+<dd><p>The string value of the label.</p>
+</dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="flair.data.Label.score">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">score</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#flair.data.Label.score" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="id1">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">score</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#id1" title="Link to this definition">#</a></dt>
+<dd><p>The confidence score of the label (between 0.0 and 1.0).</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Label.to_dict">
-<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L242-L243"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Label.to_dict" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L353-L354"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Label.to_dict" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -915,10 +982,9 @@ Default value for the score is 1.0.</p>
 <dd></dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="flair.data.Label.typename">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">typename</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#flair.data.Label.typename" title="Link to this definition">#</a></dt>
-<dd><p>Returns the label type name this label belongs to.
-This is determined by looking up the label in the data point’s label dictionary.</p>
+<dt class="sig sig-object py" id="id2">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">typename</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id2" title="Link to this definition">#</a></dt>
+<dd><p>The name of the annotation layer this label belongs to (e.g., “ner”).</p>
 </dd></dl>
 
 </dd></dl>

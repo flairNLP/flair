@@ -4,6 +4,13 @@
 .. automodule:: flair.data
 
    
+   .. rubric:: Module Attributes
+
+   .. autosummary::
+   
+      TextPair
+      TextTriple
+   
    .. rubric:: Functions
 
    .. autosummary::

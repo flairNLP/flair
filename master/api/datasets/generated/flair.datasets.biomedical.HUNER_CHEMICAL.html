@@ -818,25 +818,16 @@ button.search-button {
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.biomedical.HUNER_CHEMICAL.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence_splitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/biomedical.py#L4986-L4987"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.biomedical.HUNER_CHEMICAL.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize a Corpus.</p>
-<p>You can define the train, dev and test split
-by passing the corresponding Dataset object to the constructor. At least one split should be defined.
-If the option <cite>sample_missing_splits</cite> is set to True, missing splits will be randomly sampled from the
-train split.
-In most cases, you will not use the constructor yourself. Rather, you will create a corpus using one of our
-helper methods that read common NLP filetypes. For instance, you can use
-<a class="reference internal" href="flair.datasets.sequence_labeling.ColumnCorpus.html#flair.datasets.sequence_labeling.ColumnCorpus" title="flair.datasets.sequence_labeling.ColumnCorpus"><code class="xref py py-class docutils literal notranslate"><span class="pre">flair.datasets.sequence_labeling.ColumnCorpus</span></code></a> to read CoNLL-formatted files directly into
-a <code class="xref py py-class docutils literal notranslate"><span class="pre">Corpus</span></code>.</p>
+<dd><p>Initializes a MultiCorpus by concatenating splits from individual corpora.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train</strong> – The split you use for model training.</p></li>
-<li><p><strong>dev</strong> – A holdout split typically used for model selection or early stopping.</p></li>
-<li><p><strong>test</strong> – The final test data to compute the score of the model.</p></li>
-<li><p><strong>name</strong> – A name that identifies the corpus.</p></li>
-<li><p><strong>sample_missing_splits</strong> – If set to True, missing splits are sampled from train. If set to False,
-missing splits are not sampled and left empty. Default: True.</p></li>
-<li><p><strong>random_seed</strong> – Set a random seed to control the sampling of missing splits.</p></li>
+<li><p><strong>corpora</strong> (<em>list</em><em>[</em><a class="reference internal" href="../../generated/flair.data.Corpus.html#flair.data.Corpus" title="flair.data.Corpus"><em>Corpus</em></a><em>]</em>) – List of Corpus objects to combine.</p></li>
+<li><p><strong>task_ids</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – List of string IDs for each corpus/task.
+If None, generates default IDs like “Task_0”, “Task_1”. Defaults to None.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name for the combined corpus. Defaults to “multicorpus”.</p></li>
+<li><p><strong>**corpusargs</strong> – Additional arguments passed to the parent Corpus constructor
+(e.g., <cite>sample_missing_splits</cite>).</p></li>
 </ul>
 </dd>
 </dl>
@@ -846,10 +837,10 @@ missing splits are not sampled and left empty. Default: True.</p></li>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.biomedical.HUNER_CHEMICAL.__init__" title="flair.datasets.biomedical.HUNER_CHEMICAL.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([sentence_splitter])</p></td>
-<td><p>Initialize a Corpus.</p></td>
+<td><p>Initializes a MultiCorpus by concatenating splits from individual corpora.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
-<td><p>Generates uniform label noise distribution in the chosen dataset split.</p></td>
+<td><p>Adds artificial label noise to a specified split (in-place).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">downsample</span></code>([percentage, downsample_train, ...])</p></td>
 <td><p>Randomly downsample the corpus to the given percentage (by removing data points).</p></td>
@@ -867,10 +858,10 @@ missing splits are not sampled and left empty. Default: True.</p></li>
 <td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_label_dictionary</span></code>(label_type[, ...])</p></td>
-<td><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p></td>
+<td><p>Creates a Dictionary for a specific label type from the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_tag_dictionary</span></code>(tag_type)</p></td>
-<td><p>Create a tag dictionary of a given label type.</p></td>
+<td><p>DEPRECATED: Creates tag dictionary ensuring 'O', '&lt;START&gt;', '&lt;STOP&gt;'.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_vocab_dictionary</span></code>([max_tokens, min_freq])</p></td>
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>

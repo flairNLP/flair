@@ -821,7 +821,7 @@ button.search-button {
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.datasets.entity_linking.BIGBIO_EL_NCBI_DISEASE.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'el-diseases'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/datasets/entity_linking.py#L2352-L2353"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.datasets.entity_linking.BIGBIO_EL_NCBI_DISEASE.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize a Corpus.</p>
+<dd><p>Initializes a Corpus, potentially sampling missing dev/test splits from train.</p>
 <p>You can define the train, dev and test split
 by passing the corresponding Dataset object to the constructor. At least one split should be defined.
 If the option <cite>sample_missing_splits</cite> is set to True, missing splits will be randomly sampled from the
@@ -833,13 +833,14 @@ a <code class="xref py py-class docutils literal notranslate"><span class="pre">
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>train</strong> – The split you use for model training.</p></li>
-<li><p><strong>dev</strong> – A holdout split typically used for model selection or early stopping.</p></li>
-<li><p><strong>test</strong> – The final test data to compute the score of the model.</p></li>
-<li><p><strong>name</strong> – A name that identifies the corpus.</p></li>
-<li><p><strong>sample_missing_splits</strong> – If set to True, missing splits are sampled from train. If set to False,
-missing splits are not sampled and left empty. Default: True.</p></li>
-<li><p><strong>random_seed</strong> – Set a random seed to control the sampling of missing splits.</p></li>
+<li><p><strong>train</strong> (<em>Optional</em><em>[</em><em>Dataset</em><em>[</em><em>T_co</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Training data. Defaults to None.</p></li>
+<li><p><strong>dev</strong> (<em>Optional</em><em>[</em><em>Dataset</em><em>[</em><em>T_co</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Development data. Defaults to None.</p></li>
+<li><p><strong>test</strong> (<em>Optional</em><em>[</em><em>Dataset</em><em>[</em><em>T_co</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Testing data. Defaults to None.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Corpus name. Defaults to “corpus”.</p></li>
+<li><p><strong>sample_missing_splits</strong> (<em>Union</em><em>[</em><em>bool</em><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Policy for handling missing splits.
+True (default): sample dev(10%)/test(10%) from train. False: keep None.
+“only_dev”: sample only dev. “only_test”: sample only test.</p></li>
+<li><p><strong>random_seed</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – Seed for reproducible sampling. Defaults to None.</p></li>
 </ul>
 </dd>
 </dl>
@@ -849,10 +850,10 @@ missing splits are not sampled and left empty. Default: True.</p></li>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.datasets.entity_linking.BIGBIO_EL_NCBI_DISEASE.__init__" title="flair.datasets.entity_linking.BIGBIO_EL_NCBI_DISEASE.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([base_path, label_type])</p></td>
-<td><p>Initialize a Corpus.</p></td>
+<td><p>Initializes a Corpus, potentially sampling missing dev/test splits from train.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label_noise</span></code>(label_type, labels[, ...])</p></td>
-<td><p>Generates uniform label noise distribution in the chosen dataset split.</p></td>
+<td><p>Adds artificial label noise to a specified split (in-place).</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">downsample</span></code>([percentage, downsample_train, ...])</p></td>
 <td><p>Randomly downsample the corpus to the given percentage (by removing data points).</p></td>
@@ -870,10 +871,10 @@ missing splits are not sampled and left empty. Default: True.</p></li>
 <td><p>Counts occurrences of each label in the corpus and returns them as a dictionary object.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_label_dictionary</span></code>(label_type[, ...])</p></td>
-<td><p>Creates a dictionary of all labels assigned to the sentences in the corpus.</p></td>
+<td><p>Creates a Dictionary for a specific label type from the corpus.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_tag_dictionary</span></code>(tag_type)</p></td>
-<td><p>Create a tag dictionary of a given label type.</p></td>
+<td><p>DEPRECATED: Creates tag dictionary ensuring 'O', '&lt;START&gt;', '&lt;STOP&gt;'.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">make_vocab_dictionary</span></code>([max_tokens, min_freq])</p></td>
 <td><p>Creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code> of all tokens contained in the corpus.</p></td>

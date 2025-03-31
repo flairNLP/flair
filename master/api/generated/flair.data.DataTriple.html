@@ -824,60 +824,71 @@ button.search-button {
 <h1>flair.data.DataTriple<a class="headerlink" href="#flair-data-datatriple" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.data.DataTriple">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">DataTriple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">third</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1506-L1544"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataTriple" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">DataTriple</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">third</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1841-L1888"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataTriple" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.data.DataPoint.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<a class="reference internal" href="flair.data.DT.html#flair.data.DT" title="flair.data.DT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DT</span></code></a>, <a class="reference internal" href="flair.data.DT2.html#flair.data.DT2" title="flair.data.DT2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DT2</span></code></a>, <a class="reference internal" href="flair.data.DT3.html#flair.data.DT3" title="flair.data.DT3"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DT3</span></code></a>]</p>
+<p>Represents a triplet of DataPoints.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataTriple.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">third</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1507-L1511"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataTriple.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">second</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">third</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1844-L1855"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataTriple.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initializes a DataTriple.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>first</strong> (<em>DT</em>) – The first data point.</p></li>
+<li><p><strong>second</strong> (<em>DT2</em>) – The second data point.</p></li>
+<li><p><strong>third</strong> (<em>DT3</em>) – The third data point.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataTriple.__init__" title="flair.data.DataTriple.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(first, second, third)</p></td>
-<td><p></p></td>
+<td><p>Initializes a DataTriple.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_label</span></code>(typename, value[, score])</p></td>
-<td><p>Adds a label to the <a class="reference internal" href="flair.data.DataPoint.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a> by internally creating a <a class="reference internal" href="flair.data.Label.html#flair.data.Label" title="flair.data.Label"><code class="xref py py-class docutils literal notranslate"><span class="pre">Label</span></code></a> object.</p></td>
+<td><p>Adds a new label to a specific annotation layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_metadata</span></code>(key, value)</p></td>
-<td><p></p></td>
+<td><p>Adds a key-value pair to the data point's metadata.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataTriple.clear_embeddings" title="flair.data.DataTriple.clear_embeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clear_embeddings</span></code></a>([embedding_names])</p></td>
-<td><p></p></td>
+<td><p>Removes stored embeddings to free memory.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_each_embedding</span></code>([embedding_names])</p></td>
-<td><p></p></td>
+<td><p>Retrieves a list of individual embedding tensors.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_embedding</span></code>([names])</p></td>
-<td><p></p></td>
+<td><p>Retrieves embeddings, concatenating if multiple names are given or if names is None.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_label</span></code>([label_type, zero_tag_value])</p></td>
-<td><p></p></td>
+<td><p>Retrieves the primary label for a given type, or a default 'O' label.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_labels</span></code>([typename])</p></td>
-<td><p>Returns all labels of this datapoint belonging to a specific annotation layer.</p></td>
+<td><p>Retrieves all labels for a specific annotation layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_metadata</span></code>(key)</p></td>
-<td><p></p></td>
+<td><p>Retrieves metadata associated with the given key.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_label</span></code>(type)</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_label</span></code>(typename)</p></td>
+<td><p>Checks if the data point has at least one label for the given annotation type.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_metadata</span></code>(key)</p></td>
-<td><p></p></td>
+<td><p>Checks if the data point has metadata for the given key.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_labels</span></code>(typename)</p></td>
-<td><p></p></td>
+<td><p>Removes all labels associated with a specific annotation layer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_embedding</span></code>(name, vector)</p></td>
-<td><p></p></td>
+<td><p>Stores an embedding tensor under a given name.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_label</span></code>(typename, value[, score])</p></td>
-<td><p></p></td>
+<td><p>Sets the label(s) for an annotation layer, overwriting any existing ones.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataTriple.to" title="flair.data.DataTriple.to"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to</span></code></a>(device[, pin_memory])</p></td>
-<td><p></p></td>
+<td><p>Moves all stored embedding tensors to the specified device.</p></td>
 </tr>
 </tbody>
 </table>
@@ -885,65 +896,87 @@ button.search-button {
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataTriple.embedding" title="flair.data.DataTriple.embedding"><code class="xref py py-obj docutils literal notranslate"><span class="pre">embedding</span></code></a></p></td>
-<td><p></p></td>
+<td><p>Provides the primary embedding representation of the data point.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataTriple.end_position" title="flair.data.DataTriple.end_position"><code class="xref py py-obj docutils literal notranslate"><span class="pre">end_position</span></code></a></p></td>
-<td><p></p></td>
+<td><p>The ending character offset (exclusive) within the original text.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">labels</span></code></p></td>
-<td><p></p></td>
+<td><p>Returns a list of all labels from all annotation layers.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score</span></code></p></td>
-<td><p></p></td>
+<td><p>Shortcut property for the score of the <em>first</em> label added.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataTriple.start_position" title="flair.data.DataTriple.start_position"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_position</span></code></a></p></td>
-<td><p></p></td>
+<td><p>The starting character offset within the original text.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tag</span></code></p></td>
-<td><p></p></td>
+<td><p>Shortcut property for the value of the <em>first</em> label added.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.DataTriple.text" title="flair.data.DataTriple.text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">text</span></code></a></p></td>
-<td><p></p></td>
+<td><p>The textual representation of this data point.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.DataTriple.unlabeled_identifier" title="flair.data.DataTriple.unlabeled_identifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unlabeled_identifier</span></code></a></p></td>
-<td><p></p></td>
+<td><p>A string identifier for the data point itself, without label info.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataTriple.to">
-<span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1513-L1516"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataTriple.to" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1857-L1860"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataTriple.to" title="Link to this definition">#</a></dt>
+<dd><p>Moves all stored embedding tensors to the specified device.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>device</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>torch.device</em><em>]</em>) – Target device (e.g., ‘cpu’, ‘cuda:0’).</p></li>
+<li><p><strong>pin_memory</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True and moving to CUDA, attempts to pin memory.
+Defaults to False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.DataTriple.clear_embeddings">
-<span class="sig-name descname"><span class="pre">clear_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1518-L1521"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataTriple.clear_embeddings" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">clear_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1862-L1865"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.DataTriple.clear_embeddings" title="Link to this definition">#</a></dt>
+<dd><p>Removes stored embeddings to free memory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>embedding_names</strong> (<em>Optional</em><em>[</em><em>list</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Specific names to remove.
+If None, removes all embeddings. Defaults to None.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataTriple.embedding">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">embedding</span></span><a class="headerlink" href="#flair.data.DataTriple.embedding" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>Provides the primary embedding representation of the data point.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataTriple.unlabeled_identifier">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">unlabeled_identifier</span></span><a class="headerlink" href="#flair.data.DataTriple.unlabeled_identifier" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>A string identifier for the data point itself, without label info.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataTriple.start_position">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start_position</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.data.DataTriple.start_position" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>The starting character offset within the original text.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataTriple.end_position">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">end_position</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#flair.data.DataTriple.end_position" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>The ending character offset (exclusive) within the original text.</p>
+</dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="flair.data.DataTriple.text">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">text</span></span><a class="headerlink" href="#flair.data.DataTriple.text" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>The textual representation of this data point.</p>
+</dd></dl>
 
 </dd></dl>
 

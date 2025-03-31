@@ -824,121 +824,138 @@ button.search-button {
 <h1>flair.data.Dictionary<a class="headerlink" href="#flair-data-dictionary" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.data.Dictionary">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_unk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L51-L211"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_unk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L70-L307"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>This class holds a dictionary that maps strings to IDs, used to generate one-hot encodings of strings.</p>
+<p>This class holds a dictionary that maps strings to unique integer IDs.</p>
+<p>Used throughout Flair for representing words, tags, characters, etc.
+Handles unknown items (&lt;unk&gt;) and flags for multi-label or span tasks.
+Items are stored internally as bytes for efficiency.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_unk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L54-L63"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_unk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L78-L93"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initializes a Dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>add_unk</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, adds a special ‘&lt;unk&gt;’ item.
+Defaults to True.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Dictionary.__init__" title="flair.data.Dictionary.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>([add_unk])</p></td>
-<td><p></p></td>
+<td><p>Initializes a Dictionary.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Dictionary.add_item" title="flair.data.Dictionary.add_item"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_item</span></code></a>(item)</p></td>
-<td><p>Add string - if already in dictionary returns its ID.</p></td>
+<td><p>Adds a string item to the dictionary.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Dictionary.get_idx_for_item" title="flair.data.Dictionary.get_idx_for_item"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_idx_for_item</span></code></a>(item)</p></td>
-<td><p>Returns the ID of the string, otherwise 0.</p></td>
+<td><p>Retrieves the integer ID for a given string item.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Dictionary.get_idx_for_items" title="flair.data.Dictionary.get_idx_for_items"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_idx_for_items</span></code></a>(items)</p></td>
-<td><p>Returns the IDs for each item of the list of string, otherwise 0 if not found.</p></td>
+<td><p>Retrieves the integer IDs for a list of string items.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Dictionary.get_item_for_index" title="flair.data.Dictionary.get_item_for_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_item_for_index</span></code></a>(idx)</p></td>
-<td><p></p></td>
+<td><p>Retrieves the string item corresponding to a given integer ID.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Dictionary.get_items" title="flair.data.Dictionary.get_items"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_items</span></code></a>()</p></td>
-<td><p></p></td>
+<td><p>Returns a list of all items in the dictionary in order of their IDs.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Dictionary.has_item" title="flair.data.Dictionary.has_item"><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_item</span></code></a>(item)</p></td>
-<td><p></p></td>
+<td><p>Checks if a given string item exists in the dictionary.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Dictionary.is_span_prediction_problem" title="flair.data.Dictionary.is_span_prediction_problem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_span_prediction_problem</span></code></a>()</p></td>
-<td><p></p></td>
+<td><p>Checks if the dictionary likely represents BIOES/BIO span labels.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Dictionary.load" title="flair.data.Dictionary.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>(name)</p></td>
-<td><p></p></td>
+<td><p>Loads a pre-built character dictionary or a dictionary from a file path.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Dictionary.load_from_file" title="flair.data.Dictionary.load_from_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_from_file</span></code></a>(filename)</p></td>
-<td><p></p></td>
+<td><p>Loads a Dictionary previously saved using the <cite>.save()</cite> method.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Dictionary.remove_item" title="flair.data.Dictionary.remove_item"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_item</span></code></a>(item)</p></td>
-<td><p></p></td>
+<td><p>Removes an item from the dictionary.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Dictionary.save" title="flair.data.Dictionary.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>(savefile)</p></td>
-<td><p></p></td>
+<td><p>Saves the dictionary mapping to a file using pickle.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Dictionary.set_start_stop_tags" title="flair.data.Dictionary.set_start_stop_tags"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_start_stop_tags</span></code></a>()</p></td>
-<td><p></p></td>
+<td><p>Adds special &lt;START&gt; and &lt;STOP&gt; tags to the dictionary (often used for CRFs).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Dictionary.start_stop_tags_are_set" title="flair.data.Dictionary.start_stop_tags_are_set"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_stop_tags_are_set</span></code></a>()</p></td>
-<td><p></p></td>
+<td><p>Checks if &lt;START&gt; and &lt;STOP&gt; tags have been added.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.remove_item">
-<span class="sig-name descname"><span class="pre">remove_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L65-L69"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.remove_item" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">remove_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L95-L107"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.remove_item" title="Link to this definition">#</a></dt>
+<dd><p>Removes an item from the dictionary.</p>
+<p>Note: This operation might be slow for large dictionaries as it involves
+list removal. It currently doesn’t re-index subsequent items.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>item</strong> (<em>str</em>) – The string item to remove.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.add_item">
-<span class="sig-name descname"><span class="pre">add_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L71-L84"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.add_item" title="Link to this definition">#</a></dt>
-<dd><p>Add string - if already in dictionary returns its ID. if not in dictionary, it will get a new ID.</p>
+<span class="sig-name descname"><span class="pre">add_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L109-L124"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.add_item" title="Link to this definition">#</a></dt>
+<dd><p>Adds a string item to the dictionary.</p>
+<p>If the item exists, returns its ID. Otherwise, adds it and returns the new ID.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>item</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – a string for which to assign an id.</p>
+<dd class="field-odd"><p><strong>item</strong> (<em>str</em>) – The string item to add.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integer ID of the item.</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ID of string</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.get_idx_for_item">
-<span class="sig-name descname"><span class="pre">get_idx_for_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L86-L105"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_idx_for_item" title="Link to this definition">#</a></dt>
-<dd><p>Returns the ID of the string, otherwise 0.</p>
+<span class="sig-name descname"><span class="pre">get_idx_for_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L126-L148"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_idx_for_item" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves the integer ID for a given string item.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>item</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – string for which ID is requested</p>
+<dd class="field-odd"><p><strong>item</strong> (<em>str</em>) – The string item.</p>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span></p>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The integer ID. Returns 0 if item is not found and <cite>add_unk</cite> is True.</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>ID of string, otherwise 0</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>IndexError</strong> – If the item is not found and <cite>add_unk</cite> is False.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.get_idx_for_items">
-<span class="sig-name descname"><span class="pre">get_idx_for_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L107-L125"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_idx_for_items" title="Link to this definition">#</a></dt>
-<dd><p>Returns the IDs for each item of the list of string, otherwise 0 if not found.</p>
+<span class="sig-name descname"><span class="pre">get_idx_for_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L150-L172"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_idx_for_items" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves the integer IDs for a list of string items. (No cache version)</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>items</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span>) – List of string for which IDs are requested</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>List of ID of strings</p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>]</span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.get_items">
-<span class="sig-name descname"><span class="pre">get_items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L127-L128"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_items" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">get_items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L174-L176"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_items" title="Link to this definition">#</a></dt>
+<dd><p>Returns a list of all items in the dictionary in order of their IDs.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
 </dd>
@@ -947,18 +964,29 @@ button.search-button {
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.get_item_for_index">
-<span class="sig-name descname"><span class="pre">get_item_for_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L133-L134"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_item_for_index" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">get_item_for_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L182-L194"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_item_for_index" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves the string item corresponding to a given integer ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>idx</strong> (<em>int</em>) – The integer ID.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The string item.</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>IndexError</strong> – If the index is out of bounds.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.has_item">
-<span class="sig-name descname"><span class="pre">has_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L136-L137"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.has_item" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">has_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L196-L198"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.has_item" title="Link to this definition">#</a></dt>
+<dd><p>Checks if a given string item exists in the dictionary.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
@@ -967,8 +995,9 @@ button.search-button {
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.set_start_stop_tags">
-<span class="sig-name descname"><span class="pre">set_start_stop_tags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L139-L141"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.set_start_stop_tags" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">set_start_stop_tags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L200-L203"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.set_start_stop_tags" title="Link to this definition">#</a></dt>
+<dd><p>Adds special &lt;START&gt; and &lt;STOP&gt; tags to the dictionary (often used for CRFs).</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
@@ -977,18 +1006,24 @@ button.search-button {
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.is_span_prediction_problem">
-<span class="sig-name descname"><span class="pre">is_span_prediction_problem</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L143-L146"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.is_span_prediction_problem" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
+<span class="sig-name descname"><span class="pre">is_span_prediction_problem</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L205-L215"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.is_span_prediction_problem" title="Link to this definition">#</a></dt>
+<dd><p>Checks if the dictionary likely represents BIOES/BIO span labels.</p>
+<p>Returns True if <cite>span_labels</cite> flag is set or any item starts with ‘B-’, ‘I-’, ‘S-‘.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if likely span labels, False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.start_stop_tags_are_set">
-<span class="sig-name descname"><span class="pre">start_stop_tags_are_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L148-L149"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.start_stop_tags_are_set" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<span class="sig-name descname"><span class="pre">start_stop_tags_are_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L217-L219"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.start_stop_tags_are_set" title="Link to this definition">#</a></dt>
+<dd><p>Checks if &lt;START&gt; and &lt;STOP&gt; tags have been added.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span></p>
 </dd>
@@ -997,25 +1032,49 @@ button.search-button {
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">savefile</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L151-L156"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.save" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">savefile</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L221-L231"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.save" title="Link to this definition">#</a></dt>
+<dd><p>Saves the dictionary mapping to a file using pickle.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>savefile</strong> (<em>PathLike</em>) – The path to the output file.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.load_from_file">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L164-L179"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.load_from_file" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L239-L262"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.load_from_file" title="Link to this definition">#</a></dt>
+<dd><p>Loads a Dictionary previously saved using the <cite>.save()</cite> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Path</em><em>]</em>) – Path to the saved dictionary file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The loaded Dictionary object.</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a></span></p>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.data.Dictionary" title="flair.data.Dictionary">Dictionary</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.load">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L181-L202"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.load" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L264-L297"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.load" title="Link to this definition">#</a></dt>
+<dd><p>Loads a pre-built character dictionary or a dictionary from a file path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of the pre-built dictionary (e.g., ‘chars’)
+or a path to a dictionary file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The loaded Dictionary object.</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.data.Dictionary" title="flair.data.Dictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dictionary</span></code></a></span></p>
+<dd class="field-odd"><p><a class="reference internal" href="#flair.data.Dictionary" title="flair.data.Dictionary">Dictionary</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the name is not recognized or the path is invalid.</p>
 </dd>
 </dl>
 </dd></dl>

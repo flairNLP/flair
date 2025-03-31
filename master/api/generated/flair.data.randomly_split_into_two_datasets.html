@@ -824,12 +824,24 @@ button.search-button {
 <h1>flair.data.randomly_split_into_two_datasets<a class="headerlink" href="#flair-data-randomly-split-into-two-datasets" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="flair.data.randomly_split_into_two_datasets">
-<span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">randomly_split_into_two_datasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_of_first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2240-L2261"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.randomly_split_into_two_datasets" title="Link to this definition">#</a></dt>
-<dd><p>Shuffles a dataset and splits into two subsets.</p>
-<p>The length of the first is specified and the remaining samples go into the second subset.</p>
+<span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">randomly_split_into_two_datasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_of_first</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L2638-L2668"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.randomly_split_into_two_datasets" title="Link to this definition">#</a></dt>
+<dd><p>Shuffles and splits a dataset into two Subsets.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>Dataset</em>) – Input dataset.</p></li>
+<li><p><strong>length_of_first</strong> (<em>int</em>) – Desired number of samples in the first subset.</p></li>
+<li><p><strong>random_seed</strong> (<em>Optional</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – Seed for reproducible shuffle. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The two dataset subsets.</p>
+</dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Subset</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Subset</span></code>]</span></p>
+<dd class="field-odd"><p>tuple[Subset, Subset]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If <cite>length_of_first</cite> is invalid.</p>
 </dd>
 </dl>
 </dd></dl>
