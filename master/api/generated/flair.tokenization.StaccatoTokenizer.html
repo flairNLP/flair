@@ -805,16 +805,17 @@ button.search-button {
 <h1>flair.tokenization.StaccatoTokenizer<a class="headerlink" href="#flair-tokenization-staccatotokenizer" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.tokenization.StaccatoTokenizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">StaccatoTokenizer</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L312-L378"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.StaccatoTokenizer" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">StaccatoTokenizer</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L312-L370"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.StaccatoTokenizer" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p>
 <p>A string-based tokenizer that splits text into tokens based on the following rules:
 - Punctuation characters are split into individual tokens
 - Sequences of numbers are kept together as single tokens
 - Kanji characters are split into individual tokens
-- Uninterrupted sequences of letters (Latin, Cyrillic, etc.) and kana are preserved as single tokens</p>
+- Uninterrupted sequences of letters (Latin, Cyrillic, etc.) and kana are preserved as single tokens
+- Whitespace and common zero-width characters are ignored.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.StaccatoTokenizer.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L321-L344"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.StaccatoTokenizer.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L322-L350"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.StaccatoTokenizer.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods</p>
@@ -824,7 +825,7 @@ button.search-button {
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.tokenization.StaccatoTokenizer.tokenize" title="flair.tokenization.StaccatoTokenizer.tokenize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tokenize</span></code></a>(text)</p></td>
-<td><p>Tokenize the input text according to the defined rules.</p></td>
+<td><p>Tokenize the input text using re.findall to extract valid tokens.</p></td>
 </tr>
 </tbody>
 </table>
@@ -838,8 +839,8 @@ button.search-button {
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.StaccatoTokenizer.tokenize">
-<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L346-L378"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.StaccatoTokenizer.tokenize" title="Link to this definition">#</a></dt>
-<dd><p>Tokenize the input text according to the defined rules.</p>
+<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L352-L370"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.StaccatoTokenizer.tokenize" title="Link to this definition">#</a></dt>
+<dd><p>Tokenize the input text using re.findall to extract valid tokens.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>text</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The input text to tokenize</p>
@@ -848,7 +849,7 @@ button.search-button {
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A list of tokens</p>
+<dd class="field-odd"><p>A list of tokens (strings)</p>
 </dd>
 </dl>
 </dd></dl>
