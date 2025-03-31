@@ -716,6 +716,10 @@ class RelationClassifier(flair.nn.DefaultClassifier[EncodedSentence, EncodedSent
                 itertools.chain.from_iterable(self._encode_sentence_for_inference(sentence) for sentence in sentences)
             )
 
+            # Add check for empty sentences_with_relation_reference
+            if not sentences_with_relation_reference:
+                return None if return_loss else None
+
             encoded_sentences = [x[0] for x in sentences_with_relation_reference]
             loss = super().predict(
                 encoded_sentences,

@@ -433,15 +433,15 @@ class TARSTagger(FewshotClassifier):
         return model_state
 
     @staticmethod
-    def _fetch_model(model_name) -> str:
-        if model_name == "tars-ner":
+    def _fetch_model(model_identifier) -> str:
+        if model_identifier == "tars-ner":
             cache_dir = Path("models")
-            model_name = cached_path(
+            model_identifier = cached_path(
                 "https://nlp.informatik.hu-berlin.de/resources/models/tars-ner/tars-ner.pt",
                 cache_dir=cache_dir,
             )
 
-        return model_name
+        return model_identifier
 
     @classmethod
     def _init_model_with_state_dict(cls, state, **kwargs):
@@ -816,17 +816,17 @@ class TARSClassifier(FewshotClassifier):
         return model
 
     @staticmethod
-    def _fetch_model(model_name) -> str:
+    def _fetch_model(model_identifier) -> str:
         model_map = {}
         hu_path: str = "https://nlp.informatik.hu-berlin.de/resources/models"
 
         model_map["tars-base"] = "/".join([hu_path, "tars-base", "tars-base-v8.pt"])
 
         cache_dir = Path("models")
-        if model_name in model_map:
-            model_name = cached_path(model_map[model_name], cache_dir=cache_dir)
+        if model_identifier in model_map:
+            model_identifier = cached_path(model_map[model_identifier], cache_dir=cache_dir)
 
-        return model_name
+        return model_identifier
 
     @property
     def tars_embeddings(self):

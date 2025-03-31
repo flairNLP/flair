@@ -81,8 +81,7 @@ class SegtokTokenizer(Tokenizer):
     """
 
     def __init__(self, additional_split_characters: Optional[list[str]] = None) -> None:
-        """Initializes the SegtokTokenizer with an optional parameter for additional characters that should always
-        be split.
+        """Initializes the SegtokTokenizer.
 
         The default behavior uses simple rules to split text into tokens. If you want to ensure that certain characters
         always become their own token, you can change default behavior by setting the ``additional_split_characters``
@@ -308,3 +307,64 @@ class SciSpacyTokenizer(Tokenizer):
     @property
     def name(self) -> str:
         return self.__class__.__name__ + "_" + self.model.meta["name"] + "_" + self.model.meta["version"]
+
+
+class StaccatoTokenizer(Tokenizer):
+    """
+    A string-based tokenizer that splits text into tokens based on the following rules:
+    - Punctuation characters are split into individual tokens
+    - Sequences of numbers are kept together as single tokens
+    - Kanji characters are split into individual tokens
+    - Uninterrupted sequences of letters (Latin, Cyrillic, etc.) and kana are preserved as single tokens
+    - Whitespace and common zero-width characters are ignored.
+    """
+
+    def __init__(self):
+        super().__init__()
+        # Define patterns for different character types
+        # Punctuation/Symbols: Non-alphanumeric, non-whitespace, excluding common zero-width characters and BOM
+        self.punctuation = r"[^\w\s\uFE00-\uFE0F\u200B-\u200D\u2060-\u206F\uFEFF]"
+        self.digits = r"\d+"  # One or more digits
+        self.kanji = r"[\u4e00-\u9fff]"  # Kanji characters
+
+        # Unicode ranges for various alphabets and scripts
+        # This includes Latin, Cyrillic, Greek, Hebrew, Arabic, Japanese Kana, Korean Hangul, etc.
+        alphabets_list = [
+            r"[a-zA-Z]+",  # Latin
+            r"[\u0400-\u04FF\u0500-\u052F]+",  # Cyrillic and Cyrillic Supplement
+            r"[\u0370-\u03FF\u1F00-\u1FFF]+",  # Greek and Coptic
+            r"[\u0590-\u05FF]+",  # Hebrew
+            r"[\u0600-\u06FF\u0750-\u077F]+",  # Arabic
+            r"[\u0E00-\u0E7F]+",  # Thai
+            r"[\u3040-\u309F]+",  # Hiragana
+            r"[\u30A0-\u30FF]+",  # Katakana
+            r"[\uAC00-\uD7AF]+",  # Hangul (Korean)
+            # Add more script ranges here if needed
+        ]
+        self.alphabet_pattern = "|".join(alphabets_list)
+
+        # Combined pattern for re.findall:
+        # Captures letter sequences OR digit sequences OR Kanji OR punctuation/symbols
+        combined_pattern = f"({self.alphabet_pattern})|({self.digits})|({self.kanji})|({self.punctuation})"
+        # Pre-compile the regex for efficiency
+        self.token_pattern = re.compile(combined_pattern)
+
+    def tokenize(self, text: str) -> list[str]:
+        """
+        Tokenize the input text using re.findall to extract valid tokens.
+
+        Args:
+            text: The input text to tokenize
+
+        Returns:
+            A list of tokens (strings)
+        """
+        # Find all matches for the defined token patterns
+        matches = self.token_pattern.findall(text)
+
+        # re.findall returns a list of tuples, where each tuple corresponds to the capturing groups.
+        # For a match, only one group will be non-empty. We extract that non-empty group.
+        # Example match: ('word', '', '', '') or ('', '123', '', '') or ('', '', '好', '') or ('', '', '', '.')
+        tokens: list[str] = [next(filter(None, match_tuple)) for match_tuple in matches]
+
+        return tokens

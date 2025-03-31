@@ -1,6 +1,6 @@
 # Tagging parts-of-speech
 
-This tutorials shows you how to do part-of-speech tagging in Flair, showcases univeral and language-specific models, and gives a list of all PoS models in Flair.
+This tutorials shows you how to do part-of-speech tagging in Flair, showcases universal and language-specific models, and gives a list of all PoS models in Flair.
 
 ## Language-specific parts-of-speech (PoS)
 
@@ -111,7 +111,7 @@ Universal parts-of-speech are a set of minimal syntactic units that exist across
 will have VERBs or NOUNs. 
 
 
-We ship models trained over 14 langages to tag upos in **multilingual text**. Use like this: 
+We ship models trained over 14 languages to tag upos in **multilingual text**. Use like this: 
 
 ```python
 from flair.nn import Classifier

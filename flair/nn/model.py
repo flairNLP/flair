@@ -40,7 +40,17 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     Every new type of model must implement these methods.
     """
 
-    model_card: Optional[dict[str, Any]] = None
+    def __init__(self) -> None:
+        super().__init__()
+
+        # The model card can contain training parameters and metadata
+        self.model_card: Optional[dict[str, Any]] = None
+
+        # Optimizer and scheduler states are only set during training when save_optimizer_state=True
+        # is passed to the ModelTrainer. These states allow resuming training from a checkpoint
+        # with the exact same optimizer and learning rate scheduler states.
+        self.optimizer_state_dict: Optional[dict[str, Any]] = None
+        self.scheduler_state_dict: Optional[dict[str, Any]] = None
 
     @property
     @abstractmethod
@@ -93,9 +103,25 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         raise NotImplementedError
 
     def _get_state_dict(self) -> dict:
-        """Returns the state dictionary for this model."""
+        """Returns the state dictionary for this model.
+
+        The state dictionary contains:
+        - "state_dict": The model's parameters state dictionary
+        - "__cls__": The class name of the model for loading
+        - "optimizer_state_dict": The optimizer's state dictionary (if it exists)
+        - "scheduler_state_dict": The scheduler's state dictionary (if it exists)
+        - "model_card": Training parameters and metadata (if set)
+        """
         # Always include the name of the Model class for which the state dict holds
         state_dict = {"state_dict": self.state_dict(), "__cls__": self.__class__.__name__}
+
+        # Add optimizer state dict if it exists
+        if hasattr(self, "optimizer_state_dict") and self.optimizer_state_dict is not None:
+            state_dict["optimizer_state_dict"] = self.optimizer_state_dict
+
+        # Add scheduler state dict if it exists
+        if hasattr(self, "scheduler_state_dict") and self.scheduler_state_dict is not None:
+            state_dict["scheduler_state_dict"] = self.scheduler_state_dict
 
         return state_dict
 
@@ -112,12 +138,34 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
         model.load_state_dict(state["state_dict"])
 
+        # load optimizer state if it exists in the state dict
+        if "optimizer_state_dict" in state:
+            log.debug(f"Found optimizer state in model file with keys: {state['optimizer_state_dict'].keys()}")
+            model.optimizer_state_dict = state["optimizer_state_dict"]
+
+        # load scheduler state if it exists in the state dict
+        if "scheduler_state_dict" in state:
+            log.debug(f"Found scheduler state in model file with keys: {state['scheduler_state_dict'].keys()}")
+            model.scheduler_state_dict = state["scheduler_state_dict"]
+
         return model
 
     @staticmethod
-    def _fetch_model(model_name):
-        # this seems to just return model name, not a model with that name
-        return model_name
+    def _fetch_model(model_identifier: str):
+        """
+        Returns a model path (e.g., Huggingface model hub id or other repo path) given a model identifier.
+
+        This method is typically overwritten in specific classes that inherit from Model to allow for easier access
+        to pre-specified models. For instance, in the SequenceTagger, the id "ner" maps to the HF path
+        "flair/ner-english".
+
+        Args:
+            model_identifier: a short string identifier of the model.
+
+        Returns:
+            Path to HuggingFace or HU repo
+        """
+        return model_identifier
 
     def save(self, model_file: Union[str, Path], checkpoint: bool = False) -> None:
         """Saves the current model to the provided file.
@@ -135,6 +183,24 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)
 
+    @property
+    def license_info(self) -> str:
+        """Get the license information for this model."""
+        if self.model_card is None:
+            return "No license information available"
+        return self.model_card.get("license_info", "No license information available")
+
+    @license_info.setter
+    def license_info(self, value: Optional[str]):
+        """Set the license information for this model."""
+        if self.model_card is None:
+            self.model_card = {}
+        if value is None:
+            # Remove license info if it exists
+            self.model_card.pop("license_info", None)
+        else:
+            self.model_card["license_info"] = value
+
     @classmethod
     def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "Model":
         """Loads a Flair model from the given file or state dictionary.
@@ -150,16 +216,18 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             # get all non-abstract subclasses
             subclasses = list(get_non_abstract_subclasses(cls))
 
-            # try to fetch the model for each subclass. if fetching is possible, load model and return it
-            for model_cls in subclasses:
-                try:
-                    new_model_path = model_cls._fetch_model(model_path)
-                    if new_model_path != model_path:
-                        return model_cls.load(new_model_path)
-                except Exception as e:
-                    log.debug(e)
-                    # skip any invalid loadings, e.g. not found on HuggingFace hub
-                    continue
+            # If the model_path is a str, try to fetch model for each subclass.
+            # If fetching is possible, load model and return it.
+            if isinstance(model_path, str):
+                for model_cls in subclasses:
+                    try:
+                        new_model_path = model_cls._fetch_model(model_path)
+                        if new_model_path != model_path:
+                            return model_cls.load(new_model_path)
+                    except Exception as e:
+                        log.debug(e)
+                        # skip any invalid loadings, e.g. not found on HuggingFace hub
+                        continue
 
             # if the model cannot be fetched, load as a file
             try:
@@ -204,10 +272,21 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             if "__cls__" in state:
                 state.pop("__cls__")
 
+            log.info("--------------------------------------------------")
+            log.info(f"- Loading {cls.__name__}")
+
             model = cls._init_model_with_state_dict(state)
 
-            if "model_card" in state:
-                model.model_card = state["model_card"]
+            # Print license information
+            log.info("--------------------------------------------------")
+            model_card = state.get("model_card", None)
+            if model_card is not None:
+                model.model_card = model_card
+                license_info = model_card.get("license_info", "No license information available")
+                log.info(f"- Model license: {license_info}")
+            else:
+                log.info("- Model license: No license information available")
+            log.info("--------------------------------------------------")
 
             model.eval()
             model.to(flair.device)
@@ -222,25 +301,39 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
         Only available for models trained with with Flair >= 0.9.1.
         """
-        if hasattr(self, "model_card"):
+        model_card = getattr(self, "model_card", None)  # Returns None if attribute doesn't exist or is None
+
+        if model_card is not None:
             param_out = "\n------------------------------------\n"
             param_out += "--------- Flair Model Card ---------\n"
             param_out += "------------------------------------\n"
-            param_out += "- this Flair model was trained with:\n"
-            param_out += f"-- Flair version {self.model_card['flair_version']}\n"
-            param_out += f"-- PyTorch version {self.model_card['pytorch_version']}\n"
-            if "transformers_version" in self.model_card:
-                param_out += f"-- Transformers version {self.model_card['transformers_version']}\n"
-            param_out += "------------------------------------\n"
 
-            param_out += "------- Training Parameters: -------\n"
-            param_out += "------------------------------------\n"
-            training_params = "\n".join(
-                f'-- {param} = {self.model_card["training_parameters"][param]}'
-                for param in self.model_card["training_parameters"]
-            )
-            param_out += training_params + "\n"
-            param_out += "------------------------------------\n"
+            # Only print version information if it exists
+            if any(key in model_card for key in ["flair_version", "pytorch_version", "transformers_version"]):
+                param_out += "- this Flair model was trained with:\n"
+                if "flair_version" in model_card:
+                    param_out += f"-- Flair version {model_card['flair_version']}\n"
+                if "pytorch_version" in model_card:
+                    param_out += f"-- PyTorch version {model_card['pytorch_version']}\n"
+                if "transformers_version" in model_card:
+                    param_out += f"-- Transformers version {model_card['transformers_version']}\n"
+                param_out += "------------------------------------\n"
+
+            # Print license info if it exists
+            if "license_info" in model_card:
+                param_out += f"-- License: {model_card['license_info']}\n"
+                param_out += "------------------------------------\n"
+
+            # Print training parameters if they exist
+            if "training_parameters" in model_card:
+                param_out += "------- Training Parameters: -------\n"
+                param_out += "------------------------------------\n"
+                training_params = "\n".join(
+                    f'-- {param} = {model_card["training_parameters"][param]}'
+                    for param in model_card["training_parameters"]
+                )
+                param_out += training_params + "\n"
+                param_out += "------------------------------------\n"
 
             log.info(param_out)
         else:
@@ -695,11 +788,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
     def _filter_data_point(self, data_point: DT) -> bool:
         """Specify if a data point should be kept.
 
-        That way you can remove for example empty texts. Per default all datapoints that have length zero
+        That way you can remove for example empty texts. Per default all datapoints that have empty text
         will be removed.
         Return true if the data point should be kept and false if it should be removed.
         """
-        return len(data_point) > 0
+        return bool(data_point.text.strip())
 
     @abstractmethod
     def _get_embedding_for_data_point(self, prediction_data_point: DT2) -> torch.Tensor:
@@ -830,10 +923,10 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             return data_points
 
         # filter empty sentences
-        sentences = [sentence for sentence in typing.cast(list[Sentence], data_points) if len(sentence) > 0]
+        sentences = [sentence for sentence in typing.cast(list[Sentence], data_points) if sentence.text.strip()]
 
-        # reverse sort all sequences by their length
-        reordered_sentences = sorted(sentences, key=len, reverse=True)
+        # sort by text length (characters) instead of token length
+        reordered_sentences = sorted(sentences, key=lambda s: len(s.text), reverse=True)
 
         return typing.cast(list[DT], reordered_sentences)
 
@@ -863,8 +956,6 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             label_name = self.label_type if self.label_type is not None else "label"
 
         with torch.no_grad():
-            if not sentences:
-                return sentences
 
             if not isinstance(sentences, list):
                 sentences = [sentences]
@@ -898,7 +989,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 batch = [dp for dp in batch if self._filter_data_point(dp)]
 
                 # stop if all sentences are empty
-                if not batch:
+                if len(batch) == 0:
                     continue
 
                 data_points = self._get_data_points_for_batch(batch)
@@ -912,7 +1003,7 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 scores = self._mask_scores(scores, data_points)
 
                 # if anything could possibly be predicted
-                if len(data_points) > 0:
+                if data_points:
                     # remove previously predicted labels of this type
                     for sentence in data_points:
                         sentence.remove_labels(label_name)
