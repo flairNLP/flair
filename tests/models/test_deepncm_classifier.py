@@ -1,5 +1,6 @@
 import pytest
 import torch
+import flair
 
 from flair.data import Sentence
 from flair.datasets import ClassificationCorpus
@@ -96,7 +97,14 @@ class TestDeepNCMDecoder(BaseModelTest):
         label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
         model = self.build_model(embeddings, label_dict)
 
-        prototype = model.decoder.get_prototype(next(iter(label_dict.get_items())))
+        # Get the first *actual* label name, skipping '<unk>' if present
+        valid_label_items = [item for item in label_dict.get_items() if item != "<unk>"]
+        assert (
+            valid_label_items
+        ), "Label dictionary should contain labels other than <unk>"  # Ensure there are actual labels
+        first_valid_item = valid_label_items[0]
+
+        prototype = model.decoder.get_prototype(first_valid_item)  # Use the first valid item
         assert isinstance(prototype, torch.Tensor)
         assert prototype.shape == (model.decoder.encoding_dim,)
 
@@ -106,14 +114,15 @@ class TestDeepNCMDecoder(BaseModelTest):
     def test_get_closest_prototypes(self, corpus, embeddings):
         label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
         model = self.build_model(embeddings, label_dict)
-        input_vector = torch.randn(model.decoder.encoding_dim)
+        input_vector = torch.randn(model.decoder.encoding_dim, device=flair.device)
         closest_prototypes = model.decoder.get_closest_prototypes(input_vector, top_k=2)
 
         assert len(closest_prototypes) == 2
         assert all(isinstance(item, tuple) and len(item) == 2 for item in closest_prototypes)
 
         with pytest.raises(ValueError):
-            model.decoder.get_closest_prototypes(torch.randn(model.decoder.encoding_dim + 1))
+            error_vector = torch.randn(model.decoder.encoding_dim + 1, device=flair.device)
+            model.decoder.get_closest_prototypes(error_vector)
 
     def test_forward_loss(self, corpus, embeddings):
         label_dict = corpus.make_label_dictionary(label_type=self.train_label_type)
@@ -159,6 +168,7 @@ class TestDeepNCMDecoder(BaseModelTest):
         # Simulate training epoch
         plugin.after_training_epoch()
 
+        # Check state after epoch (no changes needed here)
         if mean_update_method == "condensation":
             assert torch.all(
                 model.decoder.class_counts == 1
@@ -167,23 +177,56 @@ class TestDeepNCMDecoder(BaseModelTest):
             assert torch.all(
                 torch.eq(model.decoder.class_counts, initial_class_counts)
             ), "Class counts should not change for online method after epoch"
+        # Add check for decay method after epoch (should also not change)
+        elif mean_update_method == "decay":
+            assert torch.all(
+                torch.eq(model.decoder.class_counts, initial_class_counts)
+            ), "Class counts should not change for decay method after epoch"
 
         # Simulate training batch
         sentences = [Sentence("This movie was great!"), Sentence("I didn't enjoy this film at all.")]
-        for sentence, label in zip(sentences, list(label_dict.get_items())[:2]):
+        # Get the actual labels used in the batch
+        batch_labels = list(label_dict.get_items())[:2]
+        # Get the indices corresponding to these labels
+        batch_label_indices = torch.tensor(
+            [label_dict.get_idx_for_item(lbl) for lbl in batch_labels], device=flair.device
+        )
+
+        for sentence, label in zip(sentences, batch_labels):
             sentence.add_label(self.train_label_type, label)
         model.forward_loss(sentences)
-        plugin.after_training_batch()
+        plugin.after_training_batch()  # This calls decoder.update_prototypes()
 
         assert not torch.all(
             torch.eq(initial_prototypes, model.decoder.class_prototypes)
         ), "Prototypes should be updated after a batch"
 
+        # Check state after batch
         if mean_update_method == "condensation":
+            # Condensation counts are reset to 1 each epoch, then incremented.
+            # After one batch, they should be > 1 if seen, ==1 otherwise (post-epoch reset)
+            # A simpler check might be just >= 1
             assert torch.all(
-                model.decoder.class_counts >= 1
+                model.decoder.class_counts >= 1  # Check counts are at least 1
             ), "Class counts should be >= 1 for condensation method after a batch"
         elif mean_update_method == "online":
+            # Check only the counts for labels seen in the batch increased
             assert torch.all(
-                model.decoder.class_counts > initial_class_counts
-            ), "Class counts should increase for online method after a batch"
+                model.decoder.class_counts[batch_label_indices] > initial_class_counts[batch_label_indices]
+            ), "Counts for labels seen in the batch should increase for online method"
+            # Check that counts for unseen labels remain unchanged (optional but good)
+            unseen_mask = torch.ones(model.decoder.num_prototypes, dtype=torch.bool, device=flair.device)
+            unseen_mask[batch_label_indices] = False
+            assert torch.all(
+                model.decoder.class_counts[unseen_mask] == initial_class_counts[unseen_mask]
+            ), "Counts for labels not seen in the batch should remain zero for online method"
+        elif mean_update_method == "decay":
+            # Decay method also increments counts like online
+            assert torch.all(
+                model.decoder.class_counts[batch_label_indices] > initial_class_counts[batch_label_indices]
+            ), "Counts for labels seen in the batch should increase for decay method"
+            unseen_mask = torch.ones(model.decoder.num_prototypes, dtype=torch.bool, device=flair.device)
+            unseen_mask[batch_label_indices] = False
+            assert torch.all(
+                model.decoder.class_counts[unseen_mask] == initial_class_counts[unseen_mask]
+            ), "Counts for labels not seen in the batch should remain zero for decay method"

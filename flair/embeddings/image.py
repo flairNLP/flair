@@ -55,9 +55,17 @@ class IdentityImageEmbeddings(ImageEmbeddings):
 
     def _add_embeddings_internal(self, images: list[Image]):
         for image in images:
-            image_data = self.PIL.Image.open(image.imageURL)
-            image_data.load()
-            image.set_embedding(self.name, self.transforms(image_data))
+            if image.imageURL:
+                try:
+                    image_data = self.PIL.Image.open(image.imageURL)
+                    image_data.load()
+                    image.set_embedding(self.name, self.transforms(image_data))
+                except FileNotFoundError:
+                    log.warning(f"Image file not found at URL: {image.imageURL}. Skipping embedding for this image.")
+                except Exception as e:
+                    log.warning(f"Could not load image from URL: {image.imageURL}. Error: {e}. Skipping embedding.")
+            else:
+                log.warning("Image object has no imageURL. Skipping embedding.")
 
     @property
     def embedding_length(self) -> int:
