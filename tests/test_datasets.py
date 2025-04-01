@@ -13,6 +13,7 @@ from flair.datasets.sequence_labeling import (
     JsonlDataset,
     MultiFileJsonlCorpus,
 )
+from flair.tokenization import StaccatoTokenizer
 
 
 def test_load_imdb_data(tasks_base_path):
@@ -187,6 +188,46 @@ def test_load_span_data(tasks_base_path):
     assert len(dataset) == 3
     assert dataset[2][2].text == "RAB"
     assert dataset[2][2].get_label("ner").value == "PARTA"
+
+
+def test_load_span_data_retokenize(tasks_base_path):
+    corpus_original = ColumnCorpus(
+        data_folder=tasks_base_path / "span_labels",
+        train_file="span_first.txt",
+        test_file="span_second.txt",
+        dev_file="span_third.txt",
+        column_format={0: "text", 1: "ner"},
+    )
+
+    corpus_retokenized = ColumnCorpus(
+        data_folder=tasks_base_path / "span_labels",
+        train_file="span_first.txt",
+        test_file="span_second.txt",
+        dev_file="span_third.txt",
+        use_tokenizer=StaccatoTokenizer(),
+        column_format={0: "text", 1: "ner"},
+        in_memory=False,
+    )
+
+    corpus_retokenized_in_memory = ColumnCorpus(
+        data_folder=tasks_base_path / "span_labels",
+        train_file="span_first.txt",
+        test_file="span_second.txt",
+        dev_file="span_third.txt",
+        use_tokenizer=StaccatoTokenizer(),
+        column_format={0: "text", 1: "ner"},
+        in_memory=True,
+    )
+
+    # assert original number of tokens in corpus sentence
+    assert len(corpus_original.train[0]) == 6
+
+    # assert number of tokens in retokenized sentence
+    assert len(corpus_retokenized.train[0]) == 10
+    assert len(corpus_retokenized_in_memory.train[0]) == 10
+
+    assert corpus_original.tokenizer is None
+    assert isinstance(corpus_retokenized.tokenizer, StaccatoTokenizer)
 
 
 def test_load_germeval_data(tasks_base_path):
