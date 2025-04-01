@@ -1728,14 +1728,17 @@ class Sentence(DataPoint):
                     span_labels[label_type] = []
 
                 for span in spans:
-                    # Store the span text, character positions, and its labels
+                    # Get only labels of the current type being processed
+                    relevant_labels = span.get_labels(label_type)
+                    # Store the span text, character positions, and its relevant labels
                     span_labels[label_type].append(
                         (
                             span.text,
                             span.start_position,
                             span.end_position,
-                            [label.value for label in span.labels],
-                            [label.score for label in span.labels],
+                            # Use only labels matching the current label_type
+                            [label.value for label in relevant_labels],
+                            [label.score for label in relevant_labels],
                         )
                     )
 

@@ -712,3 +712,62 @@ def test_retokenize_multiple_times():
     assert len(spans) == 2
     assert spans[0].text == "01-03-2025"
     assert spans[1].text == "New York"
+
+
+def test_retokenize_with_multiple_label_types_on_same_span():
+    # Test that retokenizing preserves multiple labels of different types on the same span
+    sentence = Sentence("Berlin is great")
+
+    # Add two labels of different types to the same span "Berlin"
+    span_berlin = sentence.get_span(0, 1)
+    span_berlin.add_label("ner", "LOC")
+    span_berlin.add_label("custom_type", "CITY_CAPITAL")
+
+    # Verify initial state
+    assert len(sentence) == 3
+    spans_ner = sentence.get_spans("ner")
+    spans_custom = sentence.get_spans("custom_type")
+
+    assert len(spans_ner) == 1
+    assert spans_ner[0].text == "Berlin"
+    assert len(spans_ner[0].get_labels("ner")) == 1
+    assert spans_ner[0].get_label("ner").value == "LOC"
+
+    assert len(spans_custom) == 1
+    assert spans_custom[0].text == "Berlin"
+    assert len(spans_custom[0].get_labels("custom_type")) == 1
+    assert spans_custom[0].get_label("custom_type").value == "CITY_CAPITAL"
+
+    # Retokenize with StaccatoTokenizer (which might split differently)
+    sentence.retokenize(StaccatoTokenizer())
+
+    # Verify tokenization changed (optional, depends on tokenizer)
+    # Staccato might not change this specific sentence, let's assume it could
+    # assert len(sentence) != 3
+
+    # Verify the spans and labels are preserved without duplication
+    spans_ner_after = sentence.get_spans("ner")
+    spans_custom_after = sentence.get_spans("custom_type")
+
+    # Check NER label
+    assert len(spans_ner_after) == 1, "Should still have one NER span"
+    assert spans_ner_after[0].text == "Berlin"
+    # CRITICAL CHECK: Ensure only one 'ner' label exists for the span
+    assert len(spans_ner_after[0].get_labels("ner")) == 1, "Should only have one NER label after retokenize"
+    assert spans_ner_after[0].get_label("ner").value == "LOC"
+
+    # Check custom_type label
+    assert len(spans_custom_after) == 1, "Should still have one custom_type span"
+    assert spans_custom_after[0].text == "Berlin"
+    # CRITICAL CHECK: Ensure only one 'custom_type' label exists for the span
+    assert (
+        len(spans_custom_after[0].get_labels("custom_type")) == 1
+    ), "Should only have one custom_type label after retokenize"
+    assert spans_custom_after[0].get_label("custom_type").value == "CITY_CAPITAL"
+
+    # Check that the span objects are the same if caching works as expected
+    assert spans_ner_after[0] is spans_custom_after[0]
+
+    # Check overall annotation layers
+    assert len(sentence.annotation_layers.get("ner", [])) == 1
+    assert len(sentence.annotation_layers.get("custom_type", [])) == 1
