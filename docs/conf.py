@@ -5,10 +5,9 @@ import importlib_metadata
 
 # -- Project information -----------------------------------------------------
 from sphinx_github_style import get_linkcode_resolve
-from torch.nn import Module
 
-version = "0.15.0"
-release = "0.15.0"
+version = "0.15.1"
+release = "0.15.1"
 project = "flair"
 author = importlib_metadata.metadata(project)["Author"]
 copyright = f"2023 {author}"

@@ -51,3 +51,28 @@
 13	,	PUNCT	O	_
 14	Germany	PROPN	B-LOC	SpaceAfter=No
 15	.	PUNCT	O	_
+
+# text = The German-American computer scientist Joseph Weizenbaum (8 January 1923 - 5 March 2008) was born in Berlin.
+# relations = 21;21;7;8;place_of_birth
+1	The	DET	O	_
+2	German	PROPN	O	SpaceAfter=No
+3	-	PUNCT	O	SpaceAfter=No
+4	American	PROPN	O	_
+5	computer	PROPN	O	_
+6	scientist	NOUN	O	_
+7	Joseph	PROPN	B-PER	_
+8	Weizenbaum	PROPN	I-PER	_
+9	(	PUNCT	O	SpaceAfter=No
+10	8	NUM	O	_
+11	January	PROPN	O	_
+12	1923	NUM	O	_
+13	-	SYM	O	_
+14	5	NUM	O	_
+15	March	PROPN	O	_
+16	2008	NUM	O	SpaceAfter=No
+17	)	PUNCT	O	_
+18	was	PRON	O	_
+19	born	ADV	O	_
+20	in	ADP	O	_
+21	Berlin	PROPN	B-LOC	SpaceAfter=No
+22	.	PUNCT	O	_

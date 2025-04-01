@@ -268,11 +268,14 @@ class ClassificationDataset(FlairDataset):
         if text and (labels or self.allow_examples_without_labels):
             sentence = Sentence(text, use_tokenizer=tokenizer)
 
+            if 0 < self.truncate_to_max_tokens < len(sentence):
+                # Create new sentence with truncated text
+                truncated_text = " ".join(token.text for token in sentence.tokens[: self.truncate_to_max_tokens])
+                sentence = Sentence(truncated_text, use_tokenizer=tokenizer)
+
+            # Add the labels
             for label in labels:
                 sentence.add_label(self.label_type, label)
-
-            if sentence is not None and 0 < self.truncate_to_max_tokens < len(sentence):
-                sentence.tokens = sentence.tokens[: self.truncate_to_max_tokens]
 
             return sentence
         return None
@@ -798,7 +801,7 @@ class IMDB(ClassificationCorpus):
                         if not rebalance_corpus and dataset == "test":
                             data_file = test_data_file
 
-                        with open(data_file, "at") as f_p:
+                        with open(data_file, "a") as f_p:
                             current_path = data_path / "aclImdb" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file() and file_name.name.endswith(".txt"):
@@ -891,7 +894,7 @@ class NEWSGROUPS(ClassificationCorpus):
                             data_path / "original",
                             members=[m for m in f_in.getmembers() if f"{dataset}/{label}" in m.name],
                         )
-                        with open(f"{data_path}/{dataset}.txt", "at", encoding="utf-8") as f_p:
+                        with open(f"{data_path}/{dataset}.txt", "a", encoding="utf-8") as f_p:
                             current_path = data_path / "original" / dataset / label
                             for file_name in current_path.iterdir():
                                 if file_name.is_file():

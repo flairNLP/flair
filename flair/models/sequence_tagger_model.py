@@ -112,7 +112,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         self.predict_spans = self._determine_if_span_prediction_problem(self.label_dictionary)
 
         self.tagset_size = len(self.label_dictionary)
-        log.info(f"SequenceTagger predicts: {self.label_dictionary}")
+        log.info(f"- Predicts {len(self.label_dictionary)} classes: {self.label_dictionary.get_items()[:20]}")
 
         # ----- Embeddings -----
         self.embeddings = embeddings
@@ -286,7 +286,6 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             A tuple consisting of the loss tensor and the number of tokens in the batch.
 
         """
-
         # if there are no sentences, there is no loss
         if len(sentences) == 0:
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=True), 0
@@ -666,7 +665,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         )
 
     @staticmethod
-    def _fetch_model(model_name) -> str:
+    def _fetch_model(model_identifier) -> str:
         # core Flair models on Huggingface ModelHub
         huggingface_model_map = {
             "ner": "flair/ner-english",
@@ -763,21 +762,21 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         cache_dir = Path("models")
 
         # check if model name is a valid local file
-        if Path(model_name).exists():
-            model_path = model_name
+        if Path(model_identifier).exists():
+            model_path = model_identifier
 
         # check if model key is remapped to HF key - if so, print out information
-        elif model_name in huggingface_model_map:
+        elif model_identifier in huggingface_model_map:
             # get mapped name
-            hf_model_name = huggingface_model_map[model_name]
+            hf_model_name = huggingface_model_map[model_identifier]
 
             model_path = hf_download(hf_model_name)
 
         # if not, check if model key is remapped to direct download location. If so, download model
-        elif model_name in hu_model_map:
-            model_path = cached_path(hu_model_map[model_name], cache_dir=cache_dir)
+        elif model_identifier in hu_model_map:
+            model_path = cached_path(hu_model_map[model_identifier], cache_dir=cache_dir)
 
-            if model_name.startswith("hunflair-"):
+            if model_identifier.startswith("hunflair-"):
                 log.warning(
                     "HunFlair (version 1) is deprecated. Consider using HunFlair2 for improved extraction performance: "
                     "Classifier.load('hunflair2')."
@@ -787,7 +786,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # for all other cases (not local file or special download location), use HF model hub
         else:
-            model_path = hf_download(model_name)
+            model_path = hf_download(model_identifier)
 
         return model_path
 
@@ -863,8 +862,8 @@ for entity in sentence.get_spans('ner'):
             self.save(local_model_path)
 
             # Determine if model card already exists
-            info = model_info(repo_id, use_auth_token=token)
-            write_readme = all(f.rfilename != "README.md" for f in info.siblings)
+            info = model_info(repo_id, token=token)
+            write_readme = info.siblings is None or all(f.rfilename != "README.md" for f in info.siblings)
 
             # Generate and save model card
             if write_readme:

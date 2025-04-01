@@ -1,8 +1,6 @@
 import logging
 from typing import Any
 
-import torch
-
 from flair.trainers.plugins.base import TrainerPlugin
 
 log = logging.getLogger("flair")
@@ -29,7 +27,9 @@ class CheckpointPlugin(TrainerPlugin):
                 f"was set"
             )
             model_name = "model_epoch_" + str(epoch) + ".pt"
-            self.model.save(self.base_path / model_name, checkpoint=self.save_optimizer_state)
+
+            # Use trainer's _save_model method - we have access to trainer through self.trainer
+            self.trainer._save_model(self.base_path / model_name, save_optimizer_state=self.save_optimizer_state)
 
     @property
     def attach_to_all_processes(self) -> bool:

@@ -192,7 +192,7 @@ def unpack_file(file: Path, unpack_to: Path, mode: Optional[str] = None, keep: b
             # Extract all the contents of zip file in current directory
             zipObj.extractall(unpack_to)
 
-    elif mode == "targz" or (mode is None and str(file).endswith("tar.gz") or str(file).endswith("tgz")):
+    elif mode == "targz" or ((mode is None and str(file).endswith("tar.gz")) or str(file).endswith("tgz")):
         import tarfile
 
         with tarfile.open(file, "r:gz") as tarObj:
@@ -382,4 +382,4 @@ def load_torch_state(model_file: str) -> dict[str, typing.Any]:
         # to load models on some Mac/Windows setups
         # see https://github.com/zalandoresearch/flair/issues/351
         f = load_big_file(model_file)
-        return torch.load(f, map_location="cpu")
+        return torch.load(f, map_location="cpu", weights_only=False)

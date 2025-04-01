@@ -274,3 +274,36 @@ def test_data_point_equality():
     assert span_ner_label.data_point == span_other_label.data_point
     assert ner_label.data_point != span_other_label.data_point
     assert other_label.data_point != span_ner_label.data_point
+
+
+def test_label_typename():
+    """Test the typename property of the Label class to ensure it correctly
+    identifies and returns the label type."""
+    # Create a sentence with various types of labels
+    sentence = Sentence("George Washington went to Washington.")
+
+    # Add labels of different types to various parts of the sentence
+    sentence.add_label("sentiment", "positive")
+    sentence[0:2].add_label("ner", "PER")
+    sentence[4].add_label("pos", "PROPN")
+
+    # Get labels of each type
+    sentiment_label = sentence.get_label("sentiment")
+    ner_label = sentence.get_label("ner")
+    pos_label = sentence.get_label("pos")
+
+    # Test that typename property returns the correct type for each label
+    assert sentiment_label.typename == "sentiment"
+    assert ner_label.typename == "ner"
+    assert pos_label.typename == "pos"
+
+    # Test that the typename is set correctly when creating the label
+    new_label = Label(sentence, "test_value")
+    assert new_label.typename is None  # Should be None initially
+
+    new_label.typename = "test_type"
+    assert new_label.typename == "test_type"  # Should be set by the setter
+
+    # Test that when a label isn't associated with any layer, the typename is None
+    detached_label = Label(sentence, "detached")
+    assert detached_label.typename is None

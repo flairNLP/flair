@@ -72,8 +72,12 @@ def aggregate(value, aggregation_fn=np.mean):
 
 
 def validate_corpus_same_each_process(corpus: Corpus) -> None:
-    """Catches most cases in which a corpus is not the same on each process. However, there is no guarantee for two
-    reasons: 1) It uses a sample for speed 2) It compares strings to avoid requiring the datasets to be serializable"""
+    """Catches most cases in which a corpus is not the same on each process.
+
+    However, there is no guarantee for two reasons:
+    1) It uses a sample for speed
+    2) It compares strings to avoid requiring the datasets to be serializable
+    """
     for dataset in [corpus.train, corpus.dev, corpus.test]:
         if dataset is not None:
             _validate_dataset_same_each_process(dataset)

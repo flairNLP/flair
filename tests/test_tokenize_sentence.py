@@ -17,7 +17,9 @@ from flair.tokenization import (
     SpaceTokenizer,
     SpacyTokenizer,
     TokenizerWrapper,
+    StaccatoTokenizer,
 )
+from flair.embeddings import TransformerWordEmbeddings, TransformerDocumentEmbeddings
 
 
 def test_create_sentence_on_empty_string():
@@ -44,28 +46,6 @@ def test_create_sentence_with_extra_whitespace():
     assert sentence.get_token(2).text == "love"
     assert sentence.get_token(3).text == "Berlin"
     assert sentence.get_token(4).text == "."
-
-
-def test_create_sentence_difficult_encoding():
-    text = "so out of the norm ❤ ️ enjoyed every moment️"
-    sentence = Sentence(text)
-    assert len(sentence) == 9
-
-    text = (
-        "equivalently , accumulating the logs as :( 6 ) sl = 1N ∑ t = 1Nlogp "
-        "( Ll | xt \u200b , θ ) where "
-        "p ( Ll | xt \u200b , θ ) represents the class probability output"
-    )
-    sentence = Sentence(text)
-    assert len(sentence) == 37
-
-    text = "This guy needs his own show on Discivery Channel ! ﻿"
-    sentence = Sentence(text)
-    assert len(sentence) == 10
-
-    text = "n't have new vintages."
-    sentence = Sentence(text, use_tokenizer=True)
-    assert len(sentence) == 5
 
 
 def test_create_sentence_word_by_word():
@@ -483,6 +463,7 @@ def test_token_positions_when_creating_word_by_word():
     assert sentence.tokens[2].end_position == 13
 
 
+@pytest.mark.skip(reason="New behavior no longer excludes line separators")
 def test_line_separator_is_ignored():
     with_separator = "Untersuchungs-\u2028ausschüsse"
     without_separator = "Untersuchungs-ausschüsse"
@@ -492,3 +473,242 @@ def test_line_separator_is_ignored():
 
 def no_op_tokenizer(text: str) -> list[str]:
     return [text]
+
+
+def test_lazy_tokenization():
+    # Test 1: Verify that sentences are not tokenized upon creation
+    sentence = Sentence("The quick brown fox jumps over the lazy dog")
+    assert sentence._tokens is None
+
+    # Test 2: Verify that printing doesn't trigger tokenization on a sentence without token-labels
+    str(sentence)  # Call str() to trigger printing
+    assert sentence._tokens is None
+
+    # Test 2b: Verify that adding token labels triggers tokenization
+    sentence_with_token_label = Sentence("The quick brown fox jumps over the lazy dog")
+    sentence_with_token_label[1].add_label("POS", "ADJECTIVE")
+    assert sentence_with_token_label._tokens is not None
+
+    # Test 2c: Verify that adding sentence labels does not trigger tokenization
+    sentence_with_sent_label = Sentence("The quick brown fox jumps over the lazy dog")
+    sentence_with_sent_label.add_label("POS", "VERB")
+    assert sentence_with_sent_label._tokens is None
+
+    # Test 3: Verify that iteration triggers tokenization
+    sentence_iter = Sentence("The quick brown fox jumps over the lazy dog")
+    assert sentence_iter._tokens is None
+    for token in sentence_iter:
+        pass
+    assert sentence_iter._tokens is not None
+
+    # Test 4: Verify that len() triggers tokenization
+    sentence_len = Sentence("The quick brown fox jumps over the lazy dog")
+    assert sentence_len._tokens is None
+    _ = len(sentence_len)
+    assert sentence_len._tokens is not None
+
+    # Test 5: Verify that accessing tokens property triggers tokenization
+    sentence_tokens = Sentence("The quick brown fox jumps over the lazy dog")
+    assert sentence_tokens._tokens is None
+    _ = sentence_tokens.tokens
+    assert sentence_tokens._tokens is not None
+
+    # Test 6: Verify that accessing text property does not trigger tokenization
+    sentence_text = Sentence("The quick brown fox jumps over the lazy dog")
+    assert sentence_text._tokens is None
+    _ = sentence_text.text
+    assert sentence_text._tokens is None
+
+
+@pytest.mark.integration
+def test_embeddings_tokenization():
+    # Test 7: Verify that token-level embeddings triggers tokenization
+    sentence_word = Sentence("The quick brown fox jumps over the lazy dog")
+    word_embeddings = TransformerWordEmbeddings("distilbert-base-uncased")
+    assert sentence_word._tokens is None
+    word_embeddings.embed(sentence_word)
+    assert sentence_word._tokens is not None
+
+    # Test 8: Verify that sentence-level embeddings do not trigger tokenization
+    sentence_doc = Sentence("The quick brown fox jumps over the lazy dog")
+    doc_embeddings = TransformerDocumentEmbeddings("distilbert-base-uncased")
+    assert sentence_doc._tokens is None
+    doc_embeddings.embed(sentence_doc)
+    assert sentence_doc._tokens is None
+
+
+def test_remove_labels_keeps_untokenized():
+    # Create a sentence without triggering tokenization
+    sentence = Sentence("The quick brown fox jumps over the lazy dog")
+    sentence.add_label("pos", "ADJ")
+    assert not sentence._is_tokenized()  # Verify sentence starts untokenized
+
+    # Remove labels should not trigger tokenization
+    sentence.remove_labels("pos")
+    assert not sentence._is_tokenized()  # Sentence should still be untokenized
+
+
+def test_clear_embeddings_keeps_untokenized():
+    # Create a sentence without triggering tokenization
+    sentence = Sentence("The quick brown fox jumps over the lazy dog")
+    assert not sentence._is_tokenized()  # Verify sentence starts untokenized
+
+    # Clear embeddings should not trigger tokenization
+    sentence.clear_embeddings()
+    assert not sentence._is_tokenized()  # Sentence should still be untokenized
+
+
+def test_create_sentence_with_staccato_tokenizer():
+    sentence: Sentence = Sentence("I love Berlin.", use_tokenizer=StaccatoTokenizer())
+
+    assert len(sentence.tokens) == 4
+    assert sentence.tokens[0].text == "I"
+    assert sentence.tokens[1].text == "love"
+    assert sentence.tokens[2].text == "Berlin"
+    assert sentence.tokens[3].text == "."
+
+
+def test_staccato_tokenizer_with_numbers_and_punctuation():
+    sentence = Sentence("It's 03-16-2025", use_tokenizer=StaccatoTokenizer())
+
+    assert len(sentence.tokens) == 8
+    assert [token.text for token in sentence.tokens] == ["It", "'", "s", "03", "-", "16", "-", "2025"]
+
+
+def test_staccato_tokenizer_with_multilingual_text():
+    # Test Russian
+    russian_sentence = Sentence("Привет, мир! Это тест 123.", use_tokenizer=StaccatoTokenizer())
+    assert [token.text for token in russian_sentence.tokens] == ["Привет", ",", "мир", "!", "Это", "тест", "123", "."]
+
+    # Test Chinese
+    chinese_sentence = Sentence("你好，世界！123", use_tokenizer=StaccatoTokenizer())
+    assert [token.text for token in chinese_sentence.tokens] == ["你", "好", "，", "世", "界", "！", "123"]
+
+    # Test Japanese
+    japanese_sentence = Sentence("こんにちは世界！テスト123", use_tokenizer=StaccatoTokenizer())
+    assert [token.text for token in japanese_sentence.tokens] == ["こんにちは", "世", "界", "！", "テスト", "123"]
+
+    # Test Arabic
+    arabic_sentence = Sentence("مرحبا بالعالم! 123", use_tokenizer=StaccatoTokenizer())
+    assert [token.text for token in arabic_sentence.tokens] == ["مرحبا", "بالعالم", "!", "123"]
+
+
+def test_create_sentence_difficult_encoding():
+    text = "so out of the norm ❤ ️ enjoyed every moment️"
+    sentence = Sentence(text, use_tokenizer=StaccatoTokenizer())
+    assert len(sentence) == 9
+
+    text = "This guy needs his own show on Discivery Channel ! ﻿"
+    sentence = Sentence(text, use_tokenizer=StaccatoTokenizer())
+    assert len(sentence) == 10
+
+    text = "n't have new vintages."
+    sentence = Sentence(text, use_tokenizer=True)
+    assert len(sentence) == 5
+
+    text = (
+        "equivalently , accumulating the logs as :( 6 ) sl = 1N ∑ t = 1Nlogp "
+        "( Ll | xt \u200b , θ ) where "
+        "p ( Ll | xt \u200b , θ ) represents the class probability output"
+    )
+    sentence = Sentence(text, use_tokenizer=StaccatoTokenizer())
+    assert len(sentence) == 40
+
+
+def test_sentence_retokenize():
+    # Create a sentence with default tokenization
+    sentence = Sentence("01-03-2025 New York")
+
+    # Add span labels
+    sentence.get_span(1, 3).add_label("ner", "LOC")
+    sentence.get_span(0, 1).add_label("ner", "DATE")
+
+    # Verify initial state
+    assert len(sentence) == 3
+    spans = sentence.get_spans("ner")
+    assert len(spans) == 2
+    assert spans[0].text == "01-03-2025"
+    assert spans[1].text == "New York"
+
+    # Retokenize with StaccatoTokenizer
+    sentence.retokenize(StaccatoTokenizer())
+
+    # Verify the sentence has more tokens after retokenization
+    assert len(sentence) == 7
+
+    # Verify the spans are preserved
+    spans = sentence.get_spans("ner")
+    assert len(spans) == 2
+    assert spans[0].text == "01-03-2025"
+    assert spans[1].text == "New York"
+
+    # Verify the labels are preserved
+    assert [label.value for label in spans[0].labels] == ["DATE"]
+    assert [label.value for label in spans[1].labels] == ["LOC"]
+
+
+def test_retokenize_with_complex_spans():
+    # Test with more complex text and overlapping spans
+    sentence = Sentence("John Smith-Johnson visited New York City on January 15th, 2023.")
+
+    # Add span labels
+    sentence.get_span(0, 2).add_label("ner", "PERSON")  # John Smith-Johnson
+    sentence.get_span(3, 6).add_label("ner", "LOC")  # New York City
+    sentence.get_span(7, 11).add_label("ner", "DATE")  # January 15th, 2023
+
+    # Verify initial state
+    assert len(sentence) == 12
+    spans = sentence.get_spans("ner")
+    assert len(spans) == 3
+    assert spans[0].text == "John Smith-Johnson"
+    assert spans[1].text == "New York City"
+    assert spans[2].text == "January 15th, 2023"
+
+    # Retokenize with StaccatoTokenizer
+    sentence.retokenize(StaccatoTokenizer())
+    assert len(sentence) == 15
+
+    # Verify spans are preserved
+    spans = sentence.get_spans("ner")
+    assert len(spans) == 3
+    assert spans[0].text == "John Smith-Johnson"
+    assert spans[1].text == "New York City"
+    assert spans[2].text == "January 15th, 2023"
+
+
+def test_retokenize_preserves_sentence_labels():
+    # Test that sentence-level labels are preserved
+    sentence = Sentence("This is a positive review.")
+    sentence.add_label("sentiment", "POSITIVE")
+
+    # Verify initial state
+    assert len(sentence.labels) == 1
+    assert sentence.labels[0].value == "POSITIVE"
+
+    # Retokenize
+    sentence.retokenize(StaccatoTokenizer())
+
+    # Verify sentence label is preserved
+    assert len(sentence.labels) == 1
+    assert sentence.labels[0].value == "POSITIVE"
+
+
+def test_retokenize_multiple_times():
+    # Test retokenizing multiple times
+    sentence = Sentence("01-03-2025 New York")
+    sentence.get_span(0, 1).add_label("ner", "DATE")
+    sentence.get_span(1, 3).add_label("ner", "LOC")
+
+    # First retokenization
+    sentence.retokenize(StaccatoTokenizer())
+    assert len(sentence) == 7
+
+    # Second retokenization with a different tokenizer
+    sentence.retokenize(SpaceTokenizer())
+    assert len(sentence) == 3
+
+    # Verify spans are still preserved
+    spans = sentence.get_spans("ner")
+    assert len(spans) == 2
+    assert spans[0].text == "01-03-2025"
+    assert spans[1].text == "New York"

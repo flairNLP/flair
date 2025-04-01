@@ -1466,7 +1466,7 @@ class BytePairEmbeddings(TokenEmbeddings):
             word = token.text if self.field is None else token.get_label(self.field).value
 
             if word.strip() == "":
-                ids = [self.spm.vocab_size(), self.embedder.spm.vocab_size()]
+                ids = [self.spm.vocab_size(), self.spm.vocab_size()]
             else:
                 if self.do_preproc:
                     word = self._preprocess(word)
@@ -1633,16 +1633,16 @@ def replace_with_language_code(string: str):
 
 
 __all__ = [
-    "TransformerWordEmbeddings",
-    "StackedEmbeddings",
-    "WordEmbeddings",
+    "BytePairEmbeddings",
     "CharacterEmbeddings",
-    "FlairEmbeddings",
-    "PooledFlairEmbeddings",
     "FastTextEmbeddings",
-    "OneHotEmbeddings",
+    "FlairEmbeddings",
     "HashEmbeddings",
     "MuseCrosslingualEmbeddings",
-    "BytePairEmbeddings",
     "NILCEmbeddings",
+    "OneHotEmbeddings",
+    "PooledFlairEmbeddings",
+    "StackedEmbeddings",
+    "TransformerWordEmbeddings",
+    "WordEmbeddings",
 ]
