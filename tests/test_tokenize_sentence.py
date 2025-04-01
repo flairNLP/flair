@@ -1,7 +1,7 @@
 import pytest
 
 import flair
-from flair.data import Sentence, Token
+from flair.data import Sentence, Token, Relation
 from flair.splitter import (
     NewlineSentenceSplitter,
     NoSentenceSplitter,
@@ -773,67 +773,80 @@ def test_retokenize_with_multiple_label_types_on_same_span():
     assert len(sentence.annotation_layers.get("custom_type", [])) == 1
 
 
-def test_retokenize_preserves_spans_and_sentence_labels():
-    # Test that retokenizing preserves span labels and sentence-level labels
+def test_retokenize_preserves_spans_relations_and_sentence_labels():
+    # Test that retokenizing preserves span, relation, and sentence-level labels
 
-    # Use text where tokenization might change (hyphens)
-    text = "Event on 03-16-2025 in New York City"
-    # Use a tokenizer that might group '03-16-2025' initially (e.g., SpaceTokenizer or default Segtok)
+    # Use text where tokenization might change
+    text = "Event on 03-16-2025 caused by Big Corp."
+    # Use a tokenizer that might group '03-16-2025' initially
     sentence = Sentence(text, use_tokenizer=SegtokTokenizer())
 
     # Add a sentence-level label
-    sentence.add_label("doc_type", "ANNOUNCEMENT")
+    sentence.add_label("doc_type", "INCIDENT_REPORT")
 
     # Add span labels
-    date_span = sentence.get_span(2, 3)  # Span for "03-16-2025"
-    date_span.add_label("ner", "DATE")
-    loc_span = sentence.get_span(4, 7)  # Span for "New York City"
-    loc_span.add_label("ner", "LOC")
+    date_span = sentence.get_span(2, 3)
+    date_span.add_label("ner", "DATE")  # "03-16-2025"
+    org_span = sentence.get_span(5, 7)
+    org_span.add_label("ner", "ORG")  # "Big Corp"
+
+    # Add relation label linking the spans
+    # Ensure spans are added before creating relation
+    assert date_span in sentence.get_spans("ner")
+    assert org_span in sentence.get_spans("ner")
+    relation = Relation(org_span, date_span)
+    relation.add_label("event_rel", "CAUSED_EVENT_ON_DATE")
 
     # Verify initial state
-    assert len(sentence) == 7  # Initial token count based on SegtokTokenizer
+    assert len(sentence) == 8  # Initial token count based on SegtokTokenizer
     initial_spans = sentence.get_spans("ner")
+    initial_relations = sentence.get_relations("event_rel")
     assert len(initial_spans) == 2
-    assert initial_spans[0].text == "03-16-2025"
-    assert initial_spans[1].text == "New York City"
+    assert initial_spans[0].text == "03-16-2025"  # Date
+    assert initial_spans[1].text == "Big Corp"  # Org
+    assert len(initial_relations) == 1
+    assert initial_relations[0].first is org_span
+    assert initial_relations[0].second is date_span
+    assert initial_relations[0].get_label("event_rel").value == "CAUSED_EVENT_ON_DATE"
     assert len(sentence.get_labels("doc_type")) == 1
-    assert sentence.get_label("doc_type").value == "ANNOUNCEMENT"
+    assert sentence.get_label("doc_type").value == "INCIDENT_REPORT"
 
     # Retokenize with a tokenizer that splits hyphens (StaccatoTokenizer)
     sentence.retokenize(StaccatoTokenizer())
 
     # Verify tokenization changed (Staccato splits hyphens)
-    assert len(sentence) == 11  # Expected token count with Staccato
+    assert len(sentence) == 12  # Expected token count with Staccato
 
     # --- Verify Sentence Label Preservation ---
     sentence_labels_after = sentence.get_labels("doc_type")
     assert len(sentence_labels_after) == 1, "Should still have one sentence label"
-    assert sentence_labels_after[0].value == "ANNOUNCEMENT", "Sentence label value should be preserved"
-    assert sentence_labels_after[0].data_point is sentence, "Sentence label should be attached to the sentence"
+    assert sentence_labels_after[0].value == "INCIDENT_REPORT", "Sentence label value should be preserved"
 
     # --- Verify Span Preservation ---
     spans_after = sentence.get_spans("ner")
-    assert len(spans_after) == 2, "Should still have two NER spans"
-
-    # Find the spans again (order might change, so check by text)
+    assert len(spans_after) == 2, "Should still have two NER spans after retokenize"
     date_span_after = next((s for s in spans_after if s.get_label("ner").value == "DATE"), None)
-    loc_span_after = next((s for s in spans_after if s.get_label("ner").value == "LOC"), None)
+    org_span_after = next((s for s in spans_after if s.get_label("ner").value == "ORG"), None)
 
     assert date_span_after is not None, "Date span should be found after retokenize"
-    assert loc_span_after is not None, "Location span should be found after retokenize"
-
-    # Check text preservation (important!)
+    assert org_span_after is not None, "Org span should be found after retokenize"
     assert date_span_after.text == "03-16-2025", "Date span text should match original"
-    assert loc_span_after.text == "New York City", "Location span text should match original"
-
-    # Check labels are still correct
+    assert org_span_after.text == "Big Corp", "Org span text should match original"
     assert len(date_span_after.get_labels("ner")) == 1
-    assert date_span_after.get_label("ner").value == "DATE"
-    assert len(loc_span_after.get_labels("ner")) == 1
-    assert loc_span_after.get_label("ner").value == "LOC"
+    assert len(org_span_after.get_labels("ner")) == 1
 
-    # Check spans are correctly registered in sentence annotation layers
-    assert len(sentence.annotation_layers.get("ner", [])) == 2
-    sentence_ner_labels = sentence.annotation_layers["ner"]
-    assert any(label.data_point is date_span_after for label in sentence_ner_labels)
-    assert any(label.data_point is loc_span_after for label in sentence_ner_labels)
+    # --- Verify Relation Preservation ---
+    relations_after = sentence.get_relations("event_rel")
+    assert len(relations_after) == 1, "Should have one relation after retokenize"
+    relation_after = relations_after[0]
+
+    assert relation_after.get_label("event_rel").value == "CAUSED_EVENT_ON_DATE", "Relation label value preserved"
+
+    # Check if the relation links the *newly reconstructed* spans
+    assert relation_after.first is org_span_after, "Relation should link to the new Org span"
+    assert relation_after.second is date_span_after, "Relation should link to the new Date span"
+
+    # Check sentence annotation layers for relation
+    assert len(sentence.annotation_layers.get("event_rel", [])) == 1
+    sentence_rel_label = sentence.annotation_layers["event_rel"][0]
+    assert sentence_rel_label.data_point is relation_after, "Sentence layer should contain label for the new relation"

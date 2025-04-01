@@ -1699,12 +1699,20 @@ class Sentence(DataPoint):
 
     def retokenize(self, tokenizer):
         """
-        Retokenizes the sentence using the provided tokenizer while preserving span and sentence labels.
-        Token-level and Relation-level labels are discarded.
+        Retokenizes the sentence using the provided tokenizer while attempting to preserve
+        span, relation, and sentence labels. Token-level labels are discarded.
+
+        Note: Relation preservation depends on successfully re-mapping both constituent spans
+        based on character offsets, which might fail if tokenization changes boundaries significantly.
 
         Args:
             tokenizer: The tokenizer to use for retokenization
         """
+        # --- Step 0: Initial Setup ---
+        import logging  # Ensure logging is available
+
+        log = logging.getLogger("flair")  # Use Flair's logger
+
         original_text = self.to_original_text()
 
         # --- Step 1: Save Sentence-Level Labels ---
@@ -1714,45 +1722,62 @@ class Sentence(DataPoint):
             if label.data_point is self
         ]
 
-        # --- Step 2: Save Span Info ---
-        # Use original _known_spans before clearing
-        original_spans = [dp for dp in self._known_spans.values() if isinstance(dp, Span)]
+        # --- Step 2: Save Span and Relation Info ---
+        original_known_spans_relations = list(self._known_spans.values())
         span_data_to_reapply = {}
+        relations_to_reapply = []
 
-        for span in original_spans:
-            span_id = span.unlabeled_identifier
-            if span_id not in span_data_to_reapply:
-                span_data_to_reapply[span_id] = {
-                    "text": span.text,
-                    "start": span.start_position,
-                    "end": span.end_position,
+        # Identify all label types associated with spans and relations for later clearing
+        span_relation_label_types = set()
+
+        for dp in original_known_spans_relations:
+            if isinstance(dp, Span):
+                span_id = dp.unlabeled_identifier
+                if span_id not in span_data_to_reapply:
+                    span_data_to_reapply[span_id] = {
+                        "text": dp.text,
+                        "start": dp.start_position,
+                        "end": dp.end_position,
+                        "labels": [],
+                    }
+                # Save only labels actually belonging to this span object
+                for label in dp.labels:
+                    if label.data_point is dp:
+                        span_data_to_reapply[span_id]["labels"].append(
+                            (label.typename, label.value, label.score, label.metadata)
+                        )
+                        span_relation_label_types.add(label.typename)  # Track type
+
+            elif isinstance(dp, Relation):
+                relation_info = {
+                    "first_span_id": dp.first.unlabeled_identifier,
+                    "second_span_id": dp.second.unlabeled_identifier,
                     "labels": [],
                 }
-            # Save only labels actually belonging to this span object
-            for label in span.labels:
-                if label.data_point is span:  # Ensure label belongs to this span
-                    span_data_to_reapply[span_id]["labels"].append(
-                        (label.typename, label.value, label.score, label.metadata)
-                    )
+                for label in dp.labels:
+                    if label.data_point is dp:
+                        relation_info["labels"].append((label.typename, label.value, label.score, label.metadata))
+                        span_relation_label_types.add(label.typename)  # Track type
+                relations_to_reapply.append(relation_info)
 
         # --- Clear relevant Sentence annotation layers BEFORE reconstruction ---
-        # Find all types used by the original spans we are about to reconstruct
-        span_label_types_to_clear = set()
-        for span_id in span_data_to_reapply:
-            for typename, _, _, _ in span_data_to_reapply[span_id]["labels"]:
-                span_label_types_to_clear.add(typename)
-
-        # Clear only span-related labels from the sentence layer
-        for label_type in span_label_types_to_clear:
+        # Clear only layers associated with the spans/relations we are about to rebuild
+        for label_type in span_relation_label_types:
             if label_type in self.annotation_layers:
+                # Keep only labels not attached to Spans or Relations
                 self.annotation_layers[label_type] = [
-                    lbl for lbl in self.annotation_layers[label_type] if not isinstance(lbl.data_point, Span)
+                    lbl
+                    for lbl in self.annotation_layers[label_type]
+                    if not isinstance(lbl.data_point, (Span, Relation))
                 ]
+                # If list becomes empty, remove the key (optional cleanup)
+                if not self.annotation_layers[label_type]:
+                    del self.annotation_layers[label_type]
 
         # --- Step 3: Retokenize ---
         temp_sentence = Sentence(original_text, use_tokenizer=tokenizer)
         self._tokens = []
-        self._known_spans = {}  # Clear known spans cache *before* reconstruction
+        self._known_spans = {}  # CRITICAL: Clear known spans cache before reconstruction
         self.tokenized = None
 
         for token in temp_sentence.tokens:
@@ -1760,7 +1785,9 @@ class Sentence(DataPoint):
             token._internal_index = len(self._tokens) + 1
             self._tokens.append(token)
 
-        # --- Step 4: Reconstruct Spans ---
+        # --- Step 4: Reconstruct Spans and Build Mapping ---
+        reconstructed_span_map = {}  # Map: original_span_identifier -> new_span_object
+
         for original_span_id, span_data in span_data_to_reapply.items():
             start_pos = span_data["start"]
             end_pos = span_data["end"]
@@ -1775,8 +1802,6 @@ class Sentence(DataPoint):
                 # 1. It starts within the span, or
                 # 2. It ends within the span, or
                 # 3. It completely contains the span
-                token_start = token.start_position
-                token_end = token.end_position
                 if (
                     (token_start >= start_pos and token_start < end_pos)
                     or (token_end > start_pos and token_end <= end_pos)
@@ -1795,11 +1820,39 @@ class Sentence(DataPoint):
                 # add_label propagates to the sentence layer.
                 for typename, value, score, metadata in span_data["labels"]:
                     new_span.add_label(typename, value, score, **metadata)
-            else:
-                # Log warning if a span couldn't be mapped
-                log.warning(f"Could not map original span '{original_span_id}' to new tokens after retokenization.")
 
-        # --- Step 5: Reapply Sentence-Level Labels ---
+                # Add mapping from original ID to the NEW span object
+                reconstructed_span_map[original_span_id] = new_span
+            else:
+                log.warning(
+                    f"Could not map original span '{original_span_id}' with text '{span_data['text']}' to new tokens after retokenization."
+                )
+
+        # --- Step 5: Reconstruct Relations ---
+        for relation_info in relations_to_reapply:
+            original_first_id = relation_info["first_span_id"]
+            original_second_id = relation_info["second_span_id"]
+
+            # Find the corresponding NEW spans using the map built in Step 4
+            new_first_span = reconstructed_span_map.get(original_first_id)
+            new_second_span = reconstructed_span_map.get(original_second_id)
+
+            if new_first_span and new_second_span:
+                # If both constituent spans were successfully reconstructed, create the relation
+                # Relation.__new__ handles caching in self._known_spans
+                new_relation = Relation(new_first_span, new_second_span)
+
+                # Add the saved relation labels back using add_label for propagation
+                for typename, value, score, metadata in relation_info["labels"]:
+                    new_relation.add_label(typename, value, score, **metadata)
+            else:
+                # Log warning if relation couldn't be reconstructed
+                log.warning(
+                    f"Could not reconstruct relation between original spans '{original_first_id}' and "
+                    f"'{original_second_id}' because one or both spans failed to map after retokenization."
+                )
+
+        # --- Step 6: Reapply Sentence-Level Labels ---
         # Clear only sentence-level labels from sentence layer before reapplying
         sentence_only_label_types = {label[0] for label in sentence_level_labels}
         for label_type in sentence_only_label_types:
@@ -1808,6 +1861,9 @@ class Sentence(DataPoint):
                 self.annotation_layers[label_type] = [
                     lbl for lbl in self.annotation_layers[label_type] if lbl.data_point is not self
                 ]
+                # Optional cleanup
+                if not self.annotation_layers[label_type]:
+                    del self.annotation_layers[label_type]
 
         # Add sentence labels back
         for typename, value, score, metadata in sentence_level_labels:
