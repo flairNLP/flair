@@ -1697,6 +1697,20 @@ class Sentence(DataPoint):
                 )
             ]
 
+    def _clear_internal_state(self) -> None:
+        """
+        Resets the internal tokenization and annotation state of the sentence.
+        Used before operations like retokenization that rebuild the sentence structure.
+        """
+        # Clear the central annotation registry
+        self.annotation_layers: dict[str, list[Label]] = {}
+        # Clear token list
+        self._tokens = []
+        # Clear known spans/relations cache
+        self._known_spans = {}
+        # Reset cached tokenized string representation
+        self.tokenized = None
+
     def retokenize(self, tokenizer):
         """
         Retokenizes the sentence using the provided tokenizer while attempting to preserve
@@ -1760,21 +1774,10 @@ class Sentence(DataPoint):
                         span_relation_label_types.add(label.typename)  # Track type
                 relations_to_reapply.append(relation_info)
 
-        # --- Clear relevant Sentence annotation layers BEFORE reconstruction ---
-        # Clear only layers associated with the spans/relations we are about to rebuild
-        for label_type in span_relation_label_types:
-            if label_type in self.annotation_layers:
-                # Keep only labels not attached to Spans or Relations
-                self.annotation_layers[label_type] = [
-                    lbl
-                    for lbl in self.annotation_layers[label_type]
-                    if not isinstance(lbl.data_point, (Span, Relation))
-                ]
-                # If list becomes empty, remove the key (optional cleanup)
-                if not self.annotation_layers[label_type]:
-                    del self.annotation_layers[label_type]
+        # --- Step 3: Clear Internal State ---
+        self._clear_internal_state()
 
-        # --- Step 3: Retokenize ---
+        # --- Step 4: Retokenize ---
         temp_sentence = Sentence(original_text, use_tokenizer=tokenizer)
         self._tokens = []
         self._known_spans = {}  # CRITICAL: Clear known spans cache before reconstruction
@@ -1785,7 +1788,7 @@ class Sentence(DataPoint):
             token._internal_index = len(self._tokens) + 1
             self._tokens.append(token)
 
-        # --- Step 4: Reconstruct Spans and Build Mapping ---
+        # --- Step 5: Reconstruct Spans and Build Mapping ---
         reconstructed_span_map = {}  # Map: original_span_identifier -> new_span_object
 
         for original_span_id, span_data in span_data_to_reapply.items():
@@ -1828,7 +1831,7 @@ class Sentence(DataPoint):
                     f"Could not map original span '{original_span_id}' with text '{span_data['text']}' to new tokens after retokenization."
                 )
 
-        # --- Step 5: Reconstruct Relations ---
+        # --- Step 6: Reconstruct Relations ---
         for relation_info in relations_to_reapply:
             original_first_id = relation_info["first_span_id"]
             original_second_id = relation_info["second_span_id"]
@@ -1852,7 +1855,7 @@ class Sentence(DataPoint):
                     f"'{original_second_id}' because one or both spans failed to map after retokenization."
                 )
 
-        # --- Step 6: Reapply Sentence-Level Labels ---
+        # --- Step 7: Reapply Sentence-Level Labels ---
         # Clear only sentence-level labels from sentence layer before reapplying
         sentence_only_label_types = {label[0] for label in sentence_level_labels}
         for label_type in sentence_only_label_types:

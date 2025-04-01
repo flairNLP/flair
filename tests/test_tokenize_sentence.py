@@ -850,3 +850,66 @@ def test_retokenize_preserves_spans_relations_and_sentence_labels():
     assert len(sentence.annotation_layers.get("event_rel", [])) == 1
     sentence_rel_label = sentence.annotation_layers["event_rel"][0]
     assert sentence_rel_label.data_point is relation_after, "Sentence layer should contain label for the new relation"
+
+
+def test_retokenize_removes_token_labels_keeps_span_labels():
+    # Test that retokenizing discards token-level labels but preserves span-level labels
+
+    text = "Peter visits Berlin ."
+    # Use a simple tokenizer initially
+    sentence = Sentence(text, use_tokenizer=SpaceTokenizer())
+
+    # Add a token-level label (POS tag)
+    token_peter = sentence[0]  # Token "Peter"
+    token_berlin = sentence[2]  # Token "Berlin"
+    token_peter.add_label("pos", "NNP")
+    token_berlin.add_label("pos", "NNP")
+
+    # Add a span-level label (NER tag)
+    span_berlin = sentence[2:3]  # Span covering "Berlin"
+    span_berlin.add_label("ner", "LOC")
+
+    # --- Verify Initial State ---
+    assert len(sentence) == 4
+    # Check token labels directly
+    assert token_peter.get_label("pos").value == "NNP"
+    assert token_berlin.get_label("pos").value == "NNP"
+    # Check sentence layer for token labels
+    assert len(sentence.get_labels("pos")) == 2, "Initial sentence should have 2 POS labels"
+    # Check span label
+    initial_spans = sentence.get_spans("ner")
+    assert len(initial_spans) == 1
+    assert initial_spans[0] is span_berlin
+    assert span_berlin.get_label("ner").value == "LOC"
+    # Check sentence layer for span label
+    assert len(sentence.get_labels("ner")) == 1, "Initial sentence should have 1 NER label"
+
+    # --- Retokenize (can use the same or different tokenizer) ---
+    sentence.retokenize(StaccatoTokenizer())  # Staccato might split differently if punctuation was complex
+
+    # --- Verify State After Retokenization ---
+
+    # 1. Check Token Labels are GONE
+    # Access tokens by index - these are NEW token objects
+    new_token_peter = sentence[0]
+    new_token_berlin = sentence[2]  # Assuming tokenization is similar for these words
+
+    assert len(new_token_peter.get_labels("pos")) == 0
+
+    # Verify the sentence's central registry for 'pos' is now empty
+    assert len(sentence.get_labels("pos")) == 0, "Sentence 'pos' layer should be empty after retokenize"
+
+    # 2. Check Span Labels are KEPT
+    spans_after = sentence.get_spans("ner")
+    assert len(spans_after) == 1, "Should still have one NER span"
+    span_berlin_after = spans_after[0]
+
+    assert span_berlin_after.text == "Berlin", "Span text should be preserved"
+    assert len(span_berlin_after.get_labels("ner")) == 1, "Span should retain its NER label"
+    assert span_berlin_after.get_label("ner").value == "LOC", "Span NER label value should be preserved"
+
+    # Verify the sentence's central registry for 'ner' still contains the label
+    assert len(sentence.get_labels("ner")) == 1, "Sentence 'ner' layer should still contain the span label"
+    sentence_ner_label = sentence.get_labels("ner")[0]
+    assert sentence_ner_label.data_point is span_berlin_after, "Sentence layer 'ner' label should point to the new span"
+    assert sentence_ner_label.value == "LOC"
