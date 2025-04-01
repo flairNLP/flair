@@ -1699,93 +1699,119 @@ class Sentence(DataPoint):
 
     def retokenize(self, tokenizer):
         """
-        Retokenizes the sentence using the provided tokenizer while preserving span labels.
+        Retokenizes the sentence using the provided tokenizer while preserving span and sentence labels.
+        Token-level and Relation-level labels are discarded.
 
         Args:
             tokenizer: The tokenizer to use for retokenization
-
-        Example::
-
-            # Create a sentence with default tokenization
-            sentence = Sentence("01-03-2025 New York")
-
-            # Add span labels
-            sentence.get_span(1, 3).add_label('ner', "LOC")
-            sentence.get_span(0, 1).add_label('ner', "DATE")
-
-            # Retokenize with a different tokenizer while preserving labels
-            sentence.retokenize(StaccatoTokenizer())
         """
-        # Store the original text
         original_text = self.to_original_text()
 
-        # Save all span-level labels with their text spans and character positions
-        span_labels = {}
-        for label_type in list(self.annotation_layers.keys()):
-            spans = self.get_spans(label_type)
-            if spans:
-                if label_type not in span_labels:
-                    span_labels[label_type] = []
+        # --- Step 1: Save Sentence-Level Labels ---
+        sentence_level_labels = [
+            (label.typename, label.value, label.score, label.metadata)
+            for label in self.labels
+            if label.data_point is self
+        ]
 
-                for span in spans:
-                    # Get only labels of the current type being processed
-                    relevant_labels = span.get_labels(label_type)
-                    # Store the span text, character positions, and its relevant labels
-                    span_labels[label_type].append(
-                        (
-                            span.text,
-                            span.start_position,
-                            span.end_position,
-                            # Use only labels matching the current label_type
-                            [label.value for label in relevant_labels],
-                            [label.score for label in relevant_labels],
-                        )
+        # --- Step 2: Save Span Info ---
+        # Use original _known_spans before clearing
+        original_spans = [dp for dp in self._known_spans.values() if isinstance(dp, Span)]
+        span_data_to_reapply = {}
+
+        for span in original_spans:
+            span_id = span.unlabeled_identifier
+            if span_id not in span_data_to_reapply:
+                span_data_to_reapply[span_id] = {
+                    "text": span.text,
+                    "start": span.start_position,
+                    "end": span.end_position,
+                    "labels": [],
+                }
+            # Save only labels actually belonging to this span object
+            for label in span.labels:
+                if label.data_point is span:  # Ensure label belongs to this span
+                    span_data_to_reapply[span_id]["labels"].append(
+                        (label.typename, label.value, label.score, label.metadata)
                     )
 
-                # Remove all labels of this type
-                self.remove_labels(label_type)
+        # --- Clear relevant Sentence annotation layers BEFORE reconstruction ---
+        # Find all types used by the original spans we are about to reconstruct
+        span_label_types_to_clear = set()
+        for span_id in span_data_to_reapply:
+            for typename, _, _, _ in span_data_to_reapply[span_id]["labels"]:
+                span_label_types_to_clear.add(typename)
 
-        # Create a new sentence with the same text but using the new tokenizer
-        new_sentence = Sentence(original_text, use_tokenizer=tokenizer)
+        # Clear only span-related labels from the sentence layer
+        for label_type in span_label_types_to_clear:
+            if label_type in self.annotation_layers:
+                self.annotation_layers[label_type] = [
+                    lbl for lbl in self.annotation_layers[label_type] if not isinstance(lbl.data_point, Span)
+                ]
 
-        # Replace the tokens in the current sentence with the tokens from the new sentence
-        self.tokens.clear()
-        for token in new_sentence.tokens:
-            self.tokens.append(token)
-            # Update the token's sentence reference to point to this sentence
+        # --- Step 3: Retokenize ---
+        temp_sentence = Sentence(original_text, use_tokenizer=tokenizer)
+        self._tokens = []
+        self._known_spans = {}  # Clear known spans cache *before* reconstruction
+        self.tokenized = None
+
+        for token in temp_sentence.tokens:
             token.sentence = self
+            token._internal_index = len(self._tokens) + 1
+            self._tokens.append(token)
 
-        # Reapply span labels based on character positions
-        for label_type, spans in span_labels.items():
-            for span_text, start_pos, end_pos, label_values, label_scores in spans:
-                # Find tokens that are fully or partially contained within the span
-                token_indices = []
+        # --- Step 4: Reconstruct Spans ---
+        for original_span_id, span_data in span_data_to_reapply.items():
+            start_pos = span_data["start"]
+            end_pos = span_data["end"]
 
-                for i, token in enumerate(self.tokens):
-                    # Check if token is within or overlaps with the span
-                    # A token is part of the span if:
-                    # 1. It starts within the span, or
-                    # 2. It ends within the span, or
-                    # 3. It completely contains the span
-                    token_start = token.start_position
-                    token_end = token.end_position
+            token_indices = []
+            # Find tokens based on character overlap
+            for i, token in enumerate(self.tokens):
+                token_start = token.start_position
+                token_end = token.end_position
+                # Check if token is within or overlaps with the span
+                # A token is part of the span if:
+                # 1. It starts within the span, or
+                # 2. It ends within the span, or
+                # 3. It completely contains the span
+                token_start = token.start_position
+                token_end = token.end_position
+                if (
+                    (token_start >= start_pos and token_start < end_pos)
+                    or (token_end > start_pos and token_end <= end_pos)
+                    or (token_start <= start_pos and token_end >= end_pos)
+                ):
+                    token_indices.append(i)
 
-                    if (
-                        (token_start >= start_pos and token_start < end_pos)
-                        or (token_end > start_pos and token_end <= end_pos)  # Token starts within span
-                        or (token_start <= start_pos and token_end >= end_pos)  # Token ends within span
-                    ):  # Token contains span
-                        token_indices.append(i)
+            if token_indices:
+                span_start_idx = min(token_indices)
+                span_end_idx = max(token_indices) + 1
 
-                # If we found tokens covering this span
-                if token_indices:
-                    span_start = min(token_indices)
-                    span_end = max(token_indices) + 1
+                # Get/Create the new span using slicing (handles caching via __new__)
+                new_span = self[span_start_idx:span_end_idx]
 
-                    # Create the span and add labels
-                    span = self.get_span(span_start, span_end)
-                    for value, score in zip(label_values, label_scores):
-                        span.add_label(label_type, value, score)
+                # Add the saved labels back to this new span object.
+                # add_label propagates to the sentence layer.
+                for typename, value, score, metadata in span_data["labels"]:
+                    new_span.add_label(typename, value, score, **metadata)
+            else:
+                # Log warning if a span couldn't be mapped
+                log.warning(f"Could not map original span '{original_span_id}' to new tokens after retokenization.")
+
+        # --- Step 5: Reapply Sentence-Level Labels ---
+        # Clear only sentence-level labels from sentence layer before reapplying
+        sentence_only_label_types = {label[0] for label in sentence_level_labels}
+        for label_type in sentence_only_label_types:
+            if label_type in self.annotation_layers:
+                # Keep only labels NOT attached to the sentence itself
+                self.annotation_layers[label_type] = [
+                    lbl for lbl in self.annotation_layers[label_type] if lbl.data_point is not self
+                ]
+
+        # Add sentence labels back
+        for typename, value, score, metadata in sentence_level_labels:
+            self.add_label(typename, value, score, **metadata)  # Attaches only to self
 
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):

@@ -771,3 +771,69 @@ def test_retokenize_with_multiple_label_types_on_same_span():
     # Check overall annotation layers
     assert len(sentence.annotation_layers.get("ner", [])) == 1
     assert len(sentence.annotation_layers.get("custom_type", [])) == 1
+
+
+def test_retokenize_preserves_spans_and_sentence_labels():
+    # Test that retokenizing preserves span labels and sentence-level labels
+
+    # Use text where tokenization might change (hyphens)
+    text = "Event on 03-16-2025 in New York City"
+    # Use a tokenizer that might group '03-16-2025' initially (e.g., SpaceTokenizer or default Segtok)
+    sentence = Sentence(text, use_tokenizer=SegtokTokenizer())
+
+    # Add a sentence-level label
+    sentence.add_label("doc_type", "ANNOUNCEMENT")
+
+    # Add span labels
+    date_span = sentence.get_span(2, 3)  # Span for "03-16-2025"
+    date_span.add_label("ner", "DATE")
+    loc_span = sentence.get_span(4, 7)  # Span for "New York City"
+    loc_span.add_label("ner", "LOC")
+
+    # Verify initial state
+    assert len(sentence) == 7  # Initial token count based on SegtokTokenizer
+    initial_spans = sentence.get_spans("ner")
+    assert len(initial_spans) == 2
+    assert initial_spans[0].text == "03-16-2025"
+    assert initial_spans[1].text == "New York City"
+    assert len(sentence.get_labels("doc_type")) == 1
+    assert sentence.get_label("doc_type").value == "ANNOUNCEMENT"
+
+    # Retokenize with a tokenizer that splits hyphens (StaccatoTokenizer)
+    sentence.retokenize(StaccatoTokenizer())
+
+    # Verify tokenization changed (Staccato splits hyphens)
+    assert len(sentence) == 11  # Expected token count with Staccato
+
+    # --- Verify Sentence Label Preservation ---
+    sentence_labels_after = sentence.get_labels("doc_type")
+    assert len(sentence_labels_after) == 1, "Should still have one sentence label"
+    assert sentence_labels_after[0].value == "ANNOUNCEMENT", "Sentence label value should be preserved"
+    assert sentence_labels_after[0].data_point is sentence, "Sentence label should be attached to the sentence"
+
+    # --- Verify Span Preservation ---
+    spans_after = sentence.get_spans("ner")
+    assert len(spans_after) == 2, "Should still have two NER spans"
+
+    # Find the spans again (order might change, so check by text)
+    date_span_after = next((s for s in spans_after if s.get_label("ner").value == "DATE"), None)
+    loc_span_after = next((s for s in spans_after if s.get_label("ner").value == "LOC"), None)
+
+    assert date_span_after is not None, "Date span should be found after retokenize"
+    assert loc_span_after is not None, "Location span should be found after retokenize"
+
+    # Check text preservation (important!)
+    assert date_span_after.text == "03-16-2025", "Date span text should match original"
+    assert loc_span_after.text == "New York City", "Location span text should match original"
+
+    # Check labels are still correct
+    assert len(date_span_after.get_labels("ner")) == 1
+    assert date_span_after.get_label("ner").value == "DATE"
+    assert len(loc_span_after.get_labels("ner")) == 1
+    assert loc_span_after.get_label("ner").value == "LOC"
+
+    # Check spans are correctly registered in sentence annotation layers
+    assert len(sentence.annotation_layers.get("ner", [])) == 2
+    sentence_ner_labels = sentence.annotation_layers["ner"]
+    assert any(label.data_point is date_span_after for label in sentence_ner_labels)
+    assert any(label.data_point is loc_span_after for label in sentence_ner_labels)
