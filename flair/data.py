@@ -2106,6 +2106,9 @@ class Corpus(typing.Generic[T_co]):
         self._test: Optional[Dataset[T_co]] = test
         self._dev: Optional[Dataset[T_co]] = dev
 
+        # --- Add attribute to store tokenizer (will be set by subclasses) ---
+        self.tokenizer: Optional[Tokenizer] = None
+
     @property
     def train(self) -> Optional[Dataset[T_co]]:
         """The training split as a :class:`torch.utils.data.Dataset` object."""
@@ -2120,6 +2123,15 @@ class Corpus(typing.Generic[T_co]):
     def test(self) -> Optional[Dataset[T_co]]:
         """The test split as a :class:`torch.utils.data.Dataset` object."""
         return self._test
+
+    @property
+    def corpus_tokenizer(self) -> Optional[Tokenizer]:
+        """
+        Returns the custom tokenizer provided during corpus initialization for retokenization, if any.
+        Returns None if no custom retokenizer was specified.
+        """
+        # The tokenizer attribute is set by subclasses like ColumnCorpus during their init
+        return self.tokenizer
 
     def downsample(
         self,
