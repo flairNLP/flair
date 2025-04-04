@@ -233,7 +233,7 @@ class TextRegressor(flair.nn.Model[Sentence], ReduceTransformerVocabMixin):
                 )
 
             else:  # if it's not the main process, just set a dummy Result
-                result = Result(0.0, "", {}, {"loss": 0.0})
+                result = Result(main_score=0.0, detailed_results="", scores={"loss": 0.0}, classification_report={})
 
             if multi_gpu:
                 result = broadcast_value(result, src=0)
