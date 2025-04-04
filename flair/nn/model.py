@@ -472,7 +472,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             average_over = aggregate(average_over, sum)
             eval_loss = aggregate(eval_loss, aggregate_tensor_sum)
 
-        result = Result(0.0, "", {}, {"loss": 0.0})
+        result = Result(main_score=0.0, detailed_results="", scores={"loss": 0.0}, classification_report={})
         if is_main_process():
 
             # convert true and predicted values to two span-aligned lists
