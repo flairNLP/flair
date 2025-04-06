@@ -189,6 +189,7 @@ def run(config, gpu=0):
 
         # 5. Merge the optimal parameter sets from 2. and the summarized test scores from 4.
         merge_tables(f"{config['paths']['results_tables_path']}/{corpus_name}", config['paths']['parameter_settings_tables_path'], config['parameters']['modes'], categories_ids = categories_ids)
+    calculate_correlations(config)
     logger_experiment.info(f"Finished all experiments and summarized scores.")
 
 if __name__ == "__main__":

@@ -462,3 +462,51 @@ def optimize_F1s(config, corpus_name):
                     # all three parameter sets are different
                     for i in list(indices):
                         write_output(optimize_F1s_output_file, metric, F_SCORE_NAMES[i], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config, corpus_name)
+
+def calculate_correlations(config):
+    ''' 
+    This function calculates the correlation between the detection F-scores and the test scores for each category.
+    The correlations are calculated for each mode separately. 
+    The results are printed out to .csv files. 
+    '''
+
+    seq_tagger_modes = config['parameters']['modes']
+    max_epochs = int(config['parameters']['num_epochs'])
+    sample_metrics = config['sample_metrics']
+    base_paths = {key: config['paths']['baseline_paths'][key] for key in seq_tagger_modes}
+    seeds = config['seeds']
+    results_path = config['paths']['results_tables_path']
+    corpora = config['corpora']
+    for corpus in corpora:
+        # open the .csv for current corpus 
+
+        filepath = results_path+os.sep+corpus + os.sep + 'correlations'
+        if not os.path.exists(filepath):
+            os.makedirs(filepath)
+
+        correlations_output_file = open(filepath + os.sep+'correlations.csv','w')
+        correlations_output_file.write('category, f_type, modification, correlation\n')
+
+        for category in CATEGORIES:
+                # read the optimal F1s file
+                optimal_F1s_file = open(results_path + os.sep + corpus + os.sep + 'final_tables' + os.sep + 'category'+category['id']+'_merged_optimal_table.csv','r')
+                lines = optimal_F1s_file.readlines()
+                optimal_F1s_file.close()
+
+                for modif in ['mask', 'relabel']:
+                    for f_type in ['f05','f1','f2']:
+                        # get the f_scores and the corresponding metrics
+                        f_scores = []
+                        test_scores = []
+                        for line in lines[1:]:
+                            metric, f_score, modification, score, epoch, threshold, direction, noise_share, test_score, std_test_score  = line.split(',')
+                            if f_type in f_score.strip() and modification.strip() == modif:
+                                f_scores.append(float(score))
+                                test_scores.append(float(test_score))
+                        if len(f_scores) == 0:
+                            continue
+                        # calculate the correlation
+                        correlation = np.corrcoef(f_scores, test_scores)[0,1]
+
+                        # write the correlation to the file
+                        correlations_output_file.write(f"category{category['id']}, {f_type}, {modif}, {correlation}\n")
