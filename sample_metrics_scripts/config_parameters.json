@@ -10,10 +10,6 @@
       "EE": "sample_metrics_experiments/resources/noisebench/baseline/EE",
       "standard": "sample_metrics_experiments/resources/noisebench/baseline/standard"
     },
-    "configs_path": {
-      "EE": "sample_metrics_experiments/configs_EE",
-      "standard": "sample_metrics_experiments/configs"
-    },
     "results_tables_path": "sample_metrics_experiments/sample_metrics_results"
   },
   "parameters": {
@@ -38,6 +34,8 @@
     "category1",
     "category2"
   ],
+  "source_corpus": "noise_crowd",
+
   "corpora": [
     "noise_crowd"
   ],

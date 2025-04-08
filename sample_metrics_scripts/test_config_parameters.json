@@ -10,10 +10,6 @@
             "EE":"test_sample_metrics/resources/noisebench/baseline/EE",
             "standard":"test_sample_metrics/resources/noisebench/baseline/standard"
         },
-        "parameter_settings_tables_path":{
-            "EE":"test_sample_metrics/sample_metrics_results/noise_crowd/EE_mode",
-            "standard":"test_sample_metrics/sample_metrics_results/noise_crowd/standard_mode"
-        },
         "results_tables_path":"test_sample_metrics/sample_metrics_results"
     },
     "parameters": {
@@ -28,7 +24,7 @@
         "modes": ["EE", "standard"],
         "decoder_init":{"lr":"0.3", "num_epochs":"10"}
     },
-    "source_corpus": "noise_crowd",
+    "source_corpus": "noise_llm",
     "corpora": [
         "noise_llm"
     ],

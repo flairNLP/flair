@@ -21,10 +21,9 @@ def output_configs(config, category_table_path, cat_id, mode, metrics_list):
             # define the base config properties
             base_config = {
 
-            "experiment_name": "relabel_cat"+cat_id,
-            
+            "experiment_name": "relabel_cat"+cat_id+"_source_"+config['source_corpus'],
             "paths": {
-                "resources_path": f"{config['paths']['resources_path']}/relabel_cat{cat_id}/",
+                "resources_path": f"{config['paths']['resources_path']}/relabel_cat{cat_id}_source_{config['source_corpus']}/",
                 "data_path":config['paths']['data_path'],
                 "train_filename_extension" :config['paths']['train_filename_extension'],
                 "dev_filename_extension" :config['paths']['dev_filename_extension'],
@@ -123,46 +122,48 @@ def run(config, gpu=0):
     flair.device = torch.device("cuda:" + str(gpu))
     seeds = [int(seed) for seed in config['seeds']]
     corpora = config['corpora']
+    source_corpus = config['source_corpus']
     
     for mode in config['parameters']['modes']:
-        if not os.path.exists(config['paths']['parameter_settings_tables_path'][mode]):
-            corpus_name = config['source_corpus']
-            print(corpus_name)
+        parameter_settings_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
+
+        if not os.path.exists(parameter_settings_path):
             # 1. Run baseline for each mode: standard fine-tuning and early-exit fine-tuning
             temp_f1_scores = []
-            if not os.path.exists(f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/{seeds[0]}") and not os.path.exists(f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/{seeds[0]}_with_init-{config['parameters']['decoder_init']['lr']}"):
+            if not os.path.exists(f"{config['paths']['baseline_paths'][mode]}/{source_corpus}/{seeds[0]}") and not os.path.exists(f"{config['paths']['baseline_paths'][mode]}/{source_corpus}/{seeds[0]}_with_init-{config['parameters']['decoder_init']['lr']}"):
                 # both source and downstream corpora baseline paths are in the same folder
-                logger_experiment.info(f"Running baseline for {corpus_name}, {mode} mode")
+                logger_experiment.info(f"Running baseline for {source_corpus}, {mode} mode")
                 for seed in seeds:
                     logger_experiment.info(f"Running seed {seed}")
                     # baseline paths don't have to be set beforehand
-                    baseline_path, score = run_baseline(mode, seed, corpus_name, config,
+                    baseline_path, score = run_baseline(mode, seed, source_corpus, config,
                                                         int(config['parameters']['num_epochs']))
 
                     temp_f1_scores.append(score)
 
-                with open(baseline_path +os.sep+corpus_name+ os.sep + "test_results.tsv", "w", encoding='utf-8') as f:
+                with open(baseline_path +os.sep+source_corpus+ os.sep + "test_results.tsv", "w", encoding='utf-8') as f:
                     f.write("params\tmean\tstd\n")
                     label = "f1"
                     f.write(f"{label} \t{np.mean(temp_f1_scores)!s} \t {np.std(temp_f1_scores)!s} \n")
-                logger_experiment.info(f"Baseline for {corpus_name}, {mode} mode for seeds {seeds} finished")
+                logger_experiment.info(f"Baseline for {source_corpus}, {mode} mode for seeds {seeds} finished")
 
             # Optional: plot histograms of metrics for baseline runs, for each seed
             if config['plot_histograms']:
-                logger_experiment.info(f"Plotting histograms and lineplot for {corpus_name} corpus")
+                logger_experiment.info(f"Plotting histograms and lineplot for {source_corpus} corpus")
                 for mode in config['parameters']['modes']:
-                    plot_metric_distributions(base_path=f"{config['paths']['baseline_paths'][mode]}/{corpus_name}/",
+                    plot_metric_distributions(base_path=f"{config['paths']['baseline_paths'][mode]}/{source_corpus}/",
                                             mode=mode, seeds=seeds, sample_metrics=config['sample_metrics'][mode],
                                             dset='train', max_epochs=int(config['parameters']['num_epochs']) + 1)
-                plot_category_membership_through_epochs(base_paths = config['paths']['baseline_paths'] , corpus_name = corpus_name, seeds= seeds,dset = 'train', max_epochs=11)
+                plot_category_membership_through_epochs(base_paths = config['paths']['baseline_paths'] , corpus_name = source_corpus, seeds= seeds,dset = 'train', max_epochs=11)
 
             # 2. Find optimal parameter sets for each sample metric, mode and category
-            logger_experiment.info(f"Optimizing F scores for {corpus_name}; saving to csv files and generating config json files")
-            optimize_F1s(config, corpus_name=corpus_name)
+            logger_experiment.info(f"Optimizing F scores for {source_corpus}; saving to csv files and generating config json files")
+            optimize_F1s(config, corpus_name=source_corpus)
 
     # 3. Run experiment (relabel or mask each category) based on the optimal parameter sets from 2. 
     for mode in config['parameters']['modes']:
-        parameter_settings_path = config['paths']['parameter_settings_tables_path'][mode]
+        parameter_settings_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
+
         logger_experiment.info(f"Running experiment for {mode} mode.")
         metrics_list = config['sample_metrics'][mode]
 
@@ -185,10 +186,10 @@ def run(config, gpu=0):
         logger_experiment.info(f"Summarizing test scores for {corpus_name}")
 
         # 4. Summarize the test scores from 3. 
-        summarize_test_scores(config['paths']['results_tables_path'], corpus_name, resources_path=config['paths']['resources_path'], categories_ids = categories_ids)
+        summarize_test_scores(config['paths']['results_tables_path'], source_corpus, corpus_name, resources_path=config['paths']['resources_path'], categories_ids = categories_ids)
 
         # 5. Merge the optimal parameter sets from 2. and the summarized test scores from 4.
-        merge_tables(f"{config['paths']['results_tables_path']}/{corpus_name}", config['paths']['parameter_settings_tables_path'], config['parameters']['modes'], categories_ids = categories_ids)
+        merge_tables(f"{config['paths']['results_tables_path']}", source_corpus, corpus_name, config['parameters']['modes'], categories_ids = categories_ids)
     calculate_correlations(config)
     logger_experiment.info(f"Finished all experiments and summarized scores.")
 

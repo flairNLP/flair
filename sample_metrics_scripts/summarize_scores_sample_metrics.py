@@ -50,13 +50,15 @@ CATEGORIES = [
 CORRECT_PREDICTION_FLAG_NAME = 'correct_prediction_flag'
 NOISE_FLAG_NAME = 'noisy_flag'
 
-def summarize_test_scores(results_tables_path, corpus_name, resources_path,   categories_ids):
-
+def summarize_test_scores(results_tables_path, source_corpus, corpus_name, resources_path,   categories_ids, merged_parameters = True):
+    '''
+    Example path to test scores: source_noise_crowd_target_noise_llm/test_scores
+    '''
     dataset = corpus_name
 
     for category_id in categories_ids:
         
-        test_scores_tables_path = results_tables_path + os.sep + dataset+ os.sep +'test_scores'
+        test_scores_tables_path = f"{results_tables_path}/source_{source_corpus}_target_{corpus_name}/test_scores"
 
         if not os.path.exists(test_scores_tables_path):
             os.makedirs(test_scores_tables_path)
@@ -65,7 +67,7 @@ def summarize_test_scores(results_tables_path, corpus_name, resources_path,   ca
 
         optimize_F1s_output.write('metric, f_score, modification, noise share, test score, std test score \n')
 
-        experiment_path = resources_path+os.sep+'relabel_cat'+category_id+os.sep+'category'+category_id
+        experiment_path = f"{resources_path}/relabel_cat{category_id}_source_{source_corpus}/category{category_id}"
 
         for metric in os.listdir(experiment_path):
             # this includes both standard and EE metrics
@@ -96,19 +98,16 @@ def summarize_test_scores(results_tables_path, corpus_name, resources_path,   ca
                             #optimize_F1s_output.write(f"{metric.split('_')[1:]}, {f_type}, {modif}, {0}, {0}\n")
 
 
-def merge_tables(results_tables_path, parameter_settings_tables_path, modes, categories_ids):
+def merge_tables(results_tables_path, source_corpus, corpus_name, modes, categories_ids, merged_parameters = True):
 
     for category in categories_ids:
 
-        test_scores_df = pd.read_csv(results_tables_path+os.sep+'test_scores'+os.sep+'category'+category+'_test_scores.csv',header = 0, index_col=[0,1, 2])
+        test_scores_df = pd.read_csv(f"{results_tables_path}/source_{source_corpus}_target_{corpus_name}/test_scores/category{category}_test_scores.csv",header = 0, index_col=[0,1, 2])
 
         full_data = None
         for mode in modes:
-
-            base_path1 = f'{results_tables_path}/{mode}_mode'
-
-            parameter_settings_df = pd.read_csv(parameter_settings_tables_path[mode]+os.sep+'optimal_F1s_category'+category+'.csv',header = 0, index_col=[0,1])
-
+            parameter_settings_tables_path = f"{results_tables_path}/{source_corpus}/{mode}_mode"
+            parameter_settings_df = pd.read_csv(f"{parameter_settings_tables_path}/optimal_F1s_category{category}.csv",header = 0, index_col=[0,1])
             logger_experiment.debug(parameter_settings_df)
 
             if full_data is None:
@@ -116,7 +115,7 @@ def merge_tables(results_tables_path, parameter_settings_tables_path, modes, cat
             else:
                 full_data = pd.concat([full_data, pd.merge(parameter_settings_df, test_scores_df, left_index=True, right_index=True)], axis = 0)
 
-        final_tables_path = results_tables_path+os.sep+'final_tables'
+        final_tables_path = f"{results_tables_path}/source_{source_corpus}_target_{corpus_name}/final_tables"
 
         if not os.path.exists(final_tables_path):
             os.makedirs(final_tables_path)
