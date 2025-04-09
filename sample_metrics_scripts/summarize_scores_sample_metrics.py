@@ -102,22 +102,24 @@ def merge_tables(results_tables_path, source_corpus, corpus_name, modes, categor
 
     for category in categories_ids:
 
-        test_scores_df = pd.read_csv(f"{results_tables_path}/source_{source_corpus}_target_{corpus_name}/test_scores/category{category}_test_scores.csv",header = 0, index_col=[0,1,2])
+        test_scores_df = pd.read_csv(f"{results_tables_path}/source_{source_corpus}_target_{corpus_name}/test_scores/category{category}_test_scores.csv",header = 0, index_col=[0,1,2], delimiter = ', ')
         test_scores_df.columns = [c.strip() for c in test_scores_df.columns]
         test_scores_df.index.names = [c.strip() for c in test_scores_df.index.names]
+
+        if not merged_parameters:
+            test_scores_df.reset_index(inplace=True, names=['metric','f_score', 'modification'])
+            test_scores_df['f_score'] = test_scores_df['f_score'].apply(lambda x: [i.strip() for i in x.split('_')])
+            test_scores_df = test_scores_df.explode('f_score')
+            test_scores_df.set_index(['metric','f_score', 'modification'], inplace=True)
+
         full_data = None
         for mode in modes:
             parameter_settings_tables_path = f"{results_tables_path}/{source_corpus}/{mode}_mode"
-            parameter_settings_df = pd.read_csv(f"{parameter_settings_tables_path}/optimal_F1s_category{category}.csv",header = 0, index_col=[0,1])
 
             if not merged_parameters:
-                parameter_settings_df = pd.read_csv(f"{parameter_settings_tables_path}/optimal_F1s_category{category}.csv",header = 0, index_col=[0,1])
-                parameter_settings_df.reset_index(inplace=True, names=['metric','f_score'])
-                parameter_settings_df['f_score'] = parameter_settings_df['f_score'].apply(lambda x: [i for i in x.split('_')])
-                parameter_settings_df = parameter_settings_df.explode('f_score')
-                parameter_settings_df.set_index(['metric','f_score'], inplace=True)
+                parameter_settings_df = pd.read_csv(f"{parameter_settings_tables_path}/optimal_F1s_category{category}.csv",header = 0, index_col=[0,1], delimiter = ', ')
             else:
-                parameter_settings_df = pd.read_csv(f"{parameter_settings_tables_path}/optimal_F1s_category{category}_parameters_merged.csv",header = 0, index_col=[0,1])
+                parameter_settings_df = pd.read_csv(f"{parameter_settings_tables_path}/optimal_F1s_category{category}_parameters_merged.csv",header = 0, index_col=[0,1],  delimiter = ', ')
             parameter_settings_df.columns = [c.strip() for c in parameter_settings_df.columns]
             parameter_settings_df.index.names = [c.strip() for c in parameter_settings_df.index.names]
 
