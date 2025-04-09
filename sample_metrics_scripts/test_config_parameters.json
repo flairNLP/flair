@@ -24,7 +24,7 @@
         "modes": ["EE", "standard"],
         "decoder_init":{"lr":"0.3", "num_epochs":"10"}
     },
-    "source_corpus": "noise_llm",
+    "source_corpora": ["noise_llm"],
     "corpora": [
         "noise_llm"
     ],

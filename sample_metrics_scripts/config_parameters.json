@@ -34,7 +34,7 @@
     "category1",
     "category2"
   ],
-  "source_corpus": "noise_crowd",
+  "source_corpora": ["noise_crowd"],
 
   "corpora": [
     "noise_crowd"

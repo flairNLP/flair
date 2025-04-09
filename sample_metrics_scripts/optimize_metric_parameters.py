@@ -237,10 +237,11 @@ def write_output(file, metric, f_types, score, epoch, threshold, direction, cate
     # output_config(category, metric, f_type_str, epoch, threshold, direction, mode, config, corpus_name)
 
 
-def optimize_F1s(config, corpus_name):
+def optimize_F1s(config):
     ''' 
 
     This function finds the optimal parameter sets for detecting incorrect token labels, for each sample metric. 
+    Across multiple corpora
     Each parameter set consists of:
         -   epoch
         -   threshold
@@ -255,11 +256,12 @@ def optimize_F1s(config, corpus_name):
 
     '''
 
+    corpora = config['source_corpora']
+    
     # get general parameters from the config
     seq_tagger_modes = config['parameters']['modes']
     max_epochs = int(config['parameters']['num_epochs'])
     sample_metrics = config['sample_metrics']
-    base_paths = {key: config['paths']['baseline_paths'][key] + os.sep + corpus_name for key in seq_tagger_modes}
     seeds = config['seeds']
     results_path = config['paths']['results_tables_path']
 
@@ -270,141 +272,153 @@ def optimize_F1s(config, corpus_name):
     resources_paths['EE'] = [f'{seed}_with_init-0.3/' for seed in seeds]
     resources_paths['standard'] = [f'{seed}/' for seed in seeds]
 
-
     for mode in seq_tagger_modes:
-
-        # check if the log for epoch 0 is available (before fine-tuning starts)
-        filepath = base_paths[mode] + resources_paths[mode][0]+'epoch_log'+'_0.log'
-        if not os.path.exists(filepath):
-            start_epoch = 1
-        else:
-            start_epoch = 0
-
 
         # get the maximum number of noisy samples for each category
 
         for cat in CATEGORIES:
-            cat['max_num_noisy'] = {seed: 0 for seed in seeds}
+            cat['max_num_noisy'] = {corpus: {seed: 0 for seed in seeds} for corpus in corpora}
 
-        for seed, resources_path in zip(seeds, resources_paths[mode]):
-            path = base_paths[mode] + os.sep+ resources_path 
+        for corpus in corpora:
+            base_path = config['paths']['baseline_paths'][mode] + os.sep + corpus 
 
-            for i in [str(i) for i in range(start_epoch, max_epochs)]:
+            filepath = base_path + resources_paths[mode][0]+'epoch_log'+'_0.log'
 
-                filepath = path+'epoch_log'+'_'+i+'.log'
-                epoch_log_df = pd.read_csv(filepath,  delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
+            # this is a bit useless and should be removed. start epoch should be the same for all corpora (and seeds)
+            if not os.path.exists(filepath):
+                start_epoch = 1
+            else:
+                start_epoch = 0
+            
+            for seed, resources_path in zip(seeds, resources_paths[mode]):
 
-                epoch_log_df[correct_prediction_flag_name] = epoch_log_df['predicted'] == epoch_log_df['noisy']
+                path = base_path + os.sep+ resources_path 
 
-                for category in CATEGORIES:
+                for i in [str(i) for i in range(start_epoch, max_epochs)]:
 
-                    if category['observed_label'] == 'O':
-                        category_epoch_log_df = epoch_log_df[(epoch_log_df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']=='O')]
-                    else:
-                        category_epoch_log_df = epoch_log_df[(epoch_log_df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']!='O')]
+                    filepath = path+'epoch_log'+'_'+i+'.log'
+                    epoch_log_df = pd.read_csv(filepath,  delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
 
-                    total_num_noisy = category_epoch_log_df['noisy_flag'].sum()
+                    epoch_log_df[correct_prediction_flag_name] = epoch_log_df['predicted'] == epoch_log_df['noisy']
 
-                    if total_num_noisy > category['max_num_noisy'][seed]:
-                        category['max_num_noisy'][seed] = total_num_noisy
-        
+                    for category in CATEGORIES:
+
+                        if category['observed_label'] == 'O':
+                            category_epoch_log_df = epoch_log_df[(epoch_log_df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']=='O')]
+                        else:
+                            category_epoch_log_df = epoch_log_df[(epoch_log_df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']!='O')]
+
+                        total_num_noisy = category_epoch_log_df['noisy_flag'].sum()
+
+                        if total_num_noisy > category['max_num_noisy'][corpus][seed]:
+                            category['max_num_noisy'][corpus][seed] = total_num_noisy
+            
         # iterate over categories
 
         for category in CATEGORIES:
-   
-            all_threshold_scores = {}
+            for corpus_name in corpora:
+                all_threshold_scores = {}
 
-            # set the scores and thresholds if epoch 0 is missing
-            for score in F_SCORE_NAMES:
-                all_threshold_scores[score] = {
-                    metric: {
-                        'scores' : [], 'thresholds':[]
-                    } 
-                    for metric in sample_metrics[mode]
-                }
-
-                for i in range(0, start_epoch):
-                    for metric in sample_metrics[mode]:
-                        all_threshold_scores[score][metric]['scores'].append(0)
-                        all_threshold_scores[score][metric]['thresholds'].append(0)
-
-            # iterate over epochs
-            for i in [str(i) for i in range(start_epoch, max_epochs)]:
-                
-                # initialize directions and threshold_scores dictionaries
-                directions = {metric: [] for metric in sample_metrics[mode]}
-                threshold_scores = {}
+                # set the scores and thresholds if epoch 0 is missing
                 for score in F_SCORE_NAMES:
-                    threshold_scores[score] = {metric: [] for metric in sample_metrics[mode]} 
-                thresholds = {metric: [] for metric in sample_metrics[mode]} 
+                    all_threshold_scores[score] = {
+                        metric: {
+                            'scores' : [], 'thresholds':[]
+                        } 
+                        for metric in sample_metrics[mode]
+                    }
 
-                # iterate over seeds
-                for seed, resources_path in zip(seeds, resources_paths[mode]):
+                    for i in range(0, start_epoch):
+                        for metric in sample_metrics[mode]:
+                            all_threshold_scores[score][metric]['scores'].append(0)
+                            all_threshold_scores[score][metric]['thresholds'].append(0)
 
-                    # read epoch log file
-                    path = base_paths[mode] + os.sep +resources_path 
-                    filepath = path+'epoch_log'+'_'+i+'.log'
-                    epoch_log_df = pd.read_csv(filepath,  delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
-                    epoch_log_df[correct_prediction_flag_name] = epoch_log_df['predicted'] == epoch_log_df['noisy']
+                # iterate over epochs
+                for i in [str(i) for i in range(start_epoch, max_epochs)]:
+                    
+                    # initialize directions and threshold_scores dictionaries
+                    directions = {metric: [] for metric in sample_metrics[mode]}
 
-                    # select the data subset that is in the corresponding epoch
-                    if category['observed_label'] == 'O':
-                        category_epoch_log_df = epoch_log_df[(epoch_log_df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']=='O')]
-                    else:
-                        category_epoch_log_df = epoch_log_df[(epoch_log_df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']!='O')]
+                    threshold_scores = {}
+                    for score in F_SCORE_NAMES:
+                        threshold_scores[score] = {metric: [] for metric in sample_metrics[mode]} 
+                    thresholds = {metric: [] for metric in sample_metrics[mode]} 
 
-                    # get total number of epochs (this can be different from current epoch, only for EE mode and if metrics were calculated during decoder init)
-                    total_epoch = category_epoch_log_df['mild'].max()
+                    # change in this new function: instead of only averaging over seeds and finding the maximum, we average over seeds AND CORPORA and find the maximum.
+                    # everything else stays the same;
+                    for corpus in corpora:
 
-                    # calculate f_scores for each sample metric
+                        # iterate over seeds
+                        for seed, resources_path in zip(seeds, resources_paths[mode]):
+                            base_path = config['paths']['baseline_paths'][mode] + os.sep + corpus 
 
+                            # read epoch log file
+                            path = base_path + os.sep +resources_path 
+                            filepath = path+'epoch_log'+'_'+i+'.log'
+                            epoch_log_df = pd.read_csv(filepath,  delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
+                            epoch_log_df[correct_prediction_flag_name] = epoch_log_df['predicted'] == epoch_log_df['noisy']
+
+                            # select the data subset that is in the corresponding epoch
+                            if category['observed_label'] == 'O':
+                                category_epoch_log_df = epoch_log_df[(epoch_log_df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']=='O')]
+                            else:
+                                category_epoch_log_df = epoch_log_df[(epoch_log_df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']!='O')]
+
+                            # get total number of epochs (this can be different from current epoch, only for EE mode and if metrics were calculated during decoder init)
+                            total_epoch = category_epoch_log_df['mild'].max()
+
+                            # calculate f_scores for each sample metric
+
+                            for metric in sample_metrics[mode]:
+                                result = get_score_from_df(category_epoch_log_df, metric, epoch=total_epoch, noise_flag_name=noise_flag_name, total_num_noisy=category['max_num_noisy'][corpus][seed]) #list of 10 (over thresholds)
+
+                                for f_type in F_SCORE_NAMES:
+                                    threshold_scores[f_type][metric].append(result[f_type]) # this is a list of lists 
+
+                                thresholds[metric].append(result['thresholds']) # this is a list of lists
+                                directions[metric].append(result['direction'])
+
+                    # iterate over metrics
                     for metric in sample_metrics[mode]:
-                        result = get_score_from_df(category_epoch_log_df, metric, epoch=total_epoch, noise_flag_name=noise_flag_name, total_num_noisy=category['max_num_noisy'][seed]) #list of 10 (over thresholds)
 
-                        for f_type in F_SCORE_NAMES:
-                            threshold_scores[f_type][metric].append(result[f_type]) # this is a list of lists 
+                        # calculate minimum number of thresholds 
+                        # (in case the number of thresholds differs among seeds)
+                        min_len = len(thresholds[metric][0])
+                        for l in thresholds[metric][1:]:
+                            if len(l) < min_len:
+                                min_len = len(l)
 
-                        thresholds[metric].append(result['thresholds']) # this is a list of lists
-                        directions[metric].append(result['direction'])
+                        # take only up to min_len thresholds (from the seeds that have more)
+                        thresholds_list = np.asarray([l[:min_len] for l in thresholds[metric]]).mean(axis=0)
 
-                # iterate over metrics
-                for metric in sample_metrics[mode]:
+                        # iterate over the three f_score types
+                        for f_score_type in F_SCORE_NAMES:
 
-                    # calculate minimum number of thresholds 
-                    # (in case the number of thresholds differs among seeds)
-                    min_len = len(thresholds[metric][0])
-                    for l in thresholds[metric][1:]:
-                        if len(l) < min_len:
-                            min_len = len(l)
+                            # take only up to min_len scores
+                            scores = np.array([l[:min_len] for l in threshold_scores[f_score_type][metric]])
 
-                    # take only up to min_len thresholds (from the seeds that have more)
-                    thresholds_list = np.asarray([l[:min_len] for l in thresholds[metric]]).mean(axis=0)
+                            # average the f_scores over the seeds
+                            scores = scores.mean(axis=0)
 
-                    # iterate over the three f_score types
-                    for f_score_type in F_SCORE_NAMES:
+                            if len(scores) == 0:
+                                # if the list of scores is empty, set them and the other parameters to 0
+                                all_threshold_scores[f_score_type][metric]['scores'].append(0)
+                                all_threshold_scores[f_score_type][metric]['thresholds'].append(0)
+                                all_threshold_scores[f_score_type][metric]['direction'] = directions[metric][0]
+                            else:
+                                # get maxima over thresholds
+                                all_threshold_scores[f_score_type][metric]['scores'].append(max(scores))
+                                all_threshold_scores[f_score_type][metric]['thresholds'].append(thresholds_list[np.argmax(scores)])
+                                all_threshold_scores[f_score_type][metric]['direction'] = directions[metric][0]
 
-                        # take only up to min_len scores
-                        scores = np.array([l[:min_len] for l in threshold_scores[f_score_type][metric]])
-
-                        # average the f_scores over the seeds
-                        scores = scores.mean(axis=0)
-
-                        if len(scores) == 0:
-                            # if the list of scores is empty, set them and the other parameters to 0
-                            all_threshold_scores[f_score_type][metric]['scores'].append(0)
-                            all_threshold_scores[f_score_type][metric]['thresholds'].append(0)
-                            all_threshold_scores[f_score_type][metric]['direction'] = directions[metric][0]
-                        else:
-                            # get maxima over thresholds
-                            all_threshold_scores[f_score_type][metric]['scores'].append(max(scores))
-                            all_threshold_scores[f_score_type][metric]['thresholds'].append(thresholds_list[np.argmax(scores)])
-                            all_threshold_scores[f_score_type][metric]['direction'] = directions[metric][0]
-
-            
+                
             # open the .csv for current category 
-            filepath = results_path + os.sep + corpus_name + os.sep + mode+'_mode'
+            merged_corpora_names = '_'.join(corpora)
+            filepath = results_path + os.sep + merged_corpora_names + os.sep + mode+'_mode'
+
             if not os.path.exists(filepath):
                 os.makedirs(filepath)
+
             optimize_F1s_output_file = open(filepath + os.sep+'optimal_F1s_category'+category['id']+'.csv','w')
             optimize_F1s_output_file.write('metric, f_score, score, epoch, threshold, direction\n')
 
