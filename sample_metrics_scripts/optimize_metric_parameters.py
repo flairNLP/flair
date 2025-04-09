@@ -408,6 +408,9 @@ def optimize_F1s(config, corpus_name):
             optimize_F1s_output_file = open(filepath + os.sep+'optimal_F1s_category'+category['id']+'.csv','w')
             optimize_F1s_output_file.write('metric, f_score, score, epoch, threshold, direction\n')
 
+            optimize_F1s_output_file_parameters_merged = open(filepath + os.sep+'optimal_F1s_category'+category['id']+'_parameters_merged.csv','w')
+            optimize_F1s_output_file_parameters_merged.write('metric, f_score, score, epoch, threshold, direction\n')
+
             # iterate over metrics
             for metric in sample_metrics[mode]:
                 epochs = []
@@ -427,6 +430,7 @@ def optimize_F1s(config, corpus_name):
                     '''
                     uncomment the following code to print a full table (where duplicate parameter sets are NOT merged), which includes all actual f score values
                     '''
+                    write_output(optimize_F1s_output_file, metric, f_type, score, epoch, threshold, direction, category, mode, config, corpus_name)
                     # optimize_F1s_output_file.write(f'{metric}, {f_type}, {score}, {epoch}, {threshold}, {direction}\n')
                     # output_config(category, metric,  f_type, epoch, threshold, direction, mode)
 
@@ -452,16 +456,16 @@ def optimize_F1s(config, corpus_name):
                         if epochs[i] == epochs[k] and thresholds[i] == thresholds[k] and directions[i] == directions[k]:
                             # all three parameter sets are the same 
                             # (only f05 score is printed out)
-                            write_output(optimize_F1s_output_file, metric, F_SCORE_NAMES, scores[0], epochs[0], thresholds[0], directions[0], category, mode, config, corpus_name)
+                            write_output(optimize_F1s_output_file_parameters_merged, metric, F_SCORE_NAMES, scores[0], epochs[0], thresholds[0], directions[0], category, mode, config, corpus_name)
                         else:
                             # two parameter sets are the same, one is different
-                            write_output(optimize_F1s_output_file, metric, [F_SCORE_NAMES[i], F_SCORE_NAMES[j]], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config, corpus_name)
-                            write_output(optimize_F1s_output_file, metric, F_SCORE_NAMES[k], scores[k], epochs[k], thresholds[k], directions[k], category, mode, config, corpus_name)
+                            write_output(optimize_F1s_output_file_parameters_merged, metric, [F_SCORE_NAMES[i], F_SCORE_NAMES[j]], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config, corpus_name)
+                            write_output(optimize_F1s_output_file_parameters_merged, metric, F_SCORE_NAMES[k], scores[k], epochs[k], thresholds[k], directions[k], category, mode, config, corpus_name)
                         break
                 else:
                     # all three parameter sets are different
                     for i in list(indices):
-                        write_output(optimize_F1s_output_file, metric, F_SCORE_NAMES[i], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config, corpus_name)
+                        write_output(optimize_F1s_output_file_parameters_merged, metric, F_SCORE_NAMES[i], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config, corpus_name)
 
 def calculate_correlations(config):
     ''' 
@@ -494,7 +498,7 @@ def calculate_correlations(config):
                     continue
 
                 # read the optimal F1s file
-                optimal_F1s_file = open(f"{results_path}/source_{source_corpus}_target_{corpus}/final_tables/category{category['id']}_merged_optimal_table.csv",'r')
+                optimal_F1s_file = open(f"{results_path}/source_{source_corpus}_target_{corpus}/final_tables/category{category['id']}_final_table.csv",'r')
                 lines = optimal_F1s_file.readlines()
                 optimal_F1s_file.close()
 

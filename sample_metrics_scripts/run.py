@@ -168,7 +168,7 @@ def run(config, gpu=0):
         metrics_list = config['sample_metrics'][mode]
 
         for cat in config['categories']:
-            category_table_path = f"{parameter_settings_path}/optimal_F1s_{cat}.csv"
+            category_table_path = f"{parameter_settings_path}/optimal_F1s_{cat}_parameters_merged.csv"
             logger_experiment.info(f"Read parameter settings for {cat} from {category_table_path}.")
             experiment_configs = output_configs(config, category_table_path, cat[-1], mode, metrics_list)
 
@@ -189,8 +189,12 @@ def run(config, gpu=0):
         summarize_test_scores(config['paths']['results_tables_path'], source_corpus, corpus_name, resources_path=config['paths']['resources_path'], categories_ids = categories_ids)
 
         # 5. Merge the optimal parameter sets from 2. and the summarized test scores from 4.
-        merge_tables(f"{config['paths']['results_tables_path']}", source_corpus, corpus_name, config['parameters']['modes'], categories_ids = categories_ids)
-    calculate_correlations(config)
+        merge_tables(f"{config['paths']['results_tables_path']}", source_corpus, corpus_name, config['parameters']['modes'], categories_ids = categories_ids, merged_parameters = True)
+        merge_tables(f"{config['paths']['results_tables_path']}", source_corpus, corpus_name, config['parameters']['modes'], categories_ids = categories_ids, merged_parameters = False)
+
+
+    calculate_correlations(config) # here we use the table from 5., but the one without merged parameters.
+
     logger_experiment.info(f"Finished all experiments and summarized scores.")
 
 if __name__ == "__main__":
