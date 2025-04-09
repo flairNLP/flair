@@ -477,10 +477,12 @@ def calculate_correlations(config):
     seeds = config['seeds']
     results_path = config['paths']['results_tables_path']
     corpora = config['corpora']
+    source_corpus = config['source_corpus']
+
     for corpus in corpora:
         # open the .csv for current corpus 
 
-        filepath = results_path+os.sep+corpus + os.sep + 'correlations'
+        filepath = f'{results_path}/source_{source_corpus}_target_{corpus}/correlations'
         if not os.path.exists(filepath):
             os.makedirs(filepath)
 
@@ -488,8 +490,11 @@ def calculate_correlations(config):
         correlations_output_file.write('category, f_type, modification, correlation\n')
 
         for category in CATEGORIES:
+                if 'category'+category['id'] not in config['categories']:
+                    continue
+
                 # read the optimal F1s file
-                optimal_F1s_file = open(results_path + os.sep + corpus + os.sep + 'final_tables' + os.sep + 'category'+category['id']+'_merged_optimal_table.csv','r')
+                optimal_F1s_file = open(f"{results_path}/source_{source_corpus}_target_{corpus}/final_tables/category{category['id']}_merged_optimal_table.csv",'r')
                 lines = optimal_F1s_file.readlines()
                 optimal_F1s_file.close()
 
