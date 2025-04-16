@@ -852,7 +852,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
         if self._label_dict is None:
             self._create_label_dict()
 
-        elif self._label_embeddings is None:
+        if self._label_embeddings is None:
             self._recompute_label_embeddings()
 
         return self._label_embeddings
