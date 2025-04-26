@@ -16,49 +16,46 @@ def output_configs(config, category_table_path, cat_id, mode, metrics_list):
 
     source_corpus = '_'.join(config['source_corpora'])
 
+    base_config = {
+    "experiment_name": "relabel_cat"+cat_id+"_source_"+source_corpus,
+    "paths": {
+        "resources_path": f"{config['paths']['resources_path']}/relabel_cat{cat_id}_source_{source_corpus}/",
+        "data_path":config['paths']['data_path'],
+        "train_filename_extension" :config['paths']['train_filename_extension'],
+        "dev_filename_extension" :config['paths']['dev_filename_extension'],
+        "test_filename_extension" :config['paths']['test_filename_extension'],
+        "baseline_paths":{
+            "EE":config['paths']['baseline_paths']['EE'],
+            "standard":config['paths']['baseline_paths']['standard'],
+        }
+    },
+    "parameters": {
+        "batch_size":config['parameters']['batch_size'],
+        "learning_rate":config['parameters']['learning_rate'],
+        "num_epochs":config['parameters']['num_epochs'],
+        "model":config['parameters']['model'],
+        "monitor_test":config['parameters']['monitor_test'],
+        "scheduler":config['parameters']['scheduler'],
+        "metrics_mode":config['parameters']['metrics_mode'],
+        "model_reinit":config['parameters']['model_reinit'],
+        "decoder_init":config['parameters']['decoder_init'],
+        "modify_category1":False,
+        "modify_category2":False,
+        "modify_category3":False,
+        "modify_category4":False,
+    },
+    "corpora" : config['corpora'],
+    "seeds":config['seeds']
+    }
+
     for ind, row in data.iterrows():
         if str(ind[0]).strip() in metrics_list:
             print(row['epoch'])
-
-            # define the base config properties
-            base_config = {
-
-            "experiment_name": "relabel_cat"+cat_id+"_source_"+source_corpus,
-            "paths": {
-                "resources_path": f"{config['paths']['resources_path']}/relabel_cat{cat_id}_source_{source_corpus}/",
-                "data_path":config['paths']['data_path'],
-                "train_filename_extension" :config['paths']['train_filename_extension'],
-                "dev_filename_extension" :config['paths']['dev_filename_extension'],
-                "test_filename_extension" :config['paths']['test_filename_extension'],
-                "baseline_paths":{
-                    "EE":config['paths']['baseline_paths']['EE'],
-                    "standard":config['paths']['baseline_paths']['standard'],
-                }
-            },
-            "parameters": {
-                "batch_size":config['parameters']['batch_size'],
-                "learning_rate":config['parameters']['learning_rate'],
-                "num_epochs":config['parameters']['num_epochs'],
-                "model":config['parameters']['model'],
-                "monitor_test":config['parameters']['monitor_test'],
-                "scheduler":config['parameters']['scheduler'],
-                "metrics_mode":config['parameters']['metrics_mode'],
-                "model_reinit":config['parameters']['model_reinit'],
-                "decoder_init":config['parameters']['decoder_init'],
-                "modify_category1":False,
-                "modify_category2":False,
-                "modify_category3":False,
-                "modify_category4":False,
-            },
-            "corpora" : config['corpora'],
-            "seeds":config['seeds']
-            }
-
-
-            base_config['parameters']['seq_tagger_mode'] = mode
+            current_config = base_config.copy()
+            current_config['parameters']['seq_tagger_mode'] = mode
 
             # add current category modification parameters with 'mask' option
-            base_config['parameters']['modify_category'+cat_id] = {
+            current_config['parameters']['modify_category'+cat_id] = {
                                                             'epoch_change': str(row['epoch']).strip(),
                                                             'metric':str(ind[0]).strip(),
                                                             'f_type':ind[1].strip(),
@@ -66,12 +63,12 @@ def output_configs(config, category_table_path, cat_id, mode, metrics_list):
                                                             'direction':row['direction'],
                                                             'modification':'mask'
                                                             }
-            experiment_configs.append(base_config)
+            experiment_configs.append(current_config)
             
             if int(cat_id) == 2 or int(cat_id) == 4:
                 # add current category modification parameters with 'relabel' option
                 # *only for categories 2 and 4 (because we have an alternative label there: the predicted one)
-                base_config['parameters']['modify_category'+cat_id] = {
+                current_config['parameters']['modify_category'+cat_id] = {
                                                             'epoch_change': str(row['epoch']).strip(),
                                                             'metric':str(ind[0]).strip(),
                                                             'f_type':ind[1].strip(),
@@ -79,7 +76,8 @@ def output_configs(config, category_table_path, cat_id, mode, metrics_list):
                                                             'direction':row['direction'].strip(),
                                                             'modification':'relabel'
                                                             }
-                experiment_configs.append(base_config)
+                experiment_configs.append(current_config)
+
     return experiment_configs
     
 
