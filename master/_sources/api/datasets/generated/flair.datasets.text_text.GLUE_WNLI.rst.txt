@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~GLUE_WNLI.corpus_tokenizer
       ~GLUE_WNLI.dev
       ~GLUE_WNLI.test
       ~GLUE_WNLI.train

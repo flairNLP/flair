@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_LOCTEXT.corpus_tokenizer
       ~HUNER_LOCTEXT.dev
       ~HUNER_LOCTEXT.test
       ~HUNER_LOCTEXT.train

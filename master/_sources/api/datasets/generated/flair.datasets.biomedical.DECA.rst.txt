@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~DECA.corpus_tokenizer
       ~DECA.dev
       ~DECA.test
       ~DECA.train

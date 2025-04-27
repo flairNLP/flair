@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NEL_GERMAN_HIPE.corpus_tokenizer
       ~NEL_GERMAN_HIPE.dev
       ~NEL_GERMAN_HIPE.test
       ~NEL_GERMAN_HIPE.train

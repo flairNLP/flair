@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~OcrCorpus.corpus_tokenizer
       ~OcrCorpus.dev
       ~OcrCorpus.test
       ~OcrCorpus.train

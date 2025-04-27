@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~SENTEVAL_MPQA.corpus_tokenizer
       ~SENTEVAL_MPQA.dev
       ~SENTEVAL_MPQA.test
       ~SENTEVAL_MPQA.train

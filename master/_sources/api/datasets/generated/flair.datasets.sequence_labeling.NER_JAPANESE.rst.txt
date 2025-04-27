@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_JAPANESE.corpus_tokenizer
       ~NER_JAPANESE.dev
       ~NER_JAPANESE.test
       ~NER_JAPANESE.train

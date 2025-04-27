@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_MIRNA.corpus_tokenizer
       ~HUNER_GENE_MIRNA.dev
       ~HUNER_GENE_MIRNA.test
       ~HUNER_GENE_MIRNA.train

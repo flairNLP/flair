@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_CHEMICAL_CEMP.corpus_tokenizer
       ~HUNER_CHEMICAL_CEMP.dev
       ~HUNER_CHEMICAL_CEMP.test
       ~HUNER_CHEMICAL_CEMP.train

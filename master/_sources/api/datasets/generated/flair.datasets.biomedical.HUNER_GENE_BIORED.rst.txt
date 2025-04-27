@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_BIORED.corpus_tokenizer
       ~HUNER_GENE_BIORED.dev
       ~HUNER_GENE_BIORED.test
       ~HUNER_GENE_BIORED.train

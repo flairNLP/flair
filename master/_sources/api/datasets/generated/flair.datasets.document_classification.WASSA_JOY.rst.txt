@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WASSA_JOY.corpus_tokenizer
       ~WASSA_JOY.dev
       ~WASSA_JOY.test
       ~WASSA_JOY.train

@@ -36,6 +36,7 @@
 
    .. autosummary::
    
+      ~SCAI_CHEMICALS.corpus_tokenizer
       ~SCAI_CHEMICALS.dev
       ~SCAI_CHEMICALS.test
       ~SCAI_CHEMICALS.train

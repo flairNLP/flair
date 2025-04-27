@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~TREC_50.corpus_tokenizer
       ~TREC_50.dev
       ~TREC_50.test
       ~TREC_50.train

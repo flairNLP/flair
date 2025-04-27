@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_JNLPBA.corpus_tokenizer
       ~HUNER_GENE_JNLPBA.dev
       ~HUNER_GENE_JNLPBA.test
       ~HUNER_GENE_JNLPBA.train

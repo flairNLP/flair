@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_CHEMICAL_CPI.corpus_tokenizer
       ~HUNER_CHEMICAL_CPI.dev
       ~HUNER_CHEMICAL_CPI.test
       ~HUNER_CHEMICAL_CPI.train

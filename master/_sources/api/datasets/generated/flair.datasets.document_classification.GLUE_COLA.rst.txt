@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~GLUE_COLA.corpus_tokenizer
       ~GLUE_COLA.dev
       ~GLUE_COLA.test
       ~GLUE_COLA.train

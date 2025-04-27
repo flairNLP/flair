@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_MARATHI.corpus_tokenizer
       ~UD_MARATHI.dev
       ~UD_MARATHI.test
       ~UD_MARATHI.train

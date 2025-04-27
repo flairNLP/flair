@@ -34,6 +34,7 @@
    .. autosummary::
    
       ~NER_NOISEBENCH.SAVE_TRAINDEV_FILE
+      ~NER_NOISEBENCH.corpus_tokenizer
       ~NER_NOISEBENCH.dev
       ~NER_NOISEBENCH.label_url
       ~NER_NOISEBENCH.test

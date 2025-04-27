@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~BioBertHelper.corpus_tokenizer
       ~BioBertHelper.dev
       ~BioBertHelper.test
       ~BioBertHelper.train

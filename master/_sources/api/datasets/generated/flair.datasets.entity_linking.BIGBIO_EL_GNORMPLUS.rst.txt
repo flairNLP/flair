@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIGBIO_EL_GNORMPLUS.corpus_tokenizer
       ~BIGBIO_EL_GNORMPLUS.dev
       ~BIGBIO_EL_GNORMPLUS.test
       ~BIGBIO_EL_GNORMPLUS.train

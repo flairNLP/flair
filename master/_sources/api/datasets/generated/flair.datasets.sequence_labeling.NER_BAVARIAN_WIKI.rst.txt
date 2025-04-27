@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_BAVARIAN_WIKI.corpus_tokenizer
       ~NER_BAVARIAN_WIKI.dev
       ~NER_BAVARIAN_WIKI.test
       ~NER_BAVARIAN_WIKI.train

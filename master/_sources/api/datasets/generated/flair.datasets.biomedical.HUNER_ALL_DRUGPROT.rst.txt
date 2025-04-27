@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_ALL_DRUGPROT.corpus_tokenizer
       ~HUNER_ALL_DRUGPROT.dev
       ~HUNER_ALL_DRUGPROT.test
       ~HUNER_ALL_DRUGPROT.train

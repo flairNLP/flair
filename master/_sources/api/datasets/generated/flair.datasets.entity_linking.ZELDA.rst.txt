@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~ZELDA.corpus_tokenizer
       ~ZELDA.dev
       ~ZELDA.test
       ~ZELDA.train

@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~BIONLP2013_CG.corpus_tokenizer
       ~BIONLP2013_CG.dev
       ~BIONLP2013_CG.test
       ~BIONLP2013_CG.train

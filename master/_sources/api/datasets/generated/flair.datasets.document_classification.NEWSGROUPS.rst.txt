@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NEWSGROUPS.corpus_tokenizer
       ~NEWSGROUPS.dev
       ~NEWSGROUPS.test
       ~NEWSGROUPS.train

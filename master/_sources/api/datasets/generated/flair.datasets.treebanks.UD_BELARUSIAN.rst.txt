@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_BELARUSIAN.corpus_tokenizer
       ~UD_BELARUSIAN.dev
       ~UD_BELARUSIAN.test
       ~UD_BELARUSIAN.train

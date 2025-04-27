@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~SENTEVAL_SST_BINARY.corpus_tokenizer
       ~SENTEVAL_SST_BINARY.dev
       ~SENTEVAL_SST_BINARY.test
       ~SENTEVAL_SST_BINARY.train

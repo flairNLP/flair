@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~BIOSEMANTICS.corpus_tokenizer
       ~BIOSEMANTICS.dev
       ~BIOSEMANTICS.test
       ~BIOSEMANTICS.train

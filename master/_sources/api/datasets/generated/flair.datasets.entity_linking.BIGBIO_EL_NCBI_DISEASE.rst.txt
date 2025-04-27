@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIGBIO_EL_NCBI_DISEASE.corpus_tokenizer
       ~BIGBIO_EL_NCBI_DISEASE.dev
       ~BIGBIO_EL_NCBI_DISEASE.test
       ~BIGBIO_EL_NCBI_DISEASE.train

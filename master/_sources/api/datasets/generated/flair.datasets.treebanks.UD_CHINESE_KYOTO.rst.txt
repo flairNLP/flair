@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_CHINESE_KYOTO.corpus_tokenizer
       ~UD_CHINESE_KYOTO.dev
       ~UD_CHINESE_KYOTO.test
       ~UD_CHINESE_KYOTO.train

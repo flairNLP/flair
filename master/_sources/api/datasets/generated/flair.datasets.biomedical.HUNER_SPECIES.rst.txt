@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~HUNER_SPECIES.corpus_tokenizer
       ~HUNER_SPECIES.dev
       ~HUNER_SPECIES.test
       ~HUNER_SPECIES.train

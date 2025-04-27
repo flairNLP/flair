@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~GLUE_RTE.corpus_tokenizer
       ~GLUE_RTE.dev
       ~GLUE_RTE.test
       ~GLUE_RTE.train

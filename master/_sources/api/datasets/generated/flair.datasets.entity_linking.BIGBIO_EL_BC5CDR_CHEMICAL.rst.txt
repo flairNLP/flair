@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIGBIO_EL_BC5CDR_CHEMICAL.corpus_tokenizer
       ~BIGBIO_EL_BC5CDR_CHEMICAL.dev
       ~BIGBIO_EL_BC5CDR_CHEMICAL.test
       ~BIGBIO_EL_BC5CDR_CHEMICAL.train

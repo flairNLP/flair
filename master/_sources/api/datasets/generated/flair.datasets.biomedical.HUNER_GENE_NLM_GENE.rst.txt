@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_NLM_GENE.corpus_tokenizer
       ~HUNER_GENE_NLM_GENE.dev
       ~HUNER_GENE_NLM_GENE.test
       ~HUNER_GENE_NLM_GENE.train

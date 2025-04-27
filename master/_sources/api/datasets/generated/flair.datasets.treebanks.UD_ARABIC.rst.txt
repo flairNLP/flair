@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_ARABIC.corpus_tokenizer
       ~UD_ARABIC.dev
       ~UD_ARABIC.test
       ~UD_ARABIC.train

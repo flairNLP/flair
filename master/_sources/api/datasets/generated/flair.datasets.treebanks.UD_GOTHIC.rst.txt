@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_GOTHIC.corpus_tokenizer
       ~UD_GOTHIC.dev
       ~UD_GOTHIC.test
       ~UD_GOTHIC.train

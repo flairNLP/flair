@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~GLUE_QQP.corpus_tokenizer
       ~GLUE_QQP.dev
       ~GLUE_QQP.test
       ~GLUE_QQP.train

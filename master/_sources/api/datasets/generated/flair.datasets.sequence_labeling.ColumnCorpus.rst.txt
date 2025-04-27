@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~ColumnCorpus.corpus_tokenizer
       ~ColumnCorpus.dev
       ~ColumnCorpus.test
       ~ColumnCorpus.train

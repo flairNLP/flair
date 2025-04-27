@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~CHEMDNER.corpus_tokenizer
       ~CHEMDNER.dev
       ~CHEMDNER.test
       ~CHEMDNER.train

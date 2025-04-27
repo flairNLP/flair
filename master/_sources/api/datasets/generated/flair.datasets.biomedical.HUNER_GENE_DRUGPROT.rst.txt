@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_DRUGPROT.corpus_tokenizer
       ~HUNER_GENE_DRUGPROT.dev
       ~HUNER_GENE_DRUGPROT.test
       ~HUNER_GENE_DRUGPROT.train

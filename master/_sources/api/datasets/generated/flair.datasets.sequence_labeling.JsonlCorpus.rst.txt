@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~JsonlCorpus.corpus_tokenizer
       ~JsonlCorpus.dev
       ~JsonlCorpus.test
       ~JsonlCorpus.train

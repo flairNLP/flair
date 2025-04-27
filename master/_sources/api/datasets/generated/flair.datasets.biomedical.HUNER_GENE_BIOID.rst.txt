@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_BIOID.corpus_tokenizer
       ~HUNER_GENE_BIOID.dev
       ~HUNER_GENE_BIOID.test
       ~HUNER_GENE_BIOID.train

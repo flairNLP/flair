@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_LIVVI.corpus_tokenizer
       ~UD_LIVVI.dev
       ~UD_LIVVI.test
       ~UD_LIVVI.train

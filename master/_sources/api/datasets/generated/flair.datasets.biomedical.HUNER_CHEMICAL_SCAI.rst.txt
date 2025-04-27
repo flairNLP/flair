@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_CHEMICAL_SCAI.corpus_tokenizer
       ~HUNER_CHEMICAL_SCAI.dev
       ~HUNER_CHEMICAL_SCAI.test
       ~HUNER_CHEMICAL_SCAI.train

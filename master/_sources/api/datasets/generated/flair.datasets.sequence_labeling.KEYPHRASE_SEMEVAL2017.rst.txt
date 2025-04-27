@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~KEYPHRASE_SEMEVAL2017.corpus_tokenizer
       ~KEYPHRASE_SEMEVAL2017.dev
       ~KEYPHRASE_SEMEVAL2017.test
       ~KEYPHRASE_SEMEVAL2017.train

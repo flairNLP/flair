@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_GERMAN_POLITICS.corpus_tokenizer
       ~NER_GERMAN_POLITICS.dev
       ~NER_GERMAN_POLITICS.test
       ~NER_GERMAN_POLITICS.train

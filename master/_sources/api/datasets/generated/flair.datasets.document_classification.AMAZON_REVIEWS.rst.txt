@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~AMAZON_REVIEWS.corpus_tokenizer
       ~AMAZON_REVIEWS.dev
       ~AMAZON_REVIEWS.test
       ~AMAZON_REVIEWS.train

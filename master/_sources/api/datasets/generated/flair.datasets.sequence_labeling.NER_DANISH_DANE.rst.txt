@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_DANISH_DANE.corpus_tokenizer
       ~NER_DANISH_DANE.dev
       ~NER_DANISH_DANE.test
       ~NER_DANISH_DANE.train

@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_PROGENE.corpus_tokenizer
       ~HUNER_GENE_PROGENE.dev
       ~HUNER_GENE_PROGENE.test
       ~HUNER_GENE_PROGENE.train

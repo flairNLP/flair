@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_OSIRIS.corpus_tokenizer
       ~HUNER_GENE_OSIRIS.dev
       ~HUNER_GENE_OSIRIS.test
       ~HUNER_GENE_OSIRIS.train

@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE.corpus_tokenizer
       ~HUNER_GENE.dev
       ~HUNER_GENE.test
       ~HUNER_GENE.train

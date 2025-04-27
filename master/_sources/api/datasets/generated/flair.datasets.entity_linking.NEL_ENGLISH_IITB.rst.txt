@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NEL_ENGLISH_IITB.corpus_tokenizer
       ~NEL_ENGLISH_IITB.dev
       ~NEL_ENGLISH_IITB.test
       ~NEL_ENGLISH_IITB.train

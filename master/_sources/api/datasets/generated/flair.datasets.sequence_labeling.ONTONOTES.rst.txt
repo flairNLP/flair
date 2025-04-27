@@ -37,6 +37,7 @@
    .. autosummary::
    
       ~ONTONOTES.archive_url
+      ~ONTONOTES.corpus_tokenizer
       ~ONTONOTES.dev
       ~ONTONOTES.test
       ~ONTONOTES.train

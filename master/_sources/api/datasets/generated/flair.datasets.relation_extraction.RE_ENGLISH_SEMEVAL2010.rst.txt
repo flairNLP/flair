@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~RE_ENGLISH_SEMEVAL2010.corpus_tokenizer
       ~RE_ENGLISH_SEMEVAL2010.dev
       ~RE_ENGLISH_SEMEVAL2010.test
       ~RE_ENGLISH_SEMEVAL2010.train

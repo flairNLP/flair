@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_MULTI_CONER_V2.corpus_tokenizer
       ~NER_MULTI_CONER_V2.dev
       ~NER_MULTI_CONER_V2.test
       ~NER_MULTI_CONER_V2.train

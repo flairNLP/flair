@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~HUNER_DISEASE.corpus_tokenizer
       ~HUNER_DISEASE.dev
       ~HUNER_DISEASE.test
       ~HUNER_DISEASE.train

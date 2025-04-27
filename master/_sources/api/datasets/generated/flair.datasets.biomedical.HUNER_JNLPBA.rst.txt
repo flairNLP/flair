@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_JNLPBA.corpus_tokenizer
       ~HUNER_JNLPBA.dev
       ~HUNER_JNLPBA.test
       ~HUNER_JNLPBA.train

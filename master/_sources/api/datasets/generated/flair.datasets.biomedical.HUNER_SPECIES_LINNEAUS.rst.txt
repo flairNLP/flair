@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_SPECIES_LINNEAUS.corpus_tokenizer
       ~HUNER_SPECIES_LINNEAUS.dev
       ~HUNER_SPECIES_LINNEAUS.test
       ~HUNER_SPECIES_LINNEAUS.train

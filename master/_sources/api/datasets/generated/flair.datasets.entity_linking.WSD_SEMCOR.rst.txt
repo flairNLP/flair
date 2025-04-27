@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WSD_SEMCOR.corpus_tokenizer
       ~WSD_SEMCOR.dev
       ~WSD_SEMCOR.test
       ~WSD_SEMCOR.train

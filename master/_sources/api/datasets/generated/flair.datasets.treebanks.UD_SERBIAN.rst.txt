@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_SERBIAN.corpus_tokenizer
       ~UD_SERBIAN.dev
       ~UD_SERBIAN.test
       ~UD_SERBIAN.train

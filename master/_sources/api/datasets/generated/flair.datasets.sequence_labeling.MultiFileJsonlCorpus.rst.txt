@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~MultiFileJsonlCorpus.corpus_tokenizer
       ~MultiFileJsonlCorpus.dev
       ~MultiFileJsonlCorpus.test
       ~MultiFileJsonlCorpus.train

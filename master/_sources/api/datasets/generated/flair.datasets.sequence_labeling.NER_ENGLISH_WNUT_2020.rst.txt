@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ENGLISH_WNUT_2020.corpus_tokenizer
       ~NER_ENGLISH_WNUT_2020.dev
       ~NER_ENGLISH_WNUT_2020.test
       ~NER_ENGLISH_WNUT_2020.train

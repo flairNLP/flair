@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~MultiFileColumnCorpus.corpus_tokenizer
       ~MultiFileColumnCorpus.dev
       ~MultiFileColumnCorpus.test
       ~MultiFileColumnCorpus.train

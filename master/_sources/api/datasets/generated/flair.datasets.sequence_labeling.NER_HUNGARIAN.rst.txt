@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_HUNGARIAN.corpus_tokenizer
       ~NER_HUNGARIAN.dev
       ~NER_HUNGARIAN.test
       ~NER_HUNGARIAN.train

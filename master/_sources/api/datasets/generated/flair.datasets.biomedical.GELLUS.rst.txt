@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~GELLUS.corpus_tokenizer
       ~GELLUS.dev
       ~GELLUS.test
       ~GELLUS.train

@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~SROIE.corpus_tokenizer
       ~SROIE.dev
       ~SROIE.test
       ~SROIE.train

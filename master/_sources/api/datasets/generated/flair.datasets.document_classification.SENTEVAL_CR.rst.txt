@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~SENTEVAL_CR.corpus_tokenizer
       ~SENTEVAL_CR.dev
       ~SENTEVAL_CR.test
       ~SENTEVAL_CR.train

@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_KOREAN.corpus_tokenizer
       ~UD_KOREAN.dev
       ~UD_KOREAN.test
       ~UD_KOREAN.train

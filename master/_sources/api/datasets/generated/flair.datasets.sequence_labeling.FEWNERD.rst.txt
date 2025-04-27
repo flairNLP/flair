@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~FEWNERD.corpus_tokenizer
       ~FEWNERD.dev
       ~FEWNERD.test
       ~FEWNERD.train

@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_ALL_CPI.corpus_tokenizer
       ~HUNER_ALL_CPI.dev
       ~HUNER_ALL_CPI.test
       ~HUNER_ALL_CPI.train

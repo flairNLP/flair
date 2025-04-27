@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ARABIC_ANER.corpus_tokenizer
       ~NER_ARABIC_ANER.dev
       ~NER_ARABIC_ANER.test
       ~NER_ARABIC_ANER.train

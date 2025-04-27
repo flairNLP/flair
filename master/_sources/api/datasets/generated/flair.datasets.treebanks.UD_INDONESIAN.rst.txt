@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_INDONESIAN.corpus_tokenizer
       ~UD_INDONESIAN.dev
       ~UD_INDONESIAN.test
       ~UD_INDONESIAN.train

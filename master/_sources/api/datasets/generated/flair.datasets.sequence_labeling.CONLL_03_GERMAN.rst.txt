@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~CONLL_03_GERMAN.corpus_tokenizer
       ~CONLL_03_GERMAN.dev
       ~CONLL_03_GERMAN.test
       ~CONLL_03_GERMAN.train

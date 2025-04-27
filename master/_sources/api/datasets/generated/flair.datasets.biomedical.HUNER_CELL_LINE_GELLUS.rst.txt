@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_CELL_LINE_GELLUS.corpus_tokenizer
       ~HUNER_CELL_LINE_GELLUS.dev
       ~HUNER_CELL_LINE_GELLUS.test
       ~HUNER_CELL_LINE_GELLUS.train

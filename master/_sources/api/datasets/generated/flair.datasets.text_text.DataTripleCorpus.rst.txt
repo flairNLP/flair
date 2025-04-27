@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~DataTripleCorpus.corpus_tokenizer
       ~DataTripleCorpus.dev
       ~DataTripleCorpus.test
       ~DataTripleCorpus.train

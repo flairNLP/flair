@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_ALL_CRAFT_V4.corpus_tokenizer
       ~HUNER_ALL_CRAFT_V4.dev
       ~HUNER_ALL_CRAFT_V4.test
       ~HUNER_ALL_CRAFT_V4.train

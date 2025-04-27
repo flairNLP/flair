@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_BIONLP2013_CG.corpus_tokenizer
       ~HUNER_GENE_BIONLP2013_CG.dev
       ~HUNER_GENE_BIONLP2013_CG.test
       ~HUNER_GENE_BIONLP2013_CG.train

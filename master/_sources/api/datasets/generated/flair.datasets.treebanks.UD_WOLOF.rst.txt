@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_WOLOF.corpus_tokenizer
       ~UD_WOLOF.dev
       ~UD_WOLOF.test
       ~UD_WOLOF.train

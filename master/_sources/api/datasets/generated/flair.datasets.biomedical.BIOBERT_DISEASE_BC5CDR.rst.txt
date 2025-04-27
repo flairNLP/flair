@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIOBERT_DISEASE_BC5CDR.corpus_tokenizer
       ~BIOBERT_DISEASE_BC5CDR.dev
       ~BIOBERT_DISEASE_BC5CDR.test
       ~BIOBERT_DISEASE_BC5CDR.train

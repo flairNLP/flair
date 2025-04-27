@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_DISEASE_MIRNA.corpus_tokenizer
       ~HUNER_DISEASE_MIRNA.dev
       ~HUNER_DISEASE_MIRNA.test
       ~HUNER_DISEASE_MIRNA.train

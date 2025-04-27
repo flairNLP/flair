@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_NORWEGIAN.corpus_tokenizer
       ~UD_NORWEGIAN.dev
       ~UD_NORWEGIAN.test
       ~UD_NORWEGIAN.train

@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_NAIJA.corpus_tokenizer
       ~UD_NAIJA.dev
       ~UD_NAIJA.test
       ~UD_NAIJA.train

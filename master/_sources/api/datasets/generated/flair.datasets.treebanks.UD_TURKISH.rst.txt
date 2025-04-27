@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_TURKISH.corpus_tokenizer
       ~UD_TURKISH.dev
       ~UD_TURKISH.test
       ~UD_TURKISH.train

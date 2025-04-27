@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WSD_RAGANATO_ALL.corpus_tokenizer
       ~WSD_RAGANATO_ALL.dev
       ~WSD_RAGANATO_ALL.test
       ~WSD_RAGANATO_ALL.train

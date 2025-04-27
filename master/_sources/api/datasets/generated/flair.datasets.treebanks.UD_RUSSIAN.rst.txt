@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_RUSSIAN.corpus_tokenizer
       ~UD_RUSSIAN.dev
       ~UD_RUSSIAN.test
       ~UD_RUSSIAN.train

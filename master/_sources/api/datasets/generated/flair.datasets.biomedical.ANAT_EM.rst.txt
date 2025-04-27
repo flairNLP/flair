@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~ANAT_EM.corpus_tokenizer
       ~ANAT_EM.dev
       ~ANAT_EM.test
       ~ANAT_EM.train

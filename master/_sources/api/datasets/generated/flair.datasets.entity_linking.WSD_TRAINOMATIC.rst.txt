@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WSD_TRAINOMATIC.corpus_tokenizer
       ~WSD_TRAINOMATIC.dev
       ~WSD_TRAINOMATIC.test
       ~WSD_TRAINOMATIC.train

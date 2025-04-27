@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~Corpus.corpus_tokenizer
       ~Corpus.dev
       ~Corpus.test
       ~Corpus.train

@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_GERMAN_MOBIE.corpus_tokenizer
       ~NER_GERMAN_MOBIE.dev
       ~NER_GERMAN_MOBIE.test
       ~NER_GERMAN_MOBIE.train

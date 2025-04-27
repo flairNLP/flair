@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~MultiCorpus.corpus_tokenizer
       ~MultiCorpus.dev
       ~MultiCorpus.test
       ~MultiCorpus.train

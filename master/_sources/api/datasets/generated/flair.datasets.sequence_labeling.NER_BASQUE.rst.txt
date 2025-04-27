@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_BASQUE.corpus_tokenizer
       ~NER_BASQUE.dev
       ~NER_BASQUE.test
       ~NER_BASQUE.train

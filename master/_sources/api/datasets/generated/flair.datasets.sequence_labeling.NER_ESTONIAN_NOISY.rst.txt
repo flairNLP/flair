@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ESTONIAN_NOISY.corpus_tokenizer
       ~NER_ESTONIAN_NOISY.data_url
       ~NER_ESTONIAN_NOISY.dev
       ~NER_ESTONIAN_NOISY.label_url

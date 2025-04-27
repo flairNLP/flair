@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_GERMAN_LEGAL.corpus_tokenizer
       ~NER_GERMAN_LEGAL.dev
       ~NER_GERMAN_LEGAL.test
       ~NER_GERMAN_LEGAL.train

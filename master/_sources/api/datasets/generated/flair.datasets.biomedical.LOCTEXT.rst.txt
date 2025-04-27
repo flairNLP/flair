@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~LOCTEXT.corpus_tokenizer
       ~LOCTEXT.dev
       ~LOCTEXT.test
       ~LOCTEXT.train

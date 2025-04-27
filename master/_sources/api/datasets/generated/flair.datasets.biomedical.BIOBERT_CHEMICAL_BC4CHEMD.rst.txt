@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIOBERT_CHEMICAL_BC4CHEMD.corpus_tokenizer
       ~BIOBERT_CHEMICAL_BC4CHEMD.dev
       ~BIOBERT_CHEMICAL_BC4CHEMD.test
       ~BIOBERT_CHEMICAL_BC4CHEMD.train

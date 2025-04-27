@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WSD_UFSAC.corpus_tokenizer
       ~WSD_UFSAC.dev
       ~WSD_UFSAC.test
       ~WSD_UFSAC.train

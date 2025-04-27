@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_GERMAN_EUROPARL.corpus_tokenizer
       ~NER_GERMAN_EUROPARL.dev
       ~NER_GERMAN_EUROPARL.test
       ~NER_GERMAN_EUROPARL.train

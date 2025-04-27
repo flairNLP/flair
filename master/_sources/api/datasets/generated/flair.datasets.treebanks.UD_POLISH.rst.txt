@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_POLISH.corpus_tokenizer
       ~UD_POLISH.dev
       ~UD_POLISH.test
       ~UD_POLISH.train

@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_BIO_INFER.corpus_tokenizer
       ~HUNER_GENE_BIO_INFER.dev
       ~HUNER_GENE_BIO_INFER.test
       ~HUNER_GENE_BIO_INFER.train

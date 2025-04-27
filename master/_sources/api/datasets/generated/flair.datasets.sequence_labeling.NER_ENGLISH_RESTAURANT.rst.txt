@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ENGLISH_RESTAURANT.corpus_tokenizer
       ~NER_ENGLISH_RESTAURANT.dev
       ~NER_ENGLISH_RESTAURANT.test
       ~NER_ENGLISH_RESTAURANT.train

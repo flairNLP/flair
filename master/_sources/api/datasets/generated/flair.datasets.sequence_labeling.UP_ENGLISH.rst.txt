@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UP_ENGLISH.corpus_tokenizer
       ~UP_ENGLISH.dev
       ~UP_ENGLISH.test
       ~UP_ENGLISH.train

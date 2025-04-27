@@ -36,6 +36,7 @@
 
    .. autosummary::
    
+      ~MIRNA.corpus_tokenizer
       ~MIRNA.dev
       ~MIRNA.test
       ~MIRNA.train

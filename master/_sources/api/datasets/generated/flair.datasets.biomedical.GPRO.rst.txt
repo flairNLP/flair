@@ -36,6 +36,7 @@
 
    .. autosummary::
    
+      ~GPRO.corpus_tokenizer
       ~GPRO.dev
       ~GPRO.test
       ~GPRO.train

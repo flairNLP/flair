@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~KEYPHRASE_INSPEC.corpus_tokenizer
       ~KEYPHRASE_INSPEC.dev
       ~KEYPHRASE_INSPEC.test
       ~KEYPHRASE_INSPEC.train

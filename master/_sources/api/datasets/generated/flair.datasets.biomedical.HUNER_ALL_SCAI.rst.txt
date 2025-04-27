@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_ALL_SCAI.corpus_tokenizer
       ~HUNER_ALL_SCAI.dev
       ~HUNER_ALL_SCAI.test
       ~HUNER_ALL_SCAI.train

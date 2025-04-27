@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ENGLISH_TWITTER.corpus_tokenizer
       ~NER_ENGLISH_TWITTER.dev
       ~NER_ENGLISH_TWITTER.test
       ~NER_ENGLISH_TWITTER.train

@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~CLL.corpus_tokenizer
       ~CLL.dev
       ~CLL.test
       ~CLL.train

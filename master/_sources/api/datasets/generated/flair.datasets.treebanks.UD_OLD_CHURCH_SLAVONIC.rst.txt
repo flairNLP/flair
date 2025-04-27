@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_OLD_CHURCH_SLAVONIC.corpus_tokenizer
       ~UD_OLD_CHURCH_SLAVONIC.dev
       ~UD_OLD_CHURCH_SLAVONIC.test
       ~UD_OLD_CHURCH_SLAVONIC.train

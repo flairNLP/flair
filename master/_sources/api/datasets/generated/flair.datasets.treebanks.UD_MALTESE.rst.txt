@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_MALTESE.corpus_tokenizer
       ~UD_MALTESE.dev
       ~UD_MALTESE.test
       ~UD_MALTESE.train

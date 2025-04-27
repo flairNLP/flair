@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_FINNISH.corpus_tokenizer
       ~NER_FINNISH.dev
       ~NER_FINNISH.test
       ~NER_FINNISH.train

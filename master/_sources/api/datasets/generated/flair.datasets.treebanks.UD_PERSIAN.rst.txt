@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_PERSIAN.corpus_tokenizer
       ~UD_PERSIAN.dev
       ~UD_PERSIAN.test
       ~UD_PERSIAN.train

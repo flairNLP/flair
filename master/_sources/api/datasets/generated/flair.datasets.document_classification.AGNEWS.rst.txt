@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~AGNEWS.corpus_tokenizer
       ~AGNEWS.dev
       ~AGNEWS.test
       ~AGNEWS.train

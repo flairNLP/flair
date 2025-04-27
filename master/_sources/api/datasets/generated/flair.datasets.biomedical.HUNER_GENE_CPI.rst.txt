@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_CPI.corpus_tokenizer
       ~HUNER_GENE_CPI.dev
       ~HUNER_GENE_CPI.test
       ~HUNER_GENE_CPI.train

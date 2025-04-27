@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_MASAKHANE.corpus_tokenizer
       ~NER_MASAKHANE.dev
       ~NER_MASAKHANE.test
       ~NER_MASAKHANE.train

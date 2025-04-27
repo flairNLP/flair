@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~YAHOO_ANSWERS.corpus_tokenizer
       ~YAHOO_ANSWERS.dev
       ~YAHOO_ANSWERS.test
       ~YAHOO_ANSWERS.train

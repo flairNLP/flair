@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_CHEMICAL_CHEBI.corpus_tokenizer
       ~HUNER_CHEMICAL_CHEBI.dev
       ~HUNER_CHEMICAL_CHEBI.test
       ~HUNER_CHEMICAL_CHEBI.train

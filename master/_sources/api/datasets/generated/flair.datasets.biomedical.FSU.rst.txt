@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~FSU.corpus_tokenizer
       ~FSU.dev
       ~FSU.test
       ~FSU.train

@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_GNORMPLUS.corpus_tokenizer
       ~HUNER_GENE_GNORMPLUS.dev
       ~HUNER_GENE_GNORMPLUS.test
       ~HUNER_GENE_GNORMPLUS.train

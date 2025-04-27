@@ -36,6 +36,7 @@
 
    .. autosummary::
    
+      ~SCAI_DISEASE.corpus_tokenizer
       ~SCAI_DISEASE.dev
       ~SCAI_DISEASE.test
       ~SCAI_DISEASE.train

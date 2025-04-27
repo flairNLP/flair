@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~CRAFT_V4.corpus_tokenizer
       ~CRAFT_V4.dev
       ~CRAFT_V4.test
       ~CRAFT_V4.train

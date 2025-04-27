@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_KAZAKH.corpus_tokenizer
       ~UD_KAZAKH.dev
       ~UD_KAZAKH.test
       ~UD_KAZAKH.train

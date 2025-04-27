@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_CELL_LINE_JNLPBA.corpus_tokenizer
       ~HUNER_CELL_LINE_JNLPBA.dev
       ~HUNER_CELL_LINE_JNLPBA.test
       ~HUNER_CELL_LINE_JNLPBA.train

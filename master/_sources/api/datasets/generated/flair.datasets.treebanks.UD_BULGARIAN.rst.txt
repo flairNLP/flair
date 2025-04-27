@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_BULGARIAN.corpus_tokenizer
       ~UD_BULGARIAN.dev
       ~UD_BULGARIAN.test
       ~UD_BULGARIAN.train

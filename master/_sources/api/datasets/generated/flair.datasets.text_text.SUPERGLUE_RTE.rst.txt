@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~SUPERGLUE_RTE.corpus_tokenizer
       ~SUPERGLUE_RTE.dev
       ~SUPERGLUE_RTE.test
       ~SUPERGLUE_RTE.train

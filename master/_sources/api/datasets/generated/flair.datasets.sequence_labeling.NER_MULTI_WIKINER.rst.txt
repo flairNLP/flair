@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_MULTI_WIKINER.corpus_tokenizer
       ~NER_MULTI_WIKINER.dev
       ~NER_MULTI_WIKINER.test
       ~NER_MULTI_WIKINER.train

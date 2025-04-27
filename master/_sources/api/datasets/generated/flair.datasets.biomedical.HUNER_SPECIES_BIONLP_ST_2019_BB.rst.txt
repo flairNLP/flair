@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_SPECIES_BIONLP_ST_2019_BB.corpus_tokenizer
       ~HUNER_SPECIES_BIONLP_ST_2019_BB.dev
       ~HUNER_SPECIES_BIONLP_ST_2019_BB.test
       ~HUNER_SPECIES_BIONLP_ST_2019_BB.train

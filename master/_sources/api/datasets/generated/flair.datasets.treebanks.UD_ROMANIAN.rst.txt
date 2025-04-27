@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_ROMANIAN.corpus_tokenizer
       ~UD_ROMANIAN.dev
       ~UD_ROMANIAN.test
       ~UD_ROMANIAN.train

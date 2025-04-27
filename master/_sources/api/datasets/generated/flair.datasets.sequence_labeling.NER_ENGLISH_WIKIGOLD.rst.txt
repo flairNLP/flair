@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ENGLISH_WIKIGOLD.corpus_tokenizer
       ~NER_ENGLISH_WIKIGOLD.dev
       ~NER_ENGLISH_WIKIGOLD.test
       ~NER_ENGLISH_WIKIGOLD.train

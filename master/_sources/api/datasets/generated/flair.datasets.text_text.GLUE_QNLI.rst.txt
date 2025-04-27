@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~GLUE_QNLI.corpus_tokenizer
       ~GLUE_QNLI.dev
       ~GLUE_QNLI.test
       ~GLUE_QNLI.train

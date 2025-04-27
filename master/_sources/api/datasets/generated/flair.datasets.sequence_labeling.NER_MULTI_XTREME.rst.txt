@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_MULTI_XTREME.corpus_tokenizer
       ~NER_MULTI_XTREME.dev
       ~NER_MULTI_XTREME.test
       ~NER_MULTI_XTREME.train

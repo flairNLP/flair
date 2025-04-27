@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_BAVARIAN_MAIBAAM.corpus_tokenizer
       ~UD_BAVARIAN_MAIBAAM.dev
       ~UD_BAVARIAN_MAIBAAM.test
       ~UD_BAVARIAN_MAIBAAM.train

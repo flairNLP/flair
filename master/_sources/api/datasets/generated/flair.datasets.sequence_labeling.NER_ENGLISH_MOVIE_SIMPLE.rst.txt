@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ENGLISH_MOVIE_SIMPLE.corpus_tokenizer
       ~NER_ENGLISH_MOVIE_SIMPLE.dev
       ~NER_ENGLISH_MOVIE_SIMPLE.test
       ~NER_ENGLISH_MOVIE_SIMPLE.train

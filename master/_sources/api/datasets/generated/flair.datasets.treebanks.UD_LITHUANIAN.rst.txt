@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_LITHUANIAN.corpus_tokenizer
       ~UD_LITHUANIAN.dev
       ~UD_LITHUANIAN.test
       ~UD_LITHUANIAN.train

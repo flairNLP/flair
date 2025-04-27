@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ICELANDIC.corpus_tokenizer
       ~NER_ICELANDIC.dev
       ~NER_ICELANDIC.test
       ~NER_ICELANDIC.train

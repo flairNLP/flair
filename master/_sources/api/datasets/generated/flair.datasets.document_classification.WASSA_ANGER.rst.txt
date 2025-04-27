@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WASSA_ANGER.corpus_tokenizer
       ~WASSA_ANGER.dev
       ~WASSA_ANGER.test
       ~WASSA_ANGER.train

@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ENGLISH_STACKOVERFLOW.corpus_tokenizer
       ~NER_ENGLISH_STACKOVERFLOW.dev
       ~NER_ENGLISH_STACKOVERFLOW.test
       ~NER_ENGLISH_STACKOVERFLOW.train

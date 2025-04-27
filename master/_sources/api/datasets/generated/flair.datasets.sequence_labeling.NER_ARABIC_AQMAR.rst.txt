@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ARABIC_AQMAR.corpus_tokenizer
       ~NER_ARABIC_AQMAR.dev
       ~NER_ARABIC_AQMAR.test
       ~NER_ARABIC_AQMAR.train

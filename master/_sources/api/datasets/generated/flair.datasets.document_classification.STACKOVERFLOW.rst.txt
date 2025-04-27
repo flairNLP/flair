@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~STACKOVERFLOW.corpus_tokenizer
       ~STACKOVERFLOW.dev
       ~STACKOVERFLOW.test
       ~STACKOVERFLOW.train

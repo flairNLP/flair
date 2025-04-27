@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~IEPA.corpus_tokenizer
       ~IEPA.dev
       ~IEPA.test
       ~IEPA.train

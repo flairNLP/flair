@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~CSVClassificationCorpus.corpus_tokenizer
       ~CSVClassificationCorpus.dev
       ~CSVClassificationCorpus.test
       ~CSVClassificationCorpus.train

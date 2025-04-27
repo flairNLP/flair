@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~RE_ENGLISH_CONLL04.corpus_tokenizer
       ~RE_ENGLISH_CONLL04.dev
       ~RE_ENGLISH_CONLL04.test
       ~RE_ENGLISH_CONLL04.train

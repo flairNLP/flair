@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_MIRNA.corpus_tokenizer
       ~HUNER_MIRNA.dev
       ~HUNER_MIRNA.test
       ~HUNER_MIRNA.train

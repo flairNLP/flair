@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIOBERT_CHEMICAL_BC5CDR.corpus_tokenizer
       ~BIOBERT_CHEMICAL_BC5CDR.dev
       ~BIOBERT_CHEMICAL_BC5CDR.test
       ~BIOBERT_CHEMICAL_BC5CDR.train

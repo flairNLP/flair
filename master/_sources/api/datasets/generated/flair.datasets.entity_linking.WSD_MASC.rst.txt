@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WSD_MASC.corpus_tokenizer
       ~WSD_MASC.dev
       ~WSD_MASC.test
       ~WSD_MASC.train

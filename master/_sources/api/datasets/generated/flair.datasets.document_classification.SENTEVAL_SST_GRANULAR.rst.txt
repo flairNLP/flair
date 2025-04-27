@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~SENTEVAL_SST_GRANULAR.corpus_tokenizer
       ~SENTEVAL_SST_GRANULAR.dev
       ~SENTEVAL_SST_GRANULAR.test
       ~SENTEVAL_SST_GRANULAR.train

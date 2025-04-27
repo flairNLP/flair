@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_CROATIAN.corpus_tokenizer
       ~UD_CROATIAN.dev
       ~UD_CROATIAN.test
       ~UD_CROATIAN.train

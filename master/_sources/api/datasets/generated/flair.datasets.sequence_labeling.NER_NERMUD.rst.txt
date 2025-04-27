@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_NERMUD.corpus_tokenizer
       ~NER_NERMUD.dev
       ~NER_NERMUD.test
       ~NER_NERMUD.train

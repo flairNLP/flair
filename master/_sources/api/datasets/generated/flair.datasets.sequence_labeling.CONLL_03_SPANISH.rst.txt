@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~CONLL_03_SPANISH.corpus_tokenizer
       ~CONLL_03_SPANISH.dev
       ~CONLL_03_SPANISH.test
       ~CONLL_03_SPANISH.train

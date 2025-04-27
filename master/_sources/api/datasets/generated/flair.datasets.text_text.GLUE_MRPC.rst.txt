@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~GLUE_MRPC.corpus_tokenizer
       ~GLUE_MRPC.dev
       ~GLUE_MRPC.test
       ~GLUE_MRPC.train

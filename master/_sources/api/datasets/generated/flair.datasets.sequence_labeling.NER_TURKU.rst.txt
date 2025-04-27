@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_TURKU.corpus_tokenizer
       ~NER_TURKU.dev
       ~NER_TURKU.test
       ~NER_TURKU.train

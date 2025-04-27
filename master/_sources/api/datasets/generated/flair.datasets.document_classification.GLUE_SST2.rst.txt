@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~GLUE_SST2.corpus_tokenizer
       ~GLUE_SST2.dev
       ~GLUE_SST2.label_map
       ~GLUE_SST2.test

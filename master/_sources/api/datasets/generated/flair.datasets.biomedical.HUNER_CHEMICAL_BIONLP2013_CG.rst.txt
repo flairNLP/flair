@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_CHEMICAL_BIONLP2013_CG.corpus_tokenizer
       ~HUNER_CHEMICAL_BIONLP2013_CG.dev
       ~HUNER_CHEMICAL_BIONLP2013_CG.test
       ~HUNER_CHEMICAL_BIONLP2013_CG.train

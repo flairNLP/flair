@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_DISEASE_SCAI.corpus_tokenizer
       ~HUNER_DISEASE_SCAI.dev
       ~HUNER_DISEASE_SCAI.test
       ~HUNER_DISEASE_SCAI.train

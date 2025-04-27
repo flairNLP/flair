@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_CRAFT_V4.corpus_tokenizer
       ~HUNER_GENE_CRAFT_V4.dev
       ~HUNER_GENE_CRAFT_V4.test
       ~HUNER_GENE_CRAFT_V4.train

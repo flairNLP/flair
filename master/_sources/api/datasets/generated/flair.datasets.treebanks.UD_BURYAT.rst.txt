@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_BURYAT.corpus_tokenizer
       ~UD_BURYAT.dev
       ~UD_BURYAT.test
       ~UD_BURYAT.train

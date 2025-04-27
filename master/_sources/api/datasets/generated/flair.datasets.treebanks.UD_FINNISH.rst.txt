@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_FINNISH.corpus_tokenizer
       ~UD_FINNISH.dev
       ~UD_FINNISH.test
       ~UD_FINNISH.train

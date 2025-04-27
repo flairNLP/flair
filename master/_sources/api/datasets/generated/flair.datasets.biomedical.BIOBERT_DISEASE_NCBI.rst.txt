@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIOBERT_DISEASE_NCBI.corpus_tokenizer
       ~BIOBERT_DISEASE_NCBI.dev
       ~BIOBERT_DISEASE_NCBI.test
       ~BIOBERT_DISEASE_NCBI.train

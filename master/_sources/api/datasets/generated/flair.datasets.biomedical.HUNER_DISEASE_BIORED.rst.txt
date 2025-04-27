@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_DISEASE_BIORED.corpus_tokenizer
       ~HUNER_DISEASE_BIORED.dev
       ~HUNER_DISEASE_BIORED.test
       ~HUNER_DISEASE_BIORED.train

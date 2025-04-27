@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_GREEK.corpus_tokenizer
       ~UD_GREEK.dev
       ~UD_GREEK.test
       ~UD_GREEK.train

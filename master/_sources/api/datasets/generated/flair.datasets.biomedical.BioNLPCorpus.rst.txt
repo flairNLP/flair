@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~BioNLPCorpus.corpus_tokenizer
       ~BioNLPCorpus.dev
       ~BioNLPCorpus.test
       ~BioNLPCorpus.train

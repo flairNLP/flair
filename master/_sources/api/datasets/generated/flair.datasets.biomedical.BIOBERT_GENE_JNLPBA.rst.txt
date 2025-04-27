@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIOBERT_GENE_JNLPBA.corpus_tokenizer
       ~BIOBERT_GENE_JNLPBA.dev
       ~BIOBERT_GENE_JNLPBA.test
       ~BIOBERT_GENE_JNLPBA.train

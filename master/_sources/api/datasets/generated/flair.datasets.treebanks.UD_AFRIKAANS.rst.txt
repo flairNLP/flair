@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_AFRIKAANS.corpus_tokenizer
       ~UD_AFRIKAANS.dev
       ~UD_AFRIKAANS.test
       ~UD_AFRIKAANS.train

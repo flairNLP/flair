@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_DECA.corpus_tokenizer
       ~HUNER_GENE_DECA.dev
       ~HUNER_GENE_DECA.test
       ~HUNER_GENE_DECA.train

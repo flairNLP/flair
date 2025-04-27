@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~CDR.corpus_tokenizer
       ~CDR.dev
       ~CDR.test
       ~CDR.train

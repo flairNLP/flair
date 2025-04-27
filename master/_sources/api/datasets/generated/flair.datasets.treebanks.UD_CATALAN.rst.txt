@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_CATALAN.corpus_tokenizer
       ~UD_CATALAN.dev
       ~UD_CATALAN.test
       ~UD_CATALAN.train

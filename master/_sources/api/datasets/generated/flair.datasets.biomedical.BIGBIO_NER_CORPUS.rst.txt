@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~BIGBIO_NER_CORPUS.corpus_tokenizer
       ~BIGBIO_NER_CORPUS.dev
       ~BIGBIO_NER_CORPUS.test
       ~BIGBIO_NER_CORPUS.train

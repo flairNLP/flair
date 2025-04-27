@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~SENTIMENT_140.corpus_tokenizer
       ~SENTIMENT_140.dev
       ~SENTIMENT_140.test
       ~SENTIMENT_140.train

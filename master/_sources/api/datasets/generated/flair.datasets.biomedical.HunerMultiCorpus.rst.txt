@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~HunerMultiCorpus.corpus_tokenizer
       ~HunerMultiCorpus.dev
       ~HunerMultiCorpus.test
       ~HunerMultiCorpus.train

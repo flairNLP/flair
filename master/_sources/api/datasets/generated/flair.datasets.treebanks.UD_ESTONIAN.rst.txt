@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_ESTONIAN.corpus_tokenizer
       ~UD_ESTONIAN.dev
       ~UD_ESTONIAN.test
       ~UD_ESTONIAN.train

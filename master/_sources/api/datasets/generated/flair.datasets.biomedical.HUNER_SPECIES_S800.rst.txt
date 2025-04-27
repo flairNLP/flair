@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_SPECIES_S800.corpus_tokenizer
       ~HUNER_SPECIES_S800.dev
       ~HUNER_SPECIES_S800.test
       ~HUNER_SPECIES_S800.train

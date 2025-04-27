@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~RE_ENGLISH_DRUGPROT.corpus_tokenizer
       ~RE_ENGLISH_DRUGPROT.dev
       ~RE_ENGLISH_DRUGPROT.test
       ~RE_ENGLISH_DRUGPROT.train

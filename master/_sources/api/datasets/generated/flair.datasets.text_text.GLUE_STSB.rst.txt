@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~GLUE_STSB.corpus_tokenizer
       ~GLUE_STSB.dev
       ~GLUE_STSB.test
       ~GLUE_STSB.train

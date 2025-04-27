@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~CELL_FINDER.corpus_tokenizer
       ~CELL_FINDER.dev
       ~CELL_FINDER.test
       ~CELL_FINDER.train

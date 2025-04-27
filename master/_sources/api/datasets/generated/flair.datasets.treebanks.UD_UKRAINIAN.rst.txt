@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_UKRAINIAN.corpus_tokenizer
       ~UD_UKRAINIAN.dev
       ~UD_UKRAINIAN.test
       ~UD_UKRAINIAN.train

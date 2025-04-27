@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UP_SPANISH_ANCORA.corpus_tokenizer
       ~UP_SPANISH_ANCORA.dev
       ~UP_SPANISH_ANCORA.test
       ~UP_SPANISH_ANCORA.train

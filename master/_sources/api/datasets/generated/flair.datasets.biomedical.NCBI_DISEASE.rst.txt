@@ -36,6 +36,7 @@
 
    .. autosummary::
    
+      ~NCBI_DISEASE.corpus_tokenizer
       ~NCBI_DISEASE.dev
       ~NCBI_DISEASE.test
       ~NCBI_DISEASE.train

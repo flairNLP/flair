@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_ALL_CDR.corpus_tokenizer
       ~HUNER_ALL_CDR.dev
       ~HUNER_ALL_CDR.test
       ~HUNER_ALL_CDR.train

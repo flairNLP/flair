@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_CHINESE.corpus_tokenizer
       ~UD_CHINESE.dev
       ~UD_CHINESE.test
       ~UD_CHINESE.train

@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WSD_WORDNET_GLOSS_TAGGED.corpus_tokenizer
       ~WSD_WORDNET_GLOSS_TAGGED.dev
       ~WSD_WORDNET_GLOSS_TAGGED.test
       ~WSD_WORDNET_GLOSS_TAGGED.train

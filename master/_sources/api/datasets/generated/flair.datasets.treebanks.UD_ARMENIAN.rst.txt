@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_ARMENIAN.corpus_tokenizer
       ~UD_ARMENIAN.dev
       ~UD_ARMENIAN.test
       ~UD_ARMENIAN.train

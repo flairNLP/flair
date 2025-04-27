@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~GO_EMOTIONS.corpus_tokenizer
       ~GO_EMOTIONS.dev
       ~GO_EMOTIONS.test
       ~GO_EMOTIONS.train

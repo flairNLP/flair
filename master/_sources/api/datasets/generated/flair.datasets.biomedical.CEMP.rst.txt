@@ -36,6 +36,7 @@
 
    .. autosummary::
    
+      ~CEMP.corpus_tokenizer
       ~CEMP.dev
       ~CEMP.test
       ~CEMP.train

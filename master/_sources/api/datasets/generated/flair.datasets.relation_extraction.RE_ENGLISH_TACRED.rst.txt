@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~RE_ENGLISH_TACRED.corpus_tokenizer
       ~RE_ENGLISH_TACRED.dev
       ~RE_ENGLISH_TACRED.test
       ~RE_ENGLISH_TACRED.train

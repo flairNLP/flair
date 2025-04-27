@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_CHEMICAL_BIOID.corpus_tokenizer
       ~HUNER_CHEMICAL_BIOID.dev
       ~HUNER_CHEMICAL_BIOID.test
       ~HUNER_CHEMICAL_BIOID.train

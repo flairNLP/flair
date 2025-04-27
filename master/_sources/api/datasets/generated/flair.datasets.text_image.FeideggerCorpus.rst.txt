@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~FeideggerCorpus.corpus_tokenizer
       ~FeideggerCorpus.dev
       ~FeideggerCorpus.test
       ~FeideggerCorpus.train

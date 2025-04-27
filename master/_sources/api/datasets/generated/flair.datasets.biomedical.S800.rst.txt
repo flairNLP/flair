@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~S800.corpus_tokenizer
       ~S800.dev
       ~S800.test
       ~S800.train

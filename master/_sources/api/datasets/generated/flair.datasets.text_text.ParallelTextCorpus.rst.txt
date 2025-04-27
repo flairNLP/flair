@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~ParallelTextCorpus.corpus_tokenizer
       ~ParallelTextCorpus.dev
       ~ParallelTextCorpus.test
       ~ParallelTextCorpus.train

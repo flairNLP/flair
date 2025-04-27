@@ -34,6 +34,7 @@
 
    .. autosummary::
    
+      ~GLUE_MNLI.corpus_tokenizer
       ~GLUE_MNLI.dev
       ~GLUE_MNLI.test
       ~GLUE_MNLI.train

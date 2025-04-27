@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~IMDB.corpus_tokenizer
       ~IMDB.dev
       ~IMDB.test
       ~IMDB.train

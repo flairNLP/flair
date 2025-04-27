@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~JNLPBA.corpus_tokenizer
       ~JNLPBA.dev
       ~JNLPBA.test
       ~JNLPBA.train

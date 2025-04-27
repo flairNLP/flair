@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~OSIRIS.corpus_tokenizer
       ~OSIRIS.dev
       ~OSIRIS.test
       ~OSIRIS.train

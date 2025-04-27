@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_SWEDISH.corpus_tokenizer
       ~UD_SWEDISH.dev
       ~UD_SWEDISH.test
       ~UD_SWEDISH.train

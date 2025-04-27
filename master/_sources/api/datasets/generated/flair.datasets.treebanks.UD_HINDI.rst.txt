@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_HINDI.corpus_tokenizer
       ~UD_HINDI.dev
       ~UD_HINDI.test
       ~UD_HINDI.train

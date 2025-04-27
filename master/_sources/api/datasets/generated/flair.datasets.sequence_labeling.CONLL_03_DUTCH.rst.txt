@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~CONLL_03_DUTCH.corpus_tokenizer
       ~CONLL_03_DUTCH.dev
       ~CONLL_03_DUTCH.test
       ~CONLL_03_DUTCH.train

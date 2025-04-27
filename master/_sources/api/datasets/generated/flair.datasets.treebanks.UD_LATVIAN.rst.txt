@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_LATVIAN.corpus_tokenizer
       ~UD_LATVIAN.dev
       ~UD_LATVIAN.test
       ~UD_LATVIAN.train

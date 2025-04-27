@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_CHEMICAL_CHEMDNER.corpus_tokenizer
       ~HUNER_CHEMICAL_CHEMDNER.dev
       ~HUNER_CHEMICAL_CHEMDNER.test
       ~HUNER_CHEMICAL_CHEMDNER.train

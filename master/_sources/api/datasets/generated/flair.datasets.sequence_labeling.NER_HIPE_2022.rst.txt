@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_HIPE_2022.corpus_tokenizer
       ~NER_HIPE_2022.dev
       ~NER_HIPE_2022.test
       ~NER_HIPE_2022.train

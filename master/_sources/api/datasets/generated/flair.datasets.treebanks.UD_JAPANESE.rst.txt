@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_JAPANESE.corpus_tokenizer
       ~UD_JAPANESE.dev
       ~UD_JAPANESE.test
       ~UD_JAPANESE.train

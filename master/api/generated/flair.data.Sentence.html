@@ -824,7 +824,7 @@ button.search-button {
 <h1>flair.data.Sentence<a class="headerlink" href="#flair-data-sentence" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.data.Sentence">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1141-L1785"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1141-L1873"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.data.DataPoint.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a></p>
 <p>A central data structure representing a sentence or text passage as Tokens.</p>
 <p>Holds text, tokens, labels (sentence/token/span/relation levels), embeddings,
@@ -966,7 +966,7 @@ will be called when the language_code is accessed for the first time.</p></li>
 <td><p>Removes all labels associated with a specific annotation layer.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Sentence.retokenize" title="flair.data.Sentence.retokenize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">retokenize</span></code></a>(tokenizer)</p></td>
-<td><p>Retokenizes the sentence using the provided tokenizer while preserving span labels.</p></td>
+<td><p>Retokenizes the sentence using the provided tokenizer while attempting to preserve span, relation, and sentence labels.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Sentence.right_context" title="flair.data.Sentence.right_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">right_context</span></code></a>(context_length[, ...])</p></td>
 <td><p></p></td>
@@ -1316,25 +1316,16 @@ from all layers. Defaults to None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.retokenize">
-<span class="sig-name descname"><span class="pre">retokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1700-L1785"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.retokenize" title="Link to this definition">#</a></dt>
-<dd><p>Retokenizes the sentence using the provided tokenizer while preserving span labels.</p>
+<span class="sig-name descname"><span class="pre">retokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1714-L1873"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.retokenize" title="Link to this definition">#</a></dt>
+<dd><p>Retokenizes the sentence using the provided tokenizer while attempting to preserve
+span, relation, and sentence labels. Token-level labels are discarded.</p>
+<p>Note: Relation preservation depends on successfully re-mapping both constituent spans
+based on character offsets, which might fail if tokenization changes boundaries significantly.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tokenizer</strong> – The tokenizer to use for retokenization</p>
 </dd>
 </dl>
-<p>Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a sentence with default tokenization</span>
-<span class="n">sentence</span> <span class="o">=</span> <span class="n">Sentence</span><span class="p">(</span><span class="s2">&quot;01-03-2025 New York&quot;</span><span class="p">)</span>
-
-<span class="c1"># Add span labels</span>
-<span class="n">sentence</span><span class="o">.</span><span class="kp">get_span</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="kp">add_label</span><span class="p">(</span><span class="s1">&#39;ner&#39;</span><span class="p">,</span> <span class="s2">&quot;LOC&quot;</span><span class="p">)</span>
-<span class="n">sentence</span><span class="o">.</span><span class="kp">get_span</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="kp">add_label</span><span class="p">(</span><span class="s1">&#39;ner&#39;</span><span class="p">,</span> <span class="s2">&quot;DATE&quot;</span><span class="p">)</span>
-
-<span class="c1"># Retokenize with a different tokenizer while preserving labels</span>
-<span class="n">sentence</span><span class="o">.</span><span class="kp">retokenize</span><span class="p">(</span><span class="n">StaccatoTokenizer</span><span class="p">())</span>
-</pre></div>
-</div>
 </dd></dl>
 
 </dd></dl>

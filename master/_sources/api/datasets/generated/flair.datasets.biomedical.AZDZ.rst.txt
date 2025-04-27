@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~AZDZ.corpus_tokenizer
       ~AZDZ.dev
       ~AZDZ.test
       ~AZDZ.train

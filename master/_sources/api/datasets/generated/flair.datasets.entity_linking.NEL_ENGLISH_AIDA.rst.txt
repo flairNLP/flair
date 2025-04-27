@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NEL_ENGLISH_AIDA.corpus_tokenizer
       ~NEL_ENGLISH_AIDA.dev
       ~NEL_ENGLISH_AIDA.test
       ~NEL_ENGLISH_AIDA.train

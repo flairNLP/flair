@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~ClassificationCorpus.corpus_tokenizer
       ~ClassificationCorpus.dev
       ~ClassificationCorpus.test
       ~ClassificationCorpus.train

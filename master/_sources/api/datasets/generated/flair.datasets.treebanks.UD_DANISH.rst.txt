@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_DANISH.corpus_tokenizer
       ~UD_DANISH.dev
       ~UD_DANISH.test
       ~UD_DANISH.train

@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~MASAKHA_POS.corpus_tokenizer
       ~MASAKHA_POS.dev
       ~MASAKHA_POS.test
       ~MASAKHA_POS.train

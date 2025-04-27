@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WASSA_FEAR.corpus_tokenizer
       ~WASSA_FEAR.dev
       ~WASSA_FEAR.test
       ~WASSA_FEAR.train

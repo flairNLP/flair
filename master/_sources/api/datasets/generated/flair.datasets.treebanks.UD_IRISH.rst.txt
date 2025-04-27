@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_IRISH.corpus_tokenizer
       ~UD_IRISH.dev
       ~UD_IRISH.test
       ~UD_IRISH.train

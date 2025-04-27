@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_BASQUE.corpus_tokenizer
       ~UD_BASQUE.dev
       ~UD_BASQUE.test
       ~UD_BASQUE.train

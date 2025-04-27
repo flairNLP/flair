@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WNUT_17.corpus_tokenizer
       ~WNUT_17.dev
       ~WNUT_17.test
       ~WNUT_17.train

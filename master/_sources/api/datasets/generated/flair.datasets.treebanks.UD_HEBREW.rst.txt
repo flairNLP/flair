@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_HEBREW.corpus_tokenizer
       ~UD_HEBREW.dev
       ~UD_HEBREW.test
       ~UD_HEBREW.train

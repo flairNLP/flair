@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ENGLISH_WEBPAGES.corpus_tokenizer
       ~NER_ENGLISH_WEBPAGES.dev
       ~NER_ENGLISH_WEBPAGES.test
       ~NER_ENGLISH_WEBPAGES.train

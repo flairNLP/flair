@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~BIO_INFER.corpus_tokenizer
       ~BIO_INFER.dev
       ~BIO_INFER.test
       ~BIO_INFER.train

@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_ALL_VARIOME.corpus_tokenizer
       ~HUNER_ALL_VARIOME.dev
       ~HUNER_ALL_VARIOME.test
       ~HUNER_ALL_VARIOME.train

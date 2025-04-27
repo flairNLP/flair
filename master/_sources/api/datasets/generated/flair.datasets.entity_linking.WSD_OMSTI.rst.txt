@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~WSD_OMSTI.corpus_tokenizer
       ~WSD_OMSTI.dev
       ~WSD_OMSTI.test
       ~WSD_OMSTI.train

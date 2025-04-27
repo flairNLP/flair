@@ -35,6 +35,7 @@
 
    .. autosummary::
    
+      ~ScaiCorpus.corpus_tokenizer
       ~ScaiCorpus.dev
       ~ScaiCorpus.test
       ~ScaiCorpus.train

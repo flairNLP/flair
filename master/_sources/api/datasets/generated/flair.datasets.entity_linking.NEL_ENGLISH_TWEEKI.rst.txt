@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NEL_ENGLISH_TWEEKI.corpus_tokenizer
       ~NEL_ENGLISH_TWEEKI.dev
       ~NEL_ENGLISH_TWEEKI.test
       ~NEL_ENGLISH_TWEEKI.train

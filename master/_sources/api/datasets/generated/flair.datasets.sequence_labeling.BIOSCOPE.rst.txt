@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIOSCOPE.corpus_tokenizer
       ~BIOSCOPE.dev
       ~BIOSCOPE.test
       ~BIOSCOPE.train

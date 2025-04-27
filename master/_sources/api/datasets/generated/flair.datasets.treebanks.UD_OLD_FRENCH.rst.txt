@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_OLD_FRENCH.corpus_tokenizer
       ~UD_OLD_FRENCH.dev
       ~UD_OLD_FRENCH.test
       ~UD_OLD_FRENCH.train

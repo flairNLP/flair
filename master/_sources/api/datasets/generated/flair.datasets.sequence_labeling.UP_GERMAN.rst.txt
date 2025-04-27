@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UP_GERMAN.corpus_tokenizer
       ~UP_GERMAN.dev
       ~UP_GERMAN.test
       ~UP_GERMAN.train

@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_BIONLP_ST_2011_EPI.corpus_tokenizer
       ~HUNER_GENE_BIONLP_ST_2011_EPI.dev
       ~HUNER_GENE_BIONLP_ST_2011_EPI.test
       ~HUNER_GENE_BIONLP_ST_2011_EPI.train

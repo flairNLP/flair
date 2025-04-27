@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIOBERT_SPECIES_LINNAEUS.corpus_tokenizer
       ~BIOBERT_SPECIES_LINNAEUS.dev
       ~BIOBERT_SPECIES_LINNAEUS.test
       ~BIOBERT_SPECIES_LINNAEUS.train

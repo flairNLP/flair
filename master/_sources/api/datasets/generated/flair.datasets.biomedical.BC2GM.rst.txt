@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~BC2GM.corpus_tokenizer
       ~BC2GM.dev
       ~BC2GM.test
       ~BC2GM.train

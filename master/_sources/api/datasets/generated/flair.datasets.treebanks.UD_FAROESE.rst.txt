@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_FAROESE.corpus_tokenizer
       ~UD_FAROESE.dev
       ~UD_FAROESE.test
       ~UD_FAROESE.train

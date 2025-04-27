@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_DISEASE_NCBI.corpus_tokenizer
       ~HUNER_DISEASE_NCBI.dev
       ~HUNER_DISEASE_NCBI.test
       ~HUNER_DISEASE_NCBI.train

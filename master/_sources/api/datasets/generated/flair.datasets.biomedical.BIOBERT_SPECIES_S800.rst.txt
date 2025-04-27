@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIOBERT_SPECIES_S800.corpus_tokenizer
       ~BIOBERT_SPECIES_S800.dev
       ~BIOBERT_SPECIES_S800.test
       ~BIOBERT_SPECIES_S800.train

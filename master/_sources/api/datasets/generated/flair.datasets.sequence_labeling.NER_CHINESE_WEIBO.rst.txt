@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_CHINESE_WEIBO.corpus_tokenizer
       ~NER_CHINESE_WEIBO.dev
       ~NER_CHINESE_WEIBO.test
       ~NER_CHINESE_WEIBO.train

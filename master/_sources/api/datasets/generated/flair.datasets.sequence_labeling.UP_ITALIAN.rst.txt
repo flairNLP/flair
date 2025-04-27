@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UP_ITALIAN.corpus_tokenizer
       ~UP_ITALIAN.dev
       ~UP_ITALIAN.test
       ~UP_ITALIAN.train

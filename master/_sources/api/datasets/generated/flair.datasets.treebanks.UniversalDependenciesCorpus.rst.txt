@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UniversalDependenciesCorpus.corpus_tokenizer
       ~UniversalDependenciesCorpus.dev
       ~UniversalDependenciesCorpus.test
       ~UniversalDependenciesCorpus.train

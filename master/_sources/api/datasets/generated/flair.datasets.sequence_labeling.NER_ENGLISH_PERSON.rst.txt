@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ENGLISH_PERSON.corpus_tokenizer
       ~NER_ENGLISH_PERSON.dev
       ~NER_ENGLISH_PERSON.test
       ~NER_ENGLISH_PERSON.train

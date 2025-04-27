@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_NORTH_SAMI.corpus_tokenizer
       ~UD_NORTH_SAMI.dev
       ~UD_NORTH_SAMI.test
       ~UD_NORTH_SAMI.train

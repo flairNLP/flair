@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HunerDataset.corpus_tokenizer
       ~HunerDataset.dev
       ~HunerDataset.test
       ~HunerDataset.train

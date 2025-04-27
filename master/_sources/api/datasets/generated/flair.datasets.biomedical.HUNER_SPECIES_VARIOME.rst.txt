@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_SPECIES_VARIOME.corpus_tokenizer
       ~HUNER_SPECIES_VARIOME.dev
       ~HUNER_SPECIES_VARIOME.test
       ~HUNER_SPECIES_VARIOME.train

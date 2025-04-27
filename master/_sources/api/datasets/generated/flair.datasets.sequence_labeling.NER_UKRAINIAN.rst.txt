@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_UKRAINIAN.corpus_tokenizer
       ~NER_UKRAINIAN.dev
       ~NER_UKRAINIAN.test
       ~NER_UKRAINIAN.train

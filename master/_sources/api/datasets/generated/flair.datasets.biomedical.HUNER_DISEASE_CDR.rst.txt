@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_DISEASE_CDR.corpus_tokenizer
       ~HUNER_DISEASE_CDR.dev
       ~HUNER_DISEASE_CDR.test
       ~HUNER_DISEASE_CDR.train

@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_SETH_CORPUS.corpus_tokenizer
       ~HUNER_GENE_SETH_CORPUS.dev
       ~HUNER_GENE_SETH_CORPUS.test
       ~HUNER_GENE_SETH_CORPUS.train

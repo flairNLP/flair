@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_GERMAN_GERMEVAL.corpus_tokenizer
       ~NER_GERMAN_GERMEVAL.dev
       ~NER_GERMAN_GERMEVAL.test
       ~NER_GERMAN_GERMEVAL.train

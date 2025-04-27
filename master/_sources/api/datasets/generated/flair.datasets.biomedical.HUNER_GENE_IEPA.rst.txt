@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_IEPA.corpus_tokenizer
       ~HUNER_GENE_IEPA.dev
       ~HUNER_GENE_IEPA.test
       ~HUNER_GENE_IEPA.train

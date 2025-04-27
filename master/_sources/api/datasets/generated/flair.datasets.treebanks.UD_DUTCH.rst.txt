@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_DUTCH.corpus_tokenizer
       ~UD_DUTCH.dev
       ~UD_DUTCH.test
       ~UD_DUTCH.train

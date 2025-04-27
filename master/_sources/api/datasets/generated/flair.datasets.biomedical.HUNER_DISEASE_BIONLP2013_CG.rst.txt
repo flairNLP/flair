@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_DISEASE_BIONLP2013_CG.corpus_tokenizer
       ~HUNER_DISEASE_BIONLP2013_CG.dev
       ~HUNER_DISEASE_BIONLP2013_CG.test
       ~HUNER_DISEASE_BIONLP2013_CG.train

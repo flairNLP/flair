@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_CELL_LINE_CELL_FINDER.corpus_tokenizer
       ~HUNER_CELL_LINE_CELL_FINDER.dev
       ~HUNER_CELL_LINE_CELL_FINDER.test
       ~HUNER_CELL_LINE_CELL_FINDER.train

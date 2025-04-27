@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~CONLL_03.corpus_tokenizer
       ~CONLL_03.dev
       ~CONLL_03.test
       ~CONLL_03.train

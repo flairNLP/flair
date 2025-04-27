@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NEL_ENGLISH_REDDIT.corpus_tokenizer
       ~NEL_ENGLISH_REDDIT.dev
       ~NEL_ENGLISH_REDDIT.test
       ~NEL_ENGLISH_REDDIT.train

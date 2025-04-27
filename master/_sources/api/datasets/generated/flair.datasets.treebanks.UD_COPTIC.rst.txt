@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_COPTIC.corpus_tokenizer
       ~UD_COPTIC.dev
       ~UD_COPTIC.test
       ~UD_COPTIC.train

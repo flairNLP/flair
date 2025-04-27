@@ -37,6 +37,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_TMVAR_V3.corpus_tokenizer
       ~HUNER_GENE_TMVAR_V3.dev
       ~HUNER_GENE_TMVAR_V3.test
       ~HUNER_GENE_TMVAR_V3.train

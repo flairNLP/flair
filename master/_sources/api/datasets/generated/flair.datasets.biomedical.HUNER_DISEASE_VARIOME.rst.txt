@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_DISEASE_VARIOME.corpus_tokenizer
       ~HUNER_DISEASE_VARIOME.dev
       ~HUNER_DISEASE_VARIOME.test
       ~HUNER_DISEASE_VARIOME.train

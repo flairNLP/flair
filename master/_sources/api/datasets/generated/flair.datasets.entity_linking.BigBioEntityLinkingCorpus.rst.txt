@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BigBioEntityLinkingCorpus.corpus_tokenizer
       ~BigBioEntityLinkingCorpus.dev
       ~BigBioEntityLinkingCorpus.test
       ~BigBioEntityLinkingCorpus.train

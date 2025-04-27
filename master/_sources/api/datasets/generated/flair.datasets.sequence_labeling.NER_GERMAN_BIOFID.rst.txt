@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_GERMAN_BIOFID.corpus_tokenizer
       ~NER_GERMAN_BIOFID.dev
       ~NER_GERMAN_BIOFID.test
       ~NER_GERMAN_BIOFID.train

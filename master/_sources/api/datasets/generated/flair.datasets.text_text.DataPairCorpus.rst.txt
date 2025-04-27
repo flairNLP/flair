@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~DataPairCorpus.corpus_tokenizer
       ~DataPairCorpus.dev
       ~DataPairCorpus.test
       ~DataPairCorpus.train

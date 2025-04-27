@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ICDAR_EUROPEANA.corpus_tokenizer
       ~NER_ICDAR_EUROPEANA.dev
       ~NER_ICDAR_EUROPEANA.test
       ~NER_ICDAR_EUROPEANA.train

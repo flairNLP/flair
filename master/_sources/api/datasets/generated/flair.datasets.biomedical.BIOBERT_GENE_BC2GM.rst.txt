@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~BIOBERT_GENE_BC2GM.corpus_tokenizer
       ~BIOBERT_GENE_BC2GM.dev
       ~BIOBERT_GENE_BC2GM.test
       ~BIOBERT_GENE_BC2GM.train

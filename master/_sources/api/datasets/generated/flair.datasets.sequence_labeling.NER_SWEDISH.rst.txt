@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_SWEDISH.corpus_tokenizer
       ~NER_SWEDISH.dev
       ~NER_SWEDISH.test
       ~NER_SWEDISH.train

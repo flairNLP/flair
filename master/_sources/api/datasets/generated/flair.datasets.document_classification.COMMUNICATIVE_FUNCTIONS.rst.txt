@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~COMMUNICATIVE_FUNCTIONS.corpus_tokenizer
       ~COMMUNICATIVE_FUNCTIONS.dev
       ~COMMUNICATIVE_FUNCTIONS.test
       ~COMMUNICATIVE_FUNCTIONS.train

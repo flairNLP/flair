@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_VARIOME.corpus_tokenizer
       ~HUNER_GENE_VARIOME.dev
       ~HUNER_GENE_VARIOME.test
       ~HUNER_GENE_VARIOME.train

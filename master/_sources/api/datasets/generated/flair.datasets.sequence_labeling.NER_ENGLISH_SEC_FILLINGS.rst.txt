@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NER_ENGLISH_SEC_FILLINGS.corpus_tokenizer
       ~NER_ENGLISH_SEC_FILLINGS.dev
       ~NER_ENGLISH_SEC_FILLINGS.test
       ~NER_ENGLISH_SEC_FILLINGS.train

@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~NEL_ENGLISH_AQUAINT.corpus_tokenizer
       ~NEL_ENGLISH_AQUAINT.dev
       ~NEL_ENGLISH_AQUAINT.test
       ~NEL_ENGLISH_AQUAINT.train

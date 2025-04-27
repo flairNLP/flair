@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_SLOVENIAN.corpus_tokenizer
       ~UD_SLOVENIAN.dev
       ~UD_SLOVENIAN.test
       ~UD_SLOVENIAN.train

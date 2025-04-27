@@ -33,6 +33,7 @@
 
    .. autosummary::
    
+      ~UD_GALICIAN.corpus_tokenizer
       ~UD_GALICIAN.dev
       ~UD_GALICIAN.test
       ~UD_GALICIAN.train

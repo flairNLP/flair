@@ -38,6 +38,7 @@
 
    .. autosummary::
    
+      ~HUNER_GENE_FSU.corpus_tokenizer
       ~HUNER_GENE_FSU.dev
       ~HUNER_GENE_FSU.test
       ~HUNER_GENE_FSU.train
