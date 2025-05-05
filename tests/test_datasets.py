@@ -1018,6 +1018,90 @@ def test_bavarian_wiki(tasks_base_path):
     ), f"Number of parsed tokens ({actual_tokens}) does not match with reported number of tokens ({ref_tokens})!"
 
 
+@pytest.mark.skip()
+def test_ud_latin():
+    revision = "f16caaa"
+    corpus = flair.datasets.UD_LATIN(revision=revision)
+
+    # Taken from: https://github.com/UniversalDependencies/UD_Latin-LLCT/blob/f16caaa3b0c57e3319396a1af74ee2bc7c9b4323/stats.xml#L8
+    ref_sentences = 9023
+    actual_sentences = len(corpus.train) + len(corpus.dev) + len(corpus.test)
+
+    assert (
+        ref_sentences == actual_sentences
+    ), f"Number of parsed token ({actual_sentences}) does not match with reported number of sentences ({ref_sentences})!"
+
+
+@pytest.mark.skip()
+def test_ud_latin_circse():
+    revision = "13cc204"
+    corpus = flair.datasets.UD_LATIN_CIRCSE(revision=revision)
+
+    # Taken from: https://github.com/UniversalDependencies/UD_Latin-CIRCSE/blob/13cc204a1d8910d7f95fd78b23aec93ccb64be5c/stats.xml#L8
+    ref_sentences = 1263
+    actual_sentences = len(corpus.test)
+
+    assert (
+        ref_sentences == actual_sentences
+    ), f"Number of parsed token ({actual_sentences}) does not match with reported number of sentences ({ref_sentences})!"
+
+
+@pytest.mark.skip()
+def test_ud_latin_ittb():
+    revision = "9991421"
+    corpus = flair.datasets.UD_LATIN_ITTB(revision=revision)
+
+    # Taken from: https://github.com/UniversalDependencies/UD_Latin-ITTB/blob/9991421cd858f6603b4f27b26c1f11d4619fc8cc/stats.xml#L8
+    ref_sentences = 26977
+    actual_sentences = len(corpus.train) + len(corpus.dev) + len(corpus.test)
+
+    assert (
+        ref_sentences == actual_sentences
+    ), f"Number of parsed token ({actual_sentences}) does not match with reported number of sentences ({ref_sentences})!"
+
+
+@pytest.mark.skip()
+def test_ud_latin_udante():
+    revision = "f817abd"
+    corpus = flair.datasets.UD_LATIN_UDANTE(revision=revision)
+
+    # Taken from: https://github.com/UniversalDependencies/UD_Latin-UDante/blob/f817abdaeaf3b40250b65d1a6bbbd5c7dcee7836/stats.xml#L8
+    ref_sentences = 1723
+    actual_sentences = len(corpus.train) + len(corpus.dev) + len(corpus.test)
+
+    assert (
+        ref_sentences == actual_sentences
+    ), f"Number of parsed token ({actual_sentences}) does not match with reported number of sentences ({ref_sentences})!"
+
+
+@pytest.mark.skip()
+def test_ud_latin_perseus():
+    revision = "b3c7f9b"
+    corpus = flair.datasets.UD_LATIN_Perseus(revision=revision)
+
+    # Taken from: https://github.com/UniversalDependencies/UD_Latin-Perseus/blob/b3c7f9b6751c404db3b1f9e436ba4557d8b945c5/stats.xml#L8
+    ref_sentences = 2273
+    actual_sentences = len(corpus.train) + len(corpus.test)
+
+    assert (
+        ref_sentences == actual_sentences
+    ), f"Number of parsed token ({actual_sentences}) does not match with reported number of sentences ({ref_sentences})!"
+
+
+@pytest.mark.skip()
+def test_ud_latin_proiel():
+    revision = "6d7c717"
+    corpus = flair.datasets.UD_LATIN_PROIEL(revision=revision)
+
+    # Taken from: https://github.com/UniversalDependencies/UD_Latin-PROIEL/blob/6d7c717f6c9fa971c312fa2071016cbd5f2e6a41/stats.xml#L8
+    ref_sentences = 18689
+    actual_sentences = len(corpus.train) + len(corpus.dev) + len(corpus.test)
+
+    assert (
+        ref_sentences == actual_sentences
+    ), f"Number of parsed token ({actual_sentences}) does not match with reported number of sentences ({ref_sentences})!"
+
+
 def test_multi_file_jsonl_corpus_should_use_label_type(tasks_base_path):
     corpus = MultiFileJsonlCorpus(
         train_files=[tasks_base_path / "jsonl/train.jsonl"],
