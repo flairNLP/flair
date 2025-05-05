@@ -19,6 +19,7 @@ class UniversalDependenciesCorpus(Corpus):
         test_file=None,
         dev_file=None,
         in_memory: bool = True,
+        sample_missing_splits=True,
         split_multiwords: bool = True,
     ) -> None:
         """Instantiates a Corpus from CoNLL-U column-formatted task data such as the UD corpora.
@@ -28,6 +29,7 @@ class UniversalDependenciesCorpus(Corpus):
         :param test_file: the name of the test file
         :param dev_file: the name of the dev file, if None, dev data is sampled from train
         :param in_memory: If set to True, keeps full dataset in memory, otherwise does disk reads
+        :param sample_missing_splits: If set to True, missing splits will be randomly sampled from the training split
         :param split_multiwords: If set to True, multiwords are split (default), otherwise kept as single tokens
         :return: a Corpus with annotated train, dev and test data
         """
@@ -55,7 +57,7 @@ class UniversalDependenciesCorpus(Corpus):
             else None
         )
 
-        super().__init__(train, dev, test, name=str(data_folder))
+        super().__init__(train, dev, test, name=str(data_folder), sample_missing_splits=sample_missing_splits)
 
 
 class UniversalDependenciesDataset(FlairDataset):
@@ -579,6 +581,128 @@ class UD_LATIN(UniversalDependenciesCorpus):
         cached_path(f"{web_path}/la_llct-ud-train.conllu", Path("datasets") / dataset_name)
 
         super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
+
+class UD_LATIN_CIRCSE(UniversalDependenciesCorpus):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+        revision: str = "master",
+    ) -> None:
+        base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Latin-CIRCSE/{revision}/"
+        cached_path(f"{web_path}/la_circse-ud-test.conllu", Path("datasets") / dataset_name)
+
+        super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
+
+class UD_LATIN_ITTB(UniversalDependenciesCorpus):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+        revision: str = "master",
+    ) -> None:
+        base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Latin-ITTB/{revision}/"
+
+        for split in ["train", "dev", "test"]:
+            cached_path(f"{web_path}/la_ittb-ud-{split}.conllu", Path("datasets") / dataset_name)
+
+        super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
+
+class UD_LATIN_UDANTE(UniversalDependenciesCorpus):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+        revision: str = "master",
+    ) -> None:
+        base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Latin-UDANTE/{revision}/"
+
+        for split in ["train", "dev", "test"]:
+            cached_path(f"{web_path}/la_udante-ud-{split}.conllu", Path("datasets") / dataset_name)
+
+        super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
+
+
+class UD_LATIN_Perseus(UniversalDependenciesCorpus):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+        revision: str = "master",
+    ) -> None:
+        base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Latin-Perseus/{revision}/"
+
+        for split in ["train", "test"]:
+            cached_path(f"{web_path}/la_perseus-ud-{split}.conllu", Path("datasets") / dataset_name)
+
+        super().__init__(
+            data_folder, in_memory=in_memory, sample_missing_splits=False, split_multiwords=split_multiwords
+        )
+
+
+class UD_LATIN_PROIEL(UniversalDependenciesCorpus):
+    def __init__(
+        self,
+        base_path: Optional[Union[str, Path]] = None,
+        in_memory: bool = True,
+        split_multiwords: bool = True,
+        revision: str = "master",
+    ) -> None:
+        base_path = Path(flair.cache_root) / "datasets" if not base_path else Path(base_path)
+
+        # this dataset name
+        dataset_name = self.__class__.__name__.lower()
+
+        data_folder = base_path / dataset_name
+
+        # download data if necessary
+        web_path = f"https://raw.githubusercontent.com/UniversalDependencies/UD_Latin-PROIEL/{revision}/"
+
+        for split in ["train", "dev", "test"]:
+            cached_path(f"{web_path}/la_proiel-ud-{split}.conllu", Path("datasets") / dataset_name)
+
+        super().__init__(
+            data_folder, in_memory=in_memory, sample_missing_splits=False, split_multiwords=split_multiwords
+        )
 
 
 class UD_SPANISH(UniversalDependenciesCorpus):
