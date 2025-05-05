@@ -1077,7 +1077,7 @@ def test_ud_latin_udante():
 @pytest.mark.skip()
 def test_ud_latin_perseus():
     revision = "b3c7f9b"
-    corpus = flair.datasets.UD_LATIN_Perseus(revision=revision)
+    corpus = flair.datasets.UD_LATIN_PERSEUS(revision=revision)
 
     # Taken from: https://github.com/UniversalDependencies/UD_Latin-Perseus/blob/b3c7f9b6751c404db3b1f9e436ba4557d8b945c5/stats.xml#L8
     ref_sentences = 2273
