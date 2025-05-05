@@ -653,7 +653,7 @@ class UD_LATIN_UDANTE(UniversalDependenciesCorpus):
         super().__init__(data_folder, in_memory=in_memory, split_multiwords=split_multiwords)
 
 
-class UD_LATIN_Perseus(UniversalDependenciesCorpus):
+class UD_LATIN_PERSEUS(UniversalDependenciesCorpus):
     def __init__(
         self,
         base_path: Optional[Union[str, Path]] = None,
