@@ -1458,7 +1458,7 @@ class GLUE_COLA(ClassificationCorpus):
     see https://gluebenchmark.com/tasks
 
     The task is to predict whether an English sentence is grammatically
-    correct. Additionaly to the Corpus we have eval_dataset containing
+    correct. Additionally to the Corpus we have eval_dataset containing
     the unlabeled test data for Glue evaluation.
     """
 
@@ -1708,7 +1708,7 @@ class GO_EMOTIONS(ClassificationCorpus):
                 os.makedirs(data_folder)
 
             data_path = flair.cache_root / "datasets" / dataset_name / "raw"
-            # create correctly formated txt files
+            # create correctly formatted txt files
             for name in ["train", "test", "dev"]:
                 with (
                     (data_folder / (name + ".txt")).open("w", encoding="utf-8") as txt_file,

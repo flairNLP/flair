@@ -53,7 +53,7 @@ def test_biosyn_preprocessing():
     """Check preprocessing does not produce empty strings."""
     preprocessor = BioSynEntityPreprocessor()
 
-    # NOTE: Avoid emtpy string if mentions are just punctutations (e.g. `-` or `(`)
+    # NOTE: Avoid empty string if mentions are just punctuations (e.g. `-` or `(`)
     for s in ["-", "(", ")", "9"]:
         assert len(preprocessor.process_mention(s)) > 0
         assert len(preprocessor.process_entity_name(s)) > 0

@@ -282,7 +282,7 @@ class LanguageModelTrainer:
 
                         if not data.is_cuda and cuda.is_available():
                             log.info("Batch %d is not on CUDA, training will be very slow", batch)
-                            raise Exception("data isnt on cuda")
+                            raise Exception("data isn't on cuda")
 
                         self.model.zero_grad()
                         optimizer.zero_grad()

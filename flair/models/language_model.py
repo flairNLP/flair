@@ -334,7 +334,7 @@ class LanguageModel(nn.Module):
                 # divide by temperature
                 prediction = prediction.div(temperature)
 
-                # to prevent overflow problem with small temperature values, substract largest value from all
+                # to prevent overflow problem with small temperature values, subtract largest value from all
                 # this makes a vector in which the largest value is 0
                 max = torch.max(prediction)
                 prediction -= max

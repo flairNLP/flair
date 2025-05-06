@@ -2414,7 +2414,7 @@ class NER_ENGLISH_TWITTER(ColumnCorpus):
     ) -> None:
         """Initialize the twitter_ner corpus.
 
-        The corpus will be downoaded from https://raw.githubusercontent.com/aritter/twitter_nlp/master/data/annotated/ner.txt.
+        The corpus will be downloaded from https://raw.githubusercontent.com/aritter/twitter_nlp/master/data/annotated/ner.txt.
         The first time you call this constructor it will automatically download the dataset.
 
         Args:
@@ -3528,7 +3528,7 @@ class NER_MULTI_WIKIANN(MultiCorpus):
         """Initialize the WkiAnn corpus for cross-lingual NER consisting of datasets from 282 languages that exist in Wikipedia.
 
         See https://elisa-ie.github.io/wikiann/ for details and for the languages and their
-        respective abbreveations, i.e. "en" for english. (license: https://opendatacommons.org/licenses/by/)
+        respective abbreviations, i.e. "en" for english. (license: https://opendatacommons.org/licenses/by/)
 
         Parameters
         ----------
@@ -4862,7 +4862,7 @@ class NER_HIPE_2022(ColumnCorpus):
         :branch_name: Defines git branch name of HIPE data repository (main by default).
         :dev_split_name: Defines default name of development split (dev by default). Only the NewsEye dataset has
         currently two development splits: dev and dev2.
-        :add_document_separator: If True, a special document seperator will be introduced. This is highly
+        :add_document_separator: If True, a special document separator will be introduced. This is highly
         recommended when using our FLERT approach.
         :sample_missing_splits: If True, data is automatically sampled when certain data splits are None.
         :preproc_fn: Function that is used for dataset preprocessing. If None, default preprocessing will be performed.
@@ -5024,7 +5024,7 @@ class NER_NERMUD(MultiCorpus):
         in_memory: bool = False,
         **corpusargs,
     ) -> None:
-        """Initilize the NERMuD 2023 dataset.
+        """Initialize the NERMuD 2023 dataset.
 
         NERMuD is a task presented at EVALITA 2023 consisting in the extraction and classification
         of named-entities in a document, such as persons, organizations, and locations. NERMuD 2023 will include two different sub-tasks:

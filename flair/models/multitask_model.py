@@ -37,7 +37,7 @@ class MultitaskModel(flair.nn.Classifier):
         Args:
             models: The child models used during multitask training.
             task_ids: If given, add each corresponding model a specified task id. Otherwise, tasks get the ids 'Task_0', 'Task_1', ...
-            loss_factors: If given, weight the losses of teh corresponding models during training.
+            loss_factors: If given, weight the losses of the corresponding models during training.
             use_all_tasks: If True, each sentence will be trained on all tasks parallel, otherwise each epoch 1 task will be sampled to train the sentence on.
         """
         super().__init__()

@@ -308,7 +308,7 @@ def test_split_text_spacy():
     assert sentences[1].start_position == 17
     assert len(sentences[1].tokens) == 6
 
-    sentences = spacy_splitter._perform_split("VF inhibits something. ACE-dependent (GH+) issuses too.")
+    sentences = spacy_splitter._perform_split("VF inhibits something. ACE-dependent (GH+) issues too.")
     assert len(sentences) == 2
     assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 4
@@ -327,7 +327,7 @@ def test_split_text_spacy():
 @pytest.mark.skip(reason="SciSpacySentenceSplitter need optional requirements, so we skip the test by default")
 def test_split_text_scispacy():
     scispacy_splitter = SciSpacySentenceSplitter()
-    sentences = scispacy_splitter._perform_split("VF inhibits something. ACE-dependent (GH+) issuses too.")
+    sentences = scispacy_splitter._perform_split("VF inhibits something. ACE-dependent (GH+) issues too.")
     assert len(sentences) == 2
     assert sentences[0].start_position == 0
     assert len(sentences[0].tokens) == 4
