@@ -81,7 +81,7 @@ HunFlair2 comes with the following pre-trained linking models:
 | Chemical    | `chemical-linker` | [CTD Chemicals](https://ctdbase.org/downloads/#allchems)   | [SapBERT (BC5CDR)](https://huggingface.co/dmis-lab/biosyn-sapbert-bc5cdr-chemical)      |
 | Disease     | `disease-linker`  | [CTD Diseases](https://ctdbase.org/downloads/#alldiseases) | [SapBERT (NCBI Disease)](https://huggingface.co/dmis-lab/biosyn-sapbert-bc5cdr-disease) |
 | Gene        | `gene-linker`     | [NCBI Gene (Human)](https://www.ncbi.nlm.nih.gov/gene)     | [SapBERT (BC2GN)](https://huggingface.co/dmis-lab/biosyn-sapbert-bc2gn)                 |
-| Species     | `species-linker`  | [NCBI Taxonmy](https://www.ncbi.nlm.nih.gov/taxonomy)      | [SapBERT  (UMLS)](https://huggingface.co/cambridgeltl/SapBERT-from-PubMedBERT-fulltext) |
+| Species     | `species-linker`  | [NCBI Taxonomy](https://www.ncbi.nlm.nih.gov/taxonomy)      | [SapBERT  (UMLS)](https://huggingface.co/cambridgeltl/SapBERT-from-PubMedBERT-fulltext) |
 
 For detailed information concerning the different models and their integration please refer to [our paper](https://arxiv.org/abs/2402.12372).
 

@@ -21,7 +21,7 @@ log = logging.getLogger("flair")
 PluginArgument = Union["BasePlugin", type["BasePlugin"]]
 HookHandleId = NewType("HookHandleId", int)
 
-EventIdenifier = str
+EventIdentifier = str
 
 
 class TrainingInterrupt(Exception):
@@ -31,7 +31,7 @@ class TrainingInterrupt(Exception):
 class Pluggable:
     """Dispatches events which attached plugins can react to."""
 
-    valid_events: Optional[set[EventIdenifier]] = None
+    valid_events: Optional[set[EventIdentifier]] = None
 
     def __init__(self, *, plugins: Sequence[PluginArgument] = []) -> None:
         """Initialize a `Pluggable`.
@@ -39,7 +39,7 @@ class Pluggable:
         Args:
             plugins: Plugins which should be attached to this `Pluggable`.
         """
-        self._hook_handles: dict[EventIdenifier, dict[HookHandleId, HookHandle]] = defaultdict(dict)
+        self._hook_handles: dict[EventIdentifier, dict[HookHandleId, HookHandle]] = defaultdict(dict)
 
         self._hook_handle_id_counter = count()
 
@@ -69,16 +69,16 @@ class Pluggable:
     def append_plugin(self, plugin):
         self._plugins.append(plugin)
 
-    def validate_event(self, *events: EventIdenifier):
+    def validate_event(self, *events: EventIdentifier):
         for event in events:
-            assert isinstance(event, EventIdenifier)
+            assert isinstance(event, EventIdentifier)
 
             if self.valid_events is not None and event not in self.valid_events:
                 raise RuntimeError(f"Event '{event}' not recognized. Available: {', '.join(self.valid_events)}")
             return event
         return None
 
-    def register_hook(self, func: Callable, *events: EventIdenifier):
+    def register_hook(self, func: Callable, *events: EventIdentifier):
         """Register a hook.
 
         Args:
@@ -95,7 +95,7 @@ class Pluggable:
             self._hook_handles[event][handle.id] = handle
         return handle
 
-    def dispatch(self, event: EventIdenifier, *args, **kwargs) -> None:
+    def dispatch(self, event: EventIdentifier, *args, **kwargs) -> None:
         """Call all functions hooked to a certain event."""
         self.validate_event(event)
 
@@ -124,9 +124,9 @@ class HookHandle:
     """Represents the registration information of a hook callback."""
 
     def __init__(
-        self, _id: HookHandleId, *, events: Sequence[EventIdenifier], func: Callable, pluggable: Pluggable
+        self, _id: HookHandleId, *, events: Sequence[EventIdentifier], func: Callable, pluggable: Pluggable
     ) -> None:
-        """Intitialize `HookHandle`.
+        """Initialize `HookHandle`.
 
         Args:
             _id: Id, the callback is stored as in the `Pluggable`.
@@ -151,7 +151,7 @@ class HookHandle:
         return self._func.__qualname__
 
     @property
-    def events(self) -> Iterator[EventIdenifier]:
+    def events(self) -> Iterator[EventIdentifier]:
         """Return iterator of events whis `HookHandle` is registered for."""
         yield from self._events
 
@@ -223,7 +223,7 @@ class BasePlugin:
         self._hook_handles = []
 
     @classmethod
-    def mark_func_as_hook(cls, func: Callable, *events: EventIdenifier) -> Callable:
+    def mark_func_as_hook(cls, func: Callable, *events: EventIdentifier) -> Callable:
         """Mark method as a hook triggered by the `Pluggable`."""
         if len(events) == 0:
             events = (func.__name__,)
@@ -233,10 +233,10 @@ class BasePlugin:
     @classmethod
     def hook(
         cls,
-        first_arg: Optional[Union[Callable, EventIdenifier]] = None,
-        *other_args: EventIdenifier,
+        first_arg: Optional[Union[Callable, EventIdentifier]] = None,
+        *other_args: EventIdentifier,
     ) -> Callable:
-        """Convience function for `BasePlugin.mark_func_as_hook`).
+        """Convenience function for `BasePlugin.mark_func_as_hook`).
 
         Enables using the `@BasePlugin.hook` syntax.
 
@@ -247,10 +247,10 @@ class BasePlugin:
             # Decorator was used with parentheses, but no args
             return cls.mark_func_as_hook
 
-        if isinstance(first_arg, EventIdenifier):
-            # Decorator was used with args (strings specifiying the events)
+        if isinstance(first_arg, EventIdentifier):
+            # Decorator was used with args (strings specifying the events)
             def decorator_func(func: Callable):
-                return cls.mark_func_as_hook(func, cast(EventIdenifier, first_arg), *other_args)
+                return cls.mark_func_as_hook(func, cast(EventIdentifier, first_arg), *other_args)
 
             return decorator_func
 

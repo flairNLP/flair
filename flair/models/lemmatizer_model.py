@@ -351,7 +351,7 @@ class Lemmatizer(flair.nn.Classifier[Sentence]):
 
         # encode input characters by sending them through RNN
         if self.encode_characters:
-            # note that we do not need to fill up with dummy symbols since we process each token seperately
+            # note that we do not need to fill up with dummy symbols since we process each token separately
             encoder_input_indices = self.words_to_char_indices(
                 [token.text], start_symbol=self.start_symbol, end_symbol=self.end_symbol
             )

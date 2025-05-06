@@ -2293,7 +2293,7 @@ class Corpus(typing.Generic[T_co]):
         Args:
             label_type: Optionally set this value to obtain statistics only for one specific type of label (such
                 as "ner" or "pos"). If not set, statistics for all labels will be returned.
-            pretty_print: If set to True, returns pretty json (indented for readabilty). If not, the json is
+            pretty_print: If set to True, returns pretty json (indented for readability). If not, the json is
                 returned as a single line. Default: True.
 
         Returns:

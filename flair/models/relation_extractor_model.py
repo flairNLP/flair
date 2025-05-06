@@ -35,7 +35,7 @@ class RelationExtractor(flair.nn.DefaultClassifier[Sentence, Relation]):
             train_on_gold_pairs_only: if True, relations with "O" (no relation) label will be ignored in training.
             **classifierargs: The arguments propagated to :meth:`flair.nn.DefaultClassifier.__init__`
         """
-        # pooling operation to get embeddings for entites
+        # pooling operation to get embeddings for entities
         self.pooling_operation = pooling_operation
         relation_representation_length = 2 * embeddings.embedding_length
         if self.pooling_operation == "first_last":
