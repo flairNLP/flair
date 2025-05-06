@@ -328,7 +328,7 @@ def optimize_F1s(config):
             for score in F_SCORE_NAMES:
                 all_threshold_scores[score] = {
                     metric: {
-                        'scores' : [], 'thresholds':[]
+                        'scores' : [], 'thresholds':[], 'corpus_scores':{corpus: [] for corpus in corpora }
                     } 
                     for metric in sample_metrics[mode]
                 }
@@ -337,6 +337,8 @@ def optimize_F1s(config):
                     for metric in sample_metrics[mode]:
                         all_threshold_scores[score][metric]['scores'].append(0)
                         all_threshold_scores[score][metric]['thresholds'].append(0)
+                        for corpus in corpora:
+                            all_threshold_scores[score][metric]['corpus_scores'][corpus].append(0)
 
             # iterate over epochs
             for i in [str(i) for i in range(start_epoch, max_epochs)]:
@@ -346,7 +348,8 @@ def optimize_F1s(config):
 
                 threshold_scores = {}
                 for score in F_SCORE_NAMES:
-                    threshold_scores[score] = {direction:{metric: [] for metric in sample_metrics[mode]} for direction in ['left', 'right']}
+                    threshold_scores[score] = {direction:{metric: {corpus: [] for corpus in corpora} for metric in sample_metrics[mode]} for direction in ['left', 'right']}
+                
                 thresholds = {direction: {metric: [] for metric in sample_metrics[mode]} for direction in ['left', 'right']}
 
                 # change in this new function: instead of only averaging over seeds and finding the maximum, we average over seeds AND CORPORA and find the maximum.
@@ -363,6 +366,8 @@ def optimize_F1s(config):
                         epoch_log_df = pd.read_csv(filepath,  delimiter='\t', header=0, quoting=csv.QUOTE_NONE)
                         epoch_log_df[correct_prediction_flag_name] = epoch_log_df['predicted'] == epoch_log_df['noisy']
 
+                        # read loss.tsv.
+
                         # select the data subset that is in the corresponding epoch
                         if category['observed_label'] == 'O':
                             category_epoch_log_df = epoch_log_df[(epoch_log_df[correct_prediction_flag_name] == category['correct_prediction_flag'])  & (epoch_log_df['noisy']=='O')]
@@ -378,9 +383,8 @@ def optimize_F1s(config):
                             result = get_score_from_df(category_epoch_log_df, metric, epoch=total_epoch, noise_flag_name=noise_flag_name, total_num_noisy=category['max_num_noisy'][corpus][seed]) #list of 10 (over thresholds)
 
                             for f_type in F_SCORE_NAMES:
-                                threshold_scores[f_type]['left'][metric].append(result['left'][f_type]) # this is a list of lists 
-                                threshold_scores[f_type]['right'][metric].append(result['right'][f_type]) # this is a list of lists 
-
+                                threshold_scores[f_type]['left'][metric][corpus].append(result['left'][f_type]) # this is a list of lists 
+                                threshold_scores[f_type]['right'][metric][corpus].append(result['right'][f_type]) # this is a list of lists 
 
                             thresholds['left'][metric].append(result['left']['thresholds']) # this is a list of lists
                             thresholds['right'][metric].append(result['right']['thresholds']) # this is a list of lists
@@ -411,20 +415,40 @@ def optimize_F1s(config):
                     for f_score_type in F_SCORE_NAMES:
 
                         # take only up to min_len scores
-                        scores = np.array([l[:min_len] for l in threshold_scores[f_score_type][direction][metric]])
+                        # print(len(threshold_scores[f_score_type][direction][metric][corpus]))
+                        # print(threshold_scores[f_score_type][direction][metric][corpus])
+                        print(len(threshold_scores[f_score_type][direction][metric][corpus]))
+                        temp_scores = [score for corpus in corpora for score in threshold_scores[f_score_type][direction][metric][corpus]]
+                        print(temp_scores)
+                        print(min_len)
+                        print(len(temp_scores))
+                        scores = np.array([l[:min_len] for l in temp_scores])
 
-                        # average the f_scores over the seeds
+                        # average the f_scores over the seeds/corpora
                         scores = scores.mean(axis=0)
+                        print(scores)
+                        print(len(scores))
+                        print(thresholds_list)
 
                         if len(scores) == 0:
                             # if the list of scores is empty, set them and the other parameters to 0
                             all_threshold_scores[f_score_type][metric]['scores'].append(0)
                             all_threshold_scores[f_score_type][metric]['thresholds'].append(0)
                             all_threshold_scores[f_score_type][metric]['direction'] = direction
+                            for corpus in corpora:
+                                all_threshold_scores[f_score_type][metric]['corpus_scores'][corpus].append(0)
+
                         else:
                             all_threshold_scores[f_score_type][metric]['scores'].append(max(scores))
                             all_threshold_scores[f_score_type][metric]['thresholds'].append(thresholds_list[np.argmax(scores)])
                             all_threshold_scores[f_score_type][metric]['direction'] = direction
+                            
+                            for corpus in corpora:
+                                corpus_scores = np.array([l[:min_len] for l in threshold_scores[f_score_type][direction][metric][corpus]])
+                                corpus_scores = corpus_scores.mean(axis=0)
+                                score = corpus_scores[np.argmax(scores)]
+                                all_threshold_scores[f_score_type][metric]['corpus_scores'][corpus].append(score)
+
 
             
             # open the .csv for current category 
@@ -437,6 +461,11 @@ def optimize_F1s(config):
             optimize_F1s_output_file = open(filepath + os.sep+'optimal_F1s_category'+category['id']+'.csv','w')
             optimize_F1s_output_file.write('metric, f_score, score, epoch, threshold, direction\n')
 
+            per_corpus_files = {}
+            for corpus in corpora:
+                per_corpus_files[corpus] = open(filepath + os.sep+corpus+'_optimal_F1s_category'+category['id']+'.csv','w')
+                per_corpus_files[corpus].write('metric, f_score, score, epoch, threshold, direction\n')
+
             optimize_F1s_output_file_parameters_merged = open(filepath + os.sep+'optimal_F1s_category'+category['id']+'_parameters_merged.csv','w')
             optimize_F1s_output_file_parameters_merged.write('metric, f_score, score, epoch, threshold, direction\n')
 
@@ -447,10 +476,10 @@ def optimize_F1s(config):
                 directions = []
                 scores = []
                 for f_type in F_SCORE_NAMES:
-
                     score = np.max(all_threshold_scores[f_type][metric]['scores'])
-                    threshold = all_threshold_scores[f_type][metric]['thresholds'][np.argmax(all_threshold_scores[f_type][metric]['scores'])]
-                    epoch = np.argmax(all_threshold_scores[f_type][metric]['scores'])
+                    epoch_id = np.argmax(all_threshold_scores[f_type][metric]['scores'])
+                    threshold = all_threshold_scores[f_type][metric]['thresholds'][epoch_id]
+                    epoch = epoch_id
                     direction = all_threshold_scores[f_type][metric]['direction']
                     epochs.append(epoch)
                     thresholds.append(threshold)
@@ -459,7 +488,11 @@ def optimize_F1s(config):
                     '''
                     uncomment the following code to print a full table (where duplicate parameter sets are NOT merged), which includes all actual f score values
                     '''
-                    write_output(optimize_F1s_output_file, metric, f_type, score, epoch, threshold, direction, category, mode, config, corpus_name)
+                    write_output(optimize_F1s_output_file, metric, f_type, score, epoch, threshold, direction, category, mode, config)
+                    for corpus in corpora:
+                        score = all_threshold_scores[f_type][metric]['corpus_scores'][corpus][epoch_id]
+                        write_output(per_corpus_files[corpus], metric, f_type, score, epoch, threshold, direction, category, mode, config)
+
                     # optimize_F1s_output_file.write(f'{metric}, {f_type}, {score}, {epoch}, {threshold}, {direction}\n')
                     # output_config(category, metric,  f_type, epoch, threshold, direction, mode)
 
@@ -485,16 +518,16 @@ def optimize_F1s(config):
                         if epochs[i] == epochs[k] and thresholds[i] == thresholds[k] and directions[i] == directions[k]:
                             # all three parameter sets are the same 
                             # (only f05 score is printed out)
-                            write_output(optimize_F1s_output_file_parameters_merged, metric, F_SCORE_NAMES, scores[0], epochs[0], thresholds[0], directions[0], category, mode, config, corpus_name)
+                            write_output(optimize_F1s_output_file_parameters_merged, metric, F_SCORE_NAMES, scores[0], epochs[0], thresholds[0], directions[0], category, mode, config)
                         else:
                             # two parameter sets are the same, one is different
-                            write_output(optimize_F1s_output_file_parameters_merged, metric, [F_SCORE_NAMES[i], F_SCORE_NAMES[j]], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config, corpus_name)
-                            write_output(optimize_F1s_output_file_parameters_merged, metric, F_SCORE_NAMES[k], scores[k], epochs[k], thresholds[k], directions[k], category, mode, config, corpus_name)
+                            write_output(optimize_F1s_output_file_parameters_merged, metric, [F_SCORE_NAMES[i], F_SCORE_NAMES[j]], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config)
+                            write_output(optimize_F1s_output_file_parameters_merged, metric, F_SCORE_NAMES[k], scores[k], epochs[k], thresholds[k], directions[k], category, mode, config)
                         break
                 else:
                     # all three parameter sets are different
                     for i in list(indices):
-                        write_output(optimize_F1s_output_file_parameters_merged, metric, F_SCORE_NAMES[i], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config, corpus_name)
+                        write_output(optimize_F1s_output_file_parameters_merged, metric, F_SCORE_NAMES[i], scores[i], epochs[i], thresholds[i], directions[i], category, mode, config)
 
 def calculate_correlations(config):
     ''' 
