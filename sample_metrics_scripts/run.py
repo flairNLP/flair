@@ -8,8 +8,9 @@ import logging
 import datetime
 from pathlib import Path
 import socket
+from copy import deepcopy
 
-def output_configs(config, category_table_path, cat_id, mode, metrics_list):
+def output_configs(config, category_table_path, cat_id, mode, metrics_list, only_best = False):
     data = pd.read_csv(category_table_path, header = 0, index_col=[0,1])
     data.columns = data.columns.str.strip()
     experiment_configs = []
@@ -47,37 +48,71 @@ def output_configs(config, category_table_path, cat_id, mode, metrics_list):
     "corpora" : config['corpora'],
     "seeds":config['seeds']
     }
+    if only_best:
 
-    for ind, row in data.iterrows():
-        if str(ind[0]).strip() in metrics_list:
-            print(row['epoch'])
-            current_config = base_config.copy()
-            current_config['parameters']['seq_tagger_mode'] = mode
+        temp_data = data[data.index.get_level_values(1).str.contains('f05')]
+        print(temp_data)
+        best_params_index = temp_data['score'].idxmax()
+        row = data.loc[best_params_index]
 
-            # add current category modification parameters with 'mask' option
+        current_config = deepcopy(base_config)
+        current_config['parameters']['seq_tagger_mode'] = mode
+
+        # add current category modification parameters with 'mask' option
+        current_config['parameters']['modify_category'+cat_id] = {
+                                                        'epoch_change': str(row['epoch']).strip(),
+                                                        'metric':str(row.name[0]).strip(),
+                                                        'f_type':row.name[1].strip(),
+                                                        'threshold':str(row['threshold']).strip(),
+                                                        'direction':row['direction'],
+                                                        'modification':'mask'
+                                                        }
+        experiment_configs.append(deepcopy(current_config))
+        
+        if int(cat_id) == 2 or int(cat_id) == 4:
+            # add current category modification parameters with 'relabel' option
+            # *only for categories 2 and 4 (because we have an alternative label there: the predicted one)
             current_config['parameters']['modify_category'+cat_id] = {
-                                                            'epoch_change': str(row['epoch']).strip(),
-                                                            'metric':str(ind[0]).strip(),
-                                                            'f_type':ind[1].strip(),
-                                                            'threshold':str(row['threshold']).strip(),
-                                                            'direction':row['direction'],
-                                                            'modification':'mask'
-                                                            }
+                                                        'epoch_change': str(row['epoch']).strip(),
+                                                        'metric':str(row.name[0]).strip(),
+                                                        'f_type':row.name[1].strip(),
+                                                        'threshold':str(row['threshold']).strip(),
+                                                        'direction':row['direction'].strip(),
+                                                        'modification':'relabel'
+                                                        }
             experiment_configs.append(current_config)
-            
-            if int(cat_id) == 2 or int(cat_id) == 4:
-                # add current category modification parameters with 'relabel' option
-                # *only for categories 2 and 4 (because we have an alternative label there: the predicted one)
-                current_config['parameters']['modify_category'+cat_id] = {
-                                                            'epoch_change': str(row['epoch']).strip(),
-                                                            'metric':str(ind[0]).strip(),
-                                                            'f_type':ind[1].strip(),
-                                                            'threshold':str(row['threshold']).strip(),
-                                                            'direction':row['direction'].strip(),
-                                                            'modification':'relabel'
-                                                            }
-                experiment_configs.append(current_config)
+    else:
+        for ind, row in data.iterrows():
+            if str(ind[0]).strip() in metrics_list:
+                print(row['epoch'])
 
+                current_config = deepcopy(base_config)
+                current_config['parameters']['seq_tagger_mode'] = mode
+
+                # add current category modification parameters with 'mask' option
+                current_config['parameters']['modify_category'+cat_id] = {
+                                                                'epoch_change': str(row['epoch']).strip(),
+                                                                'metric':str(ind[0]).strip(),
+                                                                'f_type':ind[1].strip(),
+                                                                'threshold':str(row['threshold']).strip(),
+                                                                'direction':row['direction'],
+                                                                'modification':'mask'
+                                                                }
+                experiment_configs.append(deepcopy(current_config))
+                
+                if int(cat_id) == 2 or int(cat_id) == 4:
+                    # add current category modification parameters with 'relabel' option
+                    # *only for categories 2 and 4 (because we have an alternative label there: the predicted one)
+                    current_config['parameters']['modify_category'+cat_id] = {
+                                                                'epoch_change': str(row['epoch']).strip(),
+                                                                'metric':str(ind[0]).strip(),
+                                                                'f_type':ind[1].strip(),
+                                                                'threshold':str(row['threshold']).strip(),
+                                                                'direction':row['direction'].strip(),
+                                                                'modification':'relabel'
+                                                                }
+                    experiment_configs.append(current_config)
+    
     return experiment_configs
     
 
@@ -165,25 +200,27 @@ def run(config, gpu=0):
     source_corpus = '_'.join(config['source_corpora'])
 
     # 3. Run experiment (relabel or mask each category) based on the optimal parameter sets from 2. 
-    for mode in config['parameters']['modes']:
-        parameter_settings_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
+    if not config['only_results_summarization']:
+        # we can set the only_results_summarization to true if we only want to re-generate the summary tables, and not re-run the experiments
+        for mode in config['parameters']['modes']:
+            parameter_settings_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
 
-        logger_experiment.info(f"Running experiment for {mode} mode.")
-        metrics_list = config['sample_metrics'][mode]
+            logger_experiment.info(f"Running experiment for {mode} mode.")
+            metrics_list = config['sample_metrics'][mode]
 
-        for cat in config['categories']:
-            category_table_path = f"{parameter_settings_path}/optimal_F1s_{cat}_parameters_merged.csv"
-            logger_experiment.info(f"Read parameter settings for {cat} from {category_table_path}.")
-            experiment_configs = output_configs(config, category_table_path, cat[-1], mode, metrics_list)
+            for cat in config['categories']:
+                category_table_path = f"{parameter_settings_path}/optimal_F1s_{cat}_parameters_merged.csv"
+                logger_experiment.info(f"Read parameter settings for {cat} from {category_table_path}.")
+                experiment_configs = output_configs(config, category_table_path, cat[-1], mode, metrics_list, only_best=config['only_best_parameter_sets'])
 
-            for experiment_config in experiment_configs:
-                if experiment_config['parameters']['modify_category'+cat[-1]]['modification'] in config['modifications']:
+                for experiment_config in experiment_configs:
+                    if experiment_config['parameters']['modify_category'+cat[-1]]['modification'] in config['modifications']:
 
-                    logger_experiment.info(f"Running category modification experiment... \n\t\tFor metric: {experiment_config['parameters']['modify_'+cat]['metric']}\n\t\tFor f_type: {experiment_config['parameters']['modify_'+cat]['f_type']}\n\t\tFor modification: {experiment_config['parameters']['modify_'+cat]['modification']}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}")
+                        logger_experiment.info(f"Running category modification experiment... \n\t\tFor metric: {experiment_config['parameters']['modify_'+cat]['metric']}\n\t\tFor f_type: {experiment_config['parameters']['modify_'+cat]['f_type']}\n\t\tFor modification: {experiment_config['parameters']['modify_'+cat]['modification']}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}")
 
-                    # here the experiment is ran for all noise types listed in the config file
-                    main(experiment_config, gpu)
-                    logger_experiment.info(f"Finished experiment")
+                        # here the experiment is ran for all noise types listed in the config file
+                        main(experiment_config, gpu)
+                        logger_experiment.info(f"Finished experiment")
 
 
     categories_ids = [cat[-1] for cat in config['categories']]

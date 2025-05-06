@@ -1,5 +1,6 @@
 {
-    "plot_histograms": true,
+    "only_results_summarization" : true,
+    "only_best_parameter_sets":true,
     "paths": {
         "resources_path": "test_sample_metrics/resources/noisebench/",
         "data_path": "../../NoiseBench/data/noisebench/.nessieformat/",
