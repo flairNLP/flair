@@ -123,11 +123,14 @@ def run(config, gpu=0):
     seeds = [int(seed) for seed in config['seeds']]
     corpora = config['corpora']
 
-    for source_corpus in config['source_corpora']:
-        for mode in config['parameters']['modes']:
-            parameter_settings_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
+    merged_corpora_names = '_'.join(config['source_corpora'])
+    for mode in config['parameters']['modes']:
+        parameter_settings_path = f"{config['paths']['results_tables_path']}/{merged_corpora_names}/{mode}_mode"
 
-            if not os.path.exists(parameter_settings_path):
+        if not os.path.exists(parameter_settings_path):
+
+            for source_corpus in config['source_corpora']:
+
                 # 1. Run baseline for each mode: standard fine-tuning and early-exit fine-tuning
                 temp_f1_scores = []
                 if not os.path.exists(f"{config['paths']['baseline_paths'][mode]}/{source_corpus}/{seeds[0]}") and not os.path.exists(f"{config['paths']['baseline_paths'][mode]}/{source_corpus}/{seeds[0]}_with_init-{config['parameters']['decoder_init']['lr']}"):
@@ -157,8 +160,8 @@ def run(config, gpu=0):
                     plot_category_membership_through_epochs(base_paths = config['paths']['baseline_paths'] , corpus_name = source_corpus, seeds= seeds,dset = 'train', max_epochs=11)
 
             # 2. Find optimal parameter sets for each sample metric, mode and category
-        logger_experiment.info(f"Optimizing F scores for {'_'.join(config['source_corpora'])}; saving to csv files and generating config json files")
-        optimize_F1s(config)#, corpus_name=source_corpus)
+            logger_experiment.info(f"Optimizing F scores for {'_'.join(config['source_corpora'])}; saving to csv files and generating config json files; path: {parameter_settings_path}")
+            optimize_F1s(config)#, corpus_name=source_corpus)
     source_corpus = '_'.join(config['source_corpora'])
 
     # 3. Run experiment (relabel or mask each category) based on the optimal parameter sets from 2. 
@@ -174,12 +177,13 @@ def run(config, gpu=0):
             experiment_configs = output_configs(config, category_table_path, cat[-1], mode, metrics_list)
 
             for experiment_config in experiment_configs:
+                if experiment_config['parameters']['modify_category'+cat[-1]]['modification'] in config['modifications']:
 
-                logger_experiment.info(f"Running category modification experiment... \n\t\tFor metric: {experiment_config['parameters']['modify_'+cat]['metric']}\n\t\tFor f_type: {experiment_config['parameters']['modify_'+cat]['f_type']}\n\t\tFor modification: {experiment_config['parameters']['modify_'+cat]['modification']}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}")
+                    logger_experiment.info(f"Running category modification experiment... \n\t\tFor metric: {experiment_config['parameters']['modify_'+cat]['metric']}\n\t\tFor f_type: {experiment_config['parameters']['modify_'+cat]['f_type']}\n\t\tFor modification: {experiment_config['parameters']['modify_'+cat]['modification']}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}")
 
-                # here the experiment is ran for all noise types listed in the config file
-                main(experiment_config, gpu)
-                logger_experiment.info(f"Finished experiment")
+                    # here the experiment is ran for all noise types listed in the config file
+                    main(experiment_config, gpu)
+                    logger_experiment.info(f"Finished experiment")
 
 
     categories_ids = [cat[-1] for cat in config['categories']]
