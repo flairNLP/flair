@@ -370,3 +370,71 @@ def plot_category_membership_through_epochs(base_paths, corpus_name, seeds, dset
     fig.legend(handles, labels, loc='lower center', ncol = 4, bbox_to_anchor = (0.5, 0),)
     fig.savefig(f"{base_paths['standard']}/{corpus_name}/lineplots_category_memberships_version2_{corpus_name}.png")
     plt.close()
+
+def summarize_test_scores_and_baselines(config):
+    source_corpora = config['source_corpora']
+    source_corpus = '_'.join(source_corpora)
+
+    corpora = config['corpora']
+    target_corpus = '_'.join(corpora)
+    # we can set the only_results_summarization to true if we only want to re-generate the summary tables, and not re-run the experiments
+    for mode in config['parameters']['modes']:
+        
+        # open new file
+        results_file_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
+        file = open(results_file_path + os.sep + 'all_summarized_scores_' + target_corpus + '.csv','w')
+        file.write('setting,'+','.join(corpora)+'\n')
+        # write baselines
+        file.write('baseline,')
+
+        for corpus in corpora:
+
+            test_results_fname = f"{config['paths']['baseline_paths'][mode]}/{corpus}/test_results.tsv"
+
+            if os.path.isfile(test_results_fname):
+                results_df = pd.read_csv(test_results_fname, delimiter='\t', header=0)
+                logger_experiment.debug(results_df[['mean']].values)
+                score = float(results_df[['mean']].values[0])
+                stdev = float(results_df[['std']].values[0])
+            else:
+                score = 0
+                stdev = 0
+            file.write(str(score)+',')
+        file.write('\n')
+
+
+        # write category experiment scores
+        for cat in config['categories']:
+            resources_path = f"{config['paths']['resources_path']}/relabel_cat{cat[-1]}_source_{source_corpus}/category{cat[-1]}/"
+            for p in os.listdir(resources_path):
+                if mode in p:
+                    mode_metric = p
+            
+            for p in os.listdir(os.path.join(resources_path,mode_metric)):
+                f_type = p
+
+            modifications = []
+
+            for p in os.listdir(os.path.join(resources_path,mode_metric,f_type)):
+                modifications.append(p)
+
+            #logger_experiment.info(f"Read parameter settings for {cat} from {category_table_path}.")
+            
+            resources_path = os.path.join(resources_path,mode_metric,f_type)
+            
+            for modif in modifications:
+                file.write(f'cat{cat[-1]}_{modif},')
+
+                for corpus in corpora:
+                    test_results_fname = f"{resources_path}/{modif}/{corpus}/test_results.tsv"
+
+                    if os.path.isfile(test_results_fname):
+                        results_df = pd.read_csv(test_results_fname, delimiter='\t', header=0)
+                        logger_experiment.debug(results_df[['mean']].values)
+                        score = float(results_df[['mean']].values[0])
+                        stdev = float(results_df[['std']].values[0])
+                    else:
+                        score = 0
+                        stdev = 0         
+                    file.write(str(score)+',')
+                file.write('\n')
