@@ -10,6 +10,120 @@ from pathlib import Path
 import socket
 from copy import deepcopy
 
+def get_combined_config(config, mode):
+
+    source_corpus = '_'.join(config['source_corpora'])
+
+    if mode == 'EE':
+        base_config = {
+        "experiment_name": "relabel_combined_source_"+source_corpus,
+        "paths": {
+            "resources_path": f"{config['paths']['resources_path']}/relabel_combined_source_{source_corpus}/",
+            "data_path":config['paths']['data_path'],
+            "train_filename_extension" :config['paths']['train_filename_extension'],
+            "dev_filename_extension" :config['paths']['dev_filename_extension'],
+            "test_filename_extension" :config['paths']['test_filename_extension'],
+            "baseline_paths":{
+                "EE":config['paths']['baseline_paths']['EE'],
+                "standard":config['paths']['baseline_paths']['standard'],
+            }
+        },
+        "parameters": {
+            "batch_size":config['parameters']['batch_size'],
+            "learning_rate":config['parameters']['learning_rate'],
+            "num_epochs":config['parameters']['num_epochs'],
+            "model":config['parameters']['model'],
+            "monitor_test":config['parameters']['monitor_test'],
+            "scheduler":config['parameters']['scheduler'],
+            "metrics_mode":config['parameters']['metrics_mode'],
+            "model_reinit":config['parameters']['model_reinit'],
+            "decoder_init":config['parameters']['decoder_init'],
+            "seq_tagger_mode":mode,
+            "modify_category1": {
+                                'epoch_change': 1,
+                                'metric':'tac',
+                                'f_type':'f05',
+                                'threshold':20,
+                                'direction':'left',
+                                'modification':'mask'
+                                },
+            "modify_category2": {
+                                'epoch_change': 5,
+                                'metric':'tac',
+                                'f_type':'f05',
+                                'threshold':24,
+                                'direction':'left',
+                                'modification':'relabel'
+                                },
+            "modify_category3": False,
+            "modify_category4": {
+                                'epoch_change': 4,
+                                'metric':'tac',
+                                'f_type':'f05',
+                                'threshold':6,
+                                'direction':'left',
+                                'modification':'relabel'
+                                },
+        },
+        "corpora" : config['corpora'],
+        "seeds":config['seeds']
+        }
+    else:
+        base_config = {
+        "experiment_name": "relabel_combined_source_"+source_corpus,
+        "paths": {
+            "resources_path": f"{config['paths']['resources_path']}/relabel_combined_source_{source_corpus}/",
+            "data_path":config['paths']['data_path'],
+            "train_filename_extension" :config['paths']['train_filename_extension'],
+            "dev_filename_extension" :config['paths']['dev_filename_extension'],
+            "test_filename_extension" :config['paths']['test_filename_extension'],
+            "baseline_paths":{
+                "EE":config['paths']['baseline_paths']['EE'],
+                "standard":config['paths']['baseline_paths']['standard'],
+            }
+        },
+        "parameters": {
+            "batch_size":config['parameters']['batch_size'],
+            "learning_rate":config['parameters']['learning_rate'],
+            "num_epochs":config['parameters']['num_epochs'],
+            "model":config['parameters']['model'],
+            "monitor_test":config['parameters']['monitor_test'],
+            "scheduler":config['parameters']['scheduler'],
+            "metrics_mode":config['parameters']['metrics_mode'],
+            "model_reinit":config['parameters']['model_reinit'],
+            "decoder_init":config['parameters']['decoder_init'],
+            "seq_tagger_mode":mode,
+            "modify_category1": {
+                                'epoch_change': 9,
+                                'metric':'variability',
+                                'f_type':'f05',
+                                'threshold':0.15,
+                                'direction':'right',
+                                'modification':'mask'
+                                },
+            "modify_category2": {
+                                'epoch_change': 2,
+                                'metric':'confidence',
+                                'f_type':'f05',
+                                'threshold':0.4,
+                                'direction':'left',
+                                'modification':'relabel'
+                                },
+            "modify_category3": False,
+            "modify_category4": {
+                                'epoch_change': 4,
+                                'metric':'confidence',
+                                'f_type':'f05',
+                                'threshold':0.3,
+                                'direction':'left',
+                                'modification':'relabel'
+                                },
+        },
+        "corpora" : config['corpora'],
+        "seeds":config['seeds']
+        }
+
+    return base_config
 def output_configs(config, category_table_path, cat_id, mode, metrics_list, only_best = False):
     data = pd.read_csv(category_table_path, header = 0, index_col=[0,1])
     data.columns = data.columns.str.strip()
@@ -157,6 +271,10 @@ def run(config, gpu=0):
     flair.device = torch.device("cuda:" + str(gpu))
     seeds = [int(seed) for seed in config['seeds']]
     corpora = config['corpora']
+    combined_only_flag = False
+
+    if 'combined_only' in config:
+        combined_only_flag = config['combined_only']
 
     merged_corpora_names = '_'.join(config['source_corpora'])
     for mode in config['parameters']['modes']:
@@ -203,25 +321,30 @@ def run(config, gpu=0):
     if not config['only_results_summarization']:
         # we can set the only_results_summarization to true if we only want to re-generate the summary tables, and not re-run the experiments
         for mode in config['parameters']['modes']:
-            parameter_settings_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
+            if not combined_only_flag:
+                parameter_settings_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
 
-            logger_experiment.info(f"Running experiment for {mode} mode.")
-            metrics_list = config['sample_metrics'][mode]
+                logger_experiment.info(f"Running experiment for {mode} mode.")
+                metrics_list = config['sample_metrics'][mode]
 
-            for cat in config['categories']:
-                category_table_path = f"{parameter_settings_path}/optimal_F1s_{cat}_parameters_merged.csv"
-                logger_experiment.info(f"Read parameter settings for {cat} from {category_table_path}.")
-                experiment_configs = output_configs(config, category_table_path, cat[-1], mode, metrics_list, only_best=config['only_best_parameter_sets'])
+                for cat in config['categories']:
+                    category_table_path = f"{parameter_settings_path}/optimal_F1s_{cat}_parameters_merged.csv"
+                    logger_experiment.info(f"Read parameter settings for {cat} from {category_table_path}.")
+                    experiment_configs = output_configs(config, category_table_path, cat[-1], mode, metrics_list, only_best=config['only_best_parameter_sets'])
 
-                for experiment_config in experiment_configs:
-                    if experiment_config['parameters']['modify_category'+cat[-1]]['modification'] in config['modifications']:
+                    for experiment_config in experiment_configs:
+                        if experiment_config['parameters']['modify_category'+cat[-1]]['modification'] in config['modifications']:
 
-                        logger_experiment.info(f"Running category modification experiment... \n\t\tFor metric: {experiment_config['parameters']['modify_'+cat]['metric']}\n\t\tFor f_type: {experiment_config['parameters']['modify_'+cat]['f_type']}\n\t\tFor modification: {experiment_config['parameters']['modify_'+cat]['modification']}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}")
+                            logger_experiment.info(f"Running category modification experiment... \n\t\tFor metric: {experiment_config['parameters']['modify_'+cat]['metric']}\n\t\tFor f_type: {experiment_config['parameters']['modify_'+cat]['f_type']}\n\t\tFor modification: {experiment_config['parameters']['modify_'+cat]['modification']}\n\t\tResources path: {experiment_config['paths']['resources_path']}\n\t\tData path:  {experiment_config['paths']['data_path']}\n\t\tFor following corpora: {experiment_config['corpora']}")
 
-                        # here the experiment is ran for all noise types listed in the config file
-                        main(experiment_config, gpu)
-                        logger_experiment.info(f"Finished experiment")
-
+                            # here the experiment is ran for all noise types listed in the config file
+                            main(experiment_config, gpu)
+                            logger_experiment.info(f"Finished experiment")
+            else:
+                logger_experiment.info(f"Running combined experiment... \n\t\tFor mode: {mode}")
+        
+                combined_config = get_combined_config(config, mode)
+                main(combined_config, gpu)
 
     categories_ids = [cat[-1] for cat in config['categories']]
     for corpus_name in corpora:
