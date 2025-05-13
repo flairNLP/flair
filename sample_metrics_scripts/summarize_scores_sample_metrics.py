@@ -273,6 +273,10 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
                     max_metric = 8
                     binwidth = 0.1
                     binrange = (0,max_metric)
+                elif metric in ['variability']:
+                    max_metric = 0.5
+                    binwidth = 0.05
+                    binrange = (0,max_metric)
                 else:
                     max_metric = df[metric].max()
                     binwidth = 0.1
@@ -294,6 +298,17 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
 
                 fig.tight_layout() 
                 fig.savefig(path+'histograms_'+metric+os.sep+metric+'_distribution_epoch_'+i+ext+'.png')
+                plt.close()
+                
+                fig = plt.figure(figsize=(10, 3))
+
+                ax= sns.histplot( df, x=metric, binwidth=binwidth, binrange=binrange, hue= NOISE_FLAG_NAME)
+                ax.set_title('Epoch '+i+' - all categories')
+                ax.set_xlim(binrange)
+                ax.set_ylim((0,4*y_limit))
+
+                fig.tight_layout() 
+                fig.savefig(path+'histograms_'+metric+os.sep+metric+'_distribution_epoch_'+i+ext+'_all_tokens.png')
                 plt.close()
 
 
