@@ -358,7 +358,7 @@ def run(config, gpu=0):
             merge_tables(f"{config['paths']['results_tables_path']}", source_corpus, corpus_name, config['parameters']['modes'], categories_ids = categories_ids, merged_parameters = True)
             merge_tables(f"{config['paths']['results_tables_path']}", source_corpus, corpus_name, config['parameters']['modes'], categories_ids = categories_ids, merged_parameters = False)
 
-
+    logger_experiment.info(f"Calculating correlations between the optimal parameter sets and the summarized test scores.")
     calculate_correlations(config) # here we use the table from 5., but the one without merged parameters.
 
     if config['only_best_parameter_sets']:
