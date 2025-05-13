@@ -347,19 +347,28 @@ def run(config, gpu=0):
                 main(combined_config, gpu)
 
     categories_ids = [cat[-1] for cat in config['categories']]
-    for corpus_name in corpora:
-        logger_experiment.info(f"Summarizing test scores for {corpus_name}")
+    if not config['only_best_parameter_sets']:
+        for corpus_name in corpora:
+            logger_experiment.info(f"Summarizing test scores for {corpus_name}")
 
-        # 4. Summarize the test scores from 3. 
-        summarize_test_scores(config['paths']['results_tables_path'], source_corpus, corpus_name, resources_path=config['paths']['resources_path'], categories_ids = categories_ids)
+            # 4. Summarize the test scores from 3. 
+            summarize_test_scores(config['paths']['results_tables_path'], source_corpus, corpus_name, resources_path=config['paths']['resources_path'], categories_ids = categories_ids)
 
-        # 5. Merge the optimal parameter sets from 2. and the summarized test scores from 4.
-        merge_tables(f"{config['paths']['results_tables_path']}", source_corpus, corpus_name, config['parameters']['modes'], categories_ids = categories_ids, merged_parameters = True)
-        merge_tables(f"{config['paths']['results_tables_path']}", source_corpus, corpus_name, config['parameters']['modes'], categories_ids = categories_ids, merged_parameters = False)
+            # 5. Merge the optimal parameter sets from 2. and the summarized test scores from 4.
+            merge_tables(f"{config['paths']['results_tables_path']}", source_corpus, corpus_name, config['parameters']['modes'], categories_ids = categories_ids, merged_parameters = True)
+            merge_tables(f"{config['paths']['results_tables_path']}", source_corpus, corpus_name, config['parameters']['modes'], categories_ids = categories_ids, merged_parameters = False)
 
 
     calculate_correlations(config) # here we use the table from 5., but the one without merged parameters.
 
+    if config['only_best_parameter_sets']:
+        logger_experiment.info(f"Summarizing all final scores and baselines.")
+        summarize_test_scores_and_baselines(config)
+        logger_experiment.info(f"Saving tables to latex.")
+
+        # save parameter tables to latex
+        save_parameter_tables_to_latex(config['paths']['results_tables_path'], source_corpus, config['parameters']['modes'], categories_ids)
+        save_noise_shares_to_latex(config)
     logger_experiment.info(f"Finished all experiments and summarized scores.")
 
 if __name__ == "__main__":

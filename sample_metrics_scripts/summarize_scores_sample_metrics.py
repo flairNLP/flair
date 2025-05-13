@@ -50,6 +50,66 @@ CATEGORIES = [
 CORRECT_PREDICTION_FLAG_NAME = 'correct_prediction_flag'
 NOISE_FLAG_NAME = 'noisy_flag'
 
+latex_name_dictionary = {
+    'noise_crowd':'Crowd',
+    'noise_weak':'Weak',
+    'noise_distant':'Distant',
+    'noise_expert':'Expert',
+    'noise_crowdbest':'Crowd++',
+    'noise_llm':'LLM',
+    'cat1_mask':'Category 1 - Mask',
+    'cat2_mask':'Category 2 - Mask',
+    'cat3_mask':'Category 3 - Mask',
+    'cat4_mask':'Category 4 - Mask',
+    'cat2_relabel':'Category 2 - Relabel',
+    'cat4_relabel':'Category 4 - Relabel',
+    'cat1':'Category 1',
+    'cat2':'Category 2',
+    'cat3':'Category 3',
+    'cat4':'Category 4',
+      "estner_noisy_labelset1":"NoisyNER 1",
+    "estner_noisy_labelset2":"NoisyNER 2",
+    "estner_noisy_labelset3":"NoisyNER 3",
+    "estner_noisy_labelset4":"NoisyNER 4",
+    "estner_noisy_labelset5":"NoisyNER 5",
+    "estner_noisy_labelset6":"NoisyNER 6",
+    "estner_noisy_labelset7":"NoisyNER 7",
+    'german_noise_llm':'Ger. LLM',
+    'german_noise_expert':'Ger. Expert',
+    "cross_entropy":"cross-entropy",
+    "msp":"MSP",
+    "pehist":'entropy-history',
+    "iter_norm":'iteration-learned',
+    "tal":'agreement-predicted',
+    "pd":"prediction-depth",
+    "tac":"agreement-true",
+    "le":"layer-entropy",
+    "fl":'first-layer',
+    "mild":'MILD'
+}
+
+noise_shares_dict = {
+    'noise_crowd':'36.6',
+    'noise_weak':'40.4',
+    'noise_distant':'31.3',
+    'noise_expert':'5.5',
+    'noise_crowdbest':'15.3',
+    'noise_llm':'45.6',
+    "estner_noisy_labelset1":"72.0",
+    "estner_noisy_labelset2":"61.0",
+    "estner_noisy_labelset3":"66.0",
+    "estner_noisy_labelset4":"60.0",
+    "estner_noisy_labelset5":"56.0",
+    "estner_noisy_labelset6":"54.0",
+    "estner_noisy_labelset7":"46.0",
+    'german_noise_llm':'54.0',
+    'german_noise_expert':'16.2',
+}
+
+metrics_order = { 'standard':['cross-entropy','MSP','BvSB','entropy','confidence','variability','correctness','iteration-learned', 'MILD','entropy-history'],
+                 'EE': ['prediction-depth','first-layer','agreement-predicted','agreement-true','layer-entropy' ] }
+
+
 def summarize_test_scores(results_tables_path, source_corpus, corpus_name, resources_path,   categories_ids, merged_parameters = True):
     '''
     Example path to test scores: source_noise_crowd_target_noise_llm/test_scores
@@ -376,16 +436,21 @@ def summarize_test_scores_and_baselines(config):
     source_corpus = '_'.join(source_corpora)
 
     corpora = config['corpora']
-    target_corpus = '_'.join(corpora)
+    if len(corpora) == 15:
+        target_corpus = 'all'
+    else:
+        target_corpus = '_'.join(corpora)
     # we can set the only_results_summarization to true if we only want to re-generate the summary tables, and not re-run the experiments
     for mode in config['parameters']['modes']:
         
         # open new file
         results_file_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
         file = open(results_file_path + os.sep + 'all_summarized_scores_' + target_corpus + '.csv','w')
-        file.write('setting,'+','.join(corpora)+'\n')
+        file.write(', ,'+','.join([latex_name_dictionary[corpus] for corpus in corpora])+'\n')
         # write baselines
-        file.write('baseline,')
+        file.write('Baseline, ')
+
+        num_columns = len(corpora)
 
         for corpus in corpora:
 
@@ -394,12 +459,12 @@ def summarize_test_scores_and_baselines(config):
             if os.path.isfile(test_results_fname):
                 results_df = pd.read_csv(test_results_fname, delimiter='\t', header=0)
                 logger_experiment.debug(results_df[['mean']].values)
-                score = float(results_df[['mean']].values[0])
-                stdev = float(results_df[['std']].values[0])
+                score = float(results_df[['mean']].values[0])*100
+                stdev = float(results_df[['std']].values[0])*100
             else:
                 score = 0
                 stdev = 0
-            file.write(str(score)+',')
+            file.write(f",{score:.2f}\\small$\pm${stdev:.2f}")
         file.write('\n')
 
 
@@ -423,7 +488,7 @@ def summarize_test_scores_and_baselines(config):
             resources_path = os.path.join(resources_path,mode_metric,f_type)
             
             for modif in modifications:
-                file.write(f'cat{cat[-1]}_{modif},')
+                file.write(latex_name_dictionary[f'cat{cat[-1]}']+', '+modif)
 
                 for corpus in corpora:
                     test_results_fname = f"{resources_path}/{modif}/{corpus}/test_results.tsv"
@@ -431,10 +496,215 @@ def summarize_test_scores_and_baselines(config):
                     if os.path.isfile(test_results_fname):
                         results_df = pd.read_csv(test_results_fname, delimiter='\t', header=0)
                         logger_experiment.debug(results_df[['mean']].values)
-                        score = float(results_df[['mean']].values[0])
-                        stdev = float(results_df[['std']].values[0])
+                        score = float(results_df[['mean']].values[0])*100
+                        stdev = float(results_df[['std']].values[0])*100
                     else:
                         score = 0
                         stdev = 0         
-                    file.write(str(score)+',')
+                    file.write(f",{score:.1f}\\small$\pm${stdev:.1f}")
                 file.write('\n')
+        
+        combined_resources_path = f"{config['paths']['resources_path']}/relabel_combined_source_{source_corpus}/category124/"
+        for p in os.listdir(combined_resources_path):
+            if mode in p:
+                mode_metric = p
+        
+        for p in os.listdir(os.path.join(combined_resources_path,mode_metric)):
+            f_type = p
+
+        modifications = []
+
+        for p in os.listdir(os.path.join(combined_resources_path,mode_metric,f_type)):
+            modifications.append(p)
+
+
+        resources_path = os.path.join(combined_resources_path,mode_metric,f_type)
+
+        file.write('Combined, ')
+        for modif in modifications:
+            for corpus in corpora:
+                test_results_fname = f"{resources_path}/{modif}/{corpus}/test_results.tsv"
+
+                if os.path.isfile(test_results_fname):
+                    results_df = pd.read_csv(test_results_fname, delimiter='\t', header=0)
+                    logger_experiment.debug(results_df[['mean']].values)
+                    score = float(results_df[['mean']].values[0])*100
+                    stdev = float(results_df[['std']].values[0])*100
+                else:
+                    score = 0
+                    stdev = 0         
+                file.write(f",{score:.1f}\\small$\pm${stdev:.1f}")
+            file.write('\n')
+
+        file.close()
+        resultsdf = pd.read_csv(results_file_path + os.sep + 'all_summarized_scores_' + target_corpus + '.csv', header=0, index_col=[0,1], delimiter=',')
+
+        def extract_mean(val):
+            return float(val.split('\\small$\\pm$')[0])
+
+        df_means = resultsdf.applymap(extract_mean)
+
+        # Step 2: Bold the full string with highest mean per row
+        def bold_max_in_row(row, original_row):
+            print(row.astype(float))
+            max_idx = row.astype(float).idxmax()
+            original_row[max_idx] = f"\\textbf{{{original_row[max_idx]}}}"
+            return original_row
+
+        df_bolded = df_means.combine(resultsdf, bold_max_in_row)
+
+        df_bolded.T.to_latex(results_file_path + os.sep + 'all_summarized_scores_' + target_corpus + '.tex', index=True, multicolumn=True,multicolumn_format='c', escape=False, column_format='llccccccc', label='', caption='')
+
+def mixed_formatter(x):
+    if isinstance(x, int) or x == int(x):
+        return f"{int(x)}"
+    else:
+        return f"{x:.1f}"
+
+def f_score_formatter(label):
+    label=label.strip()
+    parts = label.split('_')
+    formatted_parts = []
+    for part in parts:
+        print(part)
+        if part.startswith('f'):
+            # Convert 'f05' → '0.5', 'f1' → '1'
+            num_str = part[1:]
+            if len(num_str) == 2 and num_str.startswith('0'):
+                value = f"0.{num_str[1]}"
+            else:
+                value = num_str
+            formatted_parts.append(fr"\normalsize{{F}}\scriptsize{{{value}}}")
+        else:
+            formatted_parts.append(part)
+    return '\\normalsize{/}'.join(formatted_parts)
+    
+def format_threshold(row):
+    if row['direction'].strip() == 'left':
+        char = '<'
+    else:
+        char='>'
+    threshold = mixed_formatter(row['threshold'])
+
+    return char+' '+threshold
+
+def save_parameter_tables_to_latex(results_tables_path, source_corpus, modes, categories_ids):
+    for category in categories_ids:
+        for mode in modes:
+
+            table_path = f"{results_tables_path}/{source_corpus}/{mode}_mode"
+            data = pd.read_csv(f"{table_path}/optimal_F1s_category{category}.csv", header = 0, index_col=[0,1])
+            data.columns = [c.strip() for c in data.columns]
+            print(data.columns)
+            print(data.index.names)
+            print(data.index)
+            data.index = data.index.set_levels(
+                data.index.levels[1].map(lambda x: x.strip()), level=1
+            )
+            data.drop(index='f1', level=1, inplace=True)
+            data.drop(index='f2', level=1, inplace=True)
+
+            data.index = data.index.set_levels(
+                data.index.levels[1].map(lambda x: f_score_formatter(x)), level=1
+            )
+            data.index = data.index.set_levels(
+            data.index.levels[0].map(lambda x: latex_name_dictionary.get(x, x)), level=0
+            )
+            data.index.names = [ x.replace('_','\_') for x in data.index.names]
+            formatters = {'score':lambda x: f"{x:.2f}"}
+            data['new_threshold'] = data.apply(lambda row: format_threshold(row), axis=1)
+            data.drop(columns=['threshold', 'direction'], inplace=True)
+            data.rename(columns={'new_threshold':'threshold'}, inplace=True)
+            print(data.index.names)
+            data = data.droplevel(' f\_score')
+            data.index = pd.CategoricalIndex(data.index, categories = metrics_order[mode], ordered=True)
+            data = data.sort_index(level=0)
+        
+            if mode == 'standard':
+                full_data = data
+        full_data = pd.concat([full_data, data], axis=0)
+        full_data = full_data.reset_index()
+        full_data.to_latex(f'{table_path}/optimal_F1s_category{category}.tex', index=False,escape=False,column_format='llcccc', label='', caption='',formatters = formatters )
+
+def save_noise_shares_to_latex(config):
+    source_corpora = config['source_corpora']
+    source_corpus = '_'.join(source_corpora)
+
+    corpora = config['corpora']
+    if len(corpora) == 15:
+        target_corpus = 'all'
+    else:
+        target_corpus = '_'.join(corpora)
+    # we can set the only_results_summarization to true if we only want to re-generate the summary tables, and not re-run the experiments
+    for mode in config['parameters']['modes']:
+        
+        # open new file
+        results_file_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
+        file = open(results_file_path + os.sep + 'noise_shares_' + target_corpus + '.csv','w')
+        file.write(','+','.join([latex_name_dictionary[corpus] for corpus in corpora])+'\n')
+        # write baselines
+        file.write('Original,'+','.join([noise_shares_dict[corpus] for corpus in corpora])+'\n')
+
+        # write category experiment scores
+        for cat in ['category2','category4']:
+            resources_path = f"{config['paths']['resources_path']}/relabel_cat{cat[-1]}_source_{source_corpus}/category{cat[-1]}/"
+            for p in os.listdir(resources_path):
+                if mode in p:
+                    mode_metric = p
+            
+            for p in os.listdir(os.path.join(resources_path,mode_metric)):
+                f_type = p
+
+            modifications = ['relabel']
+
+            #logger_experiment.info(f"Read parameter settings for {cat} from {category_table_path}.")
+            
+            resources_path = os.path.join(resources_path,mode_metric,f_type)
+            
+            for modif in modifications:
+                file.write(latex_name_dictionary[f'cat{cat[-1]}'])
+
+                for corpus in corpora:
+                    noise_shares = []
+                    for seed_path in os.listdir(f"{resources_path}/{modif}/{corpus}"):
+                        fname = os.path.join(f"{resources_path}/{modif}/{corpus}", seed_path, 'noise_f1.txt')
+                        if os.path.isfile(fname):
+                            with open(fname) as f:
+                                lines = f.read().strip().split('\n')
+                                noise = lines[0].split(' ')[0]
+                                noise_shares.append(float(noise))
+
+                    score = 100 - float(np.mean(noise_shares))*100
+                    stdev = float(np.std(noise_shares))*100
+
+                    file.write(f",{score:.1f}\\small$\pm${stdev:.1f}")
+                file.write('\n')
+        
+        file.close()
+        resultsdf = pd.read_csv(results_file_path + os.sep + 'noise_shares_' + target_corpus + '.csv', header=0, index_col=0, delimiter=',')
+        print(resultsdf)
+        def extract_mean(val):
+            if val is None:
+                return 0.0
+            val_str = str(val).split('\\small$\\pm$')[0]
+            print(val_str)
+            if val_str == '':
+                float_val = 0.0
+            else:
+                float_val = float(val_str)
+            return float_val
+
+        df_means = resultsdf.applymap(extract_mean)
+
+        # Step 2: Bold the full string with highest mean per row
+        def bold_max_in_row(row, original_row):
+            print(row.astype(float))
+            max_idx = row.astype(float).idxmin()
+            print(max_idx)
+            original_row[max_idx] = f"\\textbf{{{original_row[max_idx]}}}"
+            return original_row
+
+        df_bolded = df_means.combine(resultsdf, bold_max_in_row)
+
+        df_bolded.T.to_latex(results_file_path + os.sep + 'noise_shares_' + target_corpus + '.tex', index=True, multicolumn=True,multicolumn_format='c', escape=False, column_format='llccccccc', label='', caption='')
+
