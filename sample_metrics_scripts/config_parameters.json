@@ -1,4 +1,5 @@
 {
+  "plot_histograms": false,
   "only_results_summarization" : true,
   "only_best_parameter_sets":true,
   "paths": {
