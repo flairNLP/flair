@@ -14,7 +14,7 @@ logger_experiment.setLevel(level="INFO")
 CATEGORIES = [
     { 
         'id':'1',
-        'name':'Correct prediction (observed label O)',
+        'name':'Category: Learned - O',
         'axes_indices':(0,0),
         'correct_prediction_flag':True,
         'observed_label':'O',
@@ -22,7 +22,7 @@ CATEGORIES = [
     },
     {
         'id': '2',
-        'name': 'Incorrect prediction (observed label O)',
+        'name': 'Category: Misclassified - O',
         'axes_indices':(0,1),
         'correct_prediction_flag':False,
         'observed_label':'O',
@@ -30,7 +30,7 @@ CATEGORIES = [
     },                
     {
         'id':'3',
-        'name':'Correct prediction (observed label non-O)',
+        'name':'Category: Learned - entity',
         'axes_indices':(1,0),
         'correct_prediction_flag':True,
         'observed_label':'non-O',
@@ -39,7 +39,7 @@ CATEGORIES = [
 
     {
         'id':'4',
-        'name':'Incorrect prediction (observed label non O)',
+        'name':'Category: Misclassified - entity',
         'axes_indices':(1,1),
         'correct_prediction_flag':False,
         'observed_label':'non-O',
@@ -63,10 +63,10 @@ latex_name_dictionary = {
     'cat4_mask':'Category 4 - Mask',
     'cat2_relabel':'Category 2 - Relabel',
     'cat4_relabel':'Category 4 - Relabel',
-    'cat1':'Category 1',
-    'cat2':'Category 2',
-    'cat3':'Category 3',
-    'cat4':'Category 4',
+    'cat1':'Learned-\\textit{O}',
+    'cat2':'Misclassified-\\textit{O}',
+    'cat3':'Learned-\\textit{entity}',
+    'cat4':'Misclassified-\\textit{entity}',
       "estner_noisy_labelset1":"NoisyNER 1",
     "estner_noisy_labelset2":"NoisyNER 2",
     "estner_noisy_labelset3":"NoisyNER 3",
@@ -284,31 +284,45 @@ def plot_metric_distributions(base_path, seeds, mode, sample_metrics, dset = 'tr
 
                 df.rename(columns = {'noisy':'label'}, inplace=True)
 
-                fig, axes = plt.subplots(2, 2, figsize=(14, 4))
+                fig, axes = plt.subplots(2, 2, figsize=(9.5, 3.5))
                 for category in CATEGORIES:
                     #cat1
                     if category['observed_label'] == 'O':
                         dataset = df[(df[CORRECT_PREDICTION_FLAG_NAME] == category['correct_prediction_flag']) & (df['label'] == 'O') ]
                     else:
                         dataset = df[(df[CORRECT_PREDICTION_FLAG_NAME] == category['correct_prediction_flag']) & (df['label'] != 'O') ]
+                    num_samples = len(dataset)
+                    num_samples_selected = len(dataset[dataset[metric]<0.4])
+
                     sns.histplot( dataset, x=metric, binwidth=binwidth, binrange=binrange, ax = axes[category['axes_indices']], hue= NOISE_FLAG_NAME)
-                    axes[category['axes_indices']].set_title('Epoch '+i+' - '+category['name'])
+                    # axes[category['axes_indices']].set_title('Epoch '+i+' - '+category['name']+'_'+str(num_samples)+'_'+str(num_samples_selected))
+
+                    axes[category['axes_indices']].legend(title='Token label', loc='upper right', labels=['clean', 'noisy'])
+                    axes[category['axes_indices']].set_ylabel('count', fontsize=12)
+                    axes[category['axes_indices']].set_xlabel(metric, fontsize=12)
+
+
+                    axes[category['axes_indices']].set_title(category['name'], fontsize=14)
                     axes[category['axes_indices']].set_xlim(binrange)
                     axes[category['axes_indices']].set_ylim((0,y_limit))
 
                 fig.tight_layout() 
-                fig.savefig(path+'histograms_'+metric+os.sep+metric+'_distribution_epoch_'+i+ext+'.png')
+                fig.savefig(path+'histograms_'+metric+os.sep+metric+'_distribution_epoch_'+i+ext+'.png', dpi=300)
                 plt.close()
                 
-                fig = plt.figure(figsize=(10, 3))
+                fig = plt.figure(figsize=(7.5, 2.25))
 
                 ax= sns.histplot( df, x=metric, binwidth=binwidth, binrange=binrange, hue= NOISE_FLAG_NAME)
-                ax.set_title('Epoch '+i+' - all categories')
+                # ax.set_title('Epoch '+i+' - all categories')
+                ax.legend(title='Token label', loc='upper right', labels=['clean', 'noisy'])
+                ax.set_ylabel('count', fontsize=10)
+                ax.set_xlabel(metric, fontsize=10)
+
                 ax.set_xlim(binrange)
                 ax.set_ylim((0,4*y_limit))
 
                 fig.tight_layout() 
-                fig.savefig(path+'histograms_'+metric+os.sep+metric+'_distribution_epoch_'+i+ext+'_all_tokens.png')
+                fig.savefig(path+'histograms_'+metric+os.sep+metric+'_distribution_epoch_'+i+ext+'_all_tokens.png', dpi=300)
                 plt.close()
 
 
@@ -603,11 +617,56 @@ def format_threshold(row):
 
     return char+' '+threshold
 
+def get_oracle_f_scores(results_tables_path, category, mode, source_corpus):
+    corpora = source_corpus.split('noise_')
+    print(corpora)
+    corpora = ['noise_'+corpus.strip('_') for corpus in corpora if corpus != '']
+    print(corpora)
+    full_data = None
+    for corpus in corpora:
+        table_path = f"{results_tables_path}/{corpus}/{mode}_mode"
+        data = pd.read_csv(f"{table_path}/optimal_F1s_category{category}.csv", header = 0, index_col=[0,1])
+        data.columns = [c.strip() for c in data.columns]
+        data.index = data.index.set_levels(
+            data.index.levels[1].map(lambda x: x.strip()), level=1
+        )
+        data.drop(index='f1', level=1, inplace=True)
+        data.drop(index='f2', level=1, inplace=True)
+
+        data.index = data.index.set_levels(
+            data.index.levels[1].map(lambda x: f_score_formatter(x)), level=1
+        )
+        data.index = data.index.set_levels(
+        data.index.levels[0].map(lambda x: latex_name_dictionary.get(x, x)), level=0
+        )
+        data.index.names = [ x.replace('_','\_') for x in data.index.names]
+        data.drop(columns='threshold', inplace=True)
+        data.drop(columns='direction', inplace=True)
+        data.drop(columns='epoch', inplace=True)
+        print(data.index.names)
+        data = data.droplevel(' f\_score')
+        data.index = pd.CategoricalIndex(data.index, categories = metrics_order[mode], ordered=True)
+        data = data.sort_index(level=0)
+        if full_data is None:
+            full_data = data
+        else:
+            full_data['score'] = full_data['score'] + data['score']
+    full_data['score'] = full_data['score'] / len(corpora)
+    full_data.rename(columns={'score':'oracle score'}, inplace=True)
+
+    return full_data
+
 def save_parameter_tables_to_latex(results_tables_path, source_corpus, modes, categories_ids):
+    large_table = None
+    formatters = {'score':lambda x: f"{x:.2f}"}
+
     for category in categories_ids:
         for mode in modes:
 
             table_path = f"{results_tables_path}/{source_corpus}/{mode}_mode"
+
+            data_oracle = get_oracle_f_scores(results_tables_path, category, mode, source_corpus)
+            print(data_oracle)
             data = pd.read_csv(f"{table_path}/optimal_F1s_category{category}.csv", header = 0, index_col=[0,1])
             data.columns = [c.strip() for c in data.columns]
             print(data.columns)
@@ -626,7 +685,6 @@ def save_parameter_tables_to_latex(results_tables_path, source_corpus, modes, ca
             data.index.levels[0].map(lambda x: latex_name_dictionary.get(x, x)), level=0
             )
             data.index.names = [ x.replace('_','\_') for x in data.index.names]
-            formatters = {'score':lambda x: f"{x:.2f}"}
             data['new_threshold'] = data.apply(lambda row: format_threshold(row), axis=1)
             data.drop(columns=['threshold', 'direction'], inplace=True)
             data.rename(columns={'new_threshold':'threshold'}, inplace=True)
@@ -634,12 +692,94 @@ def save_parameter_tables_to_latex(results_tables_path, source_corpus, modes, ca
             data = data.droplevel(' f\_score')
             data.index = pd.CategoricalIndex(data.index, categories = metrics_order[mode], ordered=True)
             data = data.sort_index(level=0)
-        
+
+            data= pd.concat([data, data_oracle], axis=1)
+            print(data)
             if mode == 'standard':
                 full_data = data
+
         full_data = pd.concat([full_data, data], axis=0)
         full_data = full_data.reset_index()
+        full_data.drop(columns=['threshold','epoch'], inplace=True)
         full_data.to_latex(f'{table_path}/optimal_F1s_category{category}.tex', index=False,escape=False,column_format='llcccc', label='', caption='',formatters = formatters )
+        full_data.set_index('metric', inplace=True)
+        if large_table is None:
+            large_table = full_data
+        else:
+            large_table = pd.concat([large_table, full_data], axis=1)
+            
+    
+    print(large_table)
+    col_level = []
+    for cat in categories_ids:
+        col_level.extend(['Category '+str(cat)] * 2)
+    large_table.columns = [large_table.columns, col_level]
+    large_table = large_table.swaplevel(axis=1)
+    large_table = large_table.reset_index()
+    print(large_table)
+    print(large_table.columns[1:])
+    large_table.style.highlight_max(axis=0, props='textbf:--rwrap', subset=large_table.columns[1:]).format(precision = 3).hide(axis="index").to_latex(f'{table_path}/optimal_F1s_large_table.tex', multicol_align='c',column_format='lcccccccc', label='', caption='' )
+
+def get_mismatch(original_data, relabeled_data, masked_data):
+    # read the data
+    relabeled_data = pd.read_csv(relabeled_data, delimiter='\t', header=None,index_col=None, quoting=csv.QUOTE_NONE, names=['token','label'])
+    masked_data = pd.read_csv(masked_data, delimiter='\t', header=None, index_col=None,quoting=csv.QUOTE_NONE, names=['token','label'])
+    original_data = pd.read_csv(original_data, delimiter='\t', header=None,index_col=None, quoting=csv.QUOTE_NONE, names=['token','label_clean','label'])
+
+    # get the labels
+    original_labels = original_data['label'].values
+    relabeled_labels = relabeled_data['label'].values
+    masked_labels = masked_data['label'].values
+    clean_labels = original_data['label_clean'].values
+
+
+    print(len(original_labels))
+    print(len(relabeled_data))
+    print(len(masked_labels))
+    print(len(clean_labels))
+    print('\n')
+    print(sum(original_labels != clean_labels))
+    print('\n')
+
+
+    print('the next two should mostly be zeros')
+    print(original_data[original_labels != relabeled_labels])
+    print(original_data[masked_labels == 'B-MASK'])
+    print(sum(masked_labels == 'B-MASK'))
+    print(sum(original_labels != relabeled_labels))
+    # if np.abs(sum(masked_labels == 'B-MASK') - sum(original_labels != relabeled_labels)) < 0.15*sum(original_labels != relabeled_labels):
+    #     print('next')
+    # else:
+    #     input()
+
+    # print(relabeled_data[original_labels != relabeled_labels])
+    # print(masked_data[original_labels != relabeled_labels])
+
+    # get the mismatches
+    mismatch_original = original_labels[masked_labels == 'B-MASK']
+    mismatch_relabel = relabeled_labels[masked_labels == 'B-MASK']
+    mismatch_masked = masked_labels[masked_labels == 'B-MASK']
+    mismatch_clean = clean_labels[masked_labels == 'B-MASK']
+
+    return mismatch_original, mismatch_relabel, mismatch_masked, mismatch_clean
+
+def count_errors(original_data, relabeled_data, masked_data):
+    # get 4 lists (numpy arrays) of token labels, only for the tokens where relabelled/masked != original
+    # or just identify the tokens where masked = B-MASK
+    mismatch_original, mismatch_relabel, mismatch_masked, mismatch_clean = get_mismatch(original_data, relabeled_data, masked_data) 
+
+    count_bad_masked = sum(mismatch_original == mismatch_clean) # counnt how many of the masked, are actually correct (inaccurate masking)
+    count_good_masked = sum(mismatch_original != mismatch_clean) # counnt how many of the masked, are incorrect (accurate masking)
+
+    count_bad_relabel = sum((mismatch_clean != mismatch_relabel) & (mismatch_original != mismatch_clean)) # count how many of the relabeled, are relabelled into a bad class (inaccurate relabeling)
+    count_good_relabel = sum((mismatch_clean == mismatch_relabel) & (mismatch_original != mismatch_clean)) # count how many of the relabeled, are relabelled into a good class (accurate relabeling)
+
+    ''' 
+        ?? what do we do with those where mismatch_clean != mismatch_original and mismatch_clean != mismatch_relabel?
+        do we not count them at all?
+    '''
+    total_masked = len(mismatch_original)
+    return {'bad_masked':count_bad_masked/total_masked*100, 'good_masked':count_good_masked/total_masked*100, 'bad_relabel':count_bad_relabel/(count_bad_relabel + count_good_relabel)*100, 'good_relabel':count_good_relabel/(count_bad_relabel + count_good_relabel)*100}
 
 def save_noise_shares_to_latex(config):
     source_corpora = config['source_corpora']
@@ -655,13 +795,22 @@ def save_noise_shares_to_latex(config):
         
         # open new file
         results_file_path = f"{config['paths']['results_tables_path']}/{source_corpus}/{mode}_mode"
-        file = open(results_file_path + os.sep + 'noise_shares_' + target_corpus + '.csv','w')
-        file.write(','+','.join([latex_name_dictionary[corpus] for corpus in corpora])+'\n')
-        # write baselines
-        file.write('Original,'+','.join([noise_shares_dict[corpus] for corpus in corpora])+'\n')
+        file_noise_shares = open(results_file_path + os.sep + 'noise_shares_' + target_corpus + '.csv','w')
+        file_error_numbers = open(results_file_path + os.sep + 'error_numbers_' + target_corpus + '.csv','w')
 
+        file_noise_shares.write(','+','.join([latex_name_dictionary[corpus] for corpus in corpora])+'\n')
+        file_error_numbers.write(',,mask,mask,relabel,relabel\n')
+        file_error_numbers.write(',,\%$\checkmark$,\%$\\times$,\%$\checkmark$,\%$\\times$\n')
+
+        file_noise_shares.write('Original,'+','.join([noise_shares_dict[corpus] for corpus in corpora])+'\n')
+        
+        categories = ['category2','category4']
+        categories = [cat for cat in categories if cat in config['categories']]
+
+        print(categories)
+        
         # write category experiment scores
-        for cat in ['category2','category4']:
+        for cat in categories:
             resources_path = f"{config['paths']['resources_path']}/relabel_cat{cat[-1]}_source_{source_corpus}/category{cat[-1]}/"
             for p in os.listdir(resources_path):
                 if mode in p:
@@ -675,34 +824,72 @@ def save_noise_shares_to_latex(config):
             #logger_experiment.info(f"Read parameter settings for {cat} from {category_table_path}.")
             
             resources_path = os.path.join(resources_path,mode_metric,f_type)
-            
-            for modif in modifications:
-                file.write(latex_name_dictionary[f'cat{cat[-1]}'])
-
-                for corpus in corpora:
-                    noise_shares = []
-                    for seed_path in os.listdir(f"{resources_path}/{modif}/{corpus}"):
-                        fname = os.path.join(f"{resources_path}/{modif}/{corpus}", seed_path, 'noise_f1.txt')
-                        if os.path.isfile(fname):
-                            with open(fname) as f:
-                                lines = f.read().strip().split('\n')
-                                noise = lines[0].split(' ')[0]
-                                noise_shares.append(float(noise))
-
-                    score = 100 - float(np.mean(noise_shares))*100
-                    stdev = float(np.std(noise_shares))*100
-
-                    file.write(f",{score:.1f}\\small$\pm${stdev:.1f}")
-                file.write('\n')
         
-        file.close()
+            file_noise_shares.write(latex_name_dictionary[f'cat{cat[-1]}'])
+            modif = 'relabel'
+
+            for corpus in corpora:
+                noise_shares = []
+                seed_paths = [path for path in os.listdir(f"{resources_path}/{modif}/{corpus}") if len(path.split('.')) == 1]
+                counts_keys = ['good_masked','bad_masked', 'good_relabel', 'bad_relabel']
+                counts = { key:[] for key in counts_keys}
+                for seed_path in seed_paths:
+                    fname = os.path.join(f"{resources_path}/{modif}/{corpus}", seed_path, 'noise_f1.txt')
+
+                    backup_data = os.path.join(f"{resources_path}/{modif}/{corpus}", 'noise_crowd_backup.train')
+                    relabeled_data = os.path.join(f"{resources_path}/{modif}/{corpus}", seed_path, 'noise_crowd_relabeled.train')
+                    masked_data = os.path.join(f"{resources_path}/mask/{corpus}", seed_path, 'noise_crowd_relabeled.train')
+                    original_data = os.path.join(config['paths']['data_path'], corpus+config['paths']['train_filename_extension'])
+                    print(relabeled_data)
+                    print(masked_data)
+                    print(original_data)
+                    result_counts = count_errors(original_data, relabeled_data, masked_data)
+
+                    print(result_counts)
+                    for key in counts_keys:
+                        counts[key].append(result_counts[key])
+
+                    print(fname)
+                    if os.path.isfile(fname):
+                        with open(fname) as f:
+                            lines = f.read().strip().split('\n')
+                            noise = lines[0].split(' ')[0]
+                            noise_shares.append(float(noise))
+                            print(noise)
+
+                score = 100 - float(np.mean(noise_shares))*100
+                stdev = float(np.std(noise_shares))*100
+
+                file_noise_shares.write(f",{score:.1f}\\small$\pm${stdev:.1f}")
+                # file_noise_shares.write(f",{score:.1f}\\small$\pm${stdev:.1f}")
+                file_error_numbers.write(f"{latex_name_dictionary[f'cat{cat[-1]}']},{latex_name_dictionary[corpus]}")
+                for key in counts_keys:
+                    print(counts[key])
+                    if len(counts[key]) > 0:
+                        if 'good' in key and np.mean(counts[key]) > 80:
+                            file_error_numbers.write(f",\\underline{{{np.mean(counts[key]):.1f}}}")
+
+                        else:
+                            file_error_numbers.write(f",{np.mean(counts[key]):.1f}")
+                        # file_error_numbers.write(f",{np.mean(counts[key]):.1f}\\small$\pm${np.std(counts[key]):.1f}")
+                    else:
+                        file_error_numbers.write(f",0.0\\small$\pm$0.0")
+                file_error_numbers.write('\n')
+            file_noise_shares.write('\n')
+
+        file_noise_shares.close()
+        file_error_numbers.close()
+
         resultsdf = pd.read_csv(results_file_path + os.sep + 'noise_shares_' + target_corpus + '.csv', header=0, index_col=0, delimiter=',')
+        resultsdf_errors = pd.read_csv(results_file_path + os.sep + 'error_numbers_' + target_corpus + '.csv', header=[0,1], index_col=[0,1], delimiter=',')
+
+        print(resultsdf_errors)
         print(resultsdf)
+        input()
         def extract_mean(val):
             if val is None:
                 return 0.0
             val_str = str(val).split('\\small$\\pm$')[0]
-            print(val_str)
             if val_str == '':
                 float_val = 0.0
             else:
@@ -713,13 +900,39 @@ def save_noise_shares_to_latex(config):
 
         # Step 2: Bold the full string with highest mean per row
         def bold_max_in_row(row, original_row):
-            print(row.astype(float))
             max_idx = row.astype(float).idxmin()
-            print(max_idx)
             original_row[max_idx] = f"\\textbf{{{original_row[max_idx]}}}"
             return original_row
 
         df_bolded = df_means.combine(resultsdf, bold_max_in_row)
 
-        df_bolded.T.to_latex(results_file_path + os.sep + 'noise_shares_' + target_corpus + '.tex', index=True, multicolumn=True,multicolumn_format='c', escape=False, column_format='llccccccc', label='', caption='')
+        df_bolded.T.to_latex(results_file_path + os.sep + 'noise_shares_' + target_corpus + '.tex', index=True, multicolumn=True,multicolumn_format='c', escape=False, column_format='llccc', label='', caption='')
+        print(resultsdf_errors.columns)
 
+        resultsdf_errors.drop(labels=r"\%$\times$", axis=1,level=1, inplace=True)
+        
+        corpora_order = resultsdf_errors.index.get_level_values(1).unique()
+
+        resultsdf_errors = resultsdf_errors.unstack(level=0)
+
+        print(resultsdf_errors)
+
+        resultsdf_errors = resultsdf_errors.swaplevel(1,0,axis=1).swaplevel(2,1,axis=1).reindex(corpora_order)
+
+        print(resultsdf_errors)
+
+        resultsdf_errors.sort_index(axis=1,level=[0,1,2],ascending=[True,True,True], inplace=True)
+        
+        print(resultsdf_errors)
+        input()
+
+        resultsdf_errors.columns = resultsdf_errors.columns.set_levels(
+            resultsdf_errors.columns.levels[1].map(lambda x: x.replace('_',' ')), level=1
+        )
+
+        resultsdf_errors.to_latex(results_file_path + os.sep + 'error_numbers_' + target_corpus + '.tex', index=True, multicolumn=True,multicolumn_format='c', escape=False, float_format = '%.1f', column_format='l'+'cccc'*len(categories), label='', caption='')
+        temp = df_bolded.T
+        temp.columns = pd.MultiIndex.from_arrays([['\% Noise shares'] * len(temp.columns),  temp.columns, [''] + ['relabel'] * (len(temp.columns) - 1),] )
+
+        big_table = pd.concat([temp, resultsdf_errors], axis=1)
+        big_table.to_latex(results_file_path + os.sep + 'errors_noise_shares' + target_corpus + '.tex', index=True, multicolumn=True,multicolumn_format='c', escape=False, float_format = '%.1f', column_format='l'+'c'*(len(big_table.columns)), label='', caption='')
