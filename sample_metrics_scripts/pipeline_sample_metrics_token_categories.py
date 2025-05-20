@@ -662,7 +662,7 @@ def run_experiment(seed, config, category_configs, corpus_name, tag_type, catego
             current_epoch = category_config["epoch_change"]
             current_metric = category_config["metric"]
             current_threshold = float(category_config["threshold"])
-            current_direction = category_config["direction"]
+            current_direction = category_config["direction"].strip()
             current_id = category_config["id"]
 
             # gradually change the labels of 'new_ner' column
