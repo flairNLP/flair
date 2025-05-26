@@ -1,6 +1,12 @@
 import bisect
 import logging
+import math
+import numpy
 import re
+import scipy
+import sklearn
+import shutil
+import tempfile
 import typing
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
@@ -8,7 +14,7 @@ from collections.abc import Iterable
 from operator import itemgetter
 from os import PathLike
 from pathlib import Path
-from typing import Any, NamedTuple, Optional, Union, cast
+from typing import Any, Callable, Dict, NamedTuple, Optional, Union, cast
 
 import torch
 from deprecated.sphinx import deprecated
@@ -2622,6 +2628,473 @@ class Corpus(typing.Generic[T_co]):
         tag_dictionary.add_item("<START>")
         tag_dictionary.add_item("<STOP>")
         return tag_dictionary
+        
+    def simulate_label_noise(
+        self,
+        label_type: str,
+        noise_model: str = 'uniform',
+        noise_share: Optional[float] = None,
+        splits: Union[str, list[str]] = ['dev', 'train'],
+        noise_transition_matrix: Optional[Dict[str, list[float]]] = None,
+        boundary_noise_function: Optional[Callable[[float], float]] = None,
+        model_features: Optional[Dict[str, Union[str, float, int]]] = None,
+        data_folder: Optional[Path] = None,
+    ) -> None:
+        """
+        TODO: Specification
+        
+        
+        """
+
+        #TODO: assert valid parameters (basic)
+
+        # concatenate chosen splits to a single data object
+        if type(splits) is str:
+            splits = [splits]
+        data_splits = []
+        for split in splits:
+            if split == 'dev':
+                data_splits.append(self.dev)
+            elif split == 'test':
+                data_splits.append(self.test)
+            elif split == 'train':
+                data_splits.append(self.train)
+            else:
+                # TODO: invalid split
+                pass
+        data: ConcatDataset = ConcatDataset(data_splits)
+
+        # derive label space 
+        label_dict = self.make_label_dictionary(label_type=label_type, min_count=1, add_unk=True, add_dev_test=True)
+        labels = label_dict.get_items()
+        labels_no = len(labels)
+
+        len_data = 0
+        for dataset in data_splits:
+            len_data += _len_dataset(dataset)
+
+
+        def apply_ntm(noise_transition_matrix: Dict[str, list[str]]) -> None:
+            sampling = numpy.random.default_rng()
+
+            for data_point in Tqdm.tqdm(_iter_dataset(data)):
+                old_label = data_point.get_label(label_type=label_type).value
+                probability_distribution = noise_transition_matrix[old_label]
+                new_label = sampling.choice(a=labels, p=probability_distribution)
+                data_point.set_label(typename=label_type, value=new_label)
+
+
+        def scale_ntm_to_noise_share(noise_transition_matrix: Dict[str, list[str]], ) -> None:
+            label_support_data = {}
+            for dataset in data_splits:
+                label_support_split = self._count_sentence_labels(sentences=_iter_dataset(dataset), label_type=label_type)
+                label_support_data = {label: label_support_data[label] + label_support_split[label] for label in label_support_split}
+                
+            agg = 0
+            for i in range(labels_no):
+                noise_sum = sum(noise_transition_matrix[labels[i]]) - noise_transition_matrix[labels[i]][i]
+                agg += label_support_data[labels[i]] * noise_sum
+            scale = noise_share * len_data / agg
+
+            for i in range(labels_no):
+                noise_transition_matrix[labels[i]] *= scale
+                noise_sum = noise_sum = sum(noise_transition_matrix[labels[i]]) - noise_transition_matrix[labels[i]][i]
+                noise_transition_matrix[labels[i]][i] = 1 - noise_sum
+
+
+        if noise_model == 'uniform':
+            
+            prob_clean = 1 - noise_share
+            prob_noisy_label = noise_share / (labels_no - 1)
+            sampling = numpy.random.default_rng()
+
+            for data_point in Tqdm.tqdm(_iter_dataset(data)):
+                old_label = data_point.get_label(label_type=label_type).value
+                probability_distribution = [prob_noisy_label] * labels_no
+                probability_distribution[labels.index(old_label)] = prob_clean
+                new_label = sampling.choice(a=labels, p=probability_distribution)
+                data_point.set_label(typename=label_type, value=new_label)
+            
+
+        elif noise_model == 'balanced_class_dependent':
+
+            # default approach: similarity of label names
+            if noise_transition_matrix is None:
+                if model_features is None:
+                    embedding = flair.embeddings.TransformerDocumentEmbeddings('xlm-roberta-base')
+                else:
+                    # TODO: use provided embedding (+ handling)
+                    pass
+        
+                label_embeddings = []
+                for label in labels:
+                    label_obj = Sentence(label)
+                    embedding.embed(label_obj)
+                    label_embeddings.append(label_obj.embedding)
+
+                similarities = []
+                for i in range(labels_no):
+                    similarities.append([])
+                    for j in range(labels_no):
+                        similarities[i].append(torch.nn.functional.cosine_similarity(label_embeddings[i], label_embeddings[j], dim=-1))
+
+                for i in range(labels_no):
+                    similarity_sum = sum(similarities[i]) - similarities[i][i]
+                    for j in range(labels_no):
+                        if j==i:
+                            similarities[i][j] = 1 - noise_share
+                        else:
+                            similarities[i][j] = similarities[i][j] * noise_share / similarity_sum  
+                    similarities[i] = numpy.array(similarities[i])
+                    similarity_sum = sum(similarities[i])
+                    for j in range(labels_no):
+                        similarities[i][j] /= similarity_sum
+                
+                noise_transition_matrix = {}
+                for i in range(labels_no):
+                    noise_transition_matrix[labels[i]] = similarities[i]
+
+                apply_ntm(noise_transition_matrix)
+
+
+            # balanced ntm ohne noise share
+
+            # imbalanced ntm ohne noise share -> balance
+
+            # balanced ntm mit noise share -> scale
+
+            # imbalanced ntm mit noise share -> balance & scale
+
+
+        elif noise_model == 'imbalanced_class_dependent':
+
+            # default approach: models' confusion matrix on test set
+            if noise_transition_matrix is None:
+                if model_features is None:
+                    model_features = {
+                        "embeddings": 'xlm-roberta-base',
+                        "learning_rate": 5.0e-5,
+                        "mini_batch_size": 4,
+                        "max_epochs": 10                        # scale to target noise share?
+                    }
+
+                # fine-tune a classification model on train split
+                with tempfile.TemporaryDirectory() as temp_folder:
+                    embeddings = flair.embeddings.TransformerDocumentEmbeddings(model_features["embeddings"], fine_tune=True)
+                    classifier = flair.models.TextClassifier(embeddings, label_dictionary=label_dict, label_type=label_type)
+                    trainer = flair.trainers.ModelTrainer(classifier, self)
+                    trainer.fine_tune(temp_folder, learning_rate=model_features["learning_rate"], mini_batch_size=model_features["mini_batch_size"], max_epochs=model_features["max_epochs"])
+            
+                    # get models' confusion matrix on test split
+                    true_labels = []
+                    predicted_labels = []
+                    for data_point in _iter_dataset(self.test):
+                        true_labels.append(data_point.get_label(label_type=label_type).value)
+                        classifier.predict(data_point)
+                        predicted_labels.append(data_point.get_label(label_type=label_type).value)
+                    confusion_matrix = sklearn.metrics.confusion_matrix(y_true=true_labels, y_pred=predicted_labels, labels=labels)
+
+                    if data_folder is not None:
+                        shutil.copytree(temp_folder, data_folder, dirs_exist_ok=True)
+
+                label_support_test = self._count_sentence_labels(sentences=_iter_dataset(self.test), label_type=label_type)
+                noise_transition_matrix = {}
+                for i in range(labels_no):
+                    noise_transition_matrix[i] = []
+                    for j in range(labels_no):
+                        noise_transition_matrix[i][j] = confusion_matrix[i][j] / label_support_test[labels[i]]
+
+                scale_ntm_to_noise_share(noise_transition_matrix)
+
+                apply_ntm(noise_transition_matrix)
+
+            # ntm ohne noise share
+
+            # ntm mit noise share -> scale
+
+
+        elif noise_model == 'boundary_conditional':
+
+            if model_features is None:
+                model_features = {
+                        "embeddings": 'xlm-roberta-base',
+                        "learning_rate": 5.0e-5,
+                        "mini_batch_size": 4,
+                        "max_epochs": 10                       
+                    }
+            
+            # fine-tune a classification model on train split
+            with tempfile.TemporaryDirectory() as temp_folder:
+                embeddings = flair.embeddings.TransformerDocumentEmbeddings(model_features["embeddings"], fine_tune=True)
+                classifier = flair.models.TextClassifier(embeddings, label_dictionary=label_dict, label_type=label_type)
+                trainer = flair.trainers.ModelTrainer(classifier, self)
+                trainer.fine_tune(temp_folder, learning_rate=model_features["learning_rate"], mini_batch_size=model_features["mini_batch_size"], max_epochs=model_features["max_epochs"])
+
+                for data_point in _iter_dataset(self.test):
+                    classifier.predict(sentences=data_point, return_probabilities_for_all_classes=True)
+
+                if data_folder is not None:
+                    shutil.copytree(temp_folder, data_folder, dirs_exist_ok=True)
+
+            # default boundary noise function
+            if boundary_noise_function is None:
+                def boundary_noise_function(d: float) -> float:
+                    return scipy.stats.norm(loc=0, scale=1/3)
+
+            # apply boundary noise function
+            transitions = []
+            for data_point in _iter_dataset(self.test):
+                predicted_labels = data_point.get_labels(typename=label_type) 
+                scores = [label.score for label in predicted_labels]
+                first = max(scores)
+                first_label = predicted_labels[scores.index(first)].value
+                scores[scores.index(first)] = 0
+                second = max(scores)
+                second_label = predicted_labels[scores.index(second)].value
+                bnf_value = boundary_noise_function(first - second)
+                transitions.append([second_label, bnf_value, first_label])
+
+            # scale boundary noise function values to target noise share
+            agg = 0
+            for i in range(len(transitions)):
+                agg += transitions[i][1]
+            noise_level = agg / len(transitions)
+            scale = noise_share / noise_level
+            for i in range(len(transitions)):
+                transitions[i][1] *= scale
+
+            # apply boundary noise function values
+            sampling = numpy.random.default_rng()
+            i = 0
+            for data_point in _iter_dataset(self.test):
+                probability_distribution = [transitions[i][1], 1 - transitions[i][1]]
+                choice = [transitions[i][0], transitions[i][2]]
+                new_label = sampling.choice(a=choice, p=probability_distribution)
+                data_point.set_label(typename=label_type, value=new_label)
+                i += 1
+
+
+        elif noise_model == 'polynomial_margin_diminishing':
+      
+            # default polynomial margin diminishing noise function
+            if boundary_noise_function is None:
+                def boundary_noise_function(d: float) -> float:
+                    return (-1/2) * (d^2) + (1/2)
+
+            self.simulate_label_noise(label_type=label_type,
+                                      noise_model = 'boundary_conditional',
+                                      noise_share=noise_share,
+                                      splits=splits,
+                                      noise_transition_matrix=noise_transition_matrix,
+                                      boundary_noise_function=boundary_noise_function,
+                                      model_features=model_features,
+                                      data_folder=data_folder,
+                                      )
+            # switch where implemented since this approach comes from PMD?
+
+
+        elif noise_model == 'badlabel':
+
+            if model_features is None:
+                model_features = {
+                        "embeddings": 'xlm-roberta-base',
+                        "learning_rate": 5.0e-5,
+                        "mini_batch_size": 4,
+                        "max_epochs": 10                       
+                    }
+
+            # initialize flag matrix z to one-hot encodings of true labels
+            z = torch.zeros(len_data, labels_no)
+            i = 0
+            for data_point in _iter_dataset(data):
+                label_value = data_point.get_label(label_type=label_type).value
+                z[i][labels.index(label_value)] = 1
+                i += 1
+
+            with tempfile.TemporaryDirectory() as temp_folder:
+                embeddings = flair.embeddings.TransformerDocumentEmbeddings(model_features["embeddings"], fine_tune=True)
+                classifier = flair.models.TextClassifier(embeddings, label_dictionary=label_dict, label_type=label_type)
+                trainer = flair.trainers.ModelTrainer(classifier, self)
+
+                for j in range(model_features["max_epochs"]):
+                    trainer.fine_tune(temp_folder, learning_rate=model_features["learning_rate"], mini_batch_size=model_features["mini_batch_size"], max_epochs=j+1)
+                    
+                    predicted_data = torch.zeros(len_data, labels_no)
+                    l = 0
+                    for data_point in _iter_dataset(data):
+                        classifier.predict(sentences=data_point, return_probabilities_for_all_classes=True)
+                        predicted_labels = data_point.get_labels(typename=label_type)
+                        predicted_label_values = [label.value for label in predicted_labels]
+                        scores = []
+                        for label in labels:
+                            scores.append(predicted_labels[predicted_label_values.index(label)].score)
+                        predicted_data[l] = scores
+                        l += 1
+
+                    # update flag matrix
+                    update = model_features["learning_rate"] * torch.log(predicted_data)
+                    z += update
+                    torch.nn.functional.softmax(z, dim=1)
+                
+                if data_folder is not None:
+                    shutil.copytree(temp_folder, data_folder, dirs_exist_ok=True)
+
+            # get minimal affinity scores
+            z_min = []
+            for m in len_data:
+                z_min.append(min(z[m]))
+            flips: int = noise_share * len_data
+            z_flips = sorted(z_min)[:flips]
+          
+            # apply retrieved flips
+            p = 0
+            for data_point in _iter_dataset(data):
+                if z_min[p] in z_flips:
+                    new_label = labels[z[p].index(z_min[p])]
+                    data_point.set_label(typename=label_type, value=new_label)
+                p += 1
+
+        
+        elif noise_model == 'part_dependent':
+
+            # sample instance-dependent noise probabilities
+            sampling = scipy.stats.truncnorm(0, 1, mean=noise_share, scale=0.01)
+            noise_probabilites = sampling.rvs(size=len_data)
+            
+            if model_features is None:
+                embedding = flair.embeddings.TransformerDocumentEmbeddings('xlm-roberta-base')
+            else:
+                # TODO: use provided embedding (+ handling)
+                pass
+
+            # sample feature-wise class-dependent transition probabilities
+            feature_transitions = []
+            for i in labels_no:
+                feature_transitions[i] = scipy.stats.norm.rvs(loc=0, scale=1, size=(embedding.embedding_length, labels_no))
+        
+            j = 0
+            for data_point in _iter_dataset(data):
+                label = data_point.get_label(label_type=label_type)
+                label_index = labels.index(label.value)
+                embedding.embed(data_point)
+                sentence_embedding = data_point.embedding
+
+                transition_vector = sentence_embedding @ feature_transitions[label_index]
+                transition_vector[label_index] = float('-inf')
+                torch.nn.functional.softmax(transition_vector)
+                transition_vector *= noise_probabilites[j]
+                transition_vector[label_index] = 1 - noise_probabilites[j]
+
+                sampling = numpy.random.default_rng()
+                new_label = sampling.choice(a=labels, p=transition_vector)
+                data_point.set_label(typename=label_type, value=new_label)
+                j += 1
+
+
+        elif noise_model == 'pseudo_labeling':
+
+            if model_features is None:
+                model_features = {
+                        "embeddings": 'xlm-roberta-base',
+                        "learning_rate": 5.0e-5,
+                        "mini_batch_size": 4,
+                        "max_epochs": 10                       
+                    }
+                    
+            # split corpus in two
+            corpus1: Corpus = self
+            corpus1.dev = self.dev[:int(len(self.dev)/2)]
+            corpus1.test = self.test[:int(len(self.test)/2)]
+            corpus1.train = self.train[:int(len(self.train)/2)]
+            corpus2: Corpus = self
+            corpus2.dev = self.dev[int(len(self.dev)/2):]
+            corpus2.test = self.test[int(len(self.test)/2):]
+            corpus2.train = self.train[int(len(self.train)/2):]
+            
+            # split data in two
+            data_splits1 = []
+            data_splits2 = []
+            for split in splits:
+                if split == 'dev':
+                    data_splits1.append(corpus1.dev)
+                    data_splits2.append(corpus2.dev)
+                elif split == 'test':
+                    data_splits1.append(corpus1.test)
+                    data_splits2.append(corpus2.test)
+                elif split == 'train':
+                    data_splits1.append(corpus1.train)
+                    data_splits2.append(corpus2.train)
+            data1: ConcatDataset = ConcatDataset(data_splits1)
+            data2: ConcatDataset = ConcatDataset(data_splits2)
+                
+            # fine-tune on corpus1
+            with tempfile.TemporaryDirectory() as temp_folder:
+                embeddings1 = flair.embeddings.TransformerDocumentEmbeddings(model_features["embeddings"], fine_tune=True)
+                classifier1 = flair.models.TextClassifier(embeddings1, label_dictionary=label_dict, label_type=label_type)
+                trainer1 = flair.trainers.ModelTrainer(classifier1, corpus1) 
+
+                # stop when closest to noise share
+                if noise_share is not None:
+                    for i in range(model_features["max_epochs"]):
+                        trainer1.fine_tune(temp_folder, learning_rate=model_features["learning_rate"], mini_batch_size=model_features["mini_batch_size"], max_epochs=i+1, save_model_each_k_epochs=1, use_final_model_for_eval=True)
+
+                        result1, _ = classifier1.evaluate(self.test, gold_label_type=label_type)            # which data?
+                        acc1 = result1.scores["accuracy"]
+                        if noise_share > 1 - acc1:
+                            classifier_last1 = flair.models.TextClassifier.load(f'{temp_folder}/checkpoint_epoch_{i}.pt')
+                            result_last1, _ = classifier_last1.evaluate(self.test, gold_label_type=label_type)            # which data?
+                            acc_last1 = result_last1.scores["accuracy"]
+                            if (noise_share-(1-acc1)) > (1-acc_last1-noise_share):
+                                classifier1 = classifier_last1
+                            break
+                else:
+                    trainer1.fine_tune(temp_folder, learning_rate=model_features["learning_rate"], mini_batch_size=model_features["mini_batch_size"], max_epochs=model_features["max_epochs"])
+                
+                # predict corpus2
+                for data_point in _iter_dataset(data2):
+                    classifier1.predict(data_point)
+
+                if data_folder is not None:
+                    shutil.copytree(temp_folder, data_folder, dirs_exist_ok=True)
+            
+            # fine-tune on corpus2
+            with tempfile.TemporaryDirectory() as temp_folder:
+                embeddings2 = flair.embeddings.TransformerDocumentEmbeddings(model_features["embeddings"], fine_tune=True)
+                classifier2 = flair.models.TextClassifier(embeddings2, label_dictionary=label_dict, label_type=label_type)
+                trainer2 = flair.trainers.ModelTrainer(classifier2, corpus2)
+
+                # stop when closest to noise share
+                if noise_share is not None:
+                    for i in range(model_features["max_epochs"]):
+                        trainer2.fine_tune(temp_folder, learning_rate=model_features["learning_rate"], mini_batch_size=model_features["mini_batch_size"], max_epochs=i+1, save_model_each_k_epochs=1, use_final_model_for_eval=True)
+
+                        result2, _ = classifier2.evaluate(self.test, gold_label_type=label_type)            # which data?
+                        acc2 = result2.scores["accuracy"]
+                        if noise_share > 1 - acc2:
+                            classifier_last2 = flair.models.TextClassifier.load(f'{temp_folder}/checkpoint_epoch_{i}.pt')
+                            result_last2, _ = classifier_last2.evaluate(self.test, gold_label_type=label_type)            # which data?
+                            acc_last2 = result_last2.scores["accuracy"]
+                            if (noise_share-(1-acc2)) > (1-acc_last2-noise_share):
+                                classifier2 = classifier_last2
+                            break
+                else:
+                    trainer2.fine_tune(temp_folder, learning_rate=model_features["learning_rate"], mini_batch_size=model_features["mini_batch_size"], max_epochs=model_features["max_epochs"])
+                
+                # predict corpus 1
+                for data_point in _iter_dataset(data1):
+                    classifier2.predict(data_point)
+
+                if data_folder is not None:
+                    shutil.copytree(temp_folder, data_folder, dirs_exist_ok=True)
+            
+            # report resulting noise share?
+
+        # generally report resulting noise share?
+        
+        else:
+            # TODO
+            pass
+
 
 
 class MultiCorpus(Corpus):
