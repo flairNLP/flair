@@ -1,7 +1,10 @@
 import csv
+import io
 import json
 import logging
+import numpy
 import os
+import requests
 import tarfile
 from pathlib import Path
 from typing import Optional, Union
@@ -751,6 +754,7 @@ class IMDB(ClassificationCorpus):
         self,
         base_path: Optional[Union[str, Path]] = None,
         rebalance_corpus: bool = True,
+        noise: bool = True,
         tokenizer: Tokenizer = SegtokTokenizer(),
         memory_mode="partial",
         **corpusargs,
@@ -765,59 +769,156 @@ class IMDB(ClassificationCorpus):
          processing or 'none' for less memory.
             corpusargs: Other args for ClassificationCorpus.
         """
-        base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
-        # this dataset name
-        dataset_name = self.__class__.__name__.lower() + "_v4"
+        if noise == True:
+            base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
-        # download data if necessary
-        imdb_acl_path = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
+            # this dataset name
+            dataset_name = self.__class__.__name__.lower() + "_v4"
 
-        if rebalance_corpus:
-            dataset_name = dataset_name + "-rebalanced"
-        data_folder = base_path / dataset_name
-        data_path = flair.cache_root / "datasets" / dataset_name
-        train_data_file = data_path / "train.txt"
-        test_data_file = data_path / "test.txt"
+            # download data if necessary
+            imdb_acl_path = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
 
-        if not train_data_file.is_file() or (not rebalance_corpus and not test_data_file.is_file()):
-            for file_path in [train_data_file, test_data_file]:
-                if file_path.is_file():
-                    os.remove(file_path)
+            if rebalance_corpus:
+                dataset_name = dataset_name + "-rebalanced"
+            data_folder = base_path / dataset_name
+            data_path = flair.cache_root / "datasets" / dataset_name
+            train_data_file = data_path / "train.txt"
+            test_data_file = data_path / "test.txt"
 
-            cached_path(imdb_acl_path, Path("datasets") / dataset_name)
+            if not train_data_file.is_file() or (not rebalance_corpus and not test_data_file.is_file()):
+                for file_path in [train_data_file, test_data_file]:
+                    if file_path.is_file():
+                        os.remove(file_path)
+
+                cached_path(imdb_acl_path, Path("datasets") / dataset_name)
+                import tarfile
+
+                with tarfile.open(flair.cache_root / "datasets" / dataset_name / "aclImdb_v1.tar.gz", "r:gz") as f_in:
+                    datasets = ["train", "test"]
+                    labels = ["pos", "neg"]
+
+                    for label in labels:
+                        for dataset in datasets:
+                            f_in.extractall(
+                                data_path, members=[m for m in f_in.getmembers() if f"{dataset}/{label}" in m.name]
+                            )
+                            data_file = train_data_file
+                            if not rebalance_corpus and dataset == "test":
+                                data_file = test_data_file
+
+                            with open(data_file, "a") as f_p:
+                                current_path = data_path / "aclImdb" / dataset / label
+                                for file_name in current_path.iterdir():
+                                    if file_name.is_file() and file_name.name.endswith(".txt"):
+                                        if label == "pos":
+                                            sentiment_label = "POSITIVE"
+                                        if label == "neg":
+                                            sentiment_label = "NEGATIVE"
+                                        f_p.write(
+                                            f"__label__{sentiment_label} "
+                                            + file_name.open("rt", encoding="utf-8").read()
+                                            + "\n"
+                                        )
+            
+            super().__init__(
+                data_folder, label_type="sentiment", tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs
+            )
+
+        elif noise == False:        #TODO:add noise parameter in description
+    
+            base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
+
+            dataset_name = self.__class__.__name__.lower() + "_clean_test"
+
+            load_link = "http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
+
+            if rebalance_corpus:
+                # TODO
+                # rebalance
+                # warning message
+                pass
+
+            data_origin_path = base_path / dataset_name
+            data_target_path = flair.cache_root / "datasets" / dataset_name
+            train_file = data_target_path / "train.txt"
+            test_file = data_target_path / "test.txt"
+
+            index_url = 'https://raw.githubusercontent.com/cleanlab/label-errors/main/dataset_indexing/imdb_test_set_index_to_filename.json'
+            index_response = requests.get(index_url)
+            index_json = index_response.json()
+                    
+            labels_train = numpy.concatenate([numpy.zeros(12500), numpy.ones(12500)]).astype(int)       
+            labels_test = numpy.concatenate([numpy.zeros(12500), numpy.ones(12500)]).astype(int)
+
+            # find label errors - not necessary: use mturk annotations
+
+            # probabilities_url = 'https://raw.githubusercontent.com/cleanlab/label-errors/main/cross_validated_predicted_probabilities/imdb_test_set_pyx.npy'
+            # probabilities_response = requests.get(probabilities_url)
+            # probabilities = numpy.load(io.BytesIO(probabilities_response.content), allow_pickle=True)
+
+            # predictions_url = 'https://raw.githubusercontent.com/cleanlab/label-errors/main/cross_validated_predicted_labels/imdb_test_set_pyx_argmax_predicted_labels.npy'
+            # predictions_response = requests.get(predictions_url)
+            # predictions = numpy.load(io.BytesIO(predictions_response.content), allow_pickle=True)
+
+            # label_error_indices = cleanlab.filter.find_label_issues(
+            #     labels=labels,
+            #     pred_probs=probabilities,
+            #     filter_by='prune_by_noise_rate',
+            # )
+
+            mturk_url = 'https://raw.githubusercontent.com/cleanlab/label-errors/main/mturk/imdb_mturk.json'
+            mturk_response = requests.get(mturk_url)
+            mturk_json = mturk_response.json()
+
+            for text in mturk_json:
+                if text["mturk"]["guessed"] > text["mturk"]["given"]:
+                    text_id = text["id"][5:] + ".txt"
+                    text_index = index_json.index(text_id)
+                    if text["mturk"]["guessed"] == "Negative":
+                        labels_test[text_index] = 0
+                    else:
+                        labels_test[text_index] = 1
+
+            cached_path(load_link, Path(data_origin_path))
             import tarfile
-
-            with tarfile.open(flair.cache_root / "datasets" / dataset_name / "aclImdb_v1.tar.gz", "r:gz") as f_in:
-                datasets = ["train", "test"]
-                labels = ["pos", "neg"]
-
+            with tarfile.open(data_origin_path / "aclImdb_v1.tar.gz", "r:gz") as data:
+                labels = ['pos', 'neg']
+                
                 for label in labels:
-                    for dataset in datasets:
-                        f_in.extractall(
-                            data_path, members=[m for m in f_in.getmembers() if f"{dataset}/{label}" in m.name]
-                        )
-                        data_file = train_data_file
-                        if not rebalance_corpus and dataset == "test":
-                            data_file = test_data_file
+                    data.extractall(
+                        data_target_path,
+                        members=[text_file for text_file in data.getmembers() if f"train/{label}" in text_file.name]
+                    )
 
-                        with open(data_file, "a") as f_p:
-                            current_path = data_path / "aclImdb" / dataset / label
-                            for file_name in current_path.iterdir():
-                                if file_name.is_file() and file_name.name.endswith(".txt"):
-                                    if label == "pos":
-                                        sentiment_label = "POSITIVE"
-                                    if label == "neg":
-                                        sentiment_label = "NEGATIVE"
-                                    f_p.write(
-                                        f"__label__{sentiment_label} "
-                                        + file_name.open("rt", encoding="utf-8").read()
-                                        + "\n"
-                                    )
-
-        super().__init__(
-            data_folder, label_type="sentiment", tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs
-        )
+                    with open(train_file, "a") as write_file:
+                        for file_name in (data_target_path / "aclImdb" / "train" / label).iterdir():
+                            if file_name.is_file() and file_name.name.endswith(".txt"):
+                                if label == 'pos':
+                                    sentiment_label = "POSITIVE"
+                                else:
+                                    sentiment_label = "NEGATIVE"
+                                with open(data_target_path / "aclImdb" / "train" / label / file_name, "r") as text_file:
+                                    write_file.write(f"__label__{sentiment_label} {text_file.read()}\n")
+                
+                for label in labels:
+                    data.extractall(
+                        data_target_path,
+                        members=[text_file for text_file in data.getmembers() if f"test/{label}" in text_file.name]
+                    )
+            
+                with open(test_file, "a") as write_file:
+                    for i, file_name in enumerate(index_json):
+                        if labels_test[i] == 0:
+                            sentiment_label = "NEGATIVE"
+                        else:
+                            sentiment_label = "POSITIVE"
+                        with open(data_target_path / "aclImdb" / "test" / file_name, "r") as text_file:
+                            write_file.write(f"__label__{sentiment_label} {text_file.read()}\n")
+            
+            super().__init__(
+                data_target_path, label_type="sentiment", tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs
+            )
 
 
 class NEWSGROUPS(ClassificationCorpus):
