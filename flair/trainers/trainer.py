@@ -460,6 +460,18 @@ class ModelTrainer(Pluggable):
         # initialize model card with these parameters
         self.model.model_card = self._initialize_model_card(**training_parameters)
 
+        # -- Store tokenizer used in corpus on the model --
+        # Check if the corpus has a specific tokenizer associated with it
+        corpus_tokenizer = self.corpus.corpus_tokenizer
+        if corpus_tokenizer:
+             # Add the tokenizer to the model instance
+             self.model._tokenizer = corpus_tokenizer
+             log.info(f"Storing tokenizer used in training: {corpus_tokenizer}")
+        else:
+             # Ensure the attribute exists, even if no specific tokenizer was found
+             self.model._tokenizer = None
+        # -- End tokenizer storage --
+
         # Prepare training data and get dataset size
         train_data = self._get_train_data(train_with_dev=train_with_dev, train_with_test=train_with_test)
         dataset_size = _len_dataset(train_data)

@@ -1175,6 +1175,9 @@ class Sentence(DataPoint):
         self._tokens: Optional[list[Token]] = None
         self._text: str = ""  # Change from Optional[str] to str with empty string default
 
+        # track which tokenizer created the current tokens 
+        self._tokenizer_that_created_tokens: Optional[Tokenizer] = None
+
         # private field for all known spans with explicit typing
         self._known_spans: dict[str, Union[Span, Relation]] = {}
 
@@ -1255,8 +1258,14 @@ class Sentence(DataPoint):
     @property
     def tokens(self) -> list[Token]:
         """The list of Token objects (triggers tokenization if needed)."""
+        # If no tokens exist, tokenize
         if self._tokens is None:
             self._tokenize()
+        # If tokens exist but were created with a different tokenizer, retokenize
+        elif self._tokenizer_that_created_tokens != self._tokenizer:
+            log.debug(f"Retokenizing sentence due to tokenizer change from {self._tokenizer_that_created_tokens} to {self._tokenizer}")
+            self._tokenize()
+        
         if self._tokens is None:
             raise ValueError("Tokens are None after tokenization - this indicates a bug in the tokenization process")
         return self._tokens

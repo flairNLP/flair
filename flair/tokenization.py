@@ -73,6 +73,37 @@ class SpacyTokenizer(Tokenizer):
     def name(self) -> str:
         return self.__class__.__name__ + "_" + self.model.meta["name"] + "_" + self.model.meta["version"]
 
+    def to_dict(self) -> dict:
+        """Serialize the tokenizer's configuration to a dictionary."""
+        return {
+            "class_module": self.__class__.__module__,
+            "class_name": self.__class__.__name__,
+            "model_name": self.model.meta["name"], # Store the spacy model name
+        }
+
+    @classmethod
+    def from_dict(cls, config: dict) -> "SpacyTokenizer":
+        """Instantiate the tokenizer from a configuration dictionary."""
+        try:
+            import spacy
+        except ImportError:
+            raise ImportError(
+                "Spacy not installed. Please install spacy v3.4.4 or better to load this tokenizer."
+            )
+
+        model_name = config.get("model_name")
+        if not model_name:
+            raise ValueError("Config dictionary for SpacyTokenizer must contain 'model_name'.")
+
+        # Try loading the spacy model
+        try:
+            spacy_model = spacy.load(model_name)
+        except OSError:
+            log.error(f"Could not load spacy model '{model_name}'. "
+                      f"Please make sure you have downloaded it (e.g. python -m spacy download {model_name})")
+            raise
+        return cls(spacy_model)
+
 
 class SegtokTokenizer(Tokenizer):
     """Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.
@@ -125,6 +156,20 @@ class SegtokTokenizer(Tokenizer):
 
         return words
 
+    def to_dict(self) -> dict:
+        """Serialize the tokenizer's configuration to a dictionary."""
+        return {
+            "class_module": self.__class__.__module__,
+            "class_name": self.__class__.__name__,
+            "additional_split_characters": self.additional_split_characters,
+        }
+
+    @classmethod
+    def from_dict(cls, config: dict) -> "SegtokTokenizer":
+        """Instantiate the tokenizer from a configuration dictionary."""
+        additional_split_characters = config.get("additional_split_characters")
+        return cls(additional_split_characters=additional_split_characters)
+
 
 class SpaceTokenizer(Tokenizer):
     """Tokenizer based on space character only."""
@@ -154,6 +199,20 @@ class SpaceTokenizer(Tokenizer):
             tokens.append(word)
 
         return tokens
+
+    def to_dict(self) -> dict:
+        """Serialize the tokenizer's configuration to a dictionary."""
+        # No specific configuration needed beyond class identity
+        return {
+            "class_module": self.__class__.__module__,
+            "class_name": self.__class__.__name__,
+        }
+
+    @classmethod
+    def from_dict(cls, config: dict) -> "SpaceTokenizer":
+        """Instantiate the tokenizer from a configuration dictionary."""
+        # No specific configuration needed for instantiation
+        return cls()
 
 
 class JapaneseTokenizer(Tokenizer):
@@ -192,6 +251,7 @@ class JapaneseTokenizer(Tokenizer):
         self.tokenizer = tokenizer
         self.sentence_tokenizer = konoha.SentenceTokenizer()
         self.word_tokenizer = konoha.WordTokenizer(tokenizer, mode=sudachi_mode)
+        self.sudachi_mode = sudachi_mode # Store sudachi_mode
 
     def tokenize(self, text: str) -> list[str]:
         words: list[str] = []
@@ -207,6 +267,32 @@ class JapaneseTokenizer(Tokenizer):
     def name(self) -> str:
         return self.__class__.__name__ + "_" + self.tokenizer
 
+    def to_dict(self) -> dict:
+        """Serialize the tokenizer's configuration to a dictionary."""
+        return {
+            "class_module": self.__class__.__module__,
+            "class_name": self.__class__.__name__,
+            "tokenizer_name": self.tokenizer,
+            "sudachi_mode": self.sudachi_mode,
+        }
+
+    @classmethod
+    def from_dict(cls, config: dict) -> "JapaneseTokenizer":
+        """Instantiate the tokenizer from a configuration dictionary."""
+        try:
+            import konoha # Check if konoha is installed during load
+        except ModuleNotFoundError:
+             raise ImportError(
+                'The library "konoha" is not installed! Please install it to load this tokenizer.'
+             )
+
+        tokenizer_name = config.get("tokenizer_name")
+        sudachi_mode = config.get("sudachi_mode", "A") # Default if missing
+        if not tokenizer_name:
+            raise ValueError("Config dictionary for JapaneseTokenizer must contain 'tokenizer_name'.")
+
+        return cls(tokenizer=tokenizer_name, sudachi_mode=sudachi_mode)
+
 
 class TokenizerWrapper(Tokenizer):
     """Helper class to wrap tokenizer functions to the class-based tokenizer interface."""
@@ -221,6 +307,27 @@ class TokenizerWrapper(Tokenizer):
     @property
     def name(self) -> str:
         return self.__class__.__name__ + "_" + self.tokenizer_func.__name__
+
+    def to_dict(self) -> dict:
+        """Serialize the tokenizer's configuration to a dictionary."""
+        # Cannot reliably serialize arbitrary functions, return only identity.
+        log.warning(f"TokenizerWrapper with function '{self.tokenizer_func.__name__}' cannot be reliably serialized.")
+        return {
+            "class_module": self.__class__.__module__,
+            "class_name": self.__class__.__name__,
+            # Indicate that the function itself is not serialized
+            "function_name": self.tokenizer_func.__name__,
+            "serializable": False,
+        }
+
+    @classmethod
+    def from_dict(cls, config: dict) -> "TokenizerWrapper":
+        """Instantiate the tokenizer from a configuration dictionary."""
+        # Cannot reliably reconstruct the function from saved state.
+        raise NotImplementedError(
+            f"Cannot automatically reconstruct TokenizerWrapper for function '{config.get('function_name', '<unknown>')}'."
+            " Please re-wrap the function manually after loading the model."
+            )
 
 
 class SciSpacyTokenizer(Tokenizer):
@@ -308,6 +415,26 @@ class SciSpacyTokenizer(Tokenizer):
     def name(self) -> str:
         return self.__class__.__name__ + "_" + self.model.meta["name"] + "_" + self.model.meta["version"]
 
+    def to_dict(self) -> dict:
+        """Serialize the tokenizer's configuration to a dictionary."""
+        # No specific configuration needed beyond class identity, model is fixed.
+        return {
+            "class_module": self.__class__.__module__,
+            "class_name": self.__class__.__name__,
+        }
+
+    @classmethod
+    def from_dict(cls, config: dict) -> "SciSpacyTokenizer":
+        """Instantiate the tokenizer from a configuration dictionary."""
+        try:
+            import spacy # Check imports during load
+        except ImportError:
+            raise ImportError(
+                "Spacy or SciSpacy not installed. Please install them to load this tokenizer."
+            )
+        # No specific configuration needed for instantiation
+        return cls()
+
 
 class StaccatoTokenizer(Tokenizer):
     """
@@ -368,3 +495,17 @@ class StaccatoTokenizer(Tokenizer):
         tokens: list[str] = [next(filter(None, match_tuple)) for match_tuple in matches]
 
         return tokens
+
+    def to_dict(self) -> dict:
+        """Serialize the tokenizer's configuration to a dictionary."""
+        # No specific configuration needed beyond class identity
+        return {
+            "class_module": self.__class__.__module__,
+            "class_name": self.__class__.__name__,
+        }
+
+    @classmethod
+    def from_dict(cls, config: dict) -> "StaccatoTokenizer":
+        """Instantiate the tokenizer from a configuration dictionary."""
+        # No specific configuration needed for instantiation
+        return cls()
