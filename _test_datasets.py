@@ -2,20 +2,92 @@ import csv
 import datasets
 import flair
 import pickle
+import sys
 
 # IMDb
 # corpus_imdb = flair.datasets.IMDB(rebalance_corpus=False, noise=False)
 
 
-# AG News
+# # AG News
 # corpus_ag = flair.datasets.AGNEWS()
 # corpus_ag.make_label_dictionary(label_type='topic', min_count=0, add_unk=False, add_dev_test=True)
 
 
 # Noisy AG News
-# with open(".../Data/NoisyAGNews.pkl", "rb") as pickle_file:
-#     data = pickle.load(pickle_file)
-# wait: maybe easier with official release
+noisyagnews_path = "../../Data/NoisyAGNews"
+
+with open(f"{noisyagnews_path}/NoisyAGNews.pkl", "rb") as pickle_file:
+    data = pickle.load(pickle_file)
+
+for data_point in data:
+    for i in [4,6,7,8]:
+        if data_point[i] == 0:
+            data_point[i] = "World"
+        elif data_point[i] == 1:
+            data_point[i] = "Sports"
+        elif data_point[i] == 2:
+            data_point[i] = "Business"
+        elif data_point[i] == 3:
+            data_point[i] = "Sci/Tech"
+
+with open(f"{noisyagnews_path}/train.csv", "w", newline="", encoding="utf-8") as train_file:
+    new_data = csv.writer(train_file, delimiter="\t")
+    new_data.writerows(data[:40000])
+with open(f"{noisyagnews_path}/test.csv", "w", newline="", encoding="utf-8") as test_file:
+    new_data = csv.writer(test_file, delimiter="\t")
+    new_data.writerows(data[40000:45000])
+with open(f"{noisyagnews_path}/dev.csv", "w", newline="", encoding="utf-8") as dev_file:
+    new_data = csv.writer(dev_file, delimiter="\t")
+    new_data.writerows(data[45000:])
+#TODO: choose splits
+
+corpus_noisyagnews_clean = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
+                                                                column_name_map={5: "text", 4: "label"},
+                                                                label_type="category",
+                                                                name="noisyagnews_clean_corpus", 
+                                                                train_file="train.csv",
+                                                                test_file="test.csv",
+                                                                dev_file="dev.csv",
+                                                                delimiter="\t",
+                                                                skip_header=False,                                            
+                                                                )
+corpus_noisyagnews_clean.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
+
+corpus_noisyagnews_worst = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
+                                                                column_name_map={5: "text", 8: "label"},
+                                                                label_type="category",
+                                                                name="noisyagnews_worst_corpus", 
+                                                                train_file="train.csv",
+                                                                test_file="test.csv",
+                                                                dev_file="dev.csv",
+                                                                delimiter="\t",
+                                                                skip_header=False,                                            
+                                                                )
+corpus_noisyagnews_worst.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
+
+corpus_noisyagnews_med = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
+                                                                column_name_map={5: "text", 7: "label"},
+                                                                label_type="category",
+                                                                name="noisyagnews_med_corpus", 
+                                                                train_file="train.csv",
+                                                                test_file="test.csv",
+                                                                dev_file="dev.csv",
+                                                                delimiter="\t",
+                                                                skip_header=False,                                            
+                                                                )
+corpus_noisyagnews_med.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
+
+corpus_noisyagnews_best = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
+                                                                column_name_map={5: "text", 6: "label"},
+                                                                label_type="category",
+                                                                name="noisyagnews_best_corpus", 
+                                                                train_file="train.csv",
+                                                                test_file="test.csv",
+                                                                dev_file="dev.csv",
+                                                                delimiter="\t",
+                                                                skip_header=False,                                            
+                                                                )
+corpus_noisyagnews_best.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
 
 
 # AlleNoise
@@ -125,28 +197,42 @@ import pickle
 
 
 # TREC Spam 2005
-trecspam05_path = "../../Data/TRECSpam2005"
+# trecspam05_path = "../../Data/TRECSpam2005"
 
-label_mapping = {}
-with open(f"{trecspam05_path}/full/index", newline="", encoding="utf-8") as index_file:
-    index = csv.reader(index_file, delimiter="\t")
-    for mapping in index:
-        label, email = mapping
-        label_mapping[email] = label
+# label_mapping = {}
+# with open(f"{trecspam05_path}/full/index", newline="", encoding="utf-8") as index_file:
+#     index = csv.reader(index_file, delimiter=" ")
+#     for mapping in index:
+#         label, email = mapping
+#         label_mapping[email] = label
 
-data = []
-for email in label_mapping:
-    with open(f"{trecspam05_path}/{email[3:]}, "r"", encoding='utf-8') as email_file:
-        content = email_file.read()
-        data.append([content, label_mapping[email]])
+# data = []
+# for email in label_mapping:
+#     with open(f"{trecspam05_path}/{email[3:]}", "r", encoding='latin-1') as email_file:
+#         content = email_file.read()
+#         data.append([content, label_mapping[email]])
 
-with open(f"{trecspam05_path}/full/train.csv", "w", newline="", encoding="utf-8") as train_file:
-    new_data = csv.writer(train_file, delimiter="\t")
-    new_data.writerows(data[:70000])
-with open(f"{trecspam05_path}/full/test.csv", "w", newline="", encoding="utf-8") as test_file:
-    new_data = csv.writer(test_file, delimiter="\t")
-    new_data.writerows(data[70000:85000])
-with open(f"{trecspam05_path}/full/dev.csv", "w", newline="", encoding="utf-8") as dev_file:
-    new_data = csv.writer(test_file, delimiter="\t")
-    new_data.writerows(data[85000:])
-#TODO: choose splits
+# with open(f"{trecspam05_path}/full/train.csv", "w", newline="", encoding="utf-8") as train_file:
+#     new_data = csv.writer(train_file, delimiter="\t")
+#     new_data.writerows(data[:70000])
+# with open(f"{trecspam05_path}/full/test.csv", "w", newline="", encoding="utf-8") as test_file:
+#     new_data = csv.writer(test_file, delimiter="\t")
+#     new_data.writerows(data[70000:85000])
+# with open(f"{trecspam05_path}/full/dev.csv", "w", newline="", encoding="utf-8") as dev_file:
+#     new_data = csv.writer(dev_file, delimiter="\t")
+#     new_data.writerows(data[85000:])
+# #TODO: choose splits
+
+# csv.field_size_limit(sys.maxsize)
+
+# corpus_trecspam05 = flair.datasets.CSVClassificationCorpus(data_folder=f"{trecspam05_path}/full",
+#                                                                 column_name_map={0: "text", 1: "label"},
+#                                                                 label_type="spam",
+#                                                                 name="trecspam2005_corpus", 
+#                                                                 train_file="train.csv",
+#                                                                 test_file="test.csv",
+#                                                                 dev_file="dev.csv",
+#                                                                 delimiter="\t",
+#                                                                 skip_header=False,                                            
+#                                                                 )
+# corpus_trecspam05.make_label_dictionary(label_type='spam', min_count=0, add_unk=False, add_dev_test=True)
