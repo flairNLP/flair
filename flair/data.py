@@ -1380,12 +1380,12 @@ class Sentence(DataPoint):
 
         # set token idx and sentence
         token.sentence = self
-        token._internal_index = len(self.tokens) + 1
+        token._internal_index = len(self._tokens) + 1
         if token.start_position == 0 and token._internal_index > 1:
             token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
 
         # append token to sentence
-        self.tokens.append(token)
+        self._tokens.append(token)
 
         # register token annotations on sentence
         for typename in token.annotation_layers:
