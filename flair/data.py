@@ -1261,11 +1261,6 @@ class Sentence(DataPoint):
         # If no tokens exist, tokenize
         if self._tokens is None:
             self._tokenize()
-        # If tokens exist but were created with a different tokenizer, retokenize
-        elif self._tokenizer_that_created_tokens != self._tokenizer:
-            log.debug(f"Retokenizing sentence due to tokenizer change from {self._tokenizer_that_created_tokens} to {self._tokenizer}")
-            self._tokenize()
-        
         if self._tokens is None:
             raise ValueError("Tokens are None after tokenization - this indicates a bug in the tokenization process")
         return self._tokens

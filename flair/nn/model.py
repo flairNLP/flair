@@ -1003,6 +1003,11 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             if isinstance(sentences[0], Sentence):
                 Sentence.set_context_for_sentences(typing.cast(list[Sentence], sentences))
 
+            if hasattr(self, "_tokenizer"):
+                for sentence in sentences:
+                    if sentence._tokenizer != self._tokenizer:
+                        sentence.retokenize(self._tokenizer)
+
             reordered_sentences = self._sort_data(sentences)
 
             if len(reordered_sentences) == 0:
