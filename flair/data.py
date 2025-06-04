@@ -18,7 +18,7 @@ from torch import device as torch_device  # Import torch.device for type hint
 
 import flair
 from flair.file_utils import Tqdm
-from flair.tokenization import SegtokTokenizer, SpaceTokenizer, Tokenizer
+from flair.tokenization import SegtokTokenizer, SpaceTokenizer, Tokenizer, NoTokenizer
 
 T_co = typing.TypeVar("T_co", covariant=True)
 
@@ -1211,6 +1211,9 @@ class Sentence(DataPoint):
         self._tokens: Optional[list[Token]] = None
         self._text: str = ""  # Change from Optional[str] to str with empty string default
 
+        # track which tokenizer created the current tokens
+        self._tokenizer_that_created_tokens: Optional[Tokenizer] = None
+
         # private field for all known spans with explicit typing
         self._known_spans: dict[str, Union[Span, Relation]] = {}
 
@@ -1239,6 +1242,10 @@ class Sentence(DataPoint):
 
         # if list of strings or tokens is passed, create tokens directly
         if not isinstance(text, str):
+
+            # no tokenizer is used
+            self._tokenizer = NoTokenizer()
+
             self._tokens = []
 
             # First construct the text from tokens to ensure proper text reconstruction
@@ -1280,7 +1287,11 @@ class Sentence(DataPoint):
 
             if len(text) > 0:
                 # convention: the last token has no whitespace after
-                self.tokens[-1].whitespace_after = 0
+                self._tokens[-1].whitespace_after = 0
+
+            # in this case, the tokens were created via a list
+            self._tokenizer_that_created_tokens = NoTokenizer()
+
         else:
             self._text = Sentence._handle_problem_characters(text)
 
@@ -1290,12 +1301,259 @@ class Sentence(DataPoint):
 
     @property
     def tokens(self) -> list[Token]:
-        """The list of Token objects (triggers tokenization if needed)."""
-        if self._tokens is None:
-            self._tokenize()
+        """The list of Token objects. Triggers tokenization if needed (lazy evaluation)."""
+        if self._tokens is None or self._tokenizer != self._tokenizer_that_created_tokens:
+            # Condition for retokenization:
+            # 1. Never tokenized (_tokens is None).
+            # 2. Or, the currently intended _tokenizer is different from the one
+            #    that actually created the current _tokens list.
+
+            current_tokenizer_name = self._tokenizer.__class__.__name__
+            previous_tokenizer_name = (
+                self._tokenizer_that_created_tokens.__class__.__name__
+                if self._tokenizer_that_created_tokens
+                else "None (or externally set)"
+            )
+
+            log.debug(
+                f"Tokens property accessed. Needs tokenization/retokenization. "
+                f"Current intent: '{current_tokenizer_name}', "
+                f"Tokens were created by: '{previous_tokenizer_name}'."
+            )
+
+            if self._tokens is not None and any(self.annotation_layers.values()):
+                log.debug(
+                    f"Retokenizing sentence with '{current_tokenizer_name}' (was '{previous_tokenizer_name}'). "
+                    f"Attempting to preserve span/relation/sentence annotations. "
+                    f"Token-level annotations will be lost."
+                )
+
+            self._perform_retokenization_with_annotation_preservation(new_tokenizer=self._tokenizer)
+
         if self._tokens is None:
             raise ValueError("Tokens are None after tokenization - this indicates a bug in the tokenization process")
         return self._tokens
+
+    def _clear_internal_state_for_retokenization(
+        self,
+    ) -> tuple[
+        dict[str, list[tuple[str, float, dict]]],  # sentence_labels_to_reapply
+        dict[str, dict[str, Any]],  # span_data_to_reapply
+        list[dict[str, Any]],  # relations_to_reapply
+    ]:
+        """
+        Saves sentence-level labels and clears token-dependent internal state.
+        Span and Relation data structures are more complex and should be handled
+        by the caller (_perform_retokenization_with_annotation_preservation)
+        before calling this method if they need to be preserved across retokenization.
+        """
+
+        # --- Save Sentence-Level Labels ---
+        sentence_labels_to_reapply = defaultdict(list)
+        for typename, label_list in self.annotation_layers.items():
+            for label in label_list:
+                if label.data_point is self:  # Only sentence-level labels
+                    sentence_labels_to_reapply[typename].append((label.value, label.score, label.metadata))
+
+        # --- Save Span and Relation Info (as done in the original retokenize) ---
+        # This part is complex and involves character offsets.
+        # The full retokenize method has logic for this. We'll adapt it.
+        span_data_to_reapply: dict[str, dict[str, Any]] = {}
+        relations_to_reapply: list[dict[str, Any]] = []
+
+        if self._known_spans:  # only if there are existing spans/relations
+            original_known_spans_relations = list(self._known_spans.values())
+            for dp in original_known_spans_relations:
+                if isinstance(dp, Span):
+                    span_id = dp.unlabeled_identifier  # Use as a key
+                    # Store data needed to reconstruct or re-find the span
+                    span_info = {
+                        "text": dp.text,  # For matching if char offsets fail
+                        "start_char": dp.start_position - self.start_position,  # Relative to sentence start
+                        "end_char": dp.end_position - self.start_position,  # Relative to sentence start
+                        "labels": [],
+                    }
+                    span_info_label_list = span_info["labels"]
+                    assert isinstance(span_info_label_list, list)  # just to make mypy happy
+                    for label in dp.labels:  # Save labels attached directly to this span
+                        if label.data_point is dp:
+                            span_info_label_list.append((label.typename, label.value, label.score, label.metadata))
+                    span_data_to_reapply[span_id] = span_info
+
+                elif isinstance(dp, Relation):
+                    relation_info = {
+                        "first_span_id": dp.first.unlabeled_identifier,
+                        "second_span_id": dp.second.unlabeled_identifier,
+                        "labels": [],
+                    }
+                    relation_info_labels = relation_info["labels"]
+                    assert isinstance(relation_info_labels, list)
+                    for label in dp.labels:  # Save labels attached directly to this relation
+                        if label.data_point is dp:
+                            relation_info_labels.append((label.typename, label.value, label.score, label.metadata))
+                    relations_to_reapply.append(relation_info)
+
+        # --- Clear State ---
+        self.annotation_layers.clear()  # Clear all, sentence labels will be re-added
+        self._tokens = []  # Reset token list
+        self._known_spans = {}  # Clear known spans/relations cache
+        self.tokenized = None  # Reset cached tokenized string
+
+        return sentence_labels_to_reapply, span_data_to_reapply, relations_to_reapply
+
+    def _perform_retokenization_with_annotation_preservation(self, new_tokenizer: Tokenizer) -> None:
+        """
+        Internal method to retokenize the sentence, attempting to preserve annotations.
+        This method directly manipulates self._tokens and updates self._tokenizer_that_created_tokens.
+        """
+        original_text = self.to_original_text()
+        if not original_text and self._text:  # Fallback if to_original_text is empty but _text is not
+            original_text = self._text
+
+        log.debug(
+            f"Performing retokenization for sentence with '{new_tokenizer.__class__.__name__}'. Text: '{original_text[:50]}...'"
+        )
+
+        # Step 1: Save relevant annotations and clear state
+        (sentence_labels_data, span_data_to_reapply, relations_to_reapply) = (
+            self._clear_internal_state_for_retokenization()
+        )
+
+        # Step 2: Tokenize the text using the new tokenizer and populate self._tokens directly
+        # self._tokens is already [] from _clear_internal_state_for_retokenization
+
+        token_texts = new_tokenizer.tokenize(original_text)
+
+        current_char_offset = 0
+        previous_token_obj: Optional[Token] = None
+
+        for text_content in token_texts:
+            try:
+                # Find start position relative to sentence's original text
+                start_pos_in_original = original_text.index(text_content, current_char_offset)
+            except ValueError:
+                # Fallback if token text isn't found (e.g., tokenizer normalization)
+                # This is a tricky case; for now, assume contiguous.
+                log.warning(
+                    f"Token '{text_content}' not found directly in original text after offset {current_char_offset}. "
+                    f"Using sequential offset. This might affect span/relation re-alignment."
+                )
+                start_pos_in_original = current_char_offset
+
+            delta_offset = start_pos_in_original - current_char_offset
+
+            # Create new token
+            # The token's start_position is relative to the original sentence text.
+            token = Token(text=text_content, start_position=start_pos_in_original)
+            token.sentence = self
+            if self._tokens is None:
+                self._tokens = [token]
+                token._internal_index = 1
+            else:
+                token._internal_index = len(self._tokens) + 1
+                self._tokens.append(token)  # Append to the list attribute
+
+            if previous_token_obj is not None:
+                previous_token_obj.whitespace_after = delta_offset
+
+            current_char_offset = token.end_position  # end_position is relative to sentence start
+            previous_token_obj = token
+
+        if self._tokens:  # Ensure last token has no whitespace_after
+            self._tokens[-1].whitespace_after = 0
+
+        # Step 3: Reconstruct Spans and Build Mapping for Relations
+        reconstructed_span_map: dict[str, Span] = {}  # Map: original_span_identifier -> new_span_object
+
+        # Adjust start_position of all new tokens by sentence's own start_position
+        # This makes token.start_position absolute again if sentence has an offset.
+        # (This step might be redundant if token.start_position was always stored absolute to document)
+        # For now, assume token.start_position is relative to sentence._text during this method.
+        # The `dp.start_position - self.start_position` in _clear_internal_state implies this.
+
+        for original_span_id, span_data in span_data_to_reapply.items():
+            original_rel_start_char = span_data["start_char"]
+            original_rel_end_char = span_data["end_char"]
+
+            target_tokens_for_span: list[Token] = []
+            if self._tokens:
+                for token_idx, token_obj in enumerate(self._tokens):
+                    # Token positions are relative to sentence start
+                    token_start_rel = token_obj.start_position
+                    token_end_rel = token_obj.end_position
+
+                    # Check for overlap:
+                    # A token is part of the span if it overlaps with [original_rel_start_char, original_rel_end_char)
+                    is_overlapping = max(original_rel_start_char, token_start_rel) < min(
+                        original_rel_end_char, token_end_rel
+                    )
+
+                    if is_overlapping:
+                        target_tokens_for_span.append(token_obj)
+
+            if target_tokens_for_span:
+                # Create new Span directly from the list of new tokens
+                # Span.__new__ handles caching in self._known_spans
+                new_span = Span(target_tokens_for_span)
+
+                for typename, value, score, metadata in span_data["labels"]:
+                    new_span.add_label(typename, value, score, **metadata)
+                reconstructed_span_map[original_span_id] = new_span
+            else:
+                log.warning(
+                    f"Could not map original span '{span_data.get('text', original_span_id)}' "
+                    f"(orig chars {original_rel_start_char}-{original_rel_end_char}) to new tokens after retokenization."
+                )
+
+        # Step 4: Reconstruct Relations
+        for rel_info in relations_to_reapply:
+            new_first_span = reconstructed_span_map.get(rel_info["first_span_id"])
+            new_second_span = reconstructed_span_map.get(rel_info["second_span_id"])
+
+            if new_first_span and new_second_span:
+                # Relation.__new__ handles caching in self._known_spans
+                new_relation = Relation(new_first_span, new_second_span)
+                for typename, value, score, metadata in rel_info["labels"]:
+                    new_relation.add_label(typename, value, score, **metadata)
+            else:
+                log.warning(
+                    f"Could not reconstruct relation between original spans '{rel_info['first_span_id']}' and "
+                    f"'{rel_info['second_span_id']}' due to missing span(s) after retokenization."
+                )
+
+        # Step 5: Reapply Sentence-Level Labels
+        for typename, labels_to_add in sentence_labels_data.items():
+            for value, score, metadata in labels_to_add:
+                self.add_label(typename, value, score, **metadata)  # This attaches to self (Sentence)
+
+        # Step 6: Mark that tokenization is complete with the new_tokenizer
+        self._tokenizer = new_tokenizer
+        self._tokenizer_that_created_tokens = new_tokenizer
+        log.debug(
+            f"Retokenization complete. '{self._tokenizer_that_created_tokens.__class__.__name__}' is now creator of tokens."
+        )
+
+    @property
+    def tokenizer(self) -> Tokenizer:
+        """Gets the tokenizer currently intended for this sentence."""
+        return self._tokenizer
+
+    @tokenizer.setter
+    def tokenizer(self, new_tokenizer: Tokenizer) -> None:
+        """
+        Sets the new intended tokenizer for this sentence.
+        Retokenization is lazy and will occur the next time .tokens is accessed if the
+        new_tokenizer is different from the one that last created the tokens.
+        """
+        if self._tokenizer is not new_tokenizer:
+            log.debug(
+                f"Sentence tokenizer intent changed from {self._tokenizer.__class__.__name__} to {new_tokenizer.__class__.__name__}. "
+                f"Retokenization will be lazy."
+            )
+            self._tokenizer = new_tokenizer
+            # Note: We DO NOT change self._tokenizer_that_created_tokens here.
+            # That state reflects the past creation of self._tokens.
+            # The .tokens property will compare self._tokenizer and self._tokenizer_that_created_tokens.
 
     def _tokenize(self) -> None:
         """Internal method to perform tokenization based on `self.text` and `self._tokenizer`."""
@@ -1335,7 +1593,9 @@ class Sentence(DataPoint):
 
     @property
     def unlabeled_identifier(self):
-        return f'Sentence[{len(self)}]: "{self.text}"'
+        # Try to get token count without forcing tokenization if _tokens exist
+        num_tokens = len(self._tokens) if self._tokens is not None else "?"
+        return f'Sentence[{num_tokens}]: "{self._text}"'
 
     @property
     def text(self) -> str:
@@ -1405,14 +1665,17 @@ class Sentence(DataPoint):
         if token.text == "":
             return
 
+        if self._tokens is None:
+            self._tokens = []
+
         # set token idx and sentence
         token.sentence = self
-        token._internal_index = len(self.tokens) + 1
+        token._internal_index = len(self._tokens) + 1
         if token.start_position == 0 and token._internal_index > 1:
             token.start_position = len(self.to_original_text()) + self[-1].whitespace_after
 
         # append token to sentence
-        self.tokens.append(token)
+        self._tokens.append(token)
 
         # register token annotations on sentence
         for typename in token.annotation_layers:
@@ -1733,92 +1996,34 @@ class Sentence(DataPoint):
                 )
             ]
 
-    def retokenize(self, tokenizer):
+    def _clear_internal_state(self) -> None:
         """
-        Retokenizes the sentence using the provided tokenizer while preserving span labels.
+        Resets the internal tokenization and annotation state of the sentence.
+        Used before operations like retokenization that rebuild the sentence structure.
+        """
+        # Clear the central annotation registry
+        self.annotation_layers: dict[str, list[Label]] = {}
+        # Clear token list
+        self._tokens = []
+        # Clear known spans/relations cache
+        self._known_spans = {}
+        # Reset cached tokenized string representation
+        self.tokenized = None
+
+    def retokenize(self, new_tokenizer: Tokenizer) -> None:
+        """
+        Eagerly retokenizes the sentence using the provided tokenizer.
+        This attempts to preserve span, relation, and sentence labels.
+        Token-level labels are generally discarded as their basis (the tokens themselves) changes.
 
         Args:
-            tokenizer: The tokenizer to use for retokenization
-
-        Example::
-
-            # Create a sentence with default tokenization
-            sentence = Sentence("01-03-2025 New York")
-
-            # Add span labels
-            sentence.get_span(1, 3).add_label('ner', "LOC")
-            sentence.get_span(0, 1).add_label('ner', "DATE")
-
-            # Retokenize with a different tokenizer while preserving labels
-            sentence.retokenize(StaccatoTokenizer())
+            new_tokenizer: The tokenizer to use for retokenization.
         """
-        # Store the original text
-        original_text = self.to_original_text()
-
-        # Save all span-level labels with their text spans and character positions
-        span_labels = {}
-        for label_type in list(self.annotation_layers.keys()):
-            spans = self.get_spans(label_type)
-            if spans:
-                if label_type not in span_labels:
-                    span_labels[label_type] = []
-
-                for span in spans:
-                    # Store the span text, character positions, and its labels
-                    span_labels[label_type].append(
-                        (
-                            span.text,
-                            span.start_position,
-                            span.end_position,
-                            [label.value for label in span.labels],
-                            [label.score for label in span.labels],
-                        )
-                    )
-
-                # Remove all labels of this type
-                self.remove_labels(label_type)
-
-        # Create a new sentence with the same text but using the new tokenizer
-        new_sentence = Sentence(original_text, use_tokenizer=tokenizer)
-
-        # Replace the tokens in the current sentence with the tokens from the new sentence
-        self.tokens.clear()
-        for token in new_sentence.tokens:
-            self.tokens.append(token)
-            # Update the token's sentence reference to point to this sentence
-            token.sentence = self
-
-        # Reapply span labels based on character positions
-        for label_type, spans in span_labels.items():
-            for span_text, start_pos, end_pos, label_values, label_scores in spans:
-                # Find tokens that are fully or partially contained within the span
-                token_indices = []
-
-                for i, token in enumerate(self.tokens):
-                    # Check if token is within or overlaps with the span
-                    # A token is part of the span if:
-                    # 1. It starts within the span, or
-                    # 2. It ends within the span, or
-                    # 3. It completely contains the span
-                    token_start = token.start_position
-                    token_end = token.end_position
-
-                    if (
-                        (token_start >= start_pos and token_start < end_pos)
-                        or (token_end > start_pos and token_end <= end_pos)  # Token starts within span
-                        or (token_start <= start_pos and token_end >= end_pos)  # Token ends within span
-                    ):  # Token contains span
-                        token_indices.append(i)
-
-                # If we found tokens covering this span
-                if token_indices:
-                    span_start = min(token_indices)
-                    span_end = max(token_indices) + 1
-
-                    # Create the span and add labels
-                    span = self.get_span(span_start, span_end)
-                    for value, score in zip(label_values, label_scores):
-                        span.add_label(label_type, value, score)
+        log.debug(f"Eager retokenize called with '{new_tokenizer.__class__.__name__}'.")
+        self._tokenizer = new_tokenizer  # Set the new intent
+        # Immediately perform the retokenization.
+        # The .tokens property would also do this on next access, but this forces it now.
+        self._perform_retokenization_with_annotation_preservation(new_tokenizer)
 
     # Keep overridden implementation for Sentence
     def _get_dynamic_embedding_names(self) -> set[str]:
@@ -2116,6 +2321,9 @@ class Corpus(typing.Generic[T_co]):
         self._test: Optional[Dataset[T_co]] = test
         self._dev: Optional[Dataset[T_co]] = dev
 
+        # --- Add attribute to store tokenizer (will be set by subclasses) ---
+        self.tokenizer: Optional[Tokenizer] = None
+
     @property
     def train(self) -> Optional[Dataset[T_co]]:
         """The training split as a :class:`torch.utils.data.Dataset` object."""
@@ -2130,6 +2338,15 @@ class Corpus(typing.Generic[T_co]):
     def test(self) -> Optional[Dataset[T_co]]:
         """The test split as a :class:`torch.utils.data.Dataset` object."""
         return self._test
+
+    @property
+    def corpus_tokenizer(self) -> Optional[Tokenizer]:
+        """
+        Returns the custom tokenizer provided during corpus initialization for retokenization, if any.
+        Returns None if no custom retokenizer was specified.
+        """
+        # The tokenizer attribute is set by subclasses like ColumnCorpus during their init
+        return self.tokenizer
 
     def downsample(
         self,

@@ -328,6 +328,7 @@ class MultiFileColumnCorpus(Corpus):
         default_whitespace_after: int = 1,
         every_sentence_is_independent: bool = False,
         documents_as_sentences: bool = False,
+        use_tokenizer: Optional[Tokenizer] = None,
         **corpusargs,
     ) -> None:
         r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -346,6 +347,7 @@ class MultiFileColumnCorpus(Corpus):
             in_memory: If set to True, the dataset is kept in memory as Sentence objects, otherwise does disk reads
             label_name_map: Optionally map tag names to different schema.
             banned_sentences: Optionally remove sentences from the corpus. Works only if `in_memory` is true
+            use_tokenizer: Optionally provide a flair Tokenizer object for retokenization.
         """
         # get train data
         train: Optional[Dataset] = (
@@ -365,6 +367,7 @@ class MultiFileColumnCorpus(Corpus):
                         default_whitespace_after=default_whitespace_after,
                         every_sentence_is_independent=every_sentence_is_independent,
                         documents_as_sentences=documents_as_sentences,
+                        use_tokenizer=use_tokenizer,
                     )
                     for train_file in train_files
                 ]
@@ -391,6 +394,7 @@ class MultiFileColumnCorpus(Corpus):
                         default_whitespace_after=default_whitespace_after,
                         every_sentence_is_independent=every_sentence_is_independent,
                         documents_as_sentences=documents_as_sentences,
+                        use_tokenizer=use_tokenizer,
                     )
                     for test_file in test_files
                 ]
@@ -417,6 +421,7 @@ class MultiFileColumnCorpus(Corpus):
                         default_whitespace_after=default_whitespace_after,
                         every_sentence_is_independent=every_sentence_is_independent,
                         documents_as_sentences=documents_as_sentences,
+                        use_tokenizer=use_tokenizer,
                     )
                     for dev_file in dev_files
                 ]
@@ -426,6 +431,9 @@ class MultiFileColumnCorpus(Corpus):
         )
 
         super().__init__(train, dev, test, **corpusargs)
+
+        # --- Store the retokenizer in the Corpus ---
+        self.tokenizer: Optional[Tokenizer] = use_tokenizer
 
 
 class ColumnCorpus(MultiFileColumnCorpus):
@@ -439,6 +447,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
         autofind_splits: bool = True,
         name: Optional[str] = None,
         comment_symbol="# ",
+        use_tokenizer: Optional[Tokenizer] = None,
         **corpusargs,
     ) -> None:
         r"""Instantiates a Corpus from CoNLL column-formatted task data such as CoNLL03 or CoNLL2000.
@@ -468,6 +477,7 @@ class ColumnCorpus(MultiFileColumnCorpus):
             test_files=[test_file] if test_file else [],
             name=name if data_folder is None else str(data_folder),
             comment_symbol=comment_symbol,
+            use_tokenizer=use_tokenizer,
             **corpusargs,
         )
 
@@ -495,6 +505,7 @@ class ColumnDataset(FlairDataset):
         label_name_map: Optional[dict[str, str]] = None,
         default_whitespace_after: int = 1,
         documents_as_sentences: bool = False,
+        use_tokenizer: Optional[Tokenizer] = None,
     ) -> None:
         r"""Instantiates a column dataset.
 
@@ -529,6 +540,8 @@ class ColumnDataset(FlairDataset):
 
         # store either Sentence objects in memory, or only file offsets
         self.in_memory = in_memory
+
+        self.use_tokenizer = use_tokenizer
 
         self.total_sentence_count: int = 0
 
@@ -587,6 +600,10 @@ class ColumnDataset(FlairDataset):
                     sentence._next_sentence = None
                     if previous_sentence:
                         previous_sentence._next_sentence = sentence
+
+                    # retokenize sentence if custom tokenizer is provided
+                    if self.use_tokenizer is not None and sentence:
+                        sentence.retokenize(self.use_tokenizer)
 
                     # append parsed sentence to list in memory
                     self.sentences.append(sentence)
@@ -864,6 +881,9 @@ class ColumnDataset(FlairDataset):
                 word_level_tag_columns=self.word_level_tag_columns,
                 span_level_tag_columns=self.span_level_tag_columns,
             )
+
+            if self.use_tokenizer is not None:
+                sentence.retokenize(self.use_tokenizer)
 
             # set sentence context using partials TODO: pointer to dataset is really inefficient
             sentence._has_context = True

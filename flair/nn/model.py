@@ -14,6 +14,7 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
+import flair.tokenization
 from flair.class_utils import get_non_abstract_subclasses
 from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
@@ -22,6 +23,7 @@ from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
 from flair.file_utils import Tqdm, load_torch_state
 from flair.training_utils import EmbeddingStorageMode, Result, store_embeddings
+import importlib
 
 log = logging.getLogger("flair")
 
@@ -43,6 +45,32 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         # with the exact same optimizer and learning rate scheduler states.
         self.optimizer_state_dict: Optional[dict[str, Any]] = None
         self.scheduler_state_dict: Optional[dict[str, Any]] = None
+
+        # Internal storage for the tokenizer
+        self._tokenizer: Optional[flair.tokenization.Tokenizer] = None
+
+    @property
+    def tokenizer(self) -> Optional[flair.tokenization.Tokenizer]:
+        """
+        Gets the tokenizer associated with this model.
+        Returns:
+            Optional[flair.tokenization.Tokenizer]: The tokenizer instance, or None if not set.
+        """
+        return self._tokenizer
+
+    @tokenizer.setter
+    def tokenizer(self, value: Optional[flair.tokenization.Tokenizer]) -> None:
+        """
+        Sets the tokenizer for this model.
+        Args:
+            value (Optional[flair.tokenization.Tokenizer]): The tokenizer instance to set.
+        """
+        if self._tokenizer is not value:  # Basic check to avoid unnecessary logging if same instance
+            log.debug(
+                f"Model tokenizer changed from {self._tokenizer.__class__.__name__ if self._tokenizer else 'None'} "
+                f"to {value.__class__.__name__ if value else 'None'}"
+            )
+        self._tokenizer = value
 
     @property
     @abstractmethod
@@ -104,19 +132,63 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         - "optimizer_state_dict": The optimizer's state dictionary (if it exists)
         - "scheduler_state_dict": The scheduler's state dictionary (if it exists)
         - "model_card": Training parameters and metadata (if set)
+        - "tokenizer_info": Information to reconstruct the tokenizer used during training (if any and serializable)
         """
         # Always include the name of the Model class for which the state dict holds
-        state_dict = {"state_dict": self.state_dict(), "__cls__": self.__class__.__name__}
+        state = {"state_dict": self.state_dict(), "__cls__": self.__class__.__name__}
 
         # Add optimizer state dict if it exists
         if hasattr(self, "optimizer_state_dict") and self.optimizer_state_dict is not None:
-            state_dict["optimizer_state_dict"] = self.optimizer_state_dict
+            state["optimizer_state_dict"] = self.optimizer_state_dict
 
         # Add scheduler state dict if it exists
         if hasattr(self, "scheduler_state_dict") and self.scheduler_state_dict is not None:
-            state_dict["scheduler_state_dict"] = self.scheduler_state_dict
+            state["scheduler_state_dict"] = self.scheduler_state_dict
 
-        return state_dict
+        # -- Start Tokenizer Serialization Logic --
+        tokenizer_info = None  # Default: no tokenizer info saved
+
+        # Get the tokenizer
+        current_tokenizer = self.tokenizer
+
+        if current_tokenizer is not None:
+
+            if hasattr(current_tokenizer, "to_dict") and callable(getattr(current_tokenizer, "to_dict")):
+                try:
+                    potential_tokenizer_info = current_tokenizer.to_dict()
+
+                    if (
+                        isinstance(potential_tokenizer_info, dict)
+                        and "class_module" in potential_tokenizer_info
+                        and "class_name" in potential_tokenizer_info
+                    ):
+                        tokenizer_info = potential_tokenizer_info  # Store the valid dict
+                    else:
+                        log.warning(
+                            f"Tokenizer {current_tokenizer.__class__.__name__} has a 'to_dict' method, "
+                            f"but it did not return a valid dictionary with 'class_module' and "
+                            f"'class_name'. Tokenizer will not be saved automatically."
+                        )
+                        # tokenizer_info remains None
+                except Exception as e:
+                    log.warning(
+                        f"Error calling 'to_dict' on tokenizer {current_tokenizer.__class__.__name__}: {e}. "
+                        f"Tokenizer will not be saved automatically."
+                    )
+                    # tokenizer_info remains None
+            else:
+                log.warning(
+                    f"Tokenizer {current_tokenizer.__class__.__name__} does not implement the 'to_dict' method "
+                    f"required for automatic saving. It will not be saved automatically. "
+                    f"You may need to manually attach it after loading the model."
+                )
+                # tokenizer_info remains None
+
+        # Add the determined tokenizer_info (either dict or None) to the state
+        state["tokenizer_info"] = tokenizer_info  # type: ignore[assignment]
+        # -- End Tokenizer Serialization Logic --
+
+        return state
 
     @classmethod
     def _init_model_with_state_dict(cls, state: dict[str, Any], **kwargs):
@@ -128,7 +200,6 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             kwargs["embeddings"] = embeddings
 
         model = cls(**kwargs)
-
         model.load_state_dict(state["state_dict"])
 
         # load optimizer state if it exists in the state dict
@@ -141,7 +212,49 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             log.debug(f"Found scheduler state in model file with keys: {state['scheduler_state_dict'].keys()}")
             model.scheduler_state_dict = state["scheduler_state_dict"]
 
-        return model
+        # --- Part 3: Load Tokenizer ---
+        tokenizer_instance = None  # Default to None
+        if "tokenizer_info" in state and state["tokenizer_info"] is not None:
+            tokenizer_info = state["tokenizer_info"]
+            if isinstance(tokenizer_info, dict) and "class_module" in tokenizer_info and "class_name" in tokenizer_info:
+                module_name = tokenizer_info["class_module"]
+                class_name = tokenizer_info["class_name"]
+                try:
+                    # ... (importlib logic, call from_dict, error handling) ...
+                    module = importlib.import_module(module_name)
+                    TokenizerClass = getattr(module, class_name)
+                    if hasattr(TokenizerClass, "from_dict") and callable(getattr(TokenizerClass, "from_dict")):
+                        tokenizer_instance = TokenizerClass.from_dict(tokenizer_info)
+                        log.info(f"Successfully loaded tokenizer '{class_name}' from '{module_name}'.")
+                    else:
+                        log.warning(
+                            f"Tokenizer class '{class_name}' found in '{module_name}', but it is missing the required "
+                            f"'from_dict' class method. Tokenizer cannot be loaded automatically."
+                        )
+                except ImportError:
+                    log.warning(
+                        f"Could not import tokenizer module '{module_name}'. "
+                        f"Make sure the module containing '{class_name}' is installed and accessible."
+                    )
+                except AttributeError:
+                    log.warning(f"Could not find tokenizer class '{class_name}' in module '{module_name}'.")
+                except Exception as e:
+                    log.warning(
+                        f"Error reconstructing tokenizer '{class_name}' from module '{module_name}' "
+                        f"using 'from_dict': {e}"
+                    )
+
+            else:
+                log.warning(
+                    "Found 'tokenizer_info' in saved model state, but it is invalid (must be a dict with "
+                    "'class_module' and 'class_name'). Tokenizer cannot be loaded automatically."
+                )
+
+        # Assign the result (instance or None) to the model
+        model._tokenizer = tokenizer_instance
+        # --- End Tokenizer Loading ---
+
+        return model  # Return the initialized model object
 
     @staticmethod
     def _fetch_model(model_identifier: str):
@@ -933,6 +1046,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             if isinstance(sentences[0], Sentence):
                 Sentence.set_context_for_sentences(typing.cast(list[Sentence], sentences))
 
+            # Use the tokenizer property getter
+            model_tokenizer = self.tokenizer
+            if model_tokenizer is not None:
+                for sentence in sentences:
+                    # this affects only models that call predict over Sentence or EncodedSentence objects (not Spans, etc.)
+                    if isinstance(sentence, Sentence):
+                        sentence.tokenizer = model_tokenizer
+
             reordered_sentences = self._sort_data(sentences)
 
             if len(reordered_sentences) == 0:
@@ -975,8 +1096,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 # if anything could possibly be predicted
                 if data_points:
                     # remove previously predicted labels of this type
-                    for sentence in data_points:
-                        sentence.remove_labels(label_name)
+                    for data_point in data_points:
+                        data_point.remove_labels(label_name)
 
                     if return_loss:
                         # filter data points that have labels outside of dictionary
