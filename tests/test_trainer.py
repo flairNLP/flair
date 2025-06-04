@@ -1,7 +1,7 @@
 import pytest
 from torch.optim import Adam
-import shutil # Import shutil for cleanup
-from pathlib import Path # Import Path for type hinting
+import shutil  # Import shutil for cleanup
+from pathlib import Path  # Import Path for type hinting
 
 import flair
 from flair.data import Sentence
@@ -209,7 +209,7 @@ def test_store_tokenizer_in_model(results_base_path, tasks_base_path):
     )
 
     # 6. Assert that the tokenizer is stored in the model
-    assert hasattr(model, '_tokenizer')
+    assert hasattr(model, "_tokenizer")
     assert model._tokenizer is not None
     assert isinstance(model._tokenizer, StaccatoTokenizer)
 
@@ -219,22 +219,31 @@ def test_store_tokenizer_in_model(results_base_path, tasks_base_path):
 
 # --- New Tests for Save/Load ---
 
-def _train_and_load_model_with_tokenizer(results_base_path: Path, tasks_base_path: Path, tokenizer: Tokenizer, model_class=TokenClassifier, embeddings=turian_embeddings) -> flair.nn.Model:
+
+def _train_and_load_model_with_tokenizer(
+    results_base_path: Path,
+    tasks_base_path: Path,
+    tokenizer: Tokenizer,
+    model_class=TokenClassifier,
+    embeddings=turian_embeddings,
+) -> flair.nn.Model:
     """Helper function to train a model with a specific tokenizer, reload it, and clean up."""
     flair.set_seed(123)
     # Define the path for saving the model specific to this test run
     model_save_path = results_base_path / f"test_{tokenizer.__class__.__name__}_save_load_{tokenizer.name}"
-    loaded_model = None # Initialize loaded_model
+    loaded_model = None  # Initialize loaded_model
 
     try:
         # 1. Get a corpus and instantiate with custom tokenizer
         corpus = flair.datasets.ColumnCorpus(
-            data_folder=tasks_base_path / "fewshot_conll", # Use a small dataset
+            data_folder=tasks_base_path / "fewshot_conll",  # Use a small dataset
             train_file="1shot.txt",
             sample_missing_splits=False,
             column_format={0: "text", 1: "ner"},
-            use_tokenizer=tokenizer, # Pass the specific tokenizer
-        ).downsample(1.0) # Use the full 1shot file
+            use_tokenizer=tokenizer,  # Pass the specific tokenizer
+        ).downsample(
+            1.0
+        )  # Use the full 1shot file
 
         # 2. Make label dictionary
         label_dict = corpus.make_label_dictionary(label_type="ner")
@@ -260,15 +269,15 @@ def _train_and_load_model_with_tokenizer(results_base_path: Path, tasks_base_pat
             mini_batch_size=1,
             max_epochs=1,
             shuffle=False,
-            save_final_model=True, # Ensure model is saved
+            save_final_model=True,  # Ensure model is saved
         )
 
         # 6. Load the saved model
         final_model_file = model_save_path / "final-model.pt"
         if final_model_file.exists():
-             loaded_model = model_class.load(final_model_file)
+            loaded_model = model_class.load(final_model_file)
         else:
-             pytest.fail(f"Model training did not produce 'final-model.pt' at {model_save_path}")
+            pytest.fail(f"Model training did not produce 'final-model.pt' at {model_save_path}")
 
         # Clean up intermediate objects (optional within try)
         del trainer, model, label_dict, corpus
@@ -278,7 +287,7 @@ def _train_and_load_model_with_tokenizer(results_base_path: Path, tasks_base_pat
         if model_save_path.exists():
             shutil.rmtree(model_save_path)
 
-    return loaded_model # Return the loaded model
+    return loaded_model  # Return the loaded model
 
 
 @pytest.mark.integration()
@@ -288,16 +297,17 @@ def test_staccato_tokenizer_save_load(results_base_path, tasks_base_path):
     loaded_model = _train_and_load_model_with_tokenizer(results_base_path, tasks_base_path, tokenizer)
 
     # Assertions
-    assert hasattr(loaded_model, '_tokenizer')
+    assert hasattr(loaded_model, "_tokenizer")
     assert loaded_model._tokenizer is not None
     assert isinstance(loaded_model._tokenizer, StaccatoTokenizer)
 
     # Optional: Check if tokenization works as expected
     sentence = Sentence("Test sentence.")
-    tokens = loaded_model._tokenizer.tokenize(sentence.text) # Use tokenizer directly
-    assert tokens == ["Test", "sentence", "."] # Check Staccato tokenization result
+    tokens = loaded_model._tokenizer.tokenize(sentence.text)  # Use tokenizer directly
+    assert tokens == ["Test", "sentence", "."]  # Check Staccato tokenization result
 
     del loaded_model, tokenizer
+
 
 @pytest.mark.integration()
 def test_segtok_tokenizer_save_load(results_base_path, tasks_base_path):
@@ -306,27 +316,27 @@ def test_segtok_tokenizer_save_load(results_base_path, tasks_base_path):
     tokenizer_default = SegtokTokenizer()
     loaded_model_default = _train_and_load_model_with_tokenizer(results_base_path, tasks_base_path, tokenizer_default)
 
-    assert hasattr(loaded_model_default, '_tokenizer')
+    assert hasattr(loaded_model_default, "_tokenizer")
     assert loaded_model_default._tokenizer is not None
     assert isinstance(loaded_model_default._tokenizer, SegtokTokenizer)
-    assert loaded_model_default._tokenizer.additional_split_characters is None # Check default param
+    assert loaded_model_default._tokenizer.additional_split_characters is None  # Check default param
 
     # Test Segtok with custom split chars
-    split_chars = ['§', '.']
+    split_chars = ["§", "."]
     tokenizer_custom = SegtokTokenizer(additional_split_characters=split_chars)
     loaded_model_custom = _train_and_load_model_with_tokenizer(results_base_path, tasks_base_path, tokenizer_custom)
 
-    assert hasattr(loaded_model_custom, '_tokenizer')
+    assert hasattr(loaded_model_custom, "_tokenizer")
     assert loaded_model_custom._tokenizer is not None
     assert isinstance(loaded_model_custom._tokenizer, SegtokTokenizer)
-    assert loaded_model_custom._tokenizer.additional_split_characters == split_chars # Check custom param restored
+    assert loaded_model_custom._tokenizer.additional_split_characters == split_chars  # Check custom param restored
 
     # Optional: Check functionality difference (though not strictly testing save/load)
     text = "Test.Symbol"
     tokens_default = loaded_model_default._tokenizer.tokenize(text)
     tokens_custom = loaded_model_custom._tokenizer.tokenize(text)
-    assert "Test.Symbol" in tokens_default # Default doesn't split '.'
-    assert "." in tokens_custom           # Custom should split '.'
+    assert "Test.Symbol" in tokens_default  # Default doesn't split '.'
+    assert "." in tokens_custom  # Custom should split '.'
 
     del loaded_model_default, tokenizer_default
     del loaded_model_custom, tokenizer_custom

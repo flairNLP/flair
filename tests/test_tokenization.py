@@ -8,8 +8,9 @@ from flair.tokenization import (
     JapaneseTokenizer,
     SciSpacyTokenizer,
     StaccatoTokenizer,
-    TokenizerWrapper
+    TokenizerWrapper,
 )
+
 
 # Helper function for basic serialization/deserialization test
 def _test_tokenizer_serialization(tokenizer_instance):
@@ -35,13 +36,16 @@ def _test_tokenizer_serialization(tokenizer_instance):
     reconstructed_tokens = reconstructed_tokenizer.tokenize(text)
     assert original_tokens == reconstructed_tokens
 
-    return reconstructed_tokenizer # Return for further specific checks if needed
+    return reconstructed_tokenizer  # Return for further specific checks if needed
+
 
 # --- Individual Tokenizer Tests ---
+
 
 def test_staccato_tokenizer_serialization():
     tokenizer = StaccatoTokenizer()
     _test_tokenizer_serialization(tokenizer)
+
 
 def test_segtok_tokenizer_serialization():
     # Test default
@@ -50,14 +54,16 @@ def test_segtok_tokenizer_serialization():
     assert reconstructed_default.additional_split_characters is None
 
     # Test with additional chars
-    split_chars = ['§', '%']
+    split_chars = ["§", "%"]
     tokenizer_custom = SegtokTokenizer(additional_split_characters=split_chars)
     reconstructed_custom = _test_tokenizer_serialization(tokenizer_custom)
     assert reconstructed_custom.additional_split_characters == split_chars
 
+
 def test_space_tokenizer_serialization():
     tokenizer = SpaceTokenizer()
     _test_tokenizer_serialization(tokenizer)
+
 
 def test_spacy_tokenizer_serialization():
     pytest.importorskip("spacy")
@@ -71,6 +77,7 @@ def test_spacy_tokenizer_serialization():
     reconstructed = _test_tokenizer_serialization(tokenizer)
     assert reconstructed.model.meta["name"] == "en_core_web_sm"
 
+
 def test_japanese_tokenizer_serialization():
     pytest.importorskip("konoha")
     # Assuming MeCab is a common backend for testing, may need specific setup/skipping
@@ -79,7 +86,7 @@ def test_japanese_tokenizer_serialization():
         tokenizer = JapaneseTokenizer("mecab")
         reconstructed = _test_tokenizer_serialization(tokenizer)
         assert reconstructed.tokenizer == "mecab"
-        assert reconstructed.sudachi_mode == "A" # Check default mode
+        assert reconstructed.sudachi_mode == "A"  # Check default mode
 
         # Test with different mode
         tokenizer_sudachi = JapaneseTokenizer("sudachi", sudachi_mode="B")
@@ -105,6 +112,7 @@ def test_scispacy_tokenizer_serialization():
     tokenizer = SciSpacyTokenizer()
     _test_tokenizer_serialization(tokenizer)
 
+
 def test_tokenizer_wrapper_serialization():
     def dummy_tokenizer(text: str) -> list[str]:
         return text.split("-")
@@ -115,9 +123,18 @@ def test_tokenizer_wrapper_serialization():
     config = tokenizer.to_dict()
     assert "class_module" in config
     assert "class_name" in config
-    assert config.get("serializable") is False # Check the non-serializable flag
+    assert config.get("serializable") is False  # Check the non-serializable flag
     assert config.get("function_name") == "dummy_tokenizer"
 
     # Test deserialization raises error
     with pytest.raises(NotImplementedError):
-        TokenizerWrapper.from_dict(config) 
+        TokenizerWrapper.from_dict(config)
+
+
+def test_tokenizer_equality():
+
+    assert StaccatoTokenizer() == StaccatoTokenizer()
+    assert SegtokTokenizer() == SegtokTokenizer()
+    assert SegtokTokenizer() != StaccatoTokenizer()
+    assert SegtokTokenizer(additional_split_characters=["!"]) != SegtokTokenizer()
+    assert SegtokTokenizer(additional_split_characters=["!"]) == SegtokTokenizer(additional_split_characters=["!"])

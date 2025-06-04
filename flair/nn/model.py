@@ -119,36 +119,44 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             state["scheduler_state_dict"] = self.scheduler_state_dict
 
         # -- Start Tokenizer Serialization Logic --
-        tokenizer_info = None # Default: no tokenizer info saved
+        tokenizer_info = None  # Default: no tokenizer info saved
 
-        if hasattr(self, '_tokenizer') and self._tokenizer is not None:
+        if hasattr(self, "_tokenizer") and self._tokenizer is not None:
             tokenizer = self._tokenizer
 
-            if hasattr(tokenizer, 'to_dict') and callable(getattr(tokenizer, 'to_dict')):
+            if hasattr(tokenizer, "to_dict") and callable(getattr(tokenizer, "to_dict")):
                 try:
                     potential_tokenizer_info = tokenizer.to_dict()
 
-                    if (isinstance(potential_tokenizer_info, dict) and
-                            'class_module' in potential_tokenizer_info and
-                            'class_name' in potential_tokenizer_info):
-                        tokenizer_info = potential_tokenizer_info # Store the valid dict
+                    if (
+                        isinstance(potential_tokenizer_info, dict)
+                        and "class_module" in potential_tokenizer_info
+                        and "class_name" in potential_tokenizer_info
+                    ):
+                        tokenizer_info = potential_tokenizer_info  # Store the valid dict
                     else:
-                        log.warning(f"Tokenizer {tokenizer.__class__.__name__} has a 'to_dict' method, "
-                                    f"but it did not return a valid dictionary with 'class_module' and "
-                                    f"'class_name'. Tokenizer will not be saved automatically.")
+                        log.warning(
+                            f"Tokenizer {tokenizer.__class__.__name__} has a 'to_dict' method, "
+                            f"but it did not return a valid dictionary with 'class_module' and "
+                            f"'class_name'. Tokenizer will not be saved automatically."
+                        )
                         # tokenizer_info remains None
                 except Exception as e:
-                    log.warning(f"Error calling 'to_dict' on tokenizer {tokenizer.__class__.__name__}: {e}. "
-                                f"Tokenizer will not be saved automatically.")
+                    log.warning(
+                        f"Error calling 'to_dict' on tokenizer {tokenizer.__class__.__name__}: {e}. "
+                        f"Tokenizer will not be saved automatically."
+                    )
                     # tokenizer_info remains None
             else:
-                log.warning(f"Tokenizer {tokenizer.__class__.__name__} does not implement the 'to_dict' method "
-                            f"required for automatic saving. It will not be saved automatically. "
-                            f"You may need to manually attach it after loading the model.")
+                log.warning(
+                    f"Tokenizer {tokenizer.__class__.__name__} does not implement the 'to_dict' method "
+                    f"required for automatic saving. It will not be saved automatically. "
+                    f"You may need to manually attach it after loading the model."
+                )
                 # tokenizer_info remains None
 
         # Add the determined tokenizer_info (either dict or None) to the state
-        state['tokenizer_info'] = tokenizer_info
+        state["tokenizer_info"] = tokenizer_info
         # -- End Tokenizer Serialization Logic --
 
         return state
@@ -176,42 +184,48 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             model.scheduler_state_dict = state["scheduler_state_dict"]
 
         # --- Part 3: Load Tokenizer ---
-        tokenizer_instance = None # Default to None
-        if 'tokenizer_info' in state and state['tokenizer_info'] is not None:
-            tokenizer_info = state['tokenizer_info']
-            if (isinstance(tokenizer_info, dict) and
-                    'class_module' in tokenizer_info and
-                    'class_name' in tokenizer_info):
-                module_name = tokenizer_info['class_module']
-                class_name = tokenizer_info['class_name']
+        tokenizer_instance = None  # Default to None
+        if "tokenizer_info" in state and state["tokenizer_info"] is not None:
+            tokenizer_info = state["tokenizer_info"]
+            if isinstance(tokenizer_info, dict) and "class_module" in tokenizer_info and "class_name" in tokenizer_info:
+                module_name = tokenizer_info["class_module"]
+                class_name = tokenizer_info["class_name"]
                 try:
                     # ... (importlib logic, call from_dict, error handling) ...
-                     module = importlib.import_module(module_name)
-                     TokenizerClass = getattr(module, class_name)
-                     if hasattr(TokenizerClass, 'from_dict') and callable(getattr(TokenizerClass, 'from_dict')):
-                         tokenizer_instance = TokenizerClass.from_dict(tokenizer_info)
-                         log.info(f"Successfully loaded tokenizer '{class_name}' from '{module_name}'.")
-                     else:
-                          log.warning(f"Tokenizer class '{class_name}' found in '{module_name}', but it is missing the required "
-                                      f"'from_dict' class method. Tokenizer cannot be loaded automatically.")
+                    module = importlib.import_module(module_name)
+                    TokenizerClass = getattr(module, class_name)
+                    if hasattr(TokenizerClass, "from_dict") and callable(getattr(TokenizerClass, "from_dict")):
+                        tokenizer_instance = TokenizerClass.from_dict(tokenizer_info)
+                        log.info(f"Successfully loaded tokenizer '{class_name}' from '{module_name}'.")
+                    else:
+                        log.warning(
+                            f"Tokenizer class '{class_name}' found in '{module_name}', but it is missing the required "
+                            f"'from_dict' class method. Tokenizer cannot be loaded automatically."
+                        )
                 except ImportError:
-                     log.warning(f"Could not import tokenizer module '{module_name}'. "
-                                 f"Make sure the module containing '{class_name}' is installed and accessible.")
+                    log.warning(
+                        f"Could not import tokenizer module '{module_name}'. "
+                        f"Make sure the module containing '{class_name}' is installed and accessible."
+                    )
                 except AttributeError:
-                     log.warning(f"Could not find tokenizer class '{class_name}' in module '{module_name}'.")
+                    log.warning(f"Could not find tokenizer class '{class_name}' in module '{module_name}'.")
                 except Exception as e:
-                     log.warning(f"Error reconstructing tokenizer '{class_name}' from module '{module_name}' "
-                                 f"using 'from_dict': {e}")
+                    log.warning(
+                        f"Error reconstructing tokenizer '{class_name}' from module '{module_name}' "
+                        f"using 'from_dict': {e}"
+                    )
 
             else:
-                 log.warning("Found 'tokenizer_info' in saved model state, but it is invalid (must be a dict with "
-                             "'class_module' and 'class_name'). Tokenizer cannot be loaded automatically.")
+                log.warning(
+                    "Found 'tokenizer_info' in saved model state, but it is invalid (must be a dict with "
+                    "'class_module' and 'class_name'). Tokenizer cannot be loaded automatically."
+                )
 
         # Assign the result (instance or None) to the model
         model._tokenizer = tokenizer_instance
         # --- End Tokenizer Loading ---
 
-        return model # Return the initialized model object
+        return model  # Return the initialized model object
 
     @staticmethod
     def _fetch_model(model_identifier: str):
@@ -1003,10 +1017,9 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             if isinstance(sentences[0], Sentence):
                 Sentence.set_context_for_sentences(typing.cast(list[Sentence], sentences))
 
-            if hasattr(self, "_tokenizer"):
+            if hasattr(self, "_tokenizer") and self._tokenizer is not None:
                 for sentence in sentences:
-                    if sentence._tokenizer != self._tokenizer:
-                        sentence.retokenize(self._tokenizer)
+                    sentence.tokenizer = self._tokenizer
 
             reordered_sentences = self._sort_data(sentences)
 

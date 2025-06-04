@@ -489,10 +489,9 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             # filter empty sentences
             sentences = [sentence for sentence in sentences if len(sentence) > 0]
 
-            if hasattr(self, "_tokenizer"):
+            if hasattr(self, "_tokenizer") and self._tokenizer is not None:
                 for sentence in sentences:
-                    if sentence._tokenizer != self._tokenizer:
-                        sentence.retokenize(self._tokenizer)
+                    sentence.tokenizer = self._tokenizer
 
             # reverse sort all sequences by their length
             reordered_sentences = sorted(sentences, key=len, reverse=True)

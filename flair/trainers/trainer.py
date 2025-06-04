@@ -464,12 +464,12 @@ class ModelTrainer(Pluggable):
         # Check if the corpus has a specific tokenizer associated with it
         corpus_tokenizer = self.corpus.corpus_tokenizer
         if corpus_tokenizer:
-             # Add the tokenizer to the model instance
-             self.model._tokenizer = corpus_tokenizer
-             log.info(f"Storing tokenizer used in training: {corpus_tokenizer}")
+            # Add the tokenizer to the model instance
+            self.model._tokenizer = corpus_tokenizer
+            log.info(f"Storing tokenizer used in training: {corpus_tokenizer}")
         else:
-             # Ensure the attribute exists, even if no specific tokenizer was found
-             self.model._tokenizer = None
+            # Ensure the attribute exists, even if no specific tokenizer was found
+            self.model._tokenizer = None
         # -- End tokenizer storage --
 
         # Prepare training data and get dataset size
