@@ -8,7 +8,7 @@ import zipfile
 from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Literal, Optional, Union, cast
+from typing import Any, Callable, Dict, Literal, Optional, Union, cast
 
 import torch
 import transformers
@@ -26,6 +26,7 @@ from transformers import (
     LayoutLMv2FeatureExtractor,
     PretrainedConfig,
     PreTrainedTokenizer,
+    T5Config,
     T5TokenizerFast,
 )
 from transformers.tokenization_utils_base import LARGE_INTEGER
@@ -674,7 +675,9 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         if self.feature_extractor is not None:
             images = [sent.get_metadata("image") for sent in sentences]
-            image_encodings = self.feature_extractor(images, return_tensors="pt")["pixel_values"]
+            # Cast self.feature_extractor to a callable type
+            feature_extractor_callable = cast(Callable[..., Dict[str, Any]], self.feature_extractor)
+            image_encodings = feature_extractor_callable(images, return_tensors="pt")["pixel_values"]
             if cpu_overflow_to_sample_mapping is not None:
                 batched_image_encodings = [image_encodings[i] for i in cpu_overflow_to_sample_mapping]
                 image_encodings = torch.stack(batched_image_encodings)
@@ -1138,7 +1141,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if is_supported_t5_model(saved_config):
                 from transformers import T5EncoderModel
 
-                transformer_model = T5EncoderModel(saved_config, **transformers_model_kwargs, **kwargs)
+                # Cast saved_config to T5Config
+                transformer_model = T5EncoderModel(cast(T5Config, saved_config), **transformers_model_kwargs, **kwargs)
             else:
                 transformer_model = AutoModel.from_config(saved_config, **transformers_model_kwargs, **kwargs)
         try:
