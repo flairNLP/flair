@@ -465,11 +465,11 @@ class ModelTrainer(Pluggable):
         corpus_tokenizer = self.corpus.corpus_tokenizer
         if corpus_tokenizer:
             # Add the tokenizer to the model instance
-            self.model._tokenizer = corpus_tokenizer
+            self.model.tokenizer = corpus_tokenizer
             log.info(f"Storing tokenizer used in training: {corpus_tokenizer}")
         else:
             # Ensure the attribute exists, even if no specific tokenizer was found
-            self.model._tokenizer = None
+            self.model.tokenizer = None
         # -- End tokenizer storage --
 
         # Prepare training data and get dataset size
@@ -619,7 +619,7 @@ class ModelTrainer(Pluggable):
                     # - SchedulerPlugin -> load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
                     # - LossFilePlugin -> get the current epoch for loss file logging
                     self.dispatch("before_training_epoch", epoch=epoch)
-                    self.model.model_card["training_parameters"]["epoch"] = epoch  # type: ignore[index]
+                    self.model.model_card["training_parameters"]["epoch"] = epoch
 
                     lr_info, momentum_info = self._get_current_lr_and_momentum(batch_count)
 

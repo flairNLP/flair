@@ -14,6 +14,7 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
+import flair.tokenization
 from flair.class_utils import get_non_abstract_subclasses
 from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
@@ -44,6 +45,32 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         # with the exact same optimizer and learning rate scheduler states.
         self.optimizer_state_dict: Optional[dict[str, Any]] = None
         self.scheduler_state_dict: Optional[dict[str, Any]] = None
+
+        # Internal storage for the tokenizer
+        self._tokenizer: Optional[flair.tokenization.Tokenizer] = None
+
+    @property
+    def tokenizer(self) -> Optional[flair.tokenization.Tokenizer]:
+        """
+        Gets the tokenizer associated with this model.
+        Returns:
+            Optional[flair.tokenization.Tokenizer]: The tokenizer instance, or None if not set.
+        """
+        return self._tokenizer
+
+    @tokenizer.setter
+    def tokenizer(self, value: Optional[flair.tokenization.Tokenizer]) -> None:
+        """
+        Sets the tokenizer for this model.
+        Args:
+            value (Optional[flair.tokenization.Tokenizer]): The tokenizer instance to set.
+        """
+        if self._tokenizer is not value:  # Basic check to avoid unnecessary logging if same instance
+            log.debug(
+                f"Model tokenizer changed from {self._tokenizer.__class__.__name__ if self._tokenizer else 'None'} "
+                f"to {value.__class__.__name__ if value else 'None'}"
+            )
+        self._tokenizer = value
 
     @property
     @abstractmethod
@@ -121,12 +148,14 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         # -- Start Tokenizer Serialization Logic --
         tokenizer_info = None  # Default: no tokenizer info saved
 
-        if hasattr(self, "_tokenizer") and self._tokenizer is not None:
-            tokenizer = self._tokenizer
+        # Get the tokenizer
+        current_tokenizer = self.tokenizer
 
-            if hasattr(tokenizer, "to_dict") and callable(getattr(tokenizer, "to_dict")):
+        if current_tokenizer is not None:
+
+            if hasattr(current_tokenizer, "to_dict") and callable(getattr(current_tokenizer, "to_dict")):
                 try:
-                    potential_tokenizer_info = tokenizer.to_dict()
+                    potential_tokenizer_info = current_tokenizer.to_dict()
 
                     if (
                         isinstance(potential_tokenizer_info, dict)
@@ -136,27 +165,27 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
                         tokenizer_info = potential_tokenizer_info  # Store the valid dict
                     else:
                         log.warning(
-                            f"Tokenizer {tokenizer.__class__.__name__} has a 'to_dict' method, "
+                            f"Tokenizer {current_tokenizer.__class__.__name__} has a 'to_dict' method, "
                             f"but it did not return a valid dictionary with 'class_module' and "
                             f"'class_name'. Tokenizer will not be saved automatically."
                         )
                         # tokenizer_info remains None
                 except Exception as e:
                     log.warning(
-                        f"Error calling 'to_dict' on tokenizer {tokenizer.__class__.__name__}: {e}. "
+                        f"Error calling 'to_dict' on tokenizer {current_tokenizer.__class__.__name__}: {e}. "
                         f"Tokenizer will not be saved automatically."
                     )
                     # tokenizer_info remains None
             else:
                 log.warning(
-                    f"Tokenizer {tokenizer.__class__.__name__} does not implement the 'to_dict' method "
+                    f"Tokenizer {current_tokenizer.__class__.__name__} does not implement the 'to_dict' method "
                     f"required for automatic saving. It will not be saved automatically. "
                     f"You may need to manually attach it after loading the model."
                 )
                 # tokenizer_info remains None
 
         # Add the determined tokenizer_info (either dict or None) to the state
-        state["tokenizer_info"] = tokenizer_info
+        state["tokenizer_info"] = tokenizer_info  # type: ignore[assignment]
         # -- End Tokenizer Serialization Logic --
 
         return state
@@ -1017,9 +1046,13 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             if isinstance(sentences[0], Sentence):
                 Sentence.set_context_for_sentences(typing.cast(list[Sentence], sentences))
 
-            if hasattr(self, "_tokenizer") and self._tokenizer is not None:
+            # Use the tokenizer property getter
+            model_tokenizer = self.tokenizer
+            if model_tokenizer is not None:
                 for sentence in sentences:
-                    sentence.tokenizer = self._tokenizer
+                    # this affects only models that call predict over Sentence or EncodedSentence objects (not Spans, etc.)
+                    if isinstance(sentence, Sentence):
+                        sentence.tokenizer = model_tokenizer
 
             reordered_sentences = self._sort_data(sentences)
 
@@ -1063,8 +1096,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 # if anything could possibly be predicted
                 if data_points:
                     # remove previously predicted labels of this type
-                    for sentence in data_points:
-                        sentence.remove_labels(label_name)
+                    for data_point in data_points:
+                        data_point.remove_labels(label_name)
 
                     if return_loss:
                         # filter data points that have labels outside of dictionary

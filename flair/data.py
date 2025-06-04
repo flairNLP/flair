@@ -1338,9 +1338,11 @@ class Sentence(DataPoint):
                         "end_char": dp.end_position - self.start_position,  # Relative to sentence start
                         "labels": [],
                     }
+                    span_info_label_list = span_info["labels"]
+                    assert isinstance(span_info_label_list, list)  # just to make mypy happy
                     for label in dp.labels:  # Save labels attached directly to this span
                         if label.data_point is dp:
-                            span_info["labels"].append((label.typename, label.value, label.score, label.metadata))
+                            span_info_label_list.append((label.typename, label.value, label.score, label.metadata))
                     span_data_to_reapply[span_id] = span_info
 
                 elif isinstance(dp, Relation):
@@ -1349,9 +1351,11 @@ class Sentence(DataPoint):
                         "second_span_id": dp.second.unlabeled_identifier,
                         "labels": [],
                     }
+                    relation_info_labels = relation_info["labels"]
+                    assert isinstance(relation_info_labels, list)
                     for label in dp.labels:  # Save labels attached directly to this relation
                         if label.data_point is dp:
-                            relation_info["labels"].append((label.typename, label.value, label.score, label.metadata))
+                            relation_info_labels.append((label.typename, label.value, label.score, label.metadata))
                     relations_to_reapply.append(relation_info)
 
         # --- Clear State ---
@@ -1407,8 +1411,12 @@ class Sentence(DataPoint):
             # The token's start_position is relative to the original sentence text.
             token = Token(text=text_content, start_position=start_pos_in_original)
             token.sentence = self
-            token._internal_index = len(self._tokens) + 1
-            self._tokens.append(token)  # Append to the list attribute
+            if self._tokens is None:
+                self._tokens = [token]
+                token._internal_index = 1
+            else:
+                token._internal_index = len(self._tokens) + 1
+                self._tokens.append(token)  # Append to the list attribute
 
             if previous_token_obj is not None:
                 previous_token_obj.whitespace_after = delta_offset
@@ -1433,19 +1441,20 @@ class Sentence(DataPoint):
             original_rel_end_char = span_data["end_char"]
 
             target_tokens_for_span: list[Token] = []
-            for token_idx, token_obj in enumerate(self._tokens):
-                # Token positions are relative to sentence start
-                token_start_rel = token_obj.start_position
-                token_end_rel = token_obj.end_position
+            if self._tokens:
+                for token_idx, token_obj in enumerate(self._tokens):
+                    # Token positions are relative to sentence start
+                    token_start_rel = token_obj.start_position
+                    token_end_rel = token_obj.end_position
 
-                # Check for overlap:
-                # A token is part of the span if it overlaps with [original_rel_start_char, original_rel_end_char)
-                is_overlapping = max(original_rel_start_char, token_start_rel) < min(
-                    original_rel_end_char, token_end_rel
-                )
+                    # Check for overlap:
+                    # A token is part of the span if it overlaps with [original_rel_start_char, original_rel_end_char)
+                    is_overlapping = max(original_rel_start_char, token_start_rel) < min(
+                        original_rel_end_char, token_end_rel
+                    )
 
-                if is_overlapping:
-                    target_tokens_for_span.append(token_obj)
+                    if is_overlapping:
+                        target_tokens_for_span.append(token_obj)
 
             if target_tokens_for_span:
                 # Create new Span directly from the list of new tokens
@@ -1622,6 +1631,9 @@ class Sentence(DataPoint):
         # data with zero-width characters cannot be handled
         if token.text == "":
             return
+
+        if self._tokens is None:
+            self._tokens = []
 
         # set token idx and sentence
         token.sentence = self
