@@ -1557,11 +1557,9 @@ class Sentence(DataPoint):
 
     @property
     def unlabeled_identifier(self):
-        # Access self._text directly to avoid triggering tokenization if only identifier is needed
-        text_preview = self._text[:30] + "..." if len(self._text) > 30 else self._text
         # Try to get token count without forcing tokenization if _tokens exist
         num_tokens = len(self._tokens) if self._tokens is not None else "?"
-        return f'Sentence[{num_tokens}]: "{text_preview}"'
+        return f'Sentence[{num_tokens}]: "{self._text}"'
 
     @property
     def text(self) -> str:
