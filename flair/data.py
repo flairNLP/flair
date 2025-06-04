@@ -687,6 +687,24 @@ class DataPoint(ABC):
         """Length of the data point (e.g., number of tokens for Sentence)."""
         raise NotImplementedError
 
+    # Default implementation for simpler classes
+    def _get_dynamic_embedding_names(self) -> set[str]:
+        """
+        Internal helper to find names of embeddings with requires_grad=True.
+        Default implementation checks only direct embeddings. Subclasses override
+        for recursive checks if needed.
+        """
+        return {name for name, vec in self._embeddings.items() if vec.requires_grad}
+
+    # Default implementation for simpler classes
+    def _get_all_embedding_names(self) -> set[str]:
+        """
+        Internal helper to find names of all embeddings.
+        Default implementation checks only direct embeddings. Subclasses override
+        for recursive checks if needed.
+        """
+        return set(self._embeddings.keys())
+
 
 class EntityCandidate:
     """Represents a potential candidate entity from a knowledge base for entity linking."""
@@ -1033,6 +1051,24 @@ class Span(_PartOfSentence):
             "end_pos": self.end_position,
             "labels": [label.to_dict() for label in self.get_labels(tag_type)],
         }
+
+    # Keep overridden implementation for Span
+    def _get_dynamic_embedding_names(self) -> set[str]:
+        """Finds dynamic embedding names from the span itself and its tokens."""
+        # Start with default implementation for self._embeddings
+        names = super()._get_dynamic_embedding_names()
+        for token in self.tokens:
+            names.update(token._get_dynamic_embedding_names())  # Token uses default impl.
+        return names
+
+    # Keep overridden implementation for Span
+    def _get_all_embedding_names(self) -> set[str]:
+        """Finds all embedding names from the span itself and its tokens."""
+        # Start with default implementation for self._embeddings
+        names = super()._get_all_embedding_names()
+        for token in self.tokens:
+            names.update(token._get_all_embedding_names())  # Token uses default impl.
+        return names
 
 
 class Relation(_PartOfSentence):
@@ -1989,6 +2025,27 @@ class Sentence(DataPoint):
         # The .tokens property would also do this on next access, but this forces it now.
         self._perform_retokenization_with_annotation_preservation(new_tokenizer)
 
+    # Keep overridden implementation for Sentence
+    def _get_dynamic_embedding_names(self) -> set[str]:
+        """Finds dynamic embedding names from the sentence itself and its tokens."""
+        # Start with default implementation for self._embeddings
+        names = super()._get_dynamic_embedding_names()
+        # Check embeddings of constituent tokens as well
+        if self._is_tokenized():  # Avoid tokenizing if not already done
+            for token in self.tokens:
+                names.update(token._get_dynamic_embedding_names())  # Token uses default impl.
+        return names
+
+    # Keep overridden implementation for Sentence
+    def _get_all_embedding_names(self) -> set[str]:
+        """Finds all embedding names from the sentence itself and its tokens."""
+        # Start with default implementation for self._embeddings
+        names = super()._get_all_embedding_names()
+        if self._is_tokenized():  # Avoid tokenizing if not already done
+            for token in self.tokens:
+                names.update(token._get_all_embedding_names())  # Token uses default impl.
+        return names
+
 
 class DataPair(DataPoint, typing.Generic[DT, DT2]):
     """Represents a pair of DataPoints, often used for sentence-pair tasks."""
@@ -2037,6 +2094,24 @@ class DataPair(DataPoint, typing.Generic[DT, DT2]):
     @property
     def text(self):
         return self.first.text + " || " + self.second.text
+
+    # Keep overridden implementation for DataPair
+    def _get_dynamic_embedding_names(self) -> set[str]:
+        """Finds dynamic embedding names from the pair itself and its components."""
+        # Start with default implementation for self._embeddings
+        names = super()._get_dynamic_embedding_names()
+        names.update(self.first._get_dynamic_embedding_names())  # Recursive call
+        names.update(self.second._get_dynamic_embedding_names())  # Recursive call
+        return names
+
+    # Keep overridden implementation for DataPair
+    def _get_all_embedding_names(self) -> set[str]:
+        """Finds all embedding names from the pair itself and its components."""
+        # Start with default implementation for self._embeddings
+        names = super()._get_all_embedding_names()
+        names.update(self.first._get_all_embedding_names())  # Recursive call
+        names.update(self.second._get_all_embedding_names())  # Recursive call
+        return names
 
 
 TextPair = DataPair[Sentence, Sentence]
@@ -2091,6 +2166,26 @@ class DataTriple(DataPoint, typing.Generic[DT, DT2, DT3]):
     @property
     def text(self):
         return self.first.text + " || " + self.second.text + "||" + self.third.text
+
+    # Keep overridden implementation for DataTriple
+    def _get_dynamic_embedding_names(self) -> set[str]:
+        """Finds dynamic embedding names from the triple itself and its components."""
+        # Start with default implementation for self._embeddings
+        names = super()._get_dynamic_embedding_names()
+        names.update(self.first._get_dynamic_embedding_names())  # Recursive call
+        names.update(self.second._get_dynamic_embedding_names())  # Recursive call
+        names.update(self.third._get_dynamic_embedding_names())  # Recursive call
+        return names
+
+    # Keep overridden implementation for DataTriple
+    def _get_all_embedding_names(self) -> set[str]:
+        """Finds all embedding names from the triple itself and its components."""
+        # Start with default implementation for self._embeddings
+        names = super()._get_all_embedding_names()
+        names.update(self.first._get_all_embedding_names())  # Recursive call
+        names.update(self.second._get_all_embedding_names())  # Recursive call
+        names.update(self.third._get_all_embedding_names())  # Recursive call
+        return names
 
 
 TextTriple = DataTriple[Sentence, Sentence, Sentence]
