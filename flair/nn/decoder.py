@@ -303,7 +303,12 @@ class DeepNCMDecoder(torch.nn.Module):
         """
         try:
             class_idx = self.label_dictionary.get_idx_for_item(class_name)
-        except IndexError as exc:
+            # Check if the dictionary returned the <unk> index because the class was not found
+            if self.label_dictionary.add_unk and self.label_dictionary.get_item_for_index(class_idx) == "<unk>":
+                # Raise error even if get_idx_for_item returned 0 for <unk>
+                raise ValueError(f"Class name '{class_name}' not found in the label dictionary (returned <unk>)")
+
+        except KeyError as exc:  # Catch error if add_unk=False and item is missing
             raise ValueError(f"Class name '{class_name}' not found in the label dictionary") from exc
 
         return self.class_prototypes[class_idx].clone()

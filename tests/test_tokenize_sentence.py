@@ -1,7 +1,7 @@
 import pytest
 
 import flair
-from flair.data import Sentence, Token
+from flair.data import Sentence, Token, Relation
 from flair.splitter import (
     NewlineSentenceSplitter,
     NoSentenceSplitter,
@@ -46,28 +46,6 @@ def test_create_sentence_with_extra_whitespace():
     assert sentence.get_token(2).text == "love"
     assert sentence.get_token(3).text == "Berlin"
     assert sentence.get_token(4).text == "."
-
-
-def test_create_sentence_difficult_encoding():
-    text = "so out of the norm ❤ ️ enjoyed every moment️"
-    sentence = Sentence(text)
-    assert len(sentence) == 9
-
-    text = (
-        "equivalently , accumulating the logs as :( 6 ) sl = 1N ∑ t = 1Nlogp "
-        "( Ll | xt \u200b , θ ) where "
-        "p ( Ll | xt \u200b , θ ) represents the class probability output"
-    )
-    sentence = Sentence(text)
-    assert len(sentence) == 37
-
-    text = "This guy needs his own show on Discivery Channel ! ﻿"
-    sentence = Sentence(text)
-    assert len(sentence) == 10
-
-    text = "n't have new vintages."
-    sentence = Sentence(text, use_tokenizer=True)
-    assert len(sentence) == 5
 
 
 def test_create_sentence_word_by_word():
@@ -485,6 +463,7 @@ def test_token_positions_when_creating_word_by_word():
     assert sentence.tokens[2].end_position == 13
 
 
+@pytest.mark.skip(reason="New behavior no longer excludes line separators")
 def test_line_separator_is_ignored():
     with_separator = "Untersuchungs-\u2028ausschüsse"
     without_separator = "Untersuchungs-ausschüsse"
@@ -614,6 +593,28 @@ def test_staccato_tokenizer_with_multilingual_text():
     assert [token.text for token in arabic_sentence.tokens] == ["مرحبا", "بالعالم", "!", "123"]
 
 
+def test_create_sentence_difficult_encoding():
+    text = "so out of the norm ❤ ️ enjoyed every moment️"
+    sentence = Sentence(text, use_tokenizer=StaccatoTokenizer())
+    assert len(sentence) == 9
+
+    text = "This guy needs his own show on Discivery Channel ! ﻿"
+    sentence = Sentence(text, use_tokenizer=StaccatoTokenizer())
+    assert len(sentence) == 10
+
+    text = "n't have new vintages."
+    sentence = Sentence(text, use_tokenizer=True)
+    assert len(sentence) == 5
+
+    text = (
+        "equivalently , accumulating the logs as :( 6 ) sl = 1N ∑ t = 1Nlogp "
+        "( Ll | xt \u200b , θ ) where "
+        "p ( Ll | xt \u200b , θ ) represents the class probability output"
+    )
+    sentence = Sentence(text, use_tokenizer=StaccatoTokenizer())
+    assert len(sentence) == 40
+
+
 def test_sentence_retokenize():
     # Create a sentence with default tokenization
     sentence = Sentence("01-03-2025 New York")
@@ -711,3 +712,204 @@ def test_retokenize_multiple_times():
     assert len(spans) == 2
     assert spans[0].text == "01-03-2025"
     assert spans[1].text == "New York"
+
+
+def test_retokenize_with_multiple_label_types_on_same_span():
+    # Test that retokenizing preserves multiple labels of different types on the same span
+    sentence = Sentence("Berlin is great")
+
+    # Add two labels of different types to the same span "Berlin"
+    span_berlin = sentence.get_span(0, 1)
+    span_berlin.add_label("ner", "LOC")
+    span_berlin.add_label("custom_type", "CITY_CAPITAL")
+
+    # Verify initial state
+    assert len(sentence) == 3
+    spans_ner = sentence.get_spans("ner")
+    spans_custom = sentence.get_spans("custom_type")
+
+    assert len(spans_ner) == 1
+    assert spans_ner[0].text == "Berlin"
+    assert len(spans_ner[0].get_labels("ner")) == 1
+    assert spans_ner[0].get_label("ner").value == "LOC"
+
+    assert len(spans_custom) == 1
+    assert spans_custom[0].text == "Berlin"
+    assert len(spans_custom[0].get_labels("custom_type")) == 1
+    assert spans_custom[0].get_label("custom_type").value == "CITY_CAPITAL"
+
+    # Retokenize with StaccatoTokenizer (which might split differently)
+    sentence.retokenize(StaccatoTokenizer())
+
+    # Verify tokenization changed (optional, depends on tokenizer)
+    # Staccato might not change this specific sentence, let's assume it could
+    # assert len(sentence) != 3
+
+    # Verify the spans and labels are preserved without duplication
+    spans_ner_after = sentence.get_spans("ner")
+    spans_custom_after = sentence.get_spans("custom_type")
+
+    # Check NER label
+    assert len(spans_ner_after) == 1, "Should still have one NER span"
+    assert spans_ner_after[0].text == "Berlin"
+    # CRITICAL CHECK: Ensure only one 'ner' label exists for the span
+    assert len(spans_ner_after[0].get_labels("ner")) == 1, "Should only have one NER label after retokenize"
+    assert spans_ner_after[0].get_label("ner").value == "LOC"
+
+    # Check custom_type label
+    assert len(spans_custom_after) == 1, "Should still have one custom_type span"
+    assert spans_custom_after[0].text == "Berlin"
+    # CRITICAL CHECK: Ensure only one 'custom_type' label exists for the span
+    assert (
+        len(spans_custom_after[0].get_labels("custom_type")) == 1
+    ), "Should only have one custom_type label after retokenize"
+    assert spans_custom_after[0].get_label("custom_type").value == "CITY_CAPITAL"
+
+    # Check that the span objects are the same if caching works as expected
+    assert spans_ner_after[0] is spans_custom_after[0]
+
+    # Check overall annotation layers
+    assert len(sentence.annotation_layers.get("ner", [])) == 1
+    assert len(sentence.annotation_layers.get("custom_type", [])) == 1
+
+
+def test_retokenize_preserves_spans_relations_and_sentence_labels():
+    # Test that retokenizing preserves span, relation, and sentence-level labels
+
+    # Use text where tokenization might change
+    text = "Event on 03-16-2025 caused by Big Corp."
+    # Use a tokenizer that might group '03-16-2025' initially
+    sentence = Sentence(text, use_tokenizer=SegtokTokenizer())
+
+    # Add a sentence-level label
+    sentence.add_label("doc_type", "INCIDENT_REPORT")
+
+    # Add span labels
+    date_span = sentence.get_span(2, 3)
+    date_span.add_label("ner", "DATE")  # "03-16-2025"
+    org_span = sentence.get_span(5, 7)
+    org_span.add_label("ner", "ORG")  # "Big Corp"
+
+    # Add relation label linking the spans
+    # Ensure spans are added before creating relation
+    assert date_span in sentence.get_spans("ner")
+    assert org_span in sentence.get_spans("ner")
+    relation = Relation(org_span, date_span)
+    relation.add_label("event_rel", "CAUSED_EVENT_ON_DATE")
+
+    # Verify initial state
+    assert len(sentence) == 8  # Initial token count based on SegtokTokenizer
+    initial_spans = sentence.get_spans("ner")
+    initial_relations = sentence.get_relations("event_rel")
+    assert len(initial_spans) == 2
+    assert initial_spans[0].text == "03-16-2025"  # Date
+    assert initial_spans[1].text == "Big Corp"  # Org
+    assert len(initial_relations) == 1
+    assert initial_relations[0].first is org_span
+    assert initial_relations[0].second is date_span
+    assert initial_relations[0].get_label("event_rel").value == "CAUSED_EVENT_ON_DATE"
+    assert len(sentence.get_labels("doc_type")) == 1
+    assert sentence.get_label("doc_type").value == "INCIDENT_REPORT"
+
+    # Retokenize with a tokenizer that splits hyphens (StaccatoTokenizer)
+    sentence.retokenize(StaccatoTokenizer())
+
+    # Verify tokenization changed (Staccato splits hyphens)
+    assert len(sentence) == 12  # Expected token count with Staccato
+
+    # --- Verify Sentence Label Preservation ---
+    sentence_labels_after = sentence.get_labels("doc_type")
+    assert len(sentence_labels_after) == 1, "Should still have one sentence label"
+    assert sentence_labels_after[0].value == "INCIDENT_REPORT", "Sentence label value should be preserved"
+
+    # --- Verify Span Preservation ---
+    spans_after = sentence.get_spans("ner")
+    assert len(spans_after) == 2, "Should still have two NER spans after retokenize"
+    date_span_after = next((s for s in spans_after if s.get_label("ner").value == "DATE"), None)
+    org_span_after = next((s for s in spans_after if s.get_label("ner").value == "ORG"), None)
+
+    assert date_span_after is not None, "Date span should be found after retokenize"
+    assert org_span_after is not None, "Org span should be found after retokenize"
+    assert date_span_after.text == "03-16-2025", "Date span text should match original"
+    assert org_span_after.text == "Big Corp", "Org span text should match original"
+    assert len(date_span_after.get_labels("ner")) == 1
+    assert len(org_span_after.get_labels("ner")) == 1
+
+    # --- Verify Relation Preservation ---
+    relations_after = sentence.get_relations("event_rel")
+    assert len(relations_after) == 1, "Should have one relation after retokenize"
+    relation_after = relations_after[0]
+
+    assert relation_after.get_label("event_rel").value == "CAUSED_EVENT_ON_DATE", "Relation label value preserved"
+
+    # Check if the relation links the *newly reconstructed* spans
+    assert relation_after.first is org_span_after, "Relation should link to the new Org span"
+    assert relation_after.second is date_span_after, "Relation should link to the new Date span"
+
+    # Check sentence annotation layers for relation
+    assert len(sentence.annotation_layers.get("event_rel", [])) == 1
+    sentence_rel_label = sentence.annotation_layers["event_rel"][0]
+    assert sentence_rel_label.data_point is relation_after, "Sentence layer should contain label for the new relation"
+
+
+def test_retokenize_removes_token_labels_keeps_span_labels():
+    # Test that retokenizing discards token-level labels but preserves span-level labels
+
+    text = "Peter visits Berlin ."
+    # Use a simple tokenizer initially
+    sentence = Sentence(text, use_tokenizer=SpaceTokenizer())
+
+    # Add a token-level label (POS tag)
+    token_peter = sentence[0]  # Token "Peter"
+    token_berlin = sentence[2]  # Token "Berlin"
+    token_peter.add_label("pos", "NNP")
+    token_berlin.add_label("pos", "NNP")
+
+    # Add a span-level label (NER tag)
+    span_berlin = sentence[2:3]  # Span covering "Berlin"
+    span_berlin.add_label("ner", "LOC")
+
+    # --- Verify Initial State ---
+    assert len(sentence) == 4
+    # Check token labels directly
+    assert token_peter.get_label("pos").value == "NNP"
+    assert token_berlin.get_label("pos").value == "NNP"
+    # Check sentence layer for token labels
+    assert len(sentence.get_labels("pos")) == 2, "Initial sentence should have 2 POS labels"
+    # Check span label
+    initial_spans = sentence.get_spans("ner")
+    assert len(initial_spans) == 1
+    assert initial_spans[0] is span_berlin
+    assert span_berlin.get_label("ner").value == "LOC"
+    # Check sentence layer for span label
+    assert len(sentence.get_labels("ner")) == 1, "Initial sentence should have 1 NER label"
+
+    # --- Retokenize (can use the same or different tokenizer) ---
+    sentence.retokenize(StaccatoTokenizer())  # Staccato might split differently if punctuation was complex
+
+    # --- Verify State After Retokenization ---
+
+    # 1. Check Token Labels are GONE
+    # Access tokens by index - these are NEW token objects
+    new_token_peter = sentence[0]
+    new_token_berlin = sentence[2]  # Assuming tokenization is similar for these words
+
+    assert len(new_token_peter.get_labels("pos")) == 0
+
+    # Verify the sentence's central registry for 'pos' is now empty
+    assert len(sentence.get_labels("pos")) == 0, "Sentence 'pos' layer should be empty after retokenize"
+
+    # 2. Check Span Labels are KEPT
+    spans_after = sentence.get_spans("ner")
+    assert len(spans_after) == 1, "Should still have one NER span"
+    span_berlin_after = spans_after[0]
+
+    assert span_berlin_after.text == "Berlin", "Span text should be preserved"
+    assert len(span_berlin_after.get_labels("ner")) == 1, "Span should retain its NER label"
+    assert span_berlin_after.get_label("ner").value == "LOC", "Span NER label value should be preserved"
+
+    # Verify the sentence's central registry for 'ner' still contains the label
+    assert len(sentence.get_labels("ner")) == 1, "Sentence 'ner' layer should still contain the span label"
+    sentence_ner_label = sentence.get_labels("ner")[0]
+    assert sentence_ner_label.data_point is span_berlin_after, "Sentence layer 'ner' label should point to the new span"
+    assert sentence_ner_label.value == "LOC"

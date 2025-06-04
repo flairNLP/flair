@@ -112,7 +112,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         self.predict_spans = self._determine_if_span_prediction_problem(self.label_dictionary)
 
         self.tagset_size = len(self.label_dictionary)
-        log.info(f"SequenceTagger predicts: {self.label_dictionary}")
+        log.info(f"- Predicts {len(self.label_dictionary)} classes: {self.label_dictionary.get_items()[:20]}")
 
         # ----- Embeddings -----
         self.embeddings = embeddings
@@ -488,6 +488,12 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
             # filter empty sentences
             sentences = [sentence for sentence in sentences if len(sentence) > 0]
+
+            # Use the tokenizer property getter
+            model_tokenizer = self.tokenizer
+            if model_tokenizer is not None:
+                for sentence in sentences:
+                    sentence.tokenizer = model_tokenizer
 
             # reverse sort all sequences by their length
             reordered_sentences = sorted(sentences, key=len, reverse=True)

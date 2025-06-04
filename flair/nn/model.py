@@ -14,6 +14,7 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 import flair
+import flair.tokenization
 from flair.class_utils import get_non_abstract_subclasses
 from flair.data import DT, DT2, Corpus, Dictionary, Sentence, _iter_dataset
 from flair.datasets import DataLoader, FlairDatapointDataset
@@ -22,6 +23,7 @@ from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
 from flair.file_utils import Tqdm, load_torch_state
 from flair.training_utils import EmbeddingStorageMode, Result, store_embeddings
+import importlib
 
 log = logging.getLogger("flair")
 
@@ -32,7 +34,43 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
     Every new type of model must implement these methods.
     """
 
-    model_card: Optional[dict[str, Any]] = None
+    def __init__(self) -> None:
+        super().__init__()
+
+        # The model card can contain training parameters and metadata
+        self.model_card: Optional[dict[str, Any]] = None
+
+        # Optimizer and scheduler states are only set during training when save_optimizer_state=True
+        # is passed to the ModelTrainer. These states allow resuming training from a checkpoint
+        # with the exact same optimizer and learning rate scheduler states.
+        self.optimizer_state_dict: Optional[dict[str, Any]] = None
+        self.scheduler_state_dict: Optional[dict[str, Any]] = None
+
+        # Internal storage for the tokenizer
+        self._tokenizer: Optional[flair.tokenization.Tokenizer] = None
+
+    @property
+    def tokenizer(self) -> Optional[flair.tokenization.Tokenizer]:
+        """
+        Gets the tokenizer associated with this model.
+        Returns:
+            Optional[flair.tokenization.Tokenizer]: The tokenizer instance, or None if not set.
+        """
+        return self._tokenizer
+
+    @tokenizer.setter
+    def tokenizer(self, value: Optional[flair.tokenization.Tokenizer]) -> None:
+        """
+        Sets the tokenizer for this model.
+        Args:
+            value (Optional[flair.tokenization.Tokenizer]): The tokenizer instance to set.
+        """
+        if self._tokenizer is not value:  # Basic check to avoid unnecessary logging if same instance
+            log.debug(
+                f"Model tokenizer changed from {self._tokenizer.__class__.__name__ if self._tokenizer else 'None'} "
+                f"to {value.__class__.__name__ if value else 'None'}"
+            )
+        self._tokenizer = value
 
     @property
     @abstractmethod
@@ -86,11 +124,71 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         raise NotImplementedError
 
     def _get_state_dict(self) -> dict:
-        """Returns the state dictionary for this model."""
-        # Always include the name of the Model class for which the state dict holds
-        state_dict = {"state_dict": self.state_dict(), "__cls__": self.__class__.__name__}
+        """Returns the state dictionary for this model.
 
-        return state_dict
+        The state dictionary contains:
+        - "state_dict": The model's parameters state dictionary
+        - "__cls__": The class name of the model for loading
+        - "optimizer_state_dict": The optimizer's state dictionary (if it exists)
+        - "scheduler_state_dict": The scheduler's state dictionary (if it exists)
+        - "model_card": Training parameters and metadata (if set)
+        - "tokenizer_info": Information to reconstruct the tokenizer used during training (if any and serializable)
+        """
+        # Always include the name of the Model class for which the state dict holds
+        state = {"state_dict": self.state_dict(), "__cls__": self.__class__.__name__}
+
+        # Add optimizer state dict if it exists
+        if hasattr(self, "optimizer_state_dict") and self.optimizer_state_dict is not None:
+            state["optimizer_state_dict"] = self.optimizer_state_dict
+
+        # Add scheduler state dict if it exists
+        if hasattr(self, "scheduler_state_dict") and self.scheduler_state_dict is not None:
+            state["scheduler_state_dict"] = self.scheduler_state_dict
+
+        # -- Start Tokenizer Serialization Logic --
+        tokenizer_info = None  # Default: no tokenizer info saved
+
+        # Get the tokenizer
+        current_tokenizer = self.tokenizer
+
+        if current_tokenizer is not None:
+
+            if hasattr(current_tokenizer, "to_dict") and callable(getattr(current_tokenizer, "to_dict")):
+                try:
+                    potential_tokenizer_info = current_tokenizer.to_dict()
+
+                    if (
+                        isinstance(potential_tokenizer_info, dict)
+                        and "class_module" in potential_tokenizer_info
+                        and "class_name" in potential_tokenizer_info
+                    ):
+                        tokenizer_info = potential_tokenizer_info  # Store the valid dict
+                    else:
+                        log.warning(
+                            f"Tokenizer {current_tokenizer.__class__.__name__} has a 'to_dict' method, "
+                            f"but it did not return a valid dictionary with 'class_module' and "
+                            f"'class_name'. Tokenizer will not be saved automatically."
+                        )
+                        # tokenizer_info remains None
+                except Exception as e:
+                    log.warning(
+                        f"Error calling 'to_dict' on tokenizer {current_tokenizer.__class__.__name__}: {e}. "
+                        f"Tokenizer will not be saved automatically."
+                    )
+                    # tokenizer_info remains None
+            else:
+                log.warning(
+                    f"Tokenizer {current_tokenizer.__class__.__name__} does not implement the 'to_dict' method "
+                    f"required for automatic saving. It will not be saved automatically. "
+                    f"You may need to manually attach it after loading the model."
+                )
+                # tokenizer_info remains None
+
+        # Add the determined tokenizer_info (either dict or None) to the state
+        state["tokenizer_info"] = tokenizer_info  # type: ignore[assignment]
+        # -- End Tokenizer Serialization Logic --
+
+        return state
 
     @classmethod
     def _init_model_with_state_dict(cls, state: dict[str, Any], **kwargs):
@@ -102,10 +200,61 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             kwargs["embeddings"] = embeddings
 
         model = cls(**kwargs)
-
         model.load_state_dict(state["state_dict"])
 
-        return model
+        # load optimizer state if it exists in the state dict
+        if "optimizer_state_dict" in state:
+            log.debug(f"Found optimizer state in model file with keys: {state['optimizer_state_dict'].keys()}")
+            model.optimizer_state_dict = state["optimizer_state_dict"]
+
+        # load scheduler state if it exists in the state dict
+        if "scheduler_state_dict" in state:
+            log.debug(f"Found scheduler state in model file with keys: {state['scheduler_state_dict'].keys()}")
+            model.scheduler_state_dict = state["scheduler_state_dict"]
+
+        # --- Part 3: Load Tokenizer ---
+        tokenizer_instance = None  # Default to None
+        if "tokenizer_info" in state and state["tokenizer_info"] is not None:
+            tokenizer_info = state["tokenizer_info"]
+            if isinstance(tokenizer_info, dict) and "class_module" in tokenizer_info and "class_name" in tokenizer_info:
+                module_name = tokenizer_info["class_module"]
+                class_name = tokenizer_info["class_name"]
+                try:
+                    # ... (importlib logic, call from_dict, error handling) ...
+                    module = importlib.import_module(module_name)
+                    TokenizerClass = getattr(module, class_name)
+                    if hasattr(TokenizerClass, "from_dict") and callable(getattr(TokenizerClass, "from_dict")):
+                        tokenizer_instance = TokenizerClass.from_dict(tokenizer_info)
+                        log.info(f"Successfully loaded tokenizer '{class_name}' from '{module_name}'.")
+                    else:
+                        log.warning(
+                            f"Tokenizer class '{class_name}' found in '{module_name}', but it is missing the required "
+                            f"'from_dict' class method. Tokenizer cannot be loaded automatically."
+                        )
+                except ImportError:
+                    log.warning(
+                        f"Could not import tokenizer module '{module_name}'. "
+                        f"Make sure the module containing '{class_name}' is installed and accessible."
+                    )
+                except AttributeError:
+                    log.warning(f"Could not find tokenizer class '{class_name}' in module '{module_name}'.")
+                except Exception as e:
+                    log.warning(
+                        f"Error reconstructing tokenizer '{class_name}' from module '{module_name}' "
+                        f"using 'from_dict': {e}"
+                    )
+
+            else:
+                log.warning(
+                    "Found 'tokenizer_info' in saved model state, but it is invalid (must be a dict with "
+                    "'class_module' and 'class_name'). Tokenizer cannot be loaded automatically."
+                )
+
+        # Assign the result (instance or None) to the model
+        model._tokenizer = tokenizer_instance
+        # --- End Tokenizer Loading ---
+
+        return model  # Return the initialized model object
 
     @staticmethod
     def _fetch_model(model_identifier: str):
@@ -139,6 +288,24 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
         # save model
         torch.save(model_state, str(model_file), pickle_protocol=4)
+
+    @property
+    def license_info(self) -> str:
+        """Get the license information for this model."""
+        if self.model_card is None:
+            return "No license information available"
+        return self.model_card.get("license_info", "No license information available")
+
+    @license_info.setter
+    def license_info(self, value: Optional[str]):
+        """Set the license information for this model."""
+        if self.model_card is None:
+            self.model_card = {}
+        if value is None:
+            # Remove license info if it exists
+            self.model_card.pop("license_info", None)
+        else:
+            self.model_card["license_info"] = value
 
     @classmethod
     def load(cls, model_path: Union[str, Path, dict[str, Any]]) -> "Model":
@@ -211,10 +378,21 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             if "__cls__" in state:
                 state.pop("__cls__")
 
+            log.info("--------------------------------------------------")
+            log.info(f"- Loading {cls.__name__}")
+
             model = cls._init_model_with_state_dict(state)
 
-            if "model_card" in state:
-                model.model_card = state["model_card"]
+            # Print license information
+            log.info("--------------------------------------------------")
+            model_card = state.get("model_card", None)
+            if model_card is not None:
+                model.model_card = model_card
+                license_info = model_card.get("license_info", "No license information available")
+                log.info(f"- Model license: {license_info}")
+            else:
+                log.info("- Model license: No license information available")
+            log.info("--------------------------------------------------")
 
             model.eval()
             model.to(flair.device)
@@ -229,25 +407,39 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
         Only available for models trained with with Flair >= 0.9.1.
         """
-        if hasattr(self, "model_card"):
+        model_card = getattr(self, "model_card", None)  # Returns None if attribute doesn't exist or is None
+
+        if model_card is not None:
             param_out = "\n------------------------------------\n"
             param_out += "--------- Flair Model Card ---------\n"
             param_out += "------------------------------------\n"
-            param_out += "- this Flair model was trained with:\n"
-            param_out += f"-- Flair version {self.model_card['flair_version']}\n"
-            param_out += f"-- PyTorch version {self.model_card['pytorch_version']}\n"
-            if "transformers_version" in self.model_card:
-                param_out += f"-- Transformers version {self.model_card['transformers_version']}\n"
-            param_out += "------------------------------------\n"
 
-            param_out += "------- Training Parameters: -------\n"
-            param_out += "------------------------------------\n"
-            training_params = "\n".join(
-                f'-- {param} = {self.model_card["training_parameters"][param]}'
-                for param in self.model_card["training_parameters"]
-            )
-            param_out += training_params + "\n"
-            param_out += "------------------------------------\n"
+            # Only print version information if it exists
+            if any(key in model_card for key in ["flair_version", "pytorch_version", "transformers_version"]):
+                param_out += "- this Flair model was trained with:\n"
+                if "flair_version" in model_card:
+                    param_out += f"-- Flair version {model_card['flair_version']}\n"
+                if "pytorch_version" in model_card:
+                    param_out += f"-- PyTorch version {model_card['pytorch_version']}\n"
+                if "transformers_version" in model_card:
+                    param_out += f"-- Transformers version {model_card['transformers_version']}\n"
+                param_out += "------------------------------------\n"
+
+            # Print license info if it exists
+            if "license_info" in model_card:
+                param_out += f"-- License: {model_card['license_info']}\n"
+                param_out += "------------------------------------\n"
+
+            # Print training parameters if they exist
+            if "training_parameters" in model_card:
+                param_out += "------- Training Parameters: -------\n"
+                param_out += "------------------------------------\n"
+                training_params = "\n".join(
+                    f'-- {param} = {model_card["training_parameters"][param]}'
+                    for param in model_card["training_parameters"]
+                )
+                param_out += training_params + "\n"
+                param_out += "------------------------------------\n"
 
             log.info(param_out)
         else:
@@ -854,6 +1046,14 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
             if isinstance(sentences[0], Sentence):
                 Sentence.set_context_for_sentences(typing.cast(list[Sentence], sentences))
 
+            # Use the tokenizer property getter
+            model_tokenizer = self.tokenizer
+            if model_tokenizer is not None:
+                for sentence in sentences:
+                    # this affects only models that call predict over Sentence or EncodedSentence objects (not Spans, etc.)
+                    if isinstance(sentence, Sentence):
+                        sentence.tokenizer = model_tokenizer
+
             reordered_sentences = self._sort_data(sentences)
 
             if len(reordered_sentences) == 0:
@@ -896,8 +1096,8 @@ class DefaultClassifier(Classifier[DT], typing.Generic[DT, DT2], ABC):
                 # if anything could possibly be predicted
                 if data_points:
                     # remove previously predicted labels of this type
-                    for sentence in data_points:
-                        sentence.remove_labels(label_name)
+                    for data_point in data_points:
+                        data_point.remove_labels(label_name)
 
                     if return_loss:
                         # filter data points that have labels outside of dictionary

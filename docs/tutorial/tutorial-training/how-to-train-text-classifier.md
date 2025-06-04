@@ -1,4 +1,4 @@
-# Train a text classifier
+# Train a Text Classifier
 
 This tutorial shows you how to train your own text classifier models with Flair. For instance, you 
 could train your own sentiment analysis model, or offensive language detection model.

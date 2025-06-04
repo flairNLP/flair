@@ -460,6 +460,18 @@ class ModelTrainer(Pluggable):
         # initialize model card with these parameters
         self.model.model_card = self._initialize_model_card(**training_parameters)
 
+        # -- Store tokenizer used in corpus on the model --
+        # Check if the corpus has a specific tokenizer associated with it
+        corpus_tokenizer = self.corpus.corpus_tokenizer
+        if corpus_tokenizer:
+            # Add the tokenizer to the model instance
+            self.model.tokenizer = corpus_tokenizer
+            log.info(f"Storing tokenizer used in training: {corpus_tokenizer}")
+        else:
+            # Ensure the attribute exists, even if no specific tokenizer was found
+            self.model.tokenizer = None
+        # -- End tokenizer storage --
+
         # Prepare training data and get dataset size
         train_data = self._get_train_data(train_with_dev=train_with_dev, train_with_test=train_with_test)
         dataset_size = _len_dataset(train_data)
@@ -499,6 +511,15 @@ class ModelTrainer(Pluggable):
             )
         else:
             self.optimizer = optimizer(params=self.model.parameters(), **kwargs)
+
+        # load optimizer state if it exists
+        optimizer_state_loaded = False
+        if hasattr(self.model, "optimizer_state_dict") and self.model.optimizer_state_dict is not None:
+            try:
+                self.optimizer.load_state_dict(self.model.optimizer_state_dict)
+                optimizer_state_loaded = True
+            except Exception as e:
+                log.warning(f"Found saved optimizer state from previous training but coult not load: {e}")
 
         # initialize sampler if provided
         if sampler is not None:
@@ -561,6 +582,7 @@ class ModelTrainer(Pluggable):
             log.info(f"        (train_with_dev={train_with_dev}, train_with_test={train_with_test})")
             log_line(log)
             log.info("Training Params:")
+            log.info(f' - optimizer: "{optimizer}" ')
             log.info(
                 f' - learning_rate: "{learning_rate}" '
                 f'{"(decoder: " + str(decoder_learning_rate) + ")" if decoder_learning_rate else ""}'
@@ -568,6 +590,9 @@ class ModelTrainer(Pluggable):
             log.info(f' - mini_batch_size: "{mini_batch_size}"')
             log.info(f' - max_epochs: "{max_epochs}"')
             log.info(f' - shuffle: "{shuffle}"')
+            if optimizer_state_loaded:
+                log_line(log)
+                log.info("Optimizer state loaded from from previous training!")
             log_line(log)
             log.info("Plugins:")
             for plugin in plugins:
@@ -594,7 +619,7 @@ class ModelTrainer(Pluggable):
                     # - SchedulerPlugin -> load state for anneal_with_restarts, batch_growth_annealing, logic for early stopping
                     # - LossFilePlugin -> get the current epoch for loss file logging
                     self.dispatch("before_training_epoch", epoch=epoch)
-                    self.model.model_card["training_parameters"]["epoch"] = epoch  # type: ignore[index]
+                    self.model.model_card["training_parameters"]["epoch"] = epoch
 
                     lr_info, momentum_info = self._get_current_lr_and_momentum(batch_count)
 
@@ -813,14 +838,14 @@ class ModelTrainer(Pluggable):
 
                     if save_best_model and current_epoch_has_best_model_so_far:
                         log.info("saving best model")
-                        self._save_model(base_path / "best-model.pt", checkpoint=save_optimizer_state)
+                        self._save_model(base_path / "best-model.pt", save_optimizer_state=save_optimizer_state)
 
                 # - SWAPlugin -> restores SGD weights from SWA
                 self.dispatch("after_training_loop")
 
                 # if we do not use dev data for model selection, save final model
                 if save_final_model:
-                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", save_optimizer_state == save_optimizer_state)
 
             except KeyboardInterrupt:
                 log_line(log)
@@ -830,7 +855,7 @@ class ModelTrainer(Pluggable):
 
                 if save_final_model:
                     log.info("Saving model ...")
-                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", save_optimizer_state=save_optimizer_state)
                 log.info("Done.")
 
             except TrainingInterrupt as exc:
@@ -841,7 +866,7 @@ class ModelTrainer(Pluggable):
 
                 if save_final_model:
                     log.info("Saving model ...")
-                    self._save_model(base_path / "final-model.pt", checkpoint=save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", save_optimizer_state=save_optimizer_state)
                 log.info("Done.")
 
             except Exception:
@@ -989,9 +1014,19 @@ class ModelTrainer(Pluggable):
     def _load_model(self, model_file: Union[str, Path]) -> None:
         self.model.load_state_dict(self.model.load(model_file).state_dict())
 
-    def _save_model(self, model_file: Union[str, Path], checkpoint: bool = False) -> None:
+    def _save_model(self, model_file: Union[str, Path], save_optimizer_state: bool = False) -> None:
         if is_main_process():
-            self.model.save(model_file, checkpoint)
+            if save_optimizer_state:
+                # Save optimizer state
+                self.model.optimizer_state_dict = self.optimizer.state_dict()
+
+                # Save scheduler state from active plugins
+                for plugin in self.plugins:
+                    if hasattr(plugin, "scheduler"):
+                        self.model.scheduler_state_dict = plugin.scheduler.state_dict()
+                        break  # Only save the first scheduler we find
+
+            self.model.save(model_file)
         if torch.distributed.is_initialized():
             torch.distributed.barrier()  # Prevent any process from loading a model until writing is complete
 

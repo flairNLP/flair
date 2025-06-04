@@ -8,7 +8,7 @@ import zipfile
 from abc import abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Literal, Optional, Union, cast
+from typing import Any, Callable, Dict, Literal, Optional, Union, cast
 
 import torch
 import transformers
@@ -26,6 +26,7 @@ from transformers import (
     LayoutLMv2FeatureExtractor,
     PretrainedConfig,
     PreTrainedTokenizer,
+    T5Config,
     T5TokenizerFast,
 )
 from transformers.tokenization_utils_base import LARGE_INTEGER
@@ -172,12 +173,12 @@ def fill_mean_token_embeddings(
     all_token_embeddings.scatter_add_(
         1,
         word_ids.clamp(min=0).unsqueeze(-1).expand(-1, -1, embedding_dim),
-        sentence_hidden_states * mask.unsqueeze(-1).float(),
+        sentence_hidden_states * mask.unsqueeze(-1).to(all_token_embeddings.dtype),
     )
 
     # calculate the mean of subtokens
     subtoken_counts = torch.zeros_like(all_token_embeddings[:, :, 0])
-    subtoken_counts.scatter_add_(1, word_ids.clamp(min=0), mask.float())
+    subtoken_counts.scatter_add_(1, word_ids.clamp(min=0), mask.to(subtoken_counts.dtype))
     all_token_embeddings = torch.where(
         subtoken_counts.unsqueeze(-1) > 0,
         all_token_embeddings / subtoken_counts.unsqueeze(-1),
@@ -764,7 +765,9 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
 
         if self.feature_extractor is not None:
             images = [sent.get_metadata("image") for sent in sentences]
-            image_encodings = self.feature_extractor(images, return_tensors="pt")["pixel_values"]
+            # Cast self.feature_extractor to a callable type
+            feature_extractor_callable = cast(Callable[..., Dict[str, Any]], self.feature_extractor)
+            image_encodings = feature_extractor_callable(images, return_tensors="pt")["pixel_values"]
             if cpu_overflow_to_sample_mapping is not None:
                 batched_image_encodings = [image_encodings[i] for i in cpu_overflow_to_sample_mapping]
                 image_encodings = torch.stack(batched_image_encodings)
@@ -1230,7 +1233,8 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if is_supported_t5_model(saved_config):
                 from transformers import T5EncoderModel
 
-                transformer_model = T5EncoderModel(saved_config, **transformers_model_kwargs, **kwargs)
+                # Cast saved_config to T5Config
+                transformer_model = T5EncoderModel(cast(T5Config, saved_config), **transformers_model_kwargs, **kwargs)
             else:
                 transformer_model = AutoModel.from_config(saved_config, **transformers_model_kwargs, **kwargs)
         try:
@@ -1240,6 +1244,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             if "Please use the model as it is" not in str(e):
                 raise e
 
+        self.peft_config = peft_config
         if peft_config is not None:
             # add adapters for finetuning
             try:
@@ -1488,6 +1493,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             "subtoken_pooling": self.subtoken_pooling,
             "cls_pooling": self.cls_pooling,
             "config_state_dict": config_dict,
+            "peft_config": self.peft_config,
         }
 
         return model_state

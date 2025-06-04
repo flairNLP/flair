@@ -155,7 +155,7 @@ class WeightExtractor:
 
 
 class AnnealOnPlateau:
-    """A learningrate sheduler for annealing on plateau.
+    """A learningrate scheduler for annealing on plateau.
 
     This class is a modification of
     torch.optim.lr_scheduler.ReduceLROnPlateau that enables
@@ -411,25 +411,39 @@ def store_embeddings(
 
 
 def identify_dynamic_embeddings(data_points: list[DT]) -> Optional[list[str]]:
-    dynamic_embeddings = []
-    all_embeddings = []
-    for data_point in data_points:
-        if isinstance(data_point, Sentence):
-            first_token = data_point[0]
-            for name, vector in first_token._embeddings.items():
-                if vector.requires_grad:
-                    dynamic_embeddings.append(name)
-                all_embeddings.append(name)
+    """
+    Identifies the names of all embeddings across a list of DataPoints
+    that have requires_grad set to True by checking the DataPoints and their components.
 
-        for name, vector in data_point._embeddings.items():
-            if vector.requires_grad:
-                dynamic_embeddings.append(name)
-            all_embeddings.append(name)
-        if dynamic_embeddings:
-            return dynamic_embeddings
-    if not all_embeddings:
+    Args:
+        data_points: A list of Flair DataPoints (Token, Sentence, DataPair, etc.).
+
+    Returns:
+        A list of unique dynamic embedding names, or None if no embeddings (dynamic or static)
+        are found in any of the data points.
+    """
+    all_dynamic_embeddings: set[str] = set()
+    any_embeddings_found = False
+
+    for data_point in data_points:
+        # Use the internal helper method defined in the DataPoint class
+        # This method handles recursion for composite types like Sentence, DataPair etc.
+        point_dynamic_embeddings = data_point._get_dynamic_embedding_names()
+        all_dynamic_embeddings.update(point_dynamic_embeddings)
+
+        # Check if *any* embeddings exist at all (dynamic or static)
+        # to decide whether to return None or an empty list later.
+        if not any_embeddings_found:
+            # Check if the point has *any* embeddings using the helper
+            if data_point._get_all_embedding_names():
+                any_embeddings_found = True
+
+    # Return None only if no embeddings whatsoever were found across all data points
+    if not any_embeddings_found and not all_dynamic_embeddings:
         return None
-    return list(set(dynamic_embeddings))
+
+    # Otherwise, return the list of unique dynamic embedding names found (could be empty)
+    return list(all_dynamic_embeddings)
 
 
 class TokenEntity(NamedTuple):
