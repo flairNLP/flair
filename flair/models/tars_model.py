@@ -12,7 +12,7 @@ from sklearn.preprocessing import minmax_scale
 from tqdm import tqdm
 
 import flair
-from flair.data import Corpus, Dictionary, Sentence, Span
+from flair.data import Corpus, Dictionary, Sentence, Span, Token
 from flair.datasets import DataLoader, FlairDatapointDataset
 from flair.embeddings import (
     TokenEmbeddings,
@@ -594,11 +594,15 @@ class TARSTagger(FewshotClassifier):
                                     continue
 
                             # only add if all tokens have no label
-                            if tag_this:
+                            if tag_this and isinstance(label.data_point, Span):
+                                # get tokens and filter None (they don't exist, but we have to make this explicit for mypy)
+                                token_list = [
+                                    sentence.get_token(token.idx - label_length) for token in label.data_point
+                                ]
+                                token_list_no_none = [token for token in token_list if isinstance(token, Token)]
+
                                 # make and add a corresponding predicted span
-                                predicted_span = Span(
-                                    [sentence.get_token(token.idx - label_length) for token in label.data_point]
-                                )
+                                predicted_span = Span(token_list_no_none)
                                 predicted_span.add_label(label_name, value=label.value, score=label.score)
 
                                 # set indices so that no token can be tagged twice
