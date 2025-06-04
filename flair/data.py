@@ -1234,7 +1234,6 @@ class Sentence(DataPoint):
             # Now add the tokens
             current_position = 0
             for i, item in enumerate(text):
-                print(i, item)
                 # create Token if string, otherwise use existing Token
                 if isinstance(item, str):
                     # For strings, create new Token with default whitespace
