@@ -64,6 +64,7 @@
       ~Sentence.start_position
       ~Sentence.tag
       ~Sentence.text
+      ~Sentence.tokenizer
       ~Sentence.tokens
       ~Sentence.unlabeled_identifier
    

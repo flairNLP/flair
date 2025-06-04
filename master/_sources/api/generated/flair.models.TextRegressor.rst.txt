@@ -86,6 +86,7 @@
       ~TextRegressor.dump_patches
       ~TextRegressor.label_type
       ~TextRegressor.license_info
+      ~TextRegressor.tokenizer
       ~TextRegressor.training
    
    

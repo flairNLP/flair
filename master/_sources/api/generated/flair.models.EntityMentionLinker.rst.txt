@@ -88,6 +88,7 @@
       ~EntityMentionLinker.dump_patches
       ~EntityMentionLinker.label_type
       ~EntityMentionLinker.license_info
+      ~EntityMentionLinker.tokenizer
       ~EntityMentionLinker.training
    
    

@@ -86,6 +86,7 @@
       ~WordTagger.label_type
       ~WordTagger.license_info
       ~WordTagger.multi_label_threshold
+      ~WordTagger.tokenizer
       ~WordTagger.training
    
    

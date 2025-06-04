@@ -86,6 +86,7 @@
       ~MultitaskModel.dump_patches
       ~MultitaskModel.label_type
       ~MultitaskModel.license_info
+      ~MultitaskModel.tokenizer
       ~MultitaskModel.training
    
    

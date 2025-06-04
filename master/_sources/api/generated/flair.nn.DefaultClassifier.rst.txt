@@ -86,6 +86,7 @@
       ~DefaultClassifier.label_type
       ~DefaultClassifier.license_info
       ~DefaultClassifier.multi_label_threshold
+      ~DefaultClassifier.tokenizer
       ~DefaultClassifier.training
    
    

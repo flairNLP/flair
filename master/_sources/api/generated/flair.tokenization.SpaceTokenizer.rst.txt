@@ -14,7 +14,9 @@
    .. autosummary::
    
       ~SpaceTokenizer.__init__
+      ~SpaceTokenizer.from_dict
       ~SpaceTokenizer.run_tokenize
+      ~SpaceTokenizer.to_dict
       ~SpaceTokenizer.tokenize
    
    

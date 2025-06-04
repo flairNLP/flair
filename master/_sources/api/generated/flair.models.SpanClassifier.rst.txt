@@ -90,6 +90,7 @@
       ~SpanClassifier.label_type
       ~SpanClassifier.license_info
       ~SpanClassifier.multi_label_threshold
+      ~SpanClassifier.tokenizer
       ~SpanClassifier.training
    
    

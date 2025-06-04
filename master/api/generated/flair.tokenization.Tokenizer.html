@@ -726,6 +726,7 @@ button.search-button {
 <li class="toctree-l2"><a class="reference internal" href="../flair.splitter.html">flair.splitter</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../flair.tokenization.html">flair.tokenization</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="flair.tokenization.JapaneseTokenizer.html">flair.tokenization.JapaneseTokenizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="flair.tokenization.NoTokenizer.html">flair.tokenization.NoTokenizer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flair.tokenization.SciSpacyTokenizer.html">flair.tokenization.SciSpacyTokenizer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flair.tokenization.SegtokTokenizer.html">flair.tokenization.SegtokTokenizer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="flair.tokenization.SpaceTokenizer.html">flair.tokenization.SpaceTokenizer</a></li>
@@ -805,7 +806,7 @@ button.search-button {
 <h1>flair.tokenization.Tokenizer<a class="headerlink" href="#flair-tokenization-tokenizer" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.tokenization.Tokenizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">Tokenizer</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L13-L29"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.Tokenizer" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">Tokenizer</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L13-L64"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.Tokenizer" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>An abstract class representing a <a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>.</p>
 <p>Tokenizers are used to represent algorithms and models to split plain text into
@@ -823,6 +824,12 @@ configuration.</p>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.tokenization.Tokenizer.__init__" title="flair.tokenization.Tokenizer.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#flair.tokenization.Tokenizer.from_dict" title="flair.tokenization.Tokenizer.from_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_dict</span></code></a>(config)</p></td>
+<td><p>Instantiates the tokenizer from a configuration dictionary.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#flair.tokenization.Tokenizer.to_dict" title="flair.tokenization.Tokenizer.to_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dict</span></code></a>()</p></td>
+<td><p>Serializes the tokenizer's configuration to a dictionary.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#flair.tokenization.Tokenizer.tokenize" title="flair.tokenization.Tokenizer.tokenize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tokenize</span></code></a>(text)</p></td>
 <td><p></p></td>
@@ -851,6 +858,28 @@ configuration.</p>
 <dt class="sig sig-object py" id="flair.tokenization.Tokenizer.name">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#flair.tokenization.Tokenizer.name" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.tokenization.Tokenizer.to_dict">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L31-L38"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.Tokenizer.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Serializes the tokenizer’s configuration to a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="flair.tokenization.Tokenizer.from_dict">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L40-L44"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.Tokenizer.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Instantiates the tokenizer from a configuration dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 

@@ -86,6 +86,7 @@
       ~TextPairClassifier.label_type
       ~TextPairClassifier.license_info
       ~TextPairClassifier.multi_label_threshold
+      ~TextPairClassifier.tokenizer
       ~TextPairClassifier.training
    
    

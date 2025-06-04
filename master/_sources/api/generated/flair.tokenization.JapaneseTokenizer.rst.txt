@@ -14,6 +14,8 @@
    .. autosummary::
    
       ~JapaneseTokenizer.__init__
+      ~JapaneseTokenizer.from_dict
+      ~JapaneseTokenizer.to_dict
       ~JapaneseTokenizer.tokenize
    
    

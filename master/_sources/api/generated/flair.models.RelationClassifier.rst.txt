@@ -90,6 +90,7 @@
       ~RelationClassifier.label_type
       ~RelationClassifier.license_info
       ~RelationClassifier.multi_label_threshold
+      ~RelationClassifier.tokenizer
       ~RelationClassifier.zero_tag_value
       ~RelationClassifier.training
    

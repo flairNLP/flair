@@ -96,6 +96,7 @@
       ~TARSClassifier.license_info
       ~TARSClassifier.static_label_type
       ~TARSClassifier.tars_embeddings
+      ~TARSClassifier.tokenizer
       ~TARSClassifier.training
    
    

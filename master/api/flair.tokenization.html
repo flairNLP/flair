@@ -726,6 +726,7 @@ button.search-button {
 <li class="toctree-l2"><a class="reference internal" href="flair.splitter.html">flair.splitter</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">flair.tokenization</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="generated/flair.tokenization.JapaneseTokenizer.html">flair.tokenization.JapaneseTokenizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/flair.tokenization.NoTokenizer.html">flair.tokenization.NoTokenizer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/flair.tokenization.SciSpacyTokenizer.html">flair.tokenization.SciSpacyTokenizer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/flair.tokenization.SegtokTokenizer.html">flair.tokenization.SegtokTokenizer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="generated/flair.tokenization.SpaceTokenizer.html">flair.tokenization.SpaceTokenizer</a></li>
@@ -805,25 +806,28 @@ button.search-button {
 <tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.tokenization.JapaneseTokenizer.html#flair.tokenization.JapaneseTokenizer" title="flair.tokenization.JapaneseTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JapaneseTokenizer</span></code></a></p></td>
 <td><p>Tokenizer using konoha to support popular japanese tokenizers.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.tokenization.SciSpacyTokenizer.html#flair.tokenization.SciSpacyTokenizer" title="flair.tokenization.SciSpacyTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.tokenization.NoTokenizer.html#flair.tokenization.NoTokenizer" title="flair.tokenization.NoTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NoTokenizer</span></code></a></p></td>
+<td><p>A dummy tokenizer that performs no tokenization.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.tokenization.SciSpacyTokenizer.html#flair.tokenization.SciSpacyTokenizer" title="flair.tokenization.SciSpacyTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SciSpacyTokenizer</span></code></a></p></td>
 <td><p>Tokenizer that uses the en_core_sci_sm Spacy model and some special heuristics.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.tokenization.SegtokTokenizer.html#flair.tokenization.SegtokTokenizer" title="flair.tokenization.SegtokTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SegtokTokenizer</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.tokenization.SegtokTokenizer.html#flair.tokenization.SegtokTokenizer" title="flair.tokenization.SegtokTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SegtokTokenizer</span></code></a></p></td>
 <td><p>Tokenizer using segtok, a third party library dedicated to rules-based Indo-European languages.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.tokenization.SpaceTokenizer.html#flair.tokenization.SpaceTokenizer" title="flair.tokenization.SpaceTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpaceTokenizer</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.tokenization.SpaceTokenizer.html#flair.tokenization.SpaceTokenizer" title="flair.tokenization.SpaceTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpaceTokenizer</span></code></a></p></td>
 <td><p>Tokenizer based on space character only.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.tokenization.SpacyTokenizer.html#flair.tokenization.SpacyTokenizer" title="flair.tokenization.SpacyTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.tokenization.SpacyTokenizer.html#flair.tokenization.SpacyTokenizer" title="flair.tokenization.SpacyTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpacyTokenizer</span></code></a></p></td>
 <td><p>Tokenizer using spacy under the hood.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.tokenization.StaccatoTokenizer.html#flair.tokenization.StaccatoTokenizer" title="flair.tokenization.StaccatoTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaccatoTokenizer</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.tokenization.StaccatoTokenizer.html#flair.tokenization.StaccatoTokenizer" title="flair.tokenization.StaccatoTokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">StaccatoTokenizer</span></code></a></p></td>
 <td><p>A string-based tokenizer that splits text into tokens based on the following rules: - Punctuation characters are split into individual tokens - Sequences of numbers are kept together as single tokens - Kanji characters are split into individual tokens - Uninterrupted sequences of letters (Latin, Cyrillic, etc.) and kana are preserved as single tokens - Whitespace and common zero-width characters are ignored.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p></td>
 <td><p>An abstract class representing a <a class="reference internal" href="generated/flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/flair.tokenization.TokenizerWrapper.html#flair.tokenization.TokenizerWrapper" title="flair.tokenization.TokenizerWrapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TokenizerWrapper</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/flair.tokenization.TokenizerWrapper.html#flair.tokenization.TokenizerWrapper" title="flair.tokenization.TokenizerWrapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TokenizerWrapper</span></code></a></p></td>
 <td><p>Helper class to wrap tokenizer functions to the class-based tokenizer interface.</p></td>
 </tr>
 </tbody>

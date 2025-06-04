@@ -14,6 +14,8 @@
    .. autosummary::
    
       ~StaccatoTokenizer.__init__
+      ~StaccatoTokenizer.from_dict
+      ~StaccatoTokenizer.to_dict
       ~StaccatoTokenizer.tokenize
    
    

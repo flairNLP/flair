@@ -14,7 +14,9 @@
    .. autosummary::
    
       ~SegtokTokenizer.__init__
+      ~SegtokTokenizer.from_dict
       ~SegtokTokenizer.run_tokenize
+      ~SegtokTokenizer.to_dict
       ~SegtokTokenizer.tokenize
    
    

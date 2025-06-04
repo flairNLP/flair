@@ -14,6 +14,8 @@
    .. autosummary::
    
       ~TokenizerWrapper.__init__
+      ~TokenizerWrapper.from_dict
+      ~TokenizerWrapper.to_dict
       ~TokenizerWrapper.tokenize
    
    

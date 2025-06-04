@@ -86,6 +86,7 @@
       ~RelationExtractor.label_type
       ~RelationExtractor.license_info
       ~RelationExtractor.multi_label_threshold
+      ~RelationExtractor.tokenizer
       ~RelationExtractor.training
    
    

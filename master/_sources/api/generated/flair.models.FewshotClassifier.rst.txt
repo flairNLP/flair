@@ -93,6 +93,7 @@
       ~FewshotClassifier.label_type
       ~FewshotClassifier.license_info
       ~FewshotClassifier.tars_embeddings
+      ~FewshotClassifier.tokenizer
       ~FewshotClassifier.training
    
    

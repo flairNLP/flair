@@ -824,7 +824,7 @@ button.search-button {
 <h1>flair.data.Sentence<a class="headerlink" href="#flair-data-sentence" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.data.Sentence">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1141-L1873"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1141-L1990"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.data.DataPoint.html#flair.data.DataPoint" title="flair.data.DataPoint"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataPoint</span></code></a></p>
 <p>A central data structure representing a sentence or text passage as Tokens.</p>
 <p>Holds text, tokens, labels (sentence/token/span/relation levels), embeddings,
@@ -875,7 +875,7 @@ and document context information.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1154-L1253"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">language_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_position</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1154-L1264"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Initializes a Sentence.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -965,8 +965,8 @@ will be called when the language_code is accessed for the first time.</p></li>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Sentence.remove_labels" title="flair.data.Sentence.remove_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remove_labels</span></code></a>(typename)</p></td>
 <td><p>Removes all labels associated with a specific annotation layer.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Sentence.retokenize" title="flair.data.Sentence.retokenize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">retokenize</span></code></a>(tokenizer)</p></td>
-<td><p>Retokenizes the sentence using the provided tokenizer while attempting to preserve span, relation, and sentence labels.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Sentence.retokenize" title="flair.data.Sentence.retokenize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">retokenize</span></code></a>(new_tokenizer)</p></td>
+<td><p>Eagerly retokenizes the sentence using the provided tokenizer.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Sentence.right_context" title="flair.data.Sentence.right_context"><code class="xref py py-obj docutils literal notranslate"><span class="pre">right_context</span></code></a>(context_length[, ...])</p></td>
 <td><p></p></td>
@@ -1027,10 +1027,13 @@ will be called when the language_code is accessed for the first time.</p></li>
 <tr class="row-odd"><td><p><a class="reference internal" href="#id1" title="flair.data.Sentence.text"><code class="xref py py-obj docutils literal notranslate"><span class="pre">text</span></code></a></p></td>
 <td><p>Returns the original text of this sentence.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#id0" title="flair.data.Sentence.tokens"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tokens</span></code></a></p></td>
-<td><p>The list of Token objects (triggers tokenization if needed).</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Sentence.tokenizer" title="flair.data.Sentence.tokenizer"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tokenizer</span></code></a></p></td>
+<td><p>Gets the tokenizer currently intended for this sentence.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#flair.data.Sentence.unlabeled_identifier" title="flair.data.Sentence.unlabeled_identifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unlabeled_identifier</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#id0" title="flair.data.Sentence.tokens"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tokens</span></code></a></p></td>
+<td><p>The list of Token objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#flair.data.Sentence.unlabeled_identifier" title="flair.data.Sentence.unlabeled_identifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unlabeled_identifier</span></code></a></p></td>
 <td><p>A string identifier for the data point itself, without label info.</p></td>
 </tr>
 </tbody>
@@ -1038,7 +1041,13 @@ will be called when the language_code is accessed for the first time.</p></li>
 <dl class="py property">
 <dt class="sig sig-object py" id="id0">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokens</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="flair.data.Token.html#flair.data.Token" title="flair.data.Token"><span class="pre">Token</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id0" title="Link to this definition">#</a></dt>
-<dd><p>The list of Token objects (triggers tokenization if needed).</p>
+<dd><p>The list of Token objects. Triggers tokenization if needed (lazy evaluation).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="flair.data.Sentence.tokenizer">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenizer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><span class="pre">Tokenizer</span></a></em><a class="headerlink" href="#flair.data.Sentence.tokenizer" title="Link to this definition">#</a></dt>
+<dd><p>Gets the tokenizer currently intended for this sentence.</p>
 </dd></dl>
 
 <dl class="py property">
@@ -1055,7 +1064,7 @@ will be called when the language_code is accessed for the first time.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.to_original_text">
-<span class="sig-name descname"><span class="pre">to_original_text</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1309-L1311"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to_original_text" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to_original_text</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1569-L1571"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to_original_text" title="Link to this definition">#</a></dt>
 <dd><p>Returns the original text of this sentence.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1066,7 +1075,7 @@ will be called when the language_code is accessed for the first time.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.to_tagged_string">
-<span class="sig-name descname"><span class="pre">to_tagged_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1313-L1337"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to_tagged_string" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to_tagged_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1573-L1597"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to_tagged_string" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
@@ -1076,7 +1085,7 @@ will be called when the language_code is accessed for the first time.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.get_relations">
-<span class="sig-name descname"><span class="pre">get_relations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1339-L1345"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_relations" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_relations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1599-L1605"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_relations" title="Link to this definition">#</a></dt>
 <dd><p>Retrieves all Relation objects associated with this sentence.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1087,7 +1096,7 @@ will be called when the language_code is accessed for the first time.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.get_spans">
-<span class="sig-name descname"><span class="pre">get_spans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1347-L1352"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_spans" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_spans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1607-L1612"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_spans" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Span.html#flair.data.Span" title="flair.data.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">Span</span></code></a>]</span></p>
@@ -1097,7 +1106,7 @@ will be called when the language_code is accessed for the first time.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.get_token">
-<span class="sig-name descname"><span class="pre">get_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_id</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1354-L1358"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_token" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">token_id</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1614-L1618"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_token" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<a class="reference internal" href="flair.data.Token.html#flair.data.Token" title="flair.data.Token"><code class="xref py py-class docutils literal notranslate"><span class="pre">Token</span></code></a>]</span></p>
@@ -1113,7 +1122,7 @@ will be called when the language_code is accessed for the first time.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.to">
-<span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1393-L1399"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1656-L1662"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to" title="Link to this definition">#</a></dt>
 <dd><p>Moves all stored embedding tensors to the specified device.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1128,7 +1137,7 @@ Defaults to False.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.clear_embeddings">
-<span class="sig-name descname"><span class="pre">clear_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1401-L1408"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.clear_embeddings" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">clear_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">embedding_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1664-L1671"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.clear_embeddings" title="Link to this definition">#</a></dt>
 <dd><p>Removes stored embeddings to free memory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1140,7 +1149,7 @@ If None, removes all embeddings. Defaults to None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.left_context">
-<span class="sig-name descname"><span class="pre">left_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_document_boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1410-L1422"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.left_context" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">left_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_document_boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1673-L1685"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.left_context" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Token.html#flair.data.Token" title="flair.data.Token"><code class="xref py py-class docutils literal notranslate"><span class="pre">Token</span></code></a>]</span></p>
@@ -1150,7 +1159,7 @@ If None, removes all embeddings. Defaults to None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.right_context">
-<span class="sig-name descname"><span class="pre">right_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_document_boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1424-L1435"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.right_context" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">right_context</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_document_boundaries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1687-L1698"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.right_context" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="flair.data.Token.html#flair.data.Token" title="flair.data.Token"><code class="xref py py-class docutils literal notranslate"><span class="pre">Token</span></code></a>]</span></p>
@@ -1160,7 +1169,7 @@ If None, removes all embeddings. Defaults to None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.to_tokenized_string">
-<span class="sig-name descname"><span class="pre">to_tokenized_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1440-L1444"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to_tokenized_string" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to_tokenized_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1703-L1707"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to_tokenized_string" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
@@ -1170,7 +1179,7 @@ If None, removes all embeddings. Defaults to None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.to_plain_string">
-<span class="sig-name descname"><span class="pre">to_plain_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1446-L1452"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to_plain_string" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to_plain_string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1709-L1715"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to_plain_string" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
@@ -1180,7 +1189,7 @@ If None, removes all embeddings. Defaults to None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.infer_space_after">
-<span class="sig-name descname"><span class="pre">infer_space_after</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1454-L1484"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.infer_space_after" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">infer_space_after</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1717-L1747"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.infer_space_after" title="Link to this definition">#</a></dt>
 <dd><p>Heuristics in case you wish to infer whitespace_after values for tokenized text.</p>
 <p>This is useful for some old NLP tasks (such as CoNLL-03 and CoNLL-2000) that provide only tokenized data with
 no info of original whitespacing.
@@ -1189,7 +1198,7 @@ no info of original whitespacing.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.to_dict">
-<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tag_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1486-L1493"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to_dict" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tag_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1749-L1756"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.to_dict" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
@@ -1199,7 +1208,7 @@ no info of original whitespacing.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.get_span">
-<span class="sig-name descname"><span class="pre">get_span</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1495-L1497"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_span" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_span</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1758-L1760"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_span" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.data.Span.html#flair.data.Span" title="flair.data.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">Span</span></code></a></span></p>
@@ -1221,7 +1230,7 @@ no info of original whitespacing.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.get_language_code">
-<span class="sig-name descname"><span class="pre">get_language_code</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1528-L1538"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_language_code" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_language_code</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1791-L1801"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_language_code" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
@@ -1231,7 +1240,7 @@ no info of original whitespacing.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.next_sentence">
-<span class="sig-name descname"><span class="pre">next_sentence</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1569-L1584"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.next_sentence" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">next_sentence</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1832-L1847"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.next_sentence" title="Link to this definition">#</a></dt>
 <dd><p>Get the next sentence in the document.</p>
 <p>This only works if context is set through dataloader or elsewhere
 :return: next Sentence in document if set, otherwise None</p>
@@ -1239,7 +1248,7 @@ no info of original whitespacing.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.previous_sentence">
-<span class="sig-name descname"><span class="pre">previous_sentence</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1586-L1601"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.previous_sentence" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">previous_sentence</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1849-L1864"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.previous_sentence" title="Link to this definition">#</a></dt>
 <dd><p>Get the previous sentence in the document.</p>
 <p>works only if context is set through dataloader or elsewhere
 :return: previous Sentence in document if set, otherwise None</p>
@@ -1247,7 +1256,7 @@ no info of original whitespacing.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.is_context_set">
-<span class="sig-name descname"><span class="pre">is_context_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1603-L1614"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.is_context_set" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_context_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1866-L1877"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.is_context_set" title="Link to this definition">#</a></dt>
 <dd><p>Determines if this sentence has a context of sentences before or after set.</p>
 <p>Return True or False depending on whether context is set (for instance in dataloader or elsewhere)
 :rtype: <span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>
@@ -1256,7 +1265,7 @@ no info of original whitespacing.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.copy_context_from_sentence">
-<span class="sig-name descname"><span class="pre">copy_context_from_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1616-L1619"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.copy_context_from_sentence" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">copy_context_from_sentence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentence</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1879-L1882"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.copy_context_from_sentence" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
@@ -1266,7 +1275,7 @@ no info of original whitespacing.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.set_context_for_sentences">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_context_for_sentences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1621-L1632"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.set_context_for_sentences" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">set_context_for_sentences</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sentences</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1884-L1895"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.set_context_for_sentences" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
@@ -1276,7 +1285,7 @@ no info of original whitespacing.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.get_labels">
-<span class="sig-name descname"><span class="pre">get_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1634-L1644"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_labels" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1897-L1907"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.get_labels" title="Link to this definition">#</a></dt>
 <dd><p>Retrieves all labels for a specific annotation layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1294,7 +1303,7 @@ from all layers. Defaults to None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.remove_labels">
-<span class="sig-name descname"><span class="pre">remove_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1646-L1658"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.remove_labels" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">remove_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">typename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1909-L1921"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.remove_labels" title="Link to this definition">#</a></dt>
 <dd><p>Removes all labels associated with a specific annotation layer.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1305,7 +1314,7 @@ from all layers. Defaults to None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.truncate">
-<span class="sig-name descname"><span class="pre">truncate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1663-L1698"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.truncate" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">truncate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_tokens</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1926-L1961"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.truncate" title="Link to this definition">#</a></dt>
 <dd><p>Truncates the sentence to <cite>max_tokens</cite>, cleaning up associated annotations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1316,14 +1325,16 @@ from all layers. Defaults to None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Sentence.retokenize">
-<span class="sig-name descname"><span class="pre">retokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1714-L1873"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.retokenize" title="Link to this definition">#</a></dt>
-<dd><p>Retokenizes the sentence using the provided tokenizer while attempting to preserve
-span, relation, and sentence labels. Token-level labels are discarded.</p>
-<p>Note: Relation preservation depends on successfully re-mapping both constituent spans
-based on character offsets, which might fail if tokenization changes boundaries significantly.</p>
+<span class="sig-name descname"><span class="pre">retokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L1977-L1990"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Sentence.retokenize" title="Link to this definition">#</a></dt>
+<dd><p>Eagerly retokenizes the sentence using the provided tokenizer.
+This attempts to preserve span, relation, and sentence labels.
+Token-level labels are generally discarded as their basis (the tokens themselves) changes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>tokenizer</strong> – The tokenizer to use for retokenization</p>
+<dd class="field-odd"><p><strong>new_tokenizer</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></span>) – The tokenizer to use for retokenization.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
 </dd>
 </dl>
 </dd></dl>

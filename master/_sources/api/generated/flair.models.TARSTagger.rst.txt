@@ -94,6 +94,7 @@
       ~TARSTagger.license_info
       ~TARSTagger.static_label_type
       ~TARSTagger.tars_embeddings
+      ~TARSTagger.tokenizer
       ~TARSTagger.training
    
    

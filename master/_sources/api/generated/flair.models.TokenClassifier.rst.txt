@@ -86,6 +86,7 @@
       ~TokenClassifier.label_type
       ~TokenClassifier.license_info
       ~TokenClassifier.multi_label_threshold
+      ~TokenClassifier.tokenizer
       ~TokenClassifier.training
    
    
