@@ -824,7 +824,7 @@ button.search-button {
 <h1>flair.data.Dictionary<a class="headerlink" href="#flair-data-dictionary" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.data.Dictionary">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_unk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L70-L307"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.data.</span></span><span class="sig-name descname"><span class="pre">Dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_unk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L71-L308"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This class holds a dictionary that maps strings to unique integer IDs.</p>
 <p>Used throughout Flair for representing words, tags, characters, etc.
@@ -832,7 +832,7 @@ Handles unknown items (&lt;unk&gt;) and flags for multi-label or span tasks.
 Items are stored internally as bytes for efficiency.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_unk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L78-L93"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">add_unk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L79-L94"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.__init__" title="Link to this definition">#</a></dt>
 <dd><p>Initializes a Dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -891,7 +891,7 @@ Defaults to True.</p>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.remove_item">
-<span class="sig-name descname"><span class="pre">remove_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L95-L107"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.remove_item" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">remove_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L96-L108"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.remove_item" title="Link to this definition">#</a></dt>
 <dd><p>Removes an item from the dictionary.</p>
 <p>Note: This operation might be slow for large dictionaries as it involves
 list removal. It currently doesn’t re-index subsequent items.</p>
@@ -904,7 +904,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.add_item">
-<span class="sig-name descname"><span class="pre">add_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L109-L124"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.add_item" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">add_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L110-L125"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.add_item" title="Link to this definition">#</a></dt>
 <dd><p>Adds a string item to the dictionary.</p>
 <p>If the item exists, returns its ID. Otherwise, adds it and returns the new ID.</p>
 <dl class="field-list simple">
@@ -922,7 +922,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.get_idx_for_item">
-<span class="sig-name descname"><span class="pre">get_idx_for_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L126-L148"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_idx_for_item" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_idx_for_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L127-L149"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_idx_for_item" title="Link to this definition">#</a></dt>
 <dd><p>Retrieves the integer ID for a given string item.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -942,7 +942,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.get_idx_for_items">
-<span class="sig-name descname"><span class="pre">get_idx_for_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L150-L172"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_idx_for_items" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_idx_for_items</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L151-L173"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_idx_for_items" title="Link to this definition">#</a></dt>
 <dd><p>Retrieves the integer IDs for a list of string items. (No cache version)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -953,7 +953,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.get_items">
-<span class="sig-name descname"><span class="pre">get_items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L174-L176"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_items" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_items</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L175-L177"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_items" title="Link to this definition">#</a></dt>
 <dd><p>Returns a list of all items in the dictionary in order of their IDs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -964,7 +964,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.get_item_for_index">
-<span class="sig-name descname"><span class="pre">get_item_for_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L182-L194"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_item_for_index" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_item_for_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L183-L195"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.get_item_for_index" title="Link to this definition">#</a></dt>
 <dd><p>Retrieves the string item corresponding to a given integer ID.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -984,7 +984,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.has_item">
-<span class="sig-name descname"><span class="pre">has_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L196-L198"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.has_item" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">has_item</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L197-L199"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.has_item" title="Link to this definition">#</a></dt>
 <dd><p>Checks if a given string item exists in the dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -995,7 +995,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.set_start_stop_tags">
-<span class="sig-name descname"><span class="pre">set_start_stop_tags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L200-L203"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.set_start_stop_tags" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_start_stop_tags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L201-L204"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.set_start_stop_tags" title="Link to this definition">#</a></dt>
 <dd><p>Adds special &lt;START&gt; and &lt;STOP&gt; tags to the dictionary (often used for CRFs).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1006,7 +1006,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.is_span_prediction_problem">
-<span class="sig-name descname"><span class="pre">is_span_prediction_problem</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L205-L215"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.is_span_prediction_problem" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">is_span_prediction_problem</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L206-L216"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.is_span_prediction_problem" title="Link to this definition">#</a></dt>
 <dd><p>Checks if the dictionary likely represents BIOES/BIO span labels.</p>
 <p>Returns True if <cite>span_labels</cite> flag is set or any item starts with ‘B-’, ‘I-’, ‘S-‘.</p>
 <dl class="field-list simple">
@@ -1021,7 +1021,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.start_stop_tags_are_set">
-<span class="sig-name descname"><span class="pre">start_stop_tags_are_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L217-L219"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.start_stop_tags_are_set" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">start_stop_tags_are_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L218-L220"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.start_stop_tags_are_set" title="Link to this definition">#</a></dt>
 <dd><p>Checks if &lt;START&gt; and &lt;STOP&gt; tags have been added.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1032,7 +1032,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">savefile</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L221-L231"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.save" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">savefile</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L222-L232"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.save" title="Link to this definition">#</a></dt>
 <dd><p>Saves the dictionary mapping to a file using pickle.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1043,7 +1043,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.load_from_file">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L239-L262"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.load_from_file" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L240-L263"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.load_from_file" title="Link to this definition">#</a></dt>
 <dd><p>Loads a Dictionary previously saved using the <cite>.save()</cite> method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1060,7 +1060,7 @@ list removal. It currently doesn’t re-index subsequent items.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.data.Dictionary.load">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L264-L297"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.load" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/data.py#L265-L298"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.data.Dictionary.load" title="Link to this definition">#</a></dt>
 <dd><p>Loads a pre-built character dictionary or a dictionary from a file path.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

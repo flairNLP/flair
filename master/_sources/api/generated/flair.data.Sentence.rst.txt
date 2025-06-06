@@ -18,6 +18,7 @@
       ~Sentence.add_metadata
       ~Sentence.clear_embeddings
       ~Sentence.copy_context_from_sentence
+      ~Sentence.from_dict
       ~Sentence.get_each_embedding
       ~Sentence.get_embedding
       ~Sentence.get_label
