@@ -2059,7 +2059,7 @@ class Sentence(DataPoint):
             end_char = span_info["end_char"]
 
             target_tokens: list[Token] = []
-            if self._tokens is not None:                
+            if self._tokens is not None:
                 for token in self._tokens:
                     # FIX: Make token positions relative to sentence for comparison
                     token_start_in_sentence = token.start_position - self.start_position
