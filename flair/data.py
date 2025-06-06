@@ -1251,9 +1251,13 @@ class Sentence(DataPoint):
                 for token in text:
                     self._add_token(token)
 
+                # The last token of a sentence should not have trailing whitespace.
+                if len(self._tokens) > 0:
+                    self._tokens[-1].whitespace_after = 0
+
                 # reconstruct text from tokens
-                if len(self.tokens) > 0:
-                    self._text = "".join([t.text + t.whitespace_after * " " for t in self.tokens]).strip()
+                if len(self._tokens) > 0:
+                    self._text = "".join([t.text + t.whitespace_after * " " for t in self._tokens]).strip()
                 else:
                     self._text = ""
 
@@ -1505,7 +1509,7 @@ class Sentence(DataPoint):
 
         # clear token embeddings if sentence is tokenized
         if self._is_tokenized():
-            for token in self.tokens:
+            for token in self._tokens:
                 token.clear_embeddings(embedding_names)
 
     def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> list[Token]:
@@ -1893,7 +1897,7 @@ class Sentence(DataPoint):
         # only access tokens if already tokenized
         if self._is_tokenized():
             # labels also need to be deleted at all tokens
-            for token in self.tokens:
+            for token in self._tokens:
                 token.remove_labels(typename)
 
             # labels also need to be deleted at all known spans
