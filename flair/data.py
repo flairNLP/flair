@@ -1509,8 +1509,9 @@ class Sentence(DataPoint):
 
         # clear token embeddings if sentence is tokenized
         if self._is_tokenized():
-            for token in self._tokens:
-                token.clear_embeddings(embedding_names)
+            if self._tokens is not None:
+                for token in self._tokens:
+                    token.clear_embeddings(embedding_names)
 
     def left_context(self, context_length: int, respect_document_boundaries: bool = True) -> list[Token]:
         sentence = self
@@ -1897,8 +1898,9 @@ class Sentence(DataPoint):
         # only access tokens if already tokenized
         if self._is_tokenized():
             # labels also need to be deleted at all tokens
-            for token in self._tokens:
-                token.remove_labels(typename)
+            if self._tokens is not None:
+                for token in self._tokens:
+                    token.remove_labels(typename)
 
             # labels also need to be deleted at all known spans
             for span in self._known_spans.values():
@@ -2057,8 +2059,8 @@ class Sentence(DataPoint):
             end_char = span_info["end_char"]
 
             target_tokens: list[Token] = []
-            if self._tokens:
-                for token in self.tokens:
+            if self._tokens is not None:                
+                for token in self._tokens:
                     # FIX: Make token positions relative to sentence for comparison
                     token_start_in_sentence = token.start_position - self.start_position
                     token_end_in_sentence = token.end_position - self.start_position
