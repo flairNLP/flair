@@ -498,7 +498,7 @@ class StaccatoTokenizer(Tokenizer):
         # Unicode ranges for various alphabets and scripts
         # This includes Latin, Cyrillic, Greek, Hebrew, Arabic, Japanese Kana, Korean Hangul, etc.
         alphabets_list = [
-            r"[a-zA-Z]+",  # Latin
+            r"[a-zA-Z\u00C0-\u02AF\u1E00-\u1EFF]+",  # Latin and extended Latin characters
             r"[\u0400-\u04FF\u0500-\u052F]+",  # Cyrillic and Cyrillic Supplement
             r"[\u0370-\u03FF\u1F00-\u1FFF]+",  # Greek and Coptic
             r"[\u0590-\u05FF]+",  # Hebrew
