@@ -495,10 +495,18 @@ class StaccatoTokenizer(Tokenizer):
         self.digits = r"\d+"  # One or more digits
         self.kanji = r"[\u4e00-\u9fff]"  # Kanji characters
 
+        # Base pattern for letters in Latin-based scripts, including diacritics
+        latin_chars = r"[a-zA-Z\u00C0-\u02AF\u1E00-\u1EFF]"
+
+        # Pattern to capture abbreviations with at least two periods (e.g., "U.S.", "e.g.")
+        # This prevents matching single words at the end of a sentence (e.g., "X.").
+        abbrev_segment = f"{latin_chars}{{1,3}}"
+        self.abbreviations = rf"\b(?:{abbrev_segment}\.){{2,}}"
+
         # Unicode ranges for various alphabets and scripts
         # This includes Latin, Cyrillic, Greek, Hebrew, Arabic, Japanese Kana, Korean Hangul, etc.
         alphabets_list = [
-            r"[a-zA-Z]+",  # Latin
+            rf"{latin_chars}+",  # Latin
             r"[\u0400-\u04FF\u0500-\u052F]+",  # Cyrillic and Cyrillic Supplement
             r"[\u0370-\u03FF\u1F00-\u1FFF]+",  # Greek and Coptic
             r"[\u0590-\u05FF]+",  # Hebrew
@@ -512,8 +520,10 @@ class StaccatoTokenizer(Tokenizer):
         self.alphabet_pattern = "|".join(alphabets_list)
 
         # Combined pattern for re.findall:
-        # Captures letter sequences OR digit sequences OR Kanji OR punctuation/symbols
-        combined_pattern = f"({self.alphabet_pattern})|({self.digits})|({self.kanji})|({self.punctuation})"
+        # Captures abbreviations OR letter sequences OR digit sequences OR Kanji OR punctuation/symbols
+        combined_pattern = (
+            f"({self.abbreviations})|({self.alphabet_pattern})|({self.digits})|({self.kanji})|({self.punctuation})"
+        )
         # Pre-compile the regex for efficiency
         self.token_pattern = re.compile(combined_pattern)
 
