@@ -1,4 +1,4 @@
-# Expose base classses
+# Expose base classes
 from flair.embeddings.transformer import (
     TransformerEmbeddings,
     TransformerJitDocumentEmbeddings,

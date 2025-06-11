@@ -93,7 +93,7 @@ to train a single model capable of handling multiple entity types at once.
 This can be achieved by using the  `PrefixedSequenceTagger()` class, which implements the method described in \[1\].
 This model uses prompting, i.e. it adds a prefix (hence the name) string in front of specifying the
 entity types requested for tagging: `[Tag <entity-type-0>, <entity-type-1>, ...]`.
-Thist is especially usefull for training, as it allows to combine multiple corpora even if they cover different subsets of entity types.
+This is especially useful for training, as it allows to combine multiple corpora even if they cover different subsets of entity types.
 
 ```python
 # 1. get the corpora

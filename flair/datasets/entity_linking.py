@@ -1182,7 +1182,7 @@ class NEL_ENGLISH_TWEEKI(ColumnCorpus):
 
         The dataset got introduced in "Tweeki:
         Linking Named Entities on Twitter to a Knowledge Graph" Harandizadeh,
-        Singh. The data consits of tweets with manually annotated wikipedia
+        Singh. The data consists of tweets with manually annotated wikipedia
         links. If you call the constructor the first time the dataset gets
         automatically downloaded and transformed in tab-separated column
         format.
@@ -2342,7 +2342,7 @@ class BigBioEntityLinkingCorpus(Corpus, abc.ABC):
 
 
 class BIGBIO_EL_NCBI_DISEASE(BigBioEntityLinkingCorpus):
-    """This class implents the adapter for the NCBI Disease corpus.
+    """This class implements the adapter for the NCBI Disease corpus.
 
     See:
     - Reference: https://www.sciencedirect.com/science/article/pii/S1532046413001974
@@ -2444,7 +2444,7 @@ class BIGBIO_EL_NCBI_DISEASE(BigBioEntityLinkingCorpus):
 
 
 class BIGBIO_EL_BC5CDR_CHEMICAL(BigBioEntityLinkingCorpus):
-    """This class implents the adapter for the BC5CDR corpus (only chemical annotations).
+    """This class implements the adapter for the BC5CDR corpus (only chemical annotations).
 
     See:
     - Reference: https://academic.oup.com/database/article/doi/10.1093/database/baw068/2630414
@@ -2536,7 +2536,7 @@ class BIGBIO_EL_BC5CDR_CHEMICAL(BigBioEntityLinkingCorpus):
 
 
 class BIGBIO_EL_GNORMPLUS(BigBioEntityLinkingCorpus):
-    """This class implents the adapter for the GNormPlus corpus.
+    """This class implements the adapter for the GNormPlus corpus.
 
     See:
     - Reference: https://www.hindawi.com/journals/bmri/2015/918710/

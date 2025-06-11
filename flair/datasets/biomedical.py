@@ -853,7 +853,7 @@ class HUNER_ALL_JNLPBA(HUNER_JNLPBA):
 class CELL_FINDER(ColumnCorpus):
     """Original CellFinder corpus containing cell line, species and gene annotations.
 
-    For futher information see Neves et al.:     Annotating and
+    For further information see Neves et al.:     Annotating and
     evaluating text for stem cell research
     https://pdfs.semanticscholar.org/38e3/75aeeeb1937d03c3c80128a70d8e7a74441f.pdf
     """
@@ -1615,7 +1615,7 @@ class CHEMDNER(ColumnCorpus):
         :param base_path: Path to the corpus on your machine
         :param in_memory: If True, keeps dataset in memory giving speedups in training.
         :param sentence_splitter: Custom implementation of :class:`SentenceSplitter` which
-            segements documents into sentences and tokens
+            segments documents into sentences and tokens
         """
         base_path = flair.cache_root / "datasets" if base_path is None else Path(base_path)
 
