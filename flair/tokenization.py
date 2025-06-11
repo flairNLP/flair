@@ -521,7 +521,9 @@ class StaccatoTokenizer(Tokenizer):
 
         # Combined pattern for re.findall:
         # Captures abbreviations OR letter sequences OR digit sequences OR Kanji OR punctuation/symbols
-        combined_pattern = f"({self.abbreviations})|({self.alphabet_pattern})|({self.digits})|({self.kanji})|({self.punctuation})"
+        combined_pattern = (
+            f"({self.abbreviations})|({self.alphabet_pattern})|({self.digits})|({self.kanji})|({self.punctuation})"
+        )
         # Pre-compile the regex for efficiency
         self.token_pattern = re.compile(combined_pattern)
 

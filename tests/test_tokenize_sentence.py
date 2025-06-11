@@ -599,8 +599,24 @@ def test_staccato_tokenizer_abbreviations():
     text_1 = "The firm is U.S.A. Inc. and i.e. in the U.S. we use e.g. to give examples."
     sentence_1 = Sentence(text_1, use_tokenizer=tokenizer)
     expected_tokens_1 = [
-        "The", "firm", "is", "U.S.A.", "Inc", ".", "and", "i.e.", "in", "the",
-        "U.S.", "we", "use", "e.g.", "to", "give", "examples", ".",
+        "The",
+        "firm",
+        "is",
+        "U.S.A.",
+        "Inc",
+        ".",
+        "and",
+        "i.e.",
+        "in",
+        "the",
+        "U.S.",
+        "we",
+        "use",
+        "e.g.",
+        "to",
+        "give",
+        "examples",
+        ".",
     ]
     assert [token.text for token in sentence_1.tokens] == expected_tokens_1
 
@@ -608,7 +624,17 @@ def test_staccato_tokenizer_abbreviations():
     text_2 = "He wrote on X. Then Dr. Smith arrived."
     sentence_2 = Sentence(text_2, use_tokenizer=tokenizer)
     expected_tokens_2 = [
-        "He", "wrote", "on", "X", ".", "Then", "Dr", ".", "Smith", "arrived", ".",
+        "He",
+        "wrote",
+        "on",
+        "X",
+        ".",
+        "Then",
+        "Dr",
+        ".",
+        "Smith",
+        "arrived",
+        ".",
     ]
     assert [token.text for token in sentence_2.tokens] == expected_tokens_2
 
@@ -616,8 +642,19 @@ def test_staccato_tokenizer_abbreviations():
     text_3 = "The item is from the U.K. (i.e. not the U.S.A.)."
     sentence_3 = Sentence(text_3, use_tokenizer=tokenizer)
     expected_tokens_3 = [
-        "The", "item", "is", "from", "the", "U.K.", "(", "i.e.",
-        "not", "the", "U.S.A.", ")", ".",
+        "The",
+        "item",
+        "is",
+        "from",
+        "the",
+        "U.K.",
+        "(",
+        "i.e.",
+        "not",
+        "the",
+        "U.S.A.",
+        ")",
+        ".",
     ]
     assert [token.text for token in sentence_3.tokens] == expected_tokens_3
 
