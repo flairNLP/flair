@@ -568,6 +568,60 @@ def test_create_sentence_with_staccato_tokenizer():
     assert sentence.tokens[3].text == "."
 
 
+def test_staccato_tokenizer_with_umlauts():
+    # Test German umlauts and other diacritics are not split from words
+    german_sentence = Sentence("US-Präsident Trump und die bösen Füchse.", use_tokenizer=StaccatoTokenizer())
+    expected_german_tokens = ["US", "-", "Präsident", "Trump", "und", "die", "bösen", "Füchse", "."]
+    assert [token.text for token in german_sentence.tokens] == expected_german_tokens
+
+    # Test with various diacritics
+    multi_diacritic_sentence = Sentence("Voilà, el pingüino se quejó de l'été.", use_tokenizer=StaccatoTokenizer())
+    expected_multi_diacritic_tokens = [
+        "Voilà",
+        ",",
+        "el",
+        "pingüino",
+        "se",
+        "quejó",
+        "de",
+        "l",
+        "'",
+        "été",
+        ".",
+    ]
+    assert [token.text for token in multi_diacritic_sentence.tokens] == expected_multi_diacritic_tokens
+
+
+def test_staccato_tokenizer_abbreviations():
+    tokenizer = StaccatoTokenizer()
+
+    # Case 1: Abbreviations with multiple periods should be one token
+    text_1 = "The firm is U.S.A. Inc. and i.e. in the U.S. we use e.g. to give examples."
+    sentence_1 = Sentence(text_1, use_tokenizer=tokenizer)
+    expected_tokens_1 = [
+        "The", "firm", "is", "U.S.A.", "Inc", ".", "and", "i.e.", "in", "the",
+        "U.S.", "we", "use", "e.g.", "to", "give", "examples", ".",
+    ]
+    assert [token.text for token in sentence_1.tokens] == expected_tokens_1
+
+    # Case 2: Single letter/short word with a dot at sentence end should be split
+    text_2 = "He wrote on X. Then Dr. Smith arrived."
+    sentence_2 = Sentence(text_2, use_tokenizer=tokenizer)
+    expected_tokens_2 = [
+        "He", "wrote", "on", "X", ".", "Then", "Dr", ".", "Smith", "arrived", ".",
+    ]
+    assert [token.text for token in sentence_2.tokens] == expected_tokens_2
+
+    # Case 3: A mix of cases
+    text_3 = "The item is from the U.K. (i.e. not the U.S.A.)."
+    sentence_3 = Sentence(text_3, use_tokenizer=tokenizer)
+    expected_tokens_3 = [
+        "The", "item", "is", "from", "the", "U.K.", "(", "i.e.",
+        "not", "the", "U.S.A.", ")", ".",
+    ]
+    assert [token.text for token in sentence_3.tokens] == expected_tokens_3
+
+
 def test_staccato_tokenizer_with_numbers_and_punctuation():
     sentence = Sentence("It's 03-16-2025", use_tokenizer=StaccatoTokenizer())
 
