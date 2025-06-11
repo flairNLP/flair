@@ -806,7 +806,7 @@ button.search-button {
 <h1>flair.tokenization.NoTokenizer<a class="headerlink" href="#flair-tokenization-notokenizer" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="flair.tokenization.NoTokenizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">NoTokenizer</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L554-L585"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.NoTokenizer" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">flair.tokenization.</span></span><span class="sig-name descname"><span class="pre">NoTokenizer</span></span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L564-L595"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.NoTokenizer" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="flair.tokenization.Tokenizer.html#flair.tokenization.Tokenizer" title="flair.tokenization.Tokenizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tokenizer</span></code></a></p>
 <p>A dummy tokenizer that performs no tokenization.
 It returns the original text as a single token in a list,
@@ -814,7 +814,7 @@ or an empty list if the text is empty or whitespace.
 Useful when text is pre-tokenized or to disable tokenization.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.NoTokenizer.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L562-L563"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.NoTokenizer.__init__" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L572-L573"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.NoTokenizer.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods</p>
@@ -844,7 +844,7 @@ Useful when text is pre-tokenized or to disable tokenization.</p>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.NoTokenizer.tokenize">
-<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L565-L573"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.NoTokenizer.tokenize" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">tokenize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L575-L583"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.NoTokenizer.tokenize" title="Link to this definition">#</a></dt>
 <dd><p>Returns the text as a single token if not empty/whitespace,
 otherwise returns an empty list.</p>
 <dl class="field-list simple">
@@ -856,7 +856,7 @@ otherwise returns an empty list.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.NoTokenizer.to_dict">
-<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L575-L580"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.NoTokenizer.to_dict" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L585-L590"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.NoTokenizer.to_dict" title="Link to this definition">#</a></dt>
 <dd><p>Serialize the tokenizer’s configuration to a dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -867,7 +867,7 @@ otherwise returns an empty list.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="flair.tokenization.NoTokenizer.from_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L582-L585"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.NoTokenizer.from_dict" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/flairNLP/flair/blob/master/flair/tokenization.py#L592-L595"><span class="linkcode-link"><span class="pre">View</span> <span class="pre">on</span> <span class="pre">GitHub</span></span></a><a class="headerlink" href="#flair.tokenization.NoTokenizer.from_dict" title="Link to this definition">#</a></dt>
 <dd><p>Instantiate the tokenizer from a configuration dictionary.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
