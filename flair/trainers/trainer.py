@@ -845,7 +845,7 @@ class ModelTrainer(Pluggable):
 
                 # if we do not use dev data for model selection, save final model
                 if save_final_model:
-                    self._save_model(base_path / "final-model.pt", save_optimizer_state == save_optimizer_state)
+                    self._save_model(base_path / "final-model.pt", save_optimizer_state=save_optimizer_state)
 
             except KeyboardInterrupt:
                 log_line(log)
