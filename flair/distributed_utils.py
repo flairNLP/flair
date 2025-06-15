@@ -2,9 +2,8 @@ import logging
 import os
 import random
 from multiprocessing.connection import Connection
-from typing import Callable
+from typing import Callable, Collection, Iterable, TypeVar
 
-import numpy as np
 import torch
 import torch.multiprocessing as mp
 from torch.distributed import destroy_process_group, init_process_group
@@ -15,8 +14,10 @@ from flair.data import Corpus, _len_dataset
 
 log = logging.getLogger("flair")
 
+T = TypeVar("T")
 
-def launch_distributed(fn, *args, **kwargs):
+
+def launch_distributed(fn: Callable, *args, **kwargs):
     """Executes the function fn(*args, **kwargs) on multiple processes (one for each local GPU).
 
     If training with multi_gpu=True, launch_distributed should wrap your code that calls .train or .fine_tune.
@@ -61,16 +62,6 @@ def is_main_process() -> bool:
         return True
 
 
-def aggregate(value, aggregation_fn=np.mean):
-    """Gather `value` from all processes and send to `aggregation_fn` to get a single return value."""
-    if torch.distributed.is_initialized():
-        gathered_values = [None for _ in range(torch.distributed.get_world_size())]
-        torch.distributed.all_gather_object(gathered_values, value)
-    else:
-        gathered_values = [value]
-    return aggregation_fn(gathered_values)
-
-
 def validate_corpus_same_each_process(corpus: Corpus) -> None:
     """Catches most cases in which a corpus is not the same on each process.
 
@@ -84,9 +75,76 @@ def validate_corpus_same_each_process(corpus: Corpus) -> None:
 
 
 def _validate_dataset_same_each_process(dataset: Dataset, sample_size: int = 10) -> None:
+    """:raises: ValueError if the dataset is not the same on each process."""
     random_indices = random.sample(range(_len_dataset(dataset)), min(sample_size, _len_dataset(dataset)))
     for i in random_indices:
         example = str(dataset[i])
         examples = aggregate(example, list)
         if not all(example == examples[0] for example in examples):
             raise ValueError("Dataset must be the same on each process")
+
+
+def gather(value: T) -> list[T]:
+    """Gather `value` from all processes and return a list of values."""
+    if torch.distributed.is_initialized():
+        gathered_values = [value for _ in range(torch.distributed.get_world_size())]
+        torch.distributed.all_gather_object(gathered_values, value)
+    else:
+        gathered_values = [value]
+    return gathered_values
+
+
+def aggregate(value: T, aggregation_fn: Callable):
+    """Gather `value` from all processes and send to `aggregation_fn` to get a single return value."""
+    gathered_values = gather(value)
+    return aggregation_fn(gathered_values)
+
+
+def broadcast_value(value: T, src: int = 0) -> T:
+    """
+    Broadcasts a Python object from the source process (src) to all other processes.
+    Every process returns the same object.
+    """
+    obj_list = [value]
+    torch.distributed.broadcast_object_list(obj_list, src=src)
+    return obj_list[0]
+
+
+# aggregation functions
+def flatten(l: Iterable[Iterable[T]]) -> list[T]:
+    """Flattens all elements in an iterable, such as a list, of iterables into a single list."""
+    return [x for s in l for x in s]
+
+
+def flatten_set(list_of_sets: Iterable[Iterable[T]]) -> set[T]:
+    """Flattens all elements in an iterable, such as a list, of iterables into a single set."""
+    return {x for subset in list_of_sets for x in subset}
+
+
+def merge_sets(list_of_sets: Collection[set[T]]) -> set[T]:
+    """Merges a collection of sets into a single set."""
+    merged_set = set()
+    for s in list_of_sets:
+        merged_set.update(s)
+    return merged_set
+
+
+def flatten_dicts(list_of_dicts: list[dict[str, list[T]]]) -> dict[str, list[T]]:
+    """This function merges a list of dictionaries with list values into a single dictionary with merged list values."""
+    merged_dict: dict[str, list[T]] = {}
+    for d in list_of_dicts:
+        for k, v in d.items():
+            if k not in merged_dict:
+                merged_dict[k] = []
+            merged_dict[k].extend(v)
+    return merged_dict
+
+
+def aggregate_tensor_sum(list_of_tensors: list[torch.Tensor]) -> torch.Tensor:
+    """
+    Custom aggregation function to sum loss values from all processes.
+    Moves all tensors to CPU and converts them to Python scalars before summing.
+    Returns a single tensor containing the summed loss.
+    """
+    total = sum(t.cpu().item() for t in list_of_tensors)
+    return torch.tensor(total)
