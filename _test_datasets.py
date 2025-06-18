@@ -14,128 +14,133 @@ import sys
 
 
 # Noisy AG News
-noisyagnews_path = "../../Data/NoisyAGNews"
+# noisyagnews_path = "../../Data/NoisyAGNews"
 
-with open(f"{noisyagnews_path}/NoisyAGNews.pkl", "rb") as pickle_file:
-    data = pickle.load(pickle_file)
+# with open(f"{noisyagnews_path}/NoisyAGNews.pkl", "rb") as pickle_file:
+#     data = pickle.load(pickle_file)
 
-for data_point in data:
-    for i in [4,6,7,8]:
-        if data_point[i] == 0:
-            data_point[i] = "World"
-        elif data_point[i] == 1:
-            data_point[i] = "Sports"
-        elif data_point[i] == 2:
-            data_point[i] = "Business"
-        elif data_point[i] == 3:
-            data_point[i] = "Sci/Tech"
+# for data_point in data:
+#     for i in [4,6,7,8]:
+#         if data_point[i] == 0:
+#             data_point[i] = "World"
+#         elif data_point[i] == 1:
+#             data_point[i] = "Sports"
+#         elif data_point[i] == 2:
+#             data_point[i] = "Business"
+#         elif data_point[i] == 3:
+#             data_point[i] = "Sci/Tech"
 
-with open(f"{noisyagnews_path}/train.csv", "w", newline="", encoding="utf-8") as train_file:
-    new_data = csv.writer(train_file, delimiter="\t")
-    new_data.writerows(data[:40000])
-with open(f"{noisyagnews_path}/test.csv", "w", newline="", encoding="utf-8") as test_file:
-    new_data = csv.writer(test_file, delimiter="\t")
-    new_data.writerows(data[40000:45000])
-with open(f"{noisyagnews_path}/dev.csv", "w", newline="", encoding="utf-8") as dev_file:
-    new_data = csv.writer(dev_file, delimiter="\t")
-    new_data.writerows(data[45000:])
-#TODO: choose splits
+# with open(f"{noisyagnews_path}/train.csv", "w", newline="", encoding="utf-8") as train_file:
+#     new_data = csv.writer(train_file, delimiter="\t")
+#     new_data.writerows(data[:40000])
+# with open(f"{noisyagnews_path}/test.csv", "w", newline="", encoding="utf-8") as test_file:
+#     new_data = csv.writer(test_file, delimiter="\t")
+#     new_data.writerows(data[40000:45000])
+# with open(f"{noisyagnews_path}/dev.csv", "w", newline="", encoding="utf-8") as dev_file:
+#     new_data = csv.writer(dev_file, delimiter="\t")
+#     new_data.writerows(data[45000:])
+# #TODO: choose splits
 
-corpus_noisyagnews_clean = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
-                                                                column_name_map={5: "text", 4: "label"},
-                                                                label_type="category",
-                                                                name="noisyagnews_clean_corpus", 
-                                                                train_file="train.csv",
-                                                                test_file="test.csv",
-                                                                dev_file="dev.csv",
-                                                                delimiter="\t",
-                                                                skip_header=False,                                            
-                                                                )
-corpus_noisyagnews_clean.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
+# corpus_noisyagnews_clean = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
+#                                                                 column_name_map={5: "text", 4: "label"},
+#                                                                 label_type="category",
+#                                                                 name="noisyagnews_clean_corpus", 
+#                                                                 train_file="train.csv",
+#                                                                 test_file="test.csv",
+#                                                                 dev_file="dev.csv",
+#                                                                 delimiter="\t",
+#                                                                 skip_header=False,                                            
+#                                                                 )
+# corpus_noisyagnews_clean.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
 
-corpus_noisyagnews_worst = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
-                                                                column_name_map={5: "text", 8: "label"},
-                                                                label_type="category",
-                                                                name="noisyagnews_worst_corpus", 
-                                                                train_file="train.csv",
-                                                                test_file="test.csv",
-                                                                dev_file="dev.csv",
-                                                                delimiter="\t",
-                                                                skip_header=False,                                            
-                                                                )
-corpus_noisyagnews_worst.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
+# corpus_noisyagnews_worst = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
+#                                                                 column_name_map={5: "text", 8: "label"},
+#                                                                 label_type="category",
+#                                                                 name="noisyagnews_worst_corpus", 
+#                                                                 train_file="train.csv",
+#                                                                 test_file="test.csv",
+#                                                                 dev_file="dev.csv",
+#                                                                 delimiter="\t",
+#                                                                 skip_header=False,                                            
+#                                                                 )
+# corpus_noisyagnews_worst.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
 
-corpus_noisyagnews_med = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
-                                                                column_name_map={5: "text", 7: "label"},
-                                                                label_type="category",
-                                                                name="noisyagnews_med_corpus", 
-                                                                train_file="train.csv",
-                                                                test_file="test.csv",
-                                                                dev_file="dev.csv",
-                                                                delimiter="\t",
-                                                                skip_header=False,                                            
-                                                                )
-corpus_noisyagnews_med.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
+# corpus_noisyagnews_med = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
+#                                                                 column_name_map={5: "text", 7: "label"},
+#                                                                 label_type="category",
+#                                                                 name="noisyagnews_med_corpus", 
+#                                                                 train_file="train.csv",
+#                                                                 test_file="test.csv",
+#                                                                 dev_file="dev.csv",
+#                                                                 delimiter="\t",
+#                                                                 skip_header=False,                                            
+#                                                                 )
+# corpus_noisyagnews_med.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
 
-corpus_noisyagnews_best = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
-                                                                column_name_map={5: "text", 6: "label"},
-                                                                label_type="category",
-                                                                name="noisyagnews_best_corpus", 
-                                                                train_file="train.csv",
-                                                                test_file="test.csv",
-                                                                dev_file="dev.csv",
-                                                                delimiter="\t",
-                                                                skip_header=False,                                            
-                                                                )
-corpus_noisyagnews_best.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
+# corpus_noisyagnews_best = flair.datasets.CSVClassificationCorpus(data_folder=noisyagnews_path,
+#                                                                 column_name_map={5: "text", 6: "label"},
+#                                                                 label_type="category",
+#                                                                 name="noisyagnews_best_corpus", 
+#                                                                 train_file="train.csv",
+#                                                                 test_file="test.csv",
+#                                                                 dev_file="dev.csv",
+#                                                                 delimiter="\t",
+#                                                                 skip_header=False,                                            
+#                                                                 )
+# corpus_noisyagnews_best.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
 
 
 # AlleNoise
-# allenoise_path = "../data/AlleNoise"
-# category_mapping = {}
-# with open(f"{allenoise_path}/category_mapping.csv", newline="", encoding="utf-8") as category_file:
-#     categories = csv.reader(category_file, delimiter="\t")
-#     next(categories)
-#     for mapping in categories:
-#         cat_id, cat_name = mapping
-#         category_mapping[cat_id] = cat_name
+allenoise_path = "../data/AlleNoise"
+category_mapping = {}
+with open(f"{allenoise_path}/category_mapping.csv", newline="", encoding="utf-8") as category_file:
+    categories = csv.reader(category_file, delimiter="\t")
+    next(categories)
+    for mapping in categories:
+        cat_id, cat_name = mapping
+        category_mapping[cat_id] = cat_name
 
-# with open(f"{allenoise_path}/full_dataset.csv", newline="", encoding="utf-8") as data_file:
-#     data = csv.reader(data_file, delimiter="\t")
-#     header = next(data)
-#     data_list = []
-#     for datum in data:
-#         datum.append(category_mapping[datum[2]])
-#         datum.append(category_mapping[datum[3]])
-#         data_list.append(datum)
-#     header.append("clean_category_label")
-#     header.append("noisy_category_label")
+with open(f"{allenoise_path}/full_dataset.csv", newline="", encoding="utf-8") as data_file:
+    data = csv.reader(data_file, delimiter="\t")
+    header = next(data)
+    data_list = []
+    for datum in data:
+        datum.append(category_mapping[datum[2]])
+        datum.append(category_mapping[datum[3]])
+        data_list.append(datum)
+    header.append("clean_category_label")
+    header.append("noisy_category_label")
 
-#     with open(f"{allenoise_path}/train.csv", "w", newline="", encoding="utf-8") as train_file:
-#         new_data = csv.writer(train_file, delimiter="\t")
-#         new_data.writerow(header)
-#         new_data.writerows(data_list[:50000])    
-#     with open(f"{allenoise_path}/test.csv", "w", newline="", encoding="utf-8") as test_file:
-#         new_data = csv.writer(test_file, delimiter="\t")
-#         new_data.writerow(header)
-#         new_data.writerows(data_list[50000:55000])    
-#     with open(f"{allenoise_path}/dev.csv", "w", newline="", encoding="utf-8") as dev_file:
-#         new_data = csv.writer(dev_file, delimiter="\t")
-#         new_data.writerow(header)
-#         new_data.writerows(data_list[55000:60000])    
-# #TODO: choose splits
+    with open(f"{allenoise_path}/train.csv", "w", newline="", encoding="utf-8") as train_file:
+        new_data = csv.writer(train_file, delimiter="\t")
+        new_data.writerow(header)
+        new_data.writerows(data_list[:10000])    
+    with open(f"{allenoise_path}/test.csv", "w", newline="", encoding="utf-8") as test_file:
+        new_data = csv.writer(test_file, delimiter="\t")
+        new_data.writerow(header)
+        new_data.writerows(data_list[10000:11000])    
+    with open(f"{allenoise_path}/dev.csv", "w", newline="", encoding="utf-8") as dev_file:
+        new_data = csv.writer(dev_file, delimiter="\t")
+        new_data.writerow(header)
+        new_data.writerows(data_list[11000:12000])    
+#TODO: choose splits
 
-# corpus_allenoise_clean = flair.datasets.CSVClassificationCorpus(data_folder=allenoise_path,
-#                                                                 column_name_map={1: "text", 4: "label"},
-#                                                                 label_type="category",
-#                                                                 name="allenoise_clean_corpus", 
-#                                                                 train_file="train.csv",
-#                                                                 test_file="test.csv",
-#                                                                 dev_file="dev.csv", 
-#                                                                 delimiter="\t",
-#                                                                 skip_header=True,                                            
-#                                                                 )
-# corpus_allenoise_clean.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
+corpus_allenoise_clean = flair.datasets.CSVClassificationCorpus(data_folder=allenoise_path,
+                                                                column_name_map={1: "text", 4: "label"},
+                                                                label_type="category",
+                                                                name="allenoise_clean_corpus", 
+                                                                train_file="train.csv",
+                                                                test_file="test.csv",
+                                                                dev_file="dev.csv", 
+                                                                delimiter="\t",
+                                                                skip_header=True,                                            
+                                                                )
+label_dict = corpus_allenoise_clean.make_label_dictionary(label_type='category', min_count=0, add_unk=False, add_dev_test=True)
+
+embeddings = flair.embeddings.TransformerDocumentEmbeddings('xlm-roberta-base', fine_tune=True)
+classifier = flair.models.TextClassifier(embeddings, label_dictionary=label_dict, label_type='category')
+trainer = flair.trainers.ModelTrainer(classifier, corpus_allenoise_clean)
+trainer.fine_tune('./_test_models/alle_noise', learning_rate=5.0e-5, mini_batch_size=4, max_epochs=1)
 
 # corpus_allenoise_noisy = flair.datasets.CSVClassificationCorpus(data_folder=allenoise_path,
 #                                                                 column_name_map={1: "text", 5: "label"},
