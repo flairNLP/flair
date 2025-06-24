@@ -291,7 +291,7 @@ class Ab3PEntityPreprocessor(EntityPreprocessor):
         if self.preprocessor is not None:
             entity_mention = self.preprocessor.process_entity_name(entity_mention)
 
-        # NOTE: Avoid emtpy string if mentions are just punctuations (e.g. `-` or `(`)
+        # NOTE: Avoid empty string if mentions are just punctuations (e.g. `-` or `(`)
         entity_mention = original if len(entity_mention) == 0 else entity_mention
 
         return entity_mention
@@ -901,7 +901,7 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
         Args:
             model_name_or_path: the name to an transformer embedding model on the huggingface hub or "exact-string-match"
             label_type: the label-type the predictions should be assigned to
-            dictionary_name_or_path: the name or path to a dictionary. If the model name is a common biomedical model, the dictionary name is asigned by default. Otherwise you can pass any of "gene", "species", "disease", "chemical" to get the respective biomedical dictionary.
+            dictionary_name_or_path: the name or path to a dictionary. If the model name is a common biomedical model, the dictionary name is assigned by default. Otherwise you can pass any of "gene", "species", "disease", "chemical" to get the respective biomedical dictionary.
             hybrid_search: if True add a character-ngram-tfidf embedding on top of the transformer embedding model.
             batch_size: the batch_size used when indexing the dictionary.
             similarity_metric: the metric used to compare similarity between two embeddings.

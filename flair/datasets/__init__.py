@@ -1,4 +1,4 @@
-# Expose base classses
+# Expose base classes
 from .base import (
     DataLoader,
     FlairDatapointDataset,

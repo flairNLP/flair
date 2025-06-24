@@ -1543,7 +1543,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
 
         Args:
             path: the path to save the embeddings. Notice that the embeddings are stored as external file,
-              hence it matters if the path is an absolue path or a relative one.
+              hence it matters if the path is an absolute path or a relative one.
             example_sentences: a list of sentences that will be used for tracing. It is recommended to take 2-4
                 sentences with some variation.
             **kwargs: the parameters passed to :meth:`TransformerOnnxEmbeddings.export_from_embedding`

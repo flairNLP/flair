@@ -19,7 +19,7 @@ log = logging.getLogger("flair")
 class ELMoEmbeddings(TokenEmbeddings):
     """Contextual word embeddings using word-level LM, as proposed in Peters et al., 2018.
     ELMo word vectors can be constructed by combining layers in different ways.
-    Default is to concatene the top 3 layers in the LM.
+    Default is to concatenate the top 3 layers in the LM.
     """
 
     def __init__(

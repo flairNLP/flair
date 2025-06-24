@@ -19,7 +19,7 @@ def test_equality():
 
 
 def test_token_labeling():
-    sentence = Sentence("This sentence will be labled")
+    sentence = Sentence("This sentence will be labeled")
     assert sentence.get_labels("ner") == []
     assert sentence.get_labels() == []
     sentence[2].add_label("ner", "B-promise")

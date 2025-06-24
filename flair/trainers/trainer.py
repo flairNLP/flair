@@ -519,7 +519,7 @@ class ModelTrainer(Pluggable):
                 self.optimizer.load_state_dict(self.model.optimizer_state_dict)
                 optimizer_state_loaded = True
             except Exception as e:
-                log.warning(f"Found saved optimizer state from previous training but coult not load: {e}")
+                log.warning(f"Found saved optimizer state from previous training but could not load: {e}")
 
         # initialize sampler if provided
         if sampler is not None:
