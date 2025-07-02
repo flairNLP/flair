@@ -27,7 +27,7 @@ class MultitaskModel(flair.nn.Classifier):
 
     def __init__(
         self,
-        models: list[flair.nn.Classifier],
+        models: list[flair.nn.Model],
         task_ids: Optional[list[str]] = None,
         loss_factors: Optional[list[float]] = None,
         use_all_tasks: bool = False,
@@ -44,7 +44,7 @@ class MultitaskModel(flair.nn.Classifier):
 
         task_ids_internal: list[str] = task_ids if task_ids else [f"Task_{i}" for i in range(len(models))]
 
-        self.tasks: dict[str, flair.nn.Classifier] = {}
+        self.tasks: dict[str, flair.nn.Model] = {}
         self.loss_factors: dict[str, float] = {}
         self.use_all_tasks = use_all_tasks
 
@@ -252,7 +252,7 @@ class MultitaskModel(flair.nn.Classifier):
         loss_factors = state["loss_factors"]
 
         for task, task_state in state["model_states"].items():
-            models.append(Classifier.load(task_state))
+            models.append(flair.nn.Model.load(task_state))
             tasks.append(task)
 
         model = cls(
