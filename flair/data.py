@@ -2640,6 +2640,7 @@ class Corpus(typing.Generic[T_co]):
         model_features: Optional[Union[Dict[str, Union[str, float, int]], Path, str]] = None,
         data_folder: Optional[Path] = None,
     ) -> None:
+        #TODO: unify return (?) - maybe save ntm also in data_folder
         """
         TODO: Specification
         
@@ -2765,6 +2766,8 @@ class Corpus(typing.Generic[T_co]):
 
             # imbalanced ntm mit noise share -> balance & scale
 
+            return noise_transition_matrix  # evtl. temporär
+
 
         elif noise_model == 'imbalanced_class_dependent':
 
@@ -2825,6 +2828,8 @@ class Corpus(typing.Generic[T_co]):
             # ntm ohne noise share
 
             # ntm mit noise share -> scale
+
+            return noise_transition_matrix  # evtl. temporär
 
 
         elif noise_model == 'boundary_conditional':
@@ -2901,6 +2906,8 @@ class Corpus(typing.Generic[T_co]):
                 new_label = sampling.choice(a=choice, p=probability_distribution)
                 data_point.set_label(typename=label_type, value=new_label)
                 i += 1
+
+            return transitions  # evtl. temporär
 
 
         elif noise_model == 'polynomial_margin_diminishing':
@@ -2985,6 +2992,8 @@ class Corpus(typing.Generic[T_co]):
                     data_point.set_label(typename=label_type, value=new_label)
                 p += 1
 
+            return z    # evtl. temporär
+
         
         elif noise_model == 'part_dependent':
 
@@ -3020,6 +3029,8 @@ class Corpus(typing.Generic[T_co]):
                 new_label = sampling.choice(a=labels, p=transition_vector.cpu().numpy())
                 data_point.set_label(typename=label_type, value=new_label)
                 j += 1
+
+                return feature_transitions  # evtl. temporär
 
 
         elif noise_model == 'pseudo_labeling':
@@ -3149,10 +3160,6 @@ class Corpus(typing.Generic[T_co]):
 
                     if data_folder is not None:
                         shutil.copytree(temp_folder, f"{data_folder}", dirs_exist_ok=True)
-            
-            # report resulting noise share?
-
-        # generally report resulting noise share?
         
         else:
             # TODO
