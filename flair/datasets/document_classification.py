@@ -825,7 +825,7 @@ class IMDB(ClassificationCorpus):
                 data_folder, label_type="sentiment", tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs
             )
 
-        elif noise == False:        #TODO:add noise parameter in description
+        elif noise == False:        #TODO: add noise parameter in description
     
             base_path = flair.cache_root / "datasets" if not base_path else Path(base_path)
 
@@ -851,22 +851,6 @@ class IMDB(ClassificationCorpus):
             labels_train = numpy.concatenate([numpy.zeros(12500), numpy.ones(12500)]).astype(int)       
             labels_test = numpy.concatenate([numpy.zeros(12500), numpy.ones(12500)]).astype(int)
 
-            # find label errors - not necessary: use mturk annotations
-
-            # probabilities_url = 'https://raw.githubusercontent.com/cleanlab/label-errors/main/cross_validated_predicted_probabilities/imdb_test_set_pyx.npy'
-            # probabilities_response = requests.get(probabilities_url)
-            # probabilities = numpy.load(io.BytesIO(probabilities_response.content), allow_pickle=True)
-
-            # predictions_url = 'https://raw.githubusercontent.com/cleanlab/label-errors/main/cross_validated_predicted_labels/imdb_test_set_pyx_argmax_predicted_labels.npy'
-            # predictions_response = requests.get(predictions_url)
-            # predictions = numpy.load(io.BytesIO(predictions_response.content), allow_pickle=True)
-
-            # label_error_indices = cleanlab.filter.find_label_issues(
-            #     labels=labels,
-            #     pred_probs=probabilities,
-            #     filter_by='prune_by_noise_rate',
-            # )
-
             mturk_url = 'https://raw.githubusercontent.com/cleanlab/label-errors/main/mturk/imdb_mturk.json'
             mturk_response = requests.get(mturk_url)
             mturk_json = mturk_response.json()
@@ -891,7 +875,7 @@ class IMDB(ClassificationCorpus):
                         members=[text_file for text_file in data.getmembers() if f"train/{label}" in text_file.name]
                     )
 
-                    with open(train_file, "a") as write_file:
+                    with open(train_file, "w") as train_write_file:
                         for file_name in (data_target_path / "aclImdb" / "train" / label).iterdir():
                             if file_name.is_file() and file_name.name.endswith(".txt"):
                                 if label == 'pos':
@@ -899,7 +883,7 @@ class IMDB(ClassificationCorpus):
                                 else:
                                     sentiment_label = "NEGATIVE"
                                 with open(data_target_path / "aclImdb" / "train" / label / file_name, "r") as text_file:
-                                    write_file.write(f"__label__{sentiment_label} {text_file.read()}\n")
+                                    train_write_file.write(f"__label__{sentiment_label} {text_file.read()}\n")
                 
                 for label in labels:
                     data.extractall(
@@ -907,14 +891,14 @@ class IMDB(ClassificationCorpus):
                         members=[text_file for text_file in data.getmembers() if f"test/{label}" in text_file.name]
                     )
             
-                with open(test_file, "a") as write_file:
+                with open(test_file, "w") as test_write_file:
                     for i, file_name in enumerate(index_json):
                         if labels_test[i] == 0:
                             sentiment_label = "NEGATIVE"
                         else:
                             sentiment_label = "POSITIVE"
                         with open(data_target_path / "aclImdb" / "test" / file_name, "r") as text_file:
-                            write_file.write(f"__label__{sentiment_label} {text_file.read()}\n")
+                            test_write_file.write(f"__label__{sentiment_label} {text_file.read()}\n")
             
             super().__init__(
                 data_target_path, label_type="sentiment", tokenizer=tokenizer, memory_mode=memory_mode, **corpusargs
