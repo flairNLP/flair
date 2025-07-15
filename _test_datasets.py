@@ -307,33 +307,32 @@ import sys
 
 
 # TREC Spam 2005
-# trecspam05_path = "../../Data/TRECSpam2005"
+trecspam05_path = "../../Data/TRECSpam2005"
 
-# label_mapping = {}
-# with open(f"{trecspam05_path}/full/index", newline="", encoding="utf-8") as index_file:
-#     index = csv.reader(index_file, delimiter=" ")
-#     for mapping in index:
-#         label, email = mapping
-#         label_mapping[email] = label
+label_mapping = {}
+with open(f"{trecspam05_path}/full/index", newline="", encoding="utf-8") as index_file:
+    index = csv.reader(index_file, delimiter=" ")
+    for mapping in index:
+        label, email = mapping
+        label_mapping[email] = label
 
-# data = []
-# for email in label_mapping:
-#     with open(f"{trecspam05_path}/{email[3:]}", "r", encoding='latin-1') as email_file:
-#         content = email_file.read()
-#         data.append([content, label_mapping[email]])
+data = []
+for email in label_mapping:
+    with open(f"{trecspam05_path}/{email[3:]}", "r", encoding='latin-1') as email_file:
+        content = email_file.read()
+        data.append([content, label_mapping[email]])
 
-# with open(f"{trecspam05_path}/full/train.csv", "w", newline="", encoding="utf-8") as train_file:
-#     new_data = csv.writer(train_file, delimiter="\t")
-#     new_data.writerows(data[:70000])
-# with open(f"{trecspam05_path}/full/test.csv", "w", newline="", encoding="utf-8") as test_file:
-#     new_data = csv.writer(test_file, delimiter="\t")
-#     new_data.writerows(data[70000:85000])
-# with open(f"{trecspam05_path}/full/dev.csv", "w", newline="", encoding="utf-8") as dev_file:
-#     new_data = csv.writer(dev_file, delimiter="\t")
-#     new_data.writerows(data[85000:])
-# #TODO: choose splits
+with open(f"{trecspam05_path}/full/train.csv", "w", newline="", encoding="utf-8") as train_file:
+    new_data = csv.writer(train_file, delimiter="\t")
+    new_data.writerows(data[:65000])
+with open(f"{trecspam05_path}/full/test.csv", "w", newline="", encoding="utf-8") as test_file:
+    new_data = csv.writer(test_file, delimiter="\t")
+    new_data.writerows(data[65000:75000])
+with open(f"{trecspam05_path}/full/dev.csv", "w", newline="", encoding="utf-8") as dev_file:
+    new_data = csv.writer(dev_file, delimiter="\t")
+    new_data.writerows(data[75000:85000])
 
-# csv.field_size_limit(sys.maxsize)
+csv.field_size_limit(sys.maxsize)
 
 # corpus_trecspam05 = flair.datasets.CSVClassificationCorpus(data_folder=f"{trecspam05_path}/full",
 #                                                                 column_name_map={0: "text", 1: "label"},
