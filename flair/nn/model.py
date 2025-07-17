@@ -271,6 +271,7 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                     mini_batch_size=mini_batch_size,
                     label_name="predicted",
                     return_loss=return_loss,
+                    **kwargs
                 )
 
                 if return_loss:

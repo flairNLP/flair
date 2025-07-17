@@ -1479,8 +1479,11 @@ class Corpus(typing.Generic[T_co]):
         label_dictionary: Dictionary = Dictionary(add_unk=add_unk)
         label_dictionary.span_labels = False
 
-        assert self.train
-        datasets = [self.train]
+        #assert self.train
+        if self.train:
+            datasets = [self.train]
+        else:
+            datasets = []
 
         if add_dev_test and self.dev is not None:
             datasets.append(self.dev)

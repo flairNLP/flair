@@ -991,6 +991,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             return_loss=False,
             embedding_storage_mode="none",
             return_span_and_label_hidden_states: bool = True,
+            save_top_k: Optional[int] = None,
     ):
         """
         Predicts labels for the spans in sentences. Adds them to the spans under label_name.
@@ -1023,22 +1024,21 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
                 most_similar_label_similarity, most_similar_label_index = torch.max(similarity_span_all_labels, dim=1)
 
-                # for inspection (and for the experiment with a different criterion) save the top 5 predictions:
-                top5_similarity, top5_index = torch.topk(similarity_span_all_labels, k=5, dim=1)
+                # Optionally save the top K predictions:
+                if save_top_k:
+                    top_k_similarity, top_k_index = torch.topk(similarity_span_all_labels, k=save_top_k, dim=1)
 
                 for i, sp in enumerate(spans):
                     original_span = original_spans[i]
                     label_value = self._label_at(most_similar_label_index[i])
                     label_score = most_similar_label_similarity[i].item()
-                    # if original_span.get_label(label_name).value != "O" and original_span.get_label(label_name).value != label_value:
-                    #    print("Difference:", original_span.text, "|", original_span.get_label("nel").value, "|", original_span.get_label(label_name).value, "-->", label_value)
-                    #    print(original_span.sentence.text)
-                    #    print("-")
+
                     original_span.set_label(label_name, label_value, score = label_score)
 
-                    top5 = zip(top5_similarity[i], top5_index[i])
-                    for t_i, (t_sim, t_index) in enumerate(top5):
-                       original_span.set_label(typename=f"top_{t_i}", value=self._label_at(t_index.item()), score=t_sim.item())
+                    if save_top_k:
+                        top_k = zip(top_k_similarity[i], top_k_index[i])
+                        for t_i, (t_sim, t_index) in enumerate(top_k):
+                           original_span.set_label(typename=f"top_{t_i+1}", value=self._label_at(t_index.item()), score=t_sim.item())
 
                 del label_embeddings, span_embeddings, similarity_span_all_labels
 
@@ -1046,7 +1046,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             # todo not yet implemented
             return torch.tensor(0.0, dtype=torch.float, device=flair.device, requires_grad=False), sum([len(b) for b in batches_original_spans])
 
-    def _print_predictions(self, batch, gold_label_type):
+    def _print_predictions(self, batch, gold_label_type, print_top_k = True):
         lines = []
         for datapoint in batch:
             eval_line = f"\n{datapoint.to_original_text()}\n"
@@ -1059,6 +1059,14 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
                     f' --> {pred} ({symbol}) "{verbalization}"\n'
                 )
+
+                if print_top_k:
+                    top_k_labels = [l for l in span.annotation_layers if l.startswith("top_")]
+                    if top_k_labels:
+                        eval_line += "   Top K: "
+                        for label_name in top_k_labels:
+                            eval_line += f"{span.get_label(label_name).value}={span.get_label(label_name).score:.3f} "
+                    eval_line += "\n"
 
             lines.append(eval_line)
 
@@ -1471,7 +1479,8 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         label_name: Optional[str] = None,
         return_loss=False,
         embedding_storage_mode="none",
-        return_span_and_label_hidden_states: bool = True
+        return_span_and_label_hidden_states: bool = True,
+        save_top_k: Optional[int] = None,
     ):
         """
         Predict labels for sentences. Uses the predict method from DualEncoderEntityDisambiguation, but in an iterative fashion.
@@ -1499,7 +1508,8 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
                                   verbose=verbose,
                                   label_name=label_name,
                                   return_loss=return_loss,
-                                  embedding_storage_mode=embedding_storage_mode
+                                  embedding_storage_mode=embedding_storage_mode,
+                                  save_top_k=save_top_k,
                                   )
 
             chosen_spans = self.select_predicted_spans_to_use_for_label_verbalization(sentences_to_use,
