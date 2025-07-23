@@ -855,11 +855,29 @@ class IMDB(ClassificationCorpus):
             mturk_response = requests.get(mturk_url)
             mturk_json = mturk_response.json()
 
+            # for text in mturk_json:
+            #     if text["mturk"]["guessed"] > text["mturk"]["given"]:
+            #         text_id = text["id"][5:] + ".txt"
+            #         text_index = index_json.index(text_id)
+            #         if text["mturk"]["guessed"] == "Negative":
+            #             labels_test[text_index] = 0
+            #         else:
+            #             labels_test[text_index] = 1
+
+            # for text in mturk_json:
+            #     if text["mturk"]["guessed"] > text["mturk"]["given"]:
+            #         text_id = text["id"][5:] + ".txt"
+            #         text_index = index_json.index(text_id)
+            #         if text["our_guessed_label"] == "Negative":
+            #             labels_test[text_index] = 0
+            #         else:
+            #             labels_test[text_index] = 1
+
             for text in mturk_json:
-                if text["mturk"]["guessed"] > text["mturk"]["given"]:
+                if text["mturk"]["given"] < 3:
                     text_id = text["id"][5:] + ".txt"
                     text_index = index_json.index(text_id)
-                    if text["mturk"]["guessed"] == "Negative":
+                    if text["given_original_label"] == "Positive":
                         labels_test[text_index] = 0
                     else:
                         labels_test[text_index] = 1
