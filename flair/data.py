@@ -2656,10 +2656,7 @@ class Corpus(typing.Generic[T_co]):
 
         returns = {}
         if type(splits) is not str:
-            if not isinstance(model_features, (Path, str)):
-                tuned = False
-            else:
-                tuned = True
+            tuned = False   # this!
             for split in splits:
                 if tuned == False:
                     return_value, tune = self.simulate_label_noise(label_type=label_type,

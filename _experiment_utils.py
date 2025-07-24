@@ -1,9 +1,10 @@
 import csv
 import flair
+import json
 from pathlib import Path
 import torch
 from torch.utils.data.dataset import ConcatDataset
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 
 def measure_noise_share(clean_corpus: flair.data.Corpus, noisy_corpus: flair.data.Corpus, label_type: str, splits: Union[str, list[str]] = ['dev', 'train']) -> float:
@@ -47,6 +48,7 @@ def measure_noise_share(clean_corpus: flair.data.Corpus, noisy_corpus: flair.dat
 
 def write_corpus_to_csv(simulation_corpus: flair.data.Corpus, data_folder: Path, label_type: str, splits: Union[str, list[str]] = ['dev', 'train']) -> None:   #TODO: data_folder
 
+    Path(data_folder).mkdir(parents=True, exist_ok=True)
     if type(splits) is str:
         splits = [splits]
     for split in splits:
@@ -70,7 +72,7 @@ def write_corpus_to_csv(simulation_corpus: flair.data.Corpus, data_folder: Path,
                 for data_point in flair.data._iter_dataset(simulation_corpus.train):
                     train_data.append([data_point.text, data_point.get_label(label_type=label_type).value])
                 simulated_train_data = csv.writer(train_file, delimiter="\t")
-                simulated_train_data.writerows(test_data) 
+                simulated_train_data.writerows(train_data) 
         else:
             # TODO: invalid split
             pass
@@ -136,36 +138,63 @@ def error_statistics(clean_corpus: flair.data.Corpus, simulation_corpus: flair.d
     for label in labels:
         error_statistics[label] = {"COUNT": error_statistics_pre[label]["TP"] + error_statistics_pre[label]["FN"],
                                    "PREC": error_statistics_pre[label]["TP"] / (error_statistics_pre[label]["TP"] + error_statistics_pre[label]["FP"]),
-                                   "REC": error_statistics_pre[label]["TP"] / (error_statistics_pre[label]["TP"] + error_statistics_pre[label]["FN"]),
-                                   "F1": 2 * error_statistics[label]["PREC"] * error_statistics[label]["REC"] / (error_statistics[label]["PREC"] + error_statistics[label]["REC"])}
+                                   "REC": error_statistics_pre[label]["TP"] / (error_statistics_pre[label]["TP"] + error_statistics_pre[label]["FN"])}
+        error_statistics[label]["F1"] = 2 * error_statistics[label]["PREC"] * error_statistics[label]["REC"] / (error_statistics[label]["PREC"] + error_statistics[label]["REC"])
 
     sum_TP = 0
     sum_FP = 0
     sum_FN = 0
     for label in labels:
-        sum_TP += error_statistics[label]["TP"]
-        sum_FP += error_statistics[label]["FP"]
-        sum_FN += error_statistics[label]["FN"]
+        sum_TP += error_statistics_pre[label]["TP"]
+        sum_FP += error_statistics_pre[label]["FP"]
+        sum_FN += error_statistics_pre[label]["FN"]
 
-    error_statistics["total"] = {"COUNT": error_statistics_pre["total"]["T"] + error_statistics_pre["total"]["F"],
-                                  "ACC": error_statistics_pre["total"]["T"] / error_statistics["total"]["COUNT"],
-                                  "micro_PREC": sum_TP / (sum_TP + sum_FP),
-                                  "micro_REC": sum_TP / (sum_TP + sum_FN),
-                                  "micro_F1": 2 * error_statistics["total"]["micro_PREC"] * error_statistics["total"]["micro_REC"] / (error_statistics["total"]["micro_PREC"] + error_statistics["total"]["micro_REC"])}
+    error_statistics["total"] = {"COUNT": error_statistics_pre["total"]["T"] + error_statistics_pre["total"]["F"]}
+    error_statistics["total"].update({"ACC": error_statistics_pre["total"]["T"] / error_statistics["total"]["COUNT"],
+                                      "micro_PREC": sum_TP / (sum_TP + sum_FP),
+                                      "micro_REC": sum_TP / (sum_TP + sum_FN)})
+    error_statistics["total"]["micro_F1"] = 2 * error_statistics["total"]["micro_PREC"] * error_statistics["total"]["micro_REC"] / (error_statistics["total"]["micro_PREC"] + error_statistics["total"]["micro_REC"])
 
     return error_statistics
 
 
-def write_specifications_file(dataset: str, label_type: str, noise_model: str, seed: int, target_noise_share: float, noise_model_specs: Union[Dict, List, torch.Tensor], base_folder: Path, model_folder: Path, data_folder: Path, resulting_noise_share: float, error_statistics: Dict) -> None:
+def write_specifications_file(dataset: str, label_type: str, noise_model: str, seed: int, target_noise_share: float, data_folder: Path, resulting_noise_share: float, error_statistics: Dict, noise_model_specs: Optional[Union[Dict, List, torch.Tensor]] = None) -> None:
 
-    with open(f"{base_folder}/specs.txt", "w") as specs_file:   #TODO: naming
+    with open(f"{data_folder}/specs_{dataset}_{noise_model}_{seed}.txt", "w") as specs_file:
         specs_file.write(f"dataset: {dataset} \n")
         specs_file.write(f"label type: {label_type} \n")
         specs_file.write(f"noise model: {noise_model} \n")
         specs_file.write(f"seed: {seed} \n")
         specs_file.write(f"target noise share: {target_noise_share} \n")
-        specs_file.write(f"noise model details: {noise_model_specs} \n")
-        specs_file.write(f"fine-tuned helper model: {model_folder} \n")
-        specs_file.write(f"simulated data: {data_folder} \n")
         specs_file.write(f"resulting noise share: {resulting_noise_share} \n")
-        specs_file.write(f"error statistics: {error_statistics} \n")
+        if noise_model_specs:
+            if isinstance(noise_model_specs, Dict):
+                specs_file.write(f"noise model details: {json.dumps(noise_model_specs, indent=4)} \n")
+            else:
+                specs_file.write(f"noise model details: {noise_model_specs} \n")
+        specs_file.write(f"error statistics: {json.dumps(error_statistics, indent=4)} \n")
+
+
+def write_consistency_specs_file(dataset: str, label_type: str, noise_model: str, seed: int, noise_share: float, data_folder: Path, micro_f1, scores, detailed_results, classification_report):
+
+    with open(f"{data_folder}/consistency_specs_{dataset}_{noise_model}_{seed}.txt", "w") as specs_file:
+        specs_file.write(f"dataset: {dataset} \n")
+        specs_file.write(f"label type: {label_type} \n")
+        specs_file.write(f"noise model: {noise_model} \n")
+        specs_file.write(f"seed: {seed} \n")
+        specs_file.write(f"target noise share: {noise_share} \n")
+        specs_file.write(f"micro F!: {micro_f1} \n")
+        specs_file.write(f"scores: {json.dumps(scores, indent=4)} \n")
+        specs_file.write(f"detailed results: {detailed_results} \n")
+        specs_file.write(f"classification report: {json.dumps(classification_report, indent=4)} \n")
+
+
+def write_stddev_file(dataset: str, label_type: str, noise_model: str, noise_share: float, data_folder: Path, results_F1: List[float], stddev: float):
+
+    with open(f"{data_folder}/stddev_results_{dataset}_{noise_model}.txt", "w") as specs_file:
+        specs_file.write(f"dataset: {dataset} \n")
+        specs_file.write(f"label type: {label_type} \n")
+        specs_file.write(f"noise model: {noise_model} \n")
+        specs_file.write(f"target noise share: {noise_share} \n")
+        specs_file.write(f"F1 scores: {results_F1} \n")
+        specs_file.write(f"stddev: {stddev} \n")
