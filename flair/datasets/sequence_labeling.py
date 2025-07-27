@@ -2952,6 +2952,7 @@ class NER_GERMAN_GERMEVAL(ColumnCorpus):
             columns,
             comment_symbol="#",
             in_memory=in_memory,
+            every_sentence_is_independent=True,
             **corpusargs,
         )
 
