@@ -992,6 +992,7 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             embedding_storage_mode="none",
             return_span_and_label_hidden_states: bool = True,
             save_top_k: Optional[int] = None,
+            **kwargs
     ):
         """
         Predicts labels for the spans in sentences. Adds them to the spans under label_name.
@@ -1481,6 +1482,7 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         embedding_storage_mode="none",
         return_span_and_label_hidden_states: bool = True,
         save_top_k: Optional[int] = None,
+        **kwargs
     ):
         """
         Predict labels for sentences. Uses the predict method from DualEncoderEntityDisambiguation, but in an iterative fashion.
