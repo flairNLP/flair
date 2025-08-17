@@ -53,7 +53,7 @@ def create_sequence_tagger_for_o_train(tag_dictionary: Dictionary) -> SequenceTa
         use_crf=True,
         use_rnn=False,
         reproject_embeddings=False,
-        o_count=5,
+        o_count=20,
     )
 
 
