@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 
 from flair.data import Sentence, Corpus, Dictionary
@@ -65,4 +66,12 @@ def create_sequence_tagger_for_train(tag_dictionary: Dictionary) -> SequenceTagg
         use_crf=True,
         use_rnn=False,
         reproject_embeddings=False,
+    )
+
+
+def get_embeddings_file(args: argparse.Namespace) -> str:
+    return (
+        "tuned-embeddings.npy"
+        if args.finetuned
+        else "raw-embeddings.npy" if not args.o_tuned else "otuned-embeddings.npy"
     )

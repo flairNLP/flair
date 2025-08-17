@@ -14,6 +14,7 @@ from flair.exp.config import exp_data_folder
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="UMAP visualization of embeddings")
     parser.add_argument("--finetuned", action="store_true")
+    parser.add_argument("--o_tuned", action="store_true")
     parser.add_argument(
         "--file",
         action="store_true",
