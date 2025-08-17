@@ -342,7 +342,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         if self.o_count != 1:
             props = F.softmax(features, dim=-1)
             o_prop = props[..., 0] + props[..., len(self.label_dictionary) :].sum(dim=-1)
-            real_props = torch.cat([o_prop.unsqueeze(0), props[..., 1 : len(self.label_dictionary)]], dim=-1)
+            real_props = torch.cat([o_prop.unsqueeze(-1), props[..., 1 : len(self.label_dictionary)]], dim=-1)
             features = torch.log(real_props)
 
         # Depending on whether we are using CRF or a linear layer, scores is either:
