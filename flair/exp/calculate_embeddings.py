@@ -21,6 +21,7 @@ def main() -> None:
     ds = load_dataset()
 
     embeddings = load_finetuned_embeddings() if args.finetuned else load_embeddings()
+    embeddings.fine_tune = False
 
     for batch in batched(tqdm(ds, desc="Embedding sentences"), args.batch_size):
         embeddings.embed(list(batch))
