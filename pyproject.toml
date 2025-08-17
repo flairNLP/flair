@@ -111,3 +111,18 @@ convention = "google"
 
 [tool.pydocstyle]
 match = "^(?!legacy).*\\.py$"
+
+[tool.poetry]
+name = "flair"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
