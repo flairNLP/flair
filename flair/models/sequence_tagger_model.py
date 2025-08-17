@@ -54,6 +54,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
         loss_weights: Optional[dict[str, float]] = None,
         init_from_state_dict: bool = False,
         allow_unk_predictions: bool = False,
+        o_count: int = 1,
     ) -> None:
         """Constructor for this class.
 
@@ -190,10 +191,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
                 ) = self._init_initial_hidden_state(num_directions)
 
             # final linear map to tag space
-            self.linear = torch.nn.Linear(hidden_output_dim, len(self.label_dictionary))
+            self.linear = torch.nn.Linear(hidden_output_dim, len(self.label_dictionary) - 1 + o_count)
         else:
-            self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary))
+            self.linear = torch.nn.Linear(embedding_dim, len(self.label_dictionary) - 1 + o_count)
             self.train_initial_hidden_state = False
+        self.o_count = o_count
 
         # the loss function is Viterbi if using CRF, else regular Cross Entropy Loss
         self.loss_function = (
@@ -337,6 +339,11 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
 
         # linear map to tag space
         features = self.linear(sentence_tensor)
+        if self.o_count != 1:
+            props = F.softmax(features, dim=-1)
+            o_prop = props[..., 0] + props[..., len(self.label_dictionary) :].sum(dim=-1)
+            real_props = torch.cat([o_prop.unsqueeze(0), props[..., 1 : len(self.label_dictionary)]], dim=-1)
+            features = torch.log(real_props)
 
         # Depending on whether we are using CRF or a linear layer, scores is either:
         # -- A tensor of shape (batch size, sequence length, tagset size, tagset size) for CRF
@@ -639,6 +646,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             "reproject_embeddings": self.reproject_embeddings,
             "weight_dict": self.weight_dict,
             "train_initial_hidden_state": self.train_initial_hidden_state,
+            "o_count": self.o_count,
         }
 
         return model_state
@@ -667,6 +675,7 @@ class SequenceTagger(flair.nn.Classifier[Sentence]):
             loss_weights=state.get("weight_dict"),
             init_from_state_dict=True,
             train_initial_hidden_state=state.get("train_initial_hidden_state", False),
+            o_count=state.get("o_count", 1),
             **kwargs,
         )
 
