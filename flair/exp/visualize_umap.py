@@ -8,7 +8,7 @@ from matplotlib.lines import Line2D
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import LabelEncoder
 
-from flair.exp.config import exp_data_folder
+from flair.exp.config import exp_data_folder, get_embeddings_file
 
 
 def parse_args() -> argparse.Namespace:
@@ -24,7 +24,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    output_name = "tuned-embeddings.npy" if args.finetuned else "raw-embeddings.npy"
+    output_name = get_embeddings_file(args)
     X = np.load(exp_data_folder / output_name)
     labels = json.loads((exp_data_folder / "labels.json").read_text(encoding="utf-8"))
 
