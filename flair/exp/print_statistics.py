@@ -40,9 +40,11 @@ def main() -> None:
     print("Global:")
     print_stats(embeddings_vector)
 
-    for i, label in enumerate(label_names):
-        print(f"{label}:")
-        print_stats(embeddings_vector[label_np == i, :])
+    print("O:")
+    print_stats(embeddings_vector[label_np == 0, :])
+
+    print("Other than O:")
+    print_stats(embeddings_vector[label_np != 0, :])
 
 
 if __name__ == "__main__":
