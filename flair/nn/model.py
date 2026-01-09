@@ -32,6 +32,12 @@ def _load_state(model_path: Union[str, Path]) -> dict[str, Any]:
     path = Path(model_path)
     if SafetensorsSerializer.is_safetensors_model(path):
         return SafetensorsSerializer.load(path)
+    warnings.warn(
+        "Loading model from pickle format. Pickle is deprecated due to security concerns. "
+        "Consider re-saving the model with model.save() to convert to safetensors format.",
+        FutureWarning,
+        stacklevel=3,
+    )
     return load_torch_state(str(path))
 
 log = logging.getLogger("flair")

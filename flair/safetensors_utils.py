@@ -1,4 +1,6 @@
+import base64
 import json
+from io import BytesIO
 from pathlib import Path
 from typing import Any, Union
 
@@ -114,6 +116,10 @@ def combine_tensors_and_metadata(
 
 
 def _json_serializer(obj: Any) -> Any:
+    if isinstance(obj, bytes):
+        return {"__bytes__": base64.b64encode(obj).decode("ascii")}
+    if isinstance(obj, BytesIO):
+        return {"__bytesio__": base64.b64encode(obj.getvalue()).decode("ascii")}
     if isinstance(obj, torch.dtype):
         return {"__torch_dtype__": str(obj)}
     if isinstance(obj, torch.device):
@@ -126,6 +132,10 @@ def _json_serializer(obj: Any) -> Any:
 
 
 def _json_deserializer(obj: dict) -> Any:
+    if "__bytes__" in obj:
+        return base64.b64decode(obj["__bytes__"])
+    if "__bytesio__" in obj:
+        return BytesIO(base64.b64decode(obj["__bytesio__"]))
     if "__torch_dtype__" in obj:
         dtype_str = obj["__torch_dtype__"]
         dtype_map = {
