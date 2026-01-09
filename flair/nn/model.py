@@ -22,6 +22,7 @@ from flair.distributed_utils import is_main_process
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
 from flair.file_utils import Tqdm, load_torch_state
+from flair.safetensors_utils import SafetensorsSerializer
 from flair.training_utils import EmbeddingStorageMode, Result, store_embeddings
 import importlib
 
