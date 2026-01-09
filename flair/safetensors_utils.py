@@ -126,6 +126,19 @@ def _json_serializer(obj: Any) -> Any:
         return {"__torch_device__": str(obj)}
     if isinstance(obj, type):
         return {"__class__": f"{obj.__module__}.{obj.__name__}"}
+    if isinstance(obj, torch.nn.Module):
+        raise TypeError(
+            f"Cannot serialize torch.nn.Module '{type(obj).__name__}' to safetensors. "
+            "Models with custom decoders should use pickle format: model.save(path, use_safetensors=False)"
+        )
+    if type(obj).__name__ == "Dictionary" and hasattr(obj, "idx2item"):
+        return {
+            "__flair_dictionary__": True,
+            "idx2item": [item.decode("utf-8") for item in obj.idx2item],
+            "add_unk": obj.add_unk,
+            "multi_label": getattr(obj, "multi_label", False),
+            "span_labels": getattr(obj, "span_labels", False),
+        }
     if hasattr(obj, "to_dict"):
         return obj.to_dict()
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
@@ -136,6 +149,16 @@ def _json_deserializer(obj: dict) -> Any:
         return base64.b64decode(obj["__bytes__"])
     if "__bytesio__" in obj:
         return BytesIO(base64.b64decode(obj["__bytesio__"]))
+    if "__flair_dictionary__" in obj:
+        from flair.data import Dictionary
+
+        d = Dictionary(add_unk=False)
+        for item in obj["idx2item"]:
+            d.add_item(item)
+        d.add_unk = obj.get("add_unk", True)
+        d.multi_label = obj.get("multi_label", False)
+        d.span_labels = obj.get("span_labels", False)
+        return d
     if "__torch_dtype__" in obj:
         dtype_str = obj["__torch_dtype__"]
         dtype_map = {
