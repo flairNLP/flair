@@ -13,6 +13,7 @@ pptree>=3.1
 python-dateutil>=2.8.2
 pytorch_revgrad>=0.2.0
 regex>=2022.1.18
+safetensors>=0.4.0
 scikit-learn>=1.0.2
 segtok>=1.5.11
 sqlitedict>=2.0.0
