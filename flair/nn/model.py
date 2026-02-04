@@ -2,6 +2,7 @@ import inspect
 import itertools
 import logging
 import typing
+import warnings
 from abc import ABC, abstractmethod
 from collections import Counter
 from pathlib import Path
@@ -22,8 +23,22 @@ from flair.distributed_utils import is_main_process
 from flair.embeddings import Embeddings
 from flair.embeddings.base import load_embeddings
 from flair.file_utils import Tqdm, load_torch_state
+from flair.safetensors_utils import SafetensorsSerializer
 from flair.training_utils import EmbeddingStorageMode, Result, store_embeddings
 import importlib
+
+
+def _load_state(model_path: Union[str, Path]) -> dict[str, Any]:
+    path = Path(model_path)
+    if SafetensorsSerializer.is_safetensors_model(path):
+        return SafetensorsSerializer.load(path)
+    warnings.warn(
+        "Loading model from pickle format. Pickle is deprecated due to security concerns. "
+        "Consider re-saving the model with model.save() to convert to safetensors format.",
+        FutureWarning,
+        stacklevel=3,
+    )
+    return load_torch_state(str(path))
 
 log = logging.getLogger("flair")
 
@@ -273,21 +288,28 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
         """
         return model_identifier
 
-    def save(self, model_file: Union[str, Path], checkpoint: bool = False) -> None:
+    def save(
+        self,
+        model_file: Union[str, Path],
+        checkpoint: bool = False,
+        use_safetensors: bool = True,
+    ) -> None:
         """Saves the current model to the provided file.
 
         Args:
-            model_file: The model file.
+            model_file: The model file path. For safetensors format, this will be a directory.
             checkpoint: This parameter is currently unused.
+            use_safetensors: If True (default), save using safetensors format. If False, use pickle.
         """
         model_state = self._get_state_dict()
 
-        # write out a "model card" if one is set
         if self.model_card is not None:
             model_state["model_card"] = self.model_card
 
-        # save model
-        torch.save(model_state, str(model_file), pickle_protocol=4)
+        if use_safetensors:
+            SafetensorsSerializer.save(model_state, model_file)
+        else:
+            torch.save(model_state, str(model_file), pickle_protocol=4)
 
     @property
     def license_info(self) -> str:
@@ -337,7 +359,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
 
             # if the model cannot be fetched, load as a file
             try:
-                state = model_path if isinstance(model_path, dict) else load_torch_state(str(model_path))
+                state = model_path if isinstance(model_path, dict) else _load_state(model_path)
             except Exception:
                 log.error("-" * 80)
                 log.error(
@@ -371,7 +393,7 @@ class Model(torch.nn.Module, typing.Generic[DT], ABC):
             # if this class is not abstract, fetch the model and load it
             if not isinstance(model_path, dict):
                 model_file = cls._fetch_model(str(model_path))
-                state = load_torch_state(model_file)
+                state = _load_state(model_file)
             else:
                 state = model_path
 
