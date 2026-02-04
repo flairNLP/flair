@@ -27,6 +27,7 @@ def test_save_load_roundtrip(tmp_path, state_dict):
     ],
 )
 def test_tensors_preserved(tmp_path, state_dict):
+    """Verify tensor values remain numerically identical after serialization."""
     SafetensorsSerializer.save(state_dict, tmp_path / "model")
     loaded = SafetensorsSerializer.load(tmp_path / "model")
     original_tensor = list(state_dict.values())[0]
@@ -38,6 +39,7 @@ def test_tensors_preserved(tmp_path, state_dict):
 
 
 def test_is_safetensors_model(tmp_path):
+    """Verify safetensors format detection distinguishes valid models from missing paths."""
     assert not SafetensorsSerializer.is_safetensors_model(tmp_path / "nonexistent")
     SafetensorsSerializer.save({"w": torch.randn(2)}, tmp_path / "model")
     assert SafetensorsSerializer.is_safetensors_model(tmp_path / "model")
