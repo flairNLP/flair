@@ -17,13 +17,13 @@ from torch.jit import ScriptModule
 from transformers import (
     CONFIG_MAPPING,
     AutoConfig,
-    AutoFeatureExtractor,
+    AutoImageProcessor,
     AutoModel,
     AutoTokenizer,
-    FeatureExtractionMixin,
+    ImageProcessingMixin,
     LayoutLMTokenizer,
     LayoutLMTokenizerFast,
-    LayoutLMv2FeatureExtractor,
+    LayoutLMv2ImageProcessor,
     PretrainedConfig,
     PreTrainedTokenizer,
     T5Config,
@@ -351,7 +351,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
         is_token_embedding: bool = False,
         force_device: Optional[torch.device] = None,
         force_max_length: bool = False,
-        feature_extractor: Optional[FeatureExtractionMixin] = None,
+        feature_extractor: Optional[ImageProcessingMixin] = None,
         needs_manual_ocr: Optional[bool] = None,
         use_context_separator: bool = True,
     ) -> None:
@@ -453,13 +453,13 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
             return AutoTokenizer.from_pretrained(temp_dir)
 
     @classmethod
-    def _feature_extractor_from_bytes(cls, zip_data: Optional[BytesIO]) -> Optional[FeatureExtractionMixin]:
+    def _feature_extractor_from_bytes(cls, zip_data: Optional[BytesIO]) -> Optional[ImageProcessingMixin]:
         if zip_data is None:
             return None
         zip_obj = zipfile.ZipFile(zip_data)
         with tempfile.TemporaryDirectory() as temp_dir:
             zip_obj.extractall(temp_dir)
-            return AutoFeatureExtractor.from_pretrained(temp_dir, apply_ocr=False)
+            return AutoImageProcessor.from_pretrained(temp_dir, apply_ocr=False)
 
     def __tokenizer_bytes(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -682,7 +682,7 @@ class TransformerBaseEmbeddings(Embeddings[Sentence]):
                 batched_image_encodings = [image_encodings[i] for i in cpu_overflow_to_sample_mapping]
                 image_encodings = torch.stack(batched_image_encodings)
             image_encodings = image_encodings.to(flair.device)
-            if isinstance(self.feature_extractor, LayoutLMv2FeatureExtractor):
+            if isinstance(self.feature_extractor, LayoutLMv2ImageProcessor):
                 model_kwargs["image"] = image_encodings
             else:
                 model_kwargs["pixel_values"] = image_encodings
@@ -1099,7 +1099,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         logging.set_verbosity_error()
 
         self.tokenizer: PreTrainedTokenizer
-        self.feature_extractor: Optional[FeatureExtractionMixin]
+        self.feature_extractor: Optional[ImageProcessingMixin]
 
         if tokenizer_data is None:
             # load tokenizer and transformer model
@@ -1107,7 +1107,7 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
                 model, add_prefix_space=True, **transformers_tokenizer_kwargs, **kwargs
             )
             try:
-                self.feature_extractor = AutoFeatureExtractor.from_pretrained(model, apply_ocr=False, **kwargs)
+                self.feature_extractor = AutoImageProcessor.from_pretrained(model, apply_ocr=False, **kwargs)
             except OSError:
                 self.feature_extractor = None
         else:
