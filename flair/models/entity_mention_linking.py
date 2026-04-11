@@ -945,9 +945,8 @@ class EntityMentionLinker(flair.nn.Model[Sentence]):
 
         candidate_generator.index(dictionary, preprocessor)
 
-        logger.info(
-            "EntityMentionLinker predicts: Dictionary `%s` (entity type: %s)", dictionary_name_or_path, entity_type
-        )
+        display_name = dictionary_name_or_path or getattr(dictionary, "database_name", None) or "custom"
+        logger.info("EntityMentionLinker predicts: Dictionary `%s` (entity type: %s)", display_name, entity_type)
 
         return cls(
             candidate_generator=candidate_generator,
