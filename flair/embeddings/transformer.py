@@ -1223,6 +1223,12 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         self.context_dropout = context_dropout
         self.respect_document_boundaries = respect_document_boundaries
 
+        # Persist trust_remote_code so it survives save/load round-trips.
+        # Without this, models like EuroBERT that need trust_remote_code=True
+        # train fine but fail on reload because CONFIG_MAPPING doesn't know
+        # the custom config type.
+        self.trust_remote_code = kwargs.get("trust_remote_code", False)
+
         # embedding parameters
         if layers == "all":
             # send mini-token through to check how many layers the model has
@@ -1368,12 +1374,32 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
         params.pop("use_lang_emb", None)
         params["use_context"] = params.pop("context_length", 0)
         config_state_dict = params.pop("config_state_dict", None)
+        trust_remote_code = params.pop("trust_remote_code", False)
         config = None
 
         if config_state_dict:
             model_type = config_state_dict.get("model_type", "bert")
-            config_class = CONFIG_MAPPING[model_type]
-            config = config_class.from_dict(config_state_dict)
+            if model_type in CONFIG_MAPPING:
+                config_class = CONFIG_MAPPING[model_type]
+                config = config_class.from_dict(config_state_dict)
+            elif trust_remote_code and "model" in params:
+                # Custom model types (e.g. EuroBERT) are not in CONFIG_MAPPING.
+                # Re-download the config with trust_remote_code so the custom
+                # config class gets registered.  Strip _name_or_path to avoid
+                # overwriting the freshly-resolved repo id with a stale value.
+                config_overrides = {
+                    k: v for k, v in config_state_dict.items() if not k.startswith("_name_or_path")
+                }
+                config = AutoConfig.from_pretrained(
+                    params["model"], trust_remote_code=True, **config_overrides
+                )
+            else:
+                config_class = CONFIG_MAPPING[model_type]  # will raise KeyError with a clear message
+                config = config_class.from_dict(config_state_dict)
+
+        if trust_remote_code:
+            params["trust_remote_code"] = True
+
         return cls.create_from_state(saved_config=config, **params)
 
     def to_params(self):
@@ -1403,6 +1429,9 @@ class TransformerEmbeddings(TransformerBaseEmbeddings):
             "config_state_dict": config_dict,
             "peft_config": self.peft_config,
         }
+
+        if self.trust_remote_code:
+            model_state["trust_remote_code"] = True
 
         return model_state
 
