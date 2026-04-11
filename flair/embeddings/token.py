@@ -9,7 +9,6 @@ from typing import Any, Optional, Union
 import numpy as np
 import torch
 from deprecated.sphinx import deprecated
-from sentencepiece import SentencePieceProcessor
 from torch import nn
 
 import flair
@@ -1389,6 +1388,7 @@ class BytePairEmbeddings(TokenEmbeddings):
             cache_dir = flair.cache_root / "embeddings"
 
         if model_file_path is not None and embedding_file_path is None:
+            (SentencePieceProcessor,) = lazy_import("word-embeddings", "sentencepiece", "SentencePieceProcessor")
             self.spm = SentencePieceProcessor()
             self.spm.Load(str(model_file_path))
             vectors = np.zeros((self.spm.vocab_size() + 1, dim))
