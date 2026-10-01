@@ -75,7 +75,7 @@ class HyperbolicDistance(nn.Module):
     """Implement a HyperbolicDistance object."""
 
     def forward(self, mat_1: Tensor, mat_2: Tensor) -> Tensor:
-        """Returns the squared euclidean distance between each element in mat_1 and each element in mat_2.
+        """Returns squared hyperbolic distances between the spatial embeddings.
 
         Parameters
         ----------
@@ -96,7 +96,7 @@ class HyperbolicDistance(nn.Module):
 
         # Compute bilinear form
         left = mat_1_x_0.mm(mat_2_x_0.t())  # n_1 x n_2
-        right = mat_1[:, 1:].mm(mat_2[:, 1:].t())  # n_1 x n_2
+        right = mat_1.mm(mat_2.t())  # n_1 x n_2
 
         # Arcosh
         return arccosh(left - right).pow(2)
