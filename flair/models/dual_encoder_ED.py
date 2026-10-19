@@ -1,7 +1,10 @@
+import json
 import sys
+import os
 import logging
 import random
 from math import ceil, floor
+import time
 
 from tqdm import tqdm
 #from tqdm.auto import tqdm
@@ -17,7 +20,24 @@ import flair
 from flair.data import DT, Dictionary, Optional, Sentence, Span, Union, Token
 from flair.embeddings import DocumentEmbeddings, TokenEmbeddings
 
+from openai import OpenAI
+from google import genai
+from google.genai import types
+from gradio_client import Client as GradioClient
+
+from multiprocessing import Process
+import threading
+
+import pickle
+import re
+from collections import defaultdict
+
+from vllm import LLM, SamplingParams
+
 log = logging.getLogger("flair")
+# logging.getLogger("openai").setLevel(logging.WARNING)
+# logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.disable(logging.INFO)
 
 
 class SimilarityMetric:
@@ -989,9 +1009,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             verbose: bool = False,
             label_name: Optional[str] = None,
             return_loss=False,
+            top_k: int = 5,
             embedding_storage_mode="none",
             return_span_and_label_hidden_states: bool = True,
-            save_top_k: Optional[int] = None,
             **kwargs
     ):
         """
@@ -1007,12 +1027,11 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
             if self._next_prediction_needs_updated_label_embeddings:
                 self._recompute_label_embeddings()
                 self._next_prediction_needs_updated_label_embeddings = False
-
+            
             batches, batches_original_spans = self._prepare_sentences(sentences,
                                                                       max_spans_per_sentence=200,
                                                                       max_spans_per_batch=400,
                                                                       )
-
             for batch, original_spans in zip(batches, batches_original_spans):
 
                 if not original_spans:
@@ -1025,10 +1044,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
 
                 most_similar_label_similarity, most_similar_label_index = torch.max(similarity_span_all_labels, dim=1)
 
-                # Optionally save the top K predictions:
-                if save_top_k:
-                    top_k_similarity, top_k_index = torch.topk(similarity_span_all_labels, k=save_top_k, dim=1)
-
+                # for inspection (and for the experiment with a different criterion) save the top 5 predictions:
+                top5_similarity, top5_index = torch.topk(similarity_span_all_labels, k=top_k, dim=1)
+                
                 for i, sp in enumerate(spans):
                     original_span = original_spans[i]
                     label_value = self._label_at(most_similar_label_index[i])
@@ -1058,7 +1076,9 @@ class DualEncoderEntityDisambiguation(flair.nn.Classifier[Sentence]):
                 verbalization = self.label_map.get(pred,pred.replace("_", " "))
                 eval_line += (
                     f' - "{span.text}" / {span.get_label(gold_label_type).value}'
-                    f' --> {pred} ({symbol}) "{verbalization}"\n'
+                    f' --> {pred} ({symbol}) "{verbalization}"'
+                    f' --> {[(span.get_label(f"top_{i}").value, span.get_label(f"top_{i}").score) for i in range(5)]}'
+                    f' --> {span.start_position} - {span.end_position}\n'
                 )
 
                 if print_top_k:
@@ -1481,7 +1501,6 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         return_loss=False,
         embedding_storage_mode="none",
         return_span_and_label_hidden_states: bool = True,
-        save_top_k: Optional[int] = None,
         **kwargs
     ):
         """
@@ -1667,8 +1686,1257 @@ class GreedyDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
         return model
 
 
+class LocalLLM():
+
+    def __init__(self, llm: LLM, max_output_tokens: int = 200, temperature: float = 0.8):
+        
+        self.llm = llm
+        self.max_output_tokens = max_output_tokens
+        self.sampling_params = SamplingParams(temperature=temperature, top_p=0.95, max_tokens=self.max_output_tokens)
+
+    def query(self, prompt: str):
+        return self.query_batch([prompt])[0]
+
+    def query_batch(self, prompts: list[str]):
+        
+        system_msg = "You are a professional entity-disambiguation annotator. For each question in the prompt you must select exactly one answer number.\n\n" \
+                     "Hard rules (must follow):" \
+                     "1. Read the full text, then answer every question in order (Q1, Q2, ...). \n" \
+                     "2. For each question, consider ONLY the mention marked with that question tag (e.g., [Q1]) and ONLY the options listed immediately after that question. Do NOT reuse options from other questions.\n" \
+                     "3. Choose the option that best matches the mention given the context. Prefer contextual relevance over surface-form match when they conflict. Prefer the most specific, contextually accurate entry when multiple options fit.\n" \
+                     "4. If no option matches, choose '0' (None of the above).\n" \
+                     "5. Sometimes, the answer numbering may not be continuous. Carefully look at the answer number of your selected option and provide it.\n" \
+                     "6. Output format: exactly N lines for N questions. Each line must contain exactly one digit (the chosen option number). The first line is the answer for Q1, the second for Q2, etc. No other characters, labels, punctuation, or explanation. No blank lines.\n" \
+                     "7. Do NOT provide chain-of-thought or any additional text.\n"
+        
+        message = [
+            [
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": prompt}
+            ]
+            for prompt in prompts
+        ]
+
+        outputs = self.llm.chat(message, self.sampling_params)
+        parsed_output = []
+        input_tokens = []
+        output_tokens = []
+
+        for output in outputs:
+            generated_text = output.outputs[0].text
+
+            # Check if </think> tags is present. If yes, strip everything before it
+            if "</think>" in generated_text:
+                generated_text = generated_text.split("</think>")[-1].strip()
+
+            parsed_output.append(generated_text)
+            input_tokens.append(len(output.prompt_token_ids))
+            output_tokens.append(len(output.outputs[0].token_ids))
+
+        return parsed_output, input_tokens, output_tokens
+
+class GradioLLM():
+
+    def __init__(self, model_name):
+        if model_name == "HU-1":
+            self.client = GradioClient("https://llm1-compute.cms.hu-berlin.de/")
+        elif model_name == "HU-2":
+            self.client = GradioClient("https://llm3-compute.cms.hu-berlin.de/")
+        else:
+            raise NotImplementedError(f"Model {model_name} not supported. Supported options are: HU-1, HU-2.")
+        
+    def query(self, prompt: str):
+        response = self.client.predict(
+            param_0=prompt,
+            api_name="/chat")
+        
+        return response, 0, 0
+
+
+class GoogleLLM():
+    """
+    Class for querying Google's LLMs, such as Gemini.
+    This class requires an API key to access the Google service.
+    :param model_name: The name of the Google model to use (default is "gemini-2.5-flash").
+    :param api_key: The API key for accessing Google's services.
+    """
+
+    def __init__(self, model_name: str = "gemini-2.5-flash", api_key: str = None, max_output_tokens: int = 200, reasoning: str = "none"):
+        self.model_name = model_name
+        self.api_key = api_key
+        self.max_output_tokens = max_output_tokens
+        self.reasoning = reasoning
+
+        if not self.api_key:
+            raise ValueError("API key is required for Google LLMs. Please provide a valid API key.")
+
+        self.client = genai.Client(
+            api_key=self.api_key
+        )
+
+    def query(self, prompt: str, temperature: float = 0.7):
+        """
+        Method for querying the Google LLM.
+        :param prompt: The input prompt to send to the LLM.
+        :param max_tokens: Maximum number of tokens to generate in the response.
+        :param temperature: Sampling temperature for response generation.
+        :return: The generated response from the LLM.
+        """
+
+        #system_msg = "You are a helpful assistant that disambiguates entities in a text based on a number of options. You will receive a text and a number of multiple choice questions. Only respond with the number of your selected answer for each multiple choice question. One answer per line. Do not add any additional text or explanations.\n" \
+        #            "Here are some tips:\n" \
+        #            "- Remember that you are doing an Entity Disambiguation tasks. Try to be as good as a professional annotator.\n" \
+        #            "- Give extra consideration to answer options whose surface form matches or closely matches the entity in question. These answer options are often correct but not always. If you think another option fits better, pick that one."
+
+        system_msg = "You are a professional entity-disambiguation annotator. For each question in the prompt you must select exactly one answer number.\n\n" \
+                     "Hard rules (must follow):" \
+                     "1. Read the full text, then answer every question in order (Q1, Q2, ...). \n" \
+                     "2. For each question, consider ONLY the mention marked with that question tag (e.g., [Q1]) and ONLY the options listed immediately after that question. Do NOT reuse options from other questions.\n" \
+                     "3. Choose the option that best matches the mention given the context. Prefer contextual relevance over surface-form match when they conflict. Prefer the most specific, contextually accurate entry when multiple options fit.\n" \
+                     "4. If no option matches, choose '0' (None of the below).\n" \
+                     "5. Sometimes, the answer numbering may not be continuous. Carefully look at the answer number of your selected option and provide it.\n" \
+                     "6. Output format: exactly N lines for N questions. Each line must contain exactly one digit (the chosen option number). The first line is the answer for Q1, the second for Q2, etc. No other characters, labels, punctuation, or explanation. No blank lines.\n" \
+                     "7. Do NOT provide chain-of-thought or any additional text.\n"
+    
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            config=types.GenerateContentConfig(
+                system_instruction=system_msg,
+            ),
+            contents=prompt
+        )
+
+        input_tokens = int(response.usage_metadata.prompt_token_count)
+        output_tokens = int(response.usage_metadata.total_token_count) - input_tokens
+
+        return response.text, input_tokens, output_tokens
+
+
+class OpenAILLM():
+    """
+    Class for querying OpenAI's LLMs, such as gpt-4o-mini.
+    This class requires an API key to access the OpenAI service.
+    :param model_name: The name of the OpenAI model to use (default is "gpt-4o-mini").
+    :param api_key: The API key for accessing OpenAI's services.
+    """
+
+    def __init__(self, model_name: str = "gpt-4o-mini", api_key: str = None, max_output_tokens: int = 200, reasoning: str = "none"):
+        self.model_name = model_name
+        self.api_key = api_key
+        self.max_output_tokens = max_output_tokens
+        self.reasoning = reasoning
+
+        if not self.api_key:
+            raise ValueError("API key is required for OpenAI LLMs. Please provide a valid API key.")
+        
+        self.client = OpenAI(
+            api_key=self.api_key
+        )
+
+    def query(self, prompt: str, temperature: float = 0.7):
+        """
+        Method for querying the OpenAI LLM.
+        :param prompt: The input prompt to send to the LLM.
+        :param max_tokens: Maximum number of tokens to generate in the response.
+        :param temperature: Sampling temperature for response generation.
+        :return: The generated response from the LLM.
+        """
+
+        #system_msg = "You are a helpful assistant that disambiguates entities in a text based on a number of options. You will receive a text and a number of multiple choice questions. Only respond with the number of your selected answer for each multiple choice question. One answer per line. Do not add any additional text or explanations.\n" \
+        #            "Here are some tips:\n" \
+        #            "- Remember that you are doing an Entity Disambiguation tasks. Try to be as good as a professional annotator.\n" \
+        #            "- Give extra consideration to answer options whose surface form matches or closely matches the entity in question. These answer options are often correct but not always. If you think another option fits better, pick that one."
+        
+        system_msg = "You are a professional entity-disambiguation annotator. For each question in the prompt you must select exactly one answer number.\n\n" \
+                     "Hard rules (must follow):" \
+                     "1. Read the full text, then answer every question in order (Q1, Q2, ...). \n" \
+                     "2. For each question, consider ONLY the mention marked with that question tag (e.g., [Q1]) and ONLY the options listed immediately after that question. Do NOT reuse options from other questions.\n" \
+                     "3. Choose the option that best matches the mention given the context. Prefer contextual relevance over surface-form match when they conflict. Prefer the most specific, contextually accurate entry when multiple options fit.\n" \
+                     "4. If no option matches, choose '0' (None of the above).\n" \
+                     "5. Sometimes, the answer numbering may not be continuous. Carefully look at the answer number of your selected option and provide it.\n" \
+                     "6. Output format: exactly N lines for N questions. Each line must contain exactly one digit (the chosen option number). The first line is the answer for Q1, the second for Q2, etc. No other characters, labels, punctuation, or explanation. No blank lines.\n" \
+                     "7. Do NOT provide chain-of-thought or any additional text.\n"
+
+        if self.reasoning == "none":
+            response = self.client.responses.create(
+                model=self.model_name,
+                input=[
+                    {"role": "developer", "content": system_msg},
+                    {"role": "user", "content": prompt}],
+                max_output_tokens=self.max_output_tokens
+            )
+        else:
+            response = self.client.responses.create(
+                model=self.model_name,
+                reasoning={"effort": self.reasoning},
+                input=[
+                    {"role": "developer", "content": system_msg},
+                    {"role": "user", "content": prompt}],
+                max_output_tokens=self.max_output_tokens
+            )
+
+        return response.output_text, response.usage.input_tokens, response.usage.output_tokens
+    
+
+    def query_batch(self, prompts: str, temperature: float = 0.7):
+        """
+        Method for querying the OpenAI LLM with a prompt in batch mode.
+        :param prompts: List of input prompts to send to the LLM.
+        :param max_tokens: Maximum number of tokens to generate in the response.
+        :param temperature: Sampling temperature for response generation.
+        :return: List of generated responses from the LLM.
+        """
+
+        system_msg = "You are a helpful assistant that disambiguates entities in a text based on a number of options. You will receive a text and a number of multiple choice questions. Only respond with the number of your selected answer for each multiple choice question. One answer per line. Do not add any additional text or explanations."
+    
+        lines_formatted = []
+        for idx, prompt in enumerate(prompts):
+            line = {"custom_id": f"request-{idx}",
+                    "method": "POST",
+                    "url": "/v1/responses",
+                    "body":{"model": self.model_name,
+                            "input": [
+                                {"role": "developer", "content": system_msg},
+                                {"role": "user", "content": prompt}],
+                            "max_output_tokens": self.max_output_tokens
+                    }
+            }
+            lines_formatted.append(line)
+        
+        # Save the formatted lines to a file
+        with open("./stored/batch_requests.jsonl", "w") as f:
+            for line in lines_formatted:
+                f.write(json.dumps(line) + "\n")
+
+        # Upload file to the OpenAI API
+        batch_input_file = self.client.files.create(
+            file=open("./stored/batch_requests.jsonl", "rb"),
+            purpose="batch"
+        )
+
+        # Start Batch
+        batch = self.client.batches.create(
+            input_file_id=batch_input_file.id,
+            endpoint="/v1/responses",
+            completion_window="24h",
+            metadata={
+                "description": "Batch processing for entity disambiguation",
+            }
+        )
+        batch_id = batch.id
+        print(f"OpenAI | Batch submitted with ID: {batch_id}, Waiting for completion...")
+        print(f"OpenAI | Batch status will be checked every 3 minutes.")
+
+        waited_mins = 0
+        while True:
+            time.sleep(180)  # Wait for the batch to be processed
+            waited_mins += 3
+            # Get Batch object
+            batch = self.client.batches.retrieve(batch_id)
+            # Check status of object
+            if batch.status == "completed":
+                print(f"OpenAI | {waited_mins} mins | Batch completed successfully.")
+                break
+            elif batch.status in ["failed", "cancelled", "cancelling", "expired"]:
+                print(f"OpenAI | {waited_mins} mins | Batch failed or was cancelled.")
+                print("Execution failed. Exiting...")
+                sys.exit(1)
+            else:
+                print(f"OpenAI | {waited_mins} mins | Batch status: {batch.status}. Waiting for completion...")
+
+        file_response = self.client.files.content(batch.output_file_id).text
+
+        # Verify that all prompts have been answered
+        assert len(file_response.splitlines()) == len(prompts), \
+            f"Number of responses {len(file_response.splitlines())} does not match number of prompts {len(prompts)}."
+
+        # LLM responses may not be in order. Sort using custom_id field of each dictionary in the response
+        responses_dict = [json.loads(line) for line in file_response.splitlines()]
+        responses_dict.sort(key=lambda x: x["custom_id"])
+
+        responses = []
+        for response in responses_dict:
+            print(response) # DEBUG
+            responses.append(response["response"]["body"]["choices"][0]["message"]["content"].strip())
+
+        return responses
 
 
 
+class LLMDualEncoderEntityDisambiguation(DualEncoderEntityDisambiguation):
+    """
+    This class extends DualEncoderEntityDisambiguation to integrate large language models (LLMs) for entity disambiguation.
+    It enables hybrid prediction workflows, where LLMs can be used to refine or override dual encoder predictions,
+    supports multiple LLM providers, and offers flexible strategies for span selection and iterative LLM querying.
+    """
+
+    def __init__(
+            self,
+            LLM_model_type: str = ["HU"],
+            LLM_model_name: str = ["HU-1"],
+            local_llm: LLM = None,
+            top_k: int = 5,
+            dynamic_top_k: bool = False,
+            LLM_strategy: str = "default",
+            LLM_selection_strategy: str = "similarity",
+            LLM_verbalization_strategy: str = "description",
+            LLM_verbalization_candidate_strategy: str = "description",
+            threshold: float = 0.7,
+            iterations: int = 3,
+            api_key: str = None,
+            batching: bool = False,
+            regenerate_sentences: bool = False,
+            reasoning: str = ["none"],
+            num_agents: int = 1,
+            verbalization_data: dict = None,
+            **kwargs
+    ):
+        super(LLMDualEncoderEntityDisambiguation, self).__init__(**kwargs)
+
+        self.LLM_model_type = LLM_model_type        # Type of the LLM model (e.g., OpenAI, HU)
+        self.LLM_model_name = LLM_model_name        # Name of the LLM model to use (e.g., OpenAI-o4, HU-1, HU-2)
+        self.local_llm = local_llm                  # Local LLM instance if using a local model
+        self.top_k = top_k                          # Number of top predictions to consider
+        self.dynamic_top_k = dynamic_top_k          # Whether to use dynamic top-k based on the span score
+        self.LLM_selection_strategy = LLM_selection_strategy  # Strategy for selecting difficult cases (e.g., similarity, difference, both). Append _abs for absolute thresholds (e.g., similarity_abs, difference_abs, both_abs)
+        self.LLM_strategy = LLM_strategy            # Strategy for using the LLM (e.g., default, all)
+        self.threshold = threshold                  # Threshold for filtering predictions if strategy is set to default
+        self.iterations = iterations                # Number of LLM prediction rounds
+        self.api_key = api_key                      # API key for accessing the LLM service, required for OpenAI-o4
+        self.batching = batching                    # Whether to use batching for LLM predictions
+        self.regenerate_sentences = regenerate_sentences    # Whether to regenerate sentences or load them from disk
+        self.reasoning = reasoning                  # How much reasoning should be used for reasoning models (low, medium, high)
+        self.num_agents = num_agents                # Number of LLM agents to use for LLM predictions. Default: 1
+        self.LLM_verbalization_strategy = LLM_verbalization_strategy  # Strategy for verbalizing labels (e.g., description, categories, both, none)
+        self.LLM_verbalization_candidate_strategy = LLM_verbalization_candidate_strategy  # Strategy for verbalizing candidate labels (e.g., description, categories, both, none)
+        self.verbalization_data = verbalization_data  # Additional data for verbalizing labels containing categories
+
+        # Validate Inputs
+        if not self.LLM_strategy in ["default", "all"]:
+            raise NotImplementedError(
+                f"LLM strategy {self.LLM_strategy} is not supported. Supported strategies are: default, all."
+            )
+        if (self.threshold < 0.0 or self.threshold > 1.0) and not "abs" in self.LLM_selection_strategy:
+            raise ValueError(
+                f"Threshold {threshold} is not valid. It should be between 0.0 and 1.0 if not using absolute thresholds."
+            )
+        if self.iterations < 1:
+            raise ValueError(
+                f"Iterations {self.iterations} must be at least 1."
+            )
+        if self.LLM_model_type in ["OpenAI", "Google"] and not api_key:
+            raise ValueError(
+                "API key is required for OpenAI and Google models. Please provide a valid API key."
+            )
+
+    def save_sentences(self, sentences, label_name: str = "predicted", LLM_label_name: str = "LLMPrediction"):
+        sentence_dict = {}
+        for i, sentence in enumerate(sentences):
+            sentence_dict[i] = {}
+            for j, span in enumerate(sentence.get_spans()):
+                labels = {}
+                labels["text"] = span.text
+                labels["start_position"] = span.start_position
+                labels["end_position"] = span.end_position
+
+                # Get Labels for the span
+                if span.has_label(label_name):
+                    labels[label_name] = (span.get_label(label_name).value, span.get_label(label_name).score)
+                
+                k = 0
+                while(span.has_label(f"top_{k}")):
+                    top_label = f"top_{k}"
+                    labels[top_label] = (span.get_label(top_label).value, span.get_label(top_label).score)
+                    k += 1
+
+                if span.has_label(LLM_label_name):
+                    labels[LLM_label_name] = (span.get_label(LLM_label_name).value, span.get_label(LLM_label_name).score)
+
+                # Save Span data to dict
+                sentence_dict[i][j] = labels
+        return sentence_dict
+    
+    def load_sentences(self, sentences, sentence_dict):
+        for i, sentence in enumerate(sentences):
+            for j, span in enumerate(sentence.get_spans()):
+                # Check if the spans match
+                try:
+                    assert span.text == sentence_dict[i][j]["text"] and \
+                           span.start_position == sentence_dict[i][j]["start_position"] and \
+                           span.end_position == sentence_dict[i][j]["end_position"]
+                except AssertionError:
+                    print(f"Span mismatch at sentence {i}, span {j}:")
+                    print(f"Expected: {sentence_dict[i][j]}")
+                    print(f"Got: text={span.text}, start={span.start_position}, end={span.end_position}")
+                    return False
+
+                # Set Labels for the Span
+                for key in sentence_dict[i][j]:
+                    if key in ["text", "start_position", "end_position", "LLMPrediction", "LLM_start_iteration", "LLM_predict_iteration"]:
+                        continue
+                    span.set_label(typename=key,
+                                   value=sentence_dict[i][j][key][0],
+                                   score=sentence_dict[i][j][key][1])
+        
+        return True
+
+    def split_spans_based_on_threshold(self, sentences, label_name: str = "predicted"):
+        """
+        Splits spans based on a threshold for the predicted labels.
+        :param sentences: List of sentences to process.
+        :param label_name: The label type to check against the threshold.
+        :return: A list of sentences with spans split based on the threshold.
+        """
 
 
+        # Sort spans from all sentences based on the threshold into one big list
+        spans = []
+        for s in sentences:
+            spans.extend([sp for sp in s.get_spans(label_name)])
+
+        # Sort spans based on LLM selection strategy
+        if self.LLM_selection_strategy in ["similarity", "similarity_abs"]:
+            # Sort spans based on score in descending order
+            spans = sorted(spans, key=lambda sp: sp.get_label(label_name).score, reverse=True)
+        elif self.LLM_selection_strategy in ["difference", "difference_abs"]:
+            # Sort spans based on the difference between top_0 and top_1 in descending order
+            spans = sorted(spans, key=lambda sp: sp.get_label(f"top_0").score - sp.get_label(f"top_1").score, reverse=True)
+        elif self.LLM_selection_strategy in ["both", "both_abs"]:
+            spans1 = sorted(spans, key=lambda sp: sp.get_label(label_name).score, reverse=True)
+            spans2 = sorted(spans, key=lambda sp: sp.get_label(f"top_0").score - sp.get_label(f"top_1").score, reverse=True)
+        
+            # Combine both lists, ensuring no duplicates, in alternating order
+            spans = []
+            span_list = [spans1, spans2]
+            span_list_idx = 0
+            i = 0
+            while i < max(len(spans1), len(spans2)):
+                # Get span from current span_list
+                selected_span = span_list[span_list_idx][i] if i < len(span_list[span_list_idx]) else None
+
+                # If there is not span at the current index, switch to the next span_list
+                # If we go back to the first span_list, increment the index
+                if not selected_span:
+                    span_list_idx = (span_list_idx + 1) % 2
+                    if span_list_idx == 0:
+                        i += 1
+                    continue
+                
+                # Check if the selected span is already in the spans list
+                if selected_span not in spans:
+                    spans.append(selected_span)
+
+                # Switch to the next span_list for the next iteration
+                # If we go back to the first span_list, increment the index
+                span_list_idx = (span_list_idx + 1) % 2
+                if span_list_idx == 0:
+                    i += 1
+
+            # Spans are now sorted in alternating order from both lists
+        else:
+            raise NotImplementedError(
+                f"LLM selection strategy {self.LLM_selection_strategy} is not supported. Supported strategies are: similarity, difference, both."
+            )
+        
+        # If the strategy is "all", we do not filter based on threshold
+        if self.LLM_strategy == "all":
+            threshold = 0.0
+        else:
+            threshold = self.threshold
+
+        # Add label to each span indicating which percentage it is
+        # This helps for later evaluation
+        for idx, span in enumerate(spans):
+            span.set_label(typename="span_percentage", value = floor((idx / len(spans)) * 100), score = 0)
+
+        # Get top threshold percent of spans (those with the best scores)
+        if "abs" not in self.LLM_selection_strategy:
+            cutoff = floor(len(spans) * threshold)
+            spans_verbalization = spans[0:cutoff]   # Spans that will be verbalized
+            spans_LLM = spans[cutoff:]              # Spans that will be processed by the LLM
+        else:
+            spans_verbalization, spans_LLM = [], []
+            for span in spans:
+                if self.LLM_selection_strategy == "similarity_abs":
+                    if span.get_label(label_name).score >= threshold:
+                        spans_verbalization.append(span)
+                    else:
+                        spans_LLM.append(span)
+                elif self.LLM_selection_strategy == "difference_abs":
+                    if abs(span.get_label(f"top_0").score - span.get_label(f"top_1").score) >= threshold:
+                        spans_verbalization.append(span)
+                    else:
+                        spans_LLM.append(span)
+                else:
+                    raise NotImplementedError(
+                        f"LLM selection strategy {self.LLM_selection_strategy} is not supported. Supported strategies are: similarity_abs, difference_abs."
+                    )
+
+
+        # Split spans_LLM into multiple lists based on the number of iterations
+        spans_LLM_batches = []
+        batch_size = ceil(len(spans_LLM) / self.iterations)
+        for i in range(self.iterations):
+            start_index = i * batch_size
+            end_index = start_index + batch_size
+            spans_LLM_batches.append(spans_LLM[start_index:min(end_index, len(spans_LLM))])  # Ensure we don't go out of bounds
+
+        return spans_verbalization, spans_LLM_batches
+
+    def get_label_category_information(self, label: str) -> str:
+        """
+        Retrieves category information for a given label from the verbalization data.
+        :param label: The label to retrieve category information for.
+        :return: A string containing the category information.
+        """
+        if not self.verbalization_data:
+            raise ValueError("Verbalization data is not defined. Please set the verbalization_data attribute before calling this method.")
+
+        if label not in self.verbalization_data:
+            raise NotImplementedError(f"Label {label} not found in verbalization data.")
+
+        categories = {'instance of': [], 'part of': [], 'country': [], 'occupation': [], 'subclass of': []}
+        data = self.verbalization_data[label].get('wikidata_properties', [])
+
+        for key, value in data:
+            if key in categories:
+                categories[key].append(value)
+
+        category_info = ""
+        for key, values in categories.items():
+            if values:
+                if category_info != "":
+                    category_info += " ; "
+                category_info += f"{key}: {', '.join(values)}"
+
+        return category_info
+
+    def get_label_excerpt(self, label: str) -> str:
+        """
+        Retrieves an excerpt for a given label from Wikipedia.
+        :param label: The label to retrieve the excerpt for.
+        :return: A string containing the excerpt.
+        """
+        raise NotImplementedError("get_label_excerpt() method is not yet implemented.")
+
+        return excerpt
+    
+    def label_to_verbalization(self, label: str, parse: bool = True, candidate: bool = False) -> str:
+        """
+        Converts a label to its verbalization based on the label map.
+        :param label: The label to convert.
+        :param parse: Whether to parse the verbalization string (default is True). This removes any prefix before a semicolon.
+        :param candidate: Whether the label is for a candidate (default is False).
+        :return: The verbalization of the label.
+        """
+        if not self.label_map:
+            raise ValueError("Label map is not defined. Please set the label_map attribute before calling this method.")
+        
+        strategy = self.LLM_verbalization_strategy if not candidate else self.LLM_verbalization_candidate_strategy
+
+        if strategy in ["description", "none"]:
+            verbalization = self.label_map.get(label, label.replace("_", " "))
+            if parse:
+                verbalization = verbalization.split(";", 1)[1].strip() if ";" in verbalization else verbalization
+        elif strategy == "categories":
+            verbalization = self.get_label_category_information(label)
+        elif strategy == "description+categories":
+            verbalization = self.label_map.get(label, label.replace("_", " "))
+            if parse:
+                verbalization = verbalization.split(";", 1)[1].strip() if ";" in verbalization else verbalization
+            verbalization += "; " + self.get_label_category_information(label)
+        elif strategy == "excerpt":
+            verbalization = "Descriptive Excerpt: " + self.get_label_excerpt(label)
+        else:
+            raise NotImplementedError(
+                f"LLM verbalization strategy {strategy} is not supported. Supported strategies are: description, categories, description+categories, excerpt, none."
+            )
+
+        return verbalization
+
+    def add_verbalizations_to_sentences(self, sentences, sentences_data, spans_verbalization, label_name: str = "predicted", iter_count: int = 0):
+        """
+        Adds verbalizations of spans to the sentences.
+        :param sentences: List of sentences to modify.
+        :param spans_verbalization: List of spans to verbalize.
+        :param label_name: The label type to use for verbalization.
+        """
+
+        # Iterate over all spans in all sentences
+        for idx, sentence in enumerate(sentences):
+            for sp in sentence.get_spans():
+                # If the span is in the spans_verbalization, add the verbalization
+                if sp in spans_verbalization and self.LLM_verbalization_strategy != "none":
+                    if not sp.has_label(label_name):
+                        continue
+                    verbalization = self.label_to_verbalization(sp.get_label(label_name).value)
+                    
+                    # Add the verbalization to the sentences_data dictionary (stored by insert position of the verbalization)
+                    sentences_data[idx]["verbalizations"][sp.end_position] = {"verbalization": verbalization, "iteration": iter_count}
+            
+            # Sort the verbalizations in place by their end position in the sentence in descending order
+            sentences_data[idx]["verbalizations"] = dict(sorted(sentences_data[idx]["verbalizations"].items(), key=lambda x: x[0], reverse=True))
+
+    def parse_LLM_response(self, response, expected_length: int = None):
+        """
+        Parses the response from the LLM.
+        :param response: The response from the LLM.
+        :param expected_length: The expected number of answers in the response (optional).
+        :return: Parsed response as a list of integers.
+        """
+        parsed = []
+        for line in response.split("\n"):
+            # Identify first whole number in the line
+            match = re.findall(r'\d+', line.strip())
+            if match:
+                parsed.append(int(match[-1]))  # Take the last matched number in the line
+
+        # Attempt more advanced parsing if the length does not match:
+        if expected_length and len(parsed) != expected_length:
+            # Go up from bottom of response and collect numbers until expected length is reached
+            # If at one point more than one number is found in a line, stop parsing
+            adv_parsed = []
+            for line in list(reversed(response.split("\n"))):
+                # Identify all numbers in line
+                match = re.findall(r'\d+', line.strip())
+                # Check if only one match exists
+                # If yes, add it to the parsed list
+                if match:
+                    if len(match) == 1:
+                        adv_parsed.append(int(match[0]))
+                    else:
+                        break
+                        
+                if len(adv_parsed) == expected_length:
+                    parsed = list(reversed(adv_parsed))
+                    break
+
+        return parsed
+
+            
+
+
+    def generate_prompt(self, sentence_data, spans, label_name, top_k, iteration_count, mappings, allow_extra_iteration):
+        """
+        Generates a prompt for the LLM based on the sentence and its spans.
+        :param sentence: The sentence to process.
+        :param sentence_data: Data containing verbalizations and other information.
+        :param spans: List of spans to include in the prompt.
+        :param label_name: The label type to use for generating the prompt.
+        :return: A formatted string prompt for the LLM.
+        """
+        final_iteration = True if iteration_count == self.iterations + allow_extra_iteration - 1 else False
+        prompt = f"Consider the following text:\n\n"
+
+        sentence_text = sentence_data["text"]
+
+        # Add verbalizations to the sentence text from back to front
+        # This is done to avoid messing up the positions of the verbalizations when inserting them
+        to_insert = {}
+        for end_position, verbalization in sentence_data["verbalizations"].items():
+            to_insert[end_position] = {"insert_type": "Verbalization", "text": verbalization["verbalization"]}
+        for idx, span in enumerate(spans):
+            to_insert[span.end_position] = {"insert_type": "Span", "text": f"**Q{idx+1}**"}
+
+        # Sort to_insert by end position in descending order
+        to_insert = dict(sorted(to_insert.items(), key=lambda x: x[0], reverse=True))
+        # Insert verbalizations and spans into the sentence text
+        for end_position, insert_data in to_insert.items():
+            if insert_data["insert_type"] == "Verbalization":
+                sentence_text = sentence_text[:end_position] + " (" + insert_data["text"] + ")" + sentence_text[end_position:]
+            elif insert_data["insert_type"] == "Span":
+                sentence_text = sentence_text[:end_position] + " [" + insert_data["text"] + "]" + sentence_text[end_position:]
+        
+        # Add the modified sentence text to the prompt
+        prompt += f"{sentence_text}\n\n----------\n\n"
+
+        for idx, span in enumerate(spans):
+            if not final_iteration:
+                span_text = f"Which entry does the mention '{span.text}' at [**Q{idx+1}**] refer to? Evaluate all options carefully.\n\n"
+            else:
+                span_text = f"Which entry does the mention '{span.text}' at [**Q{idx+1}**] refer to? Evaluate all options carefully. If you are unsure, select the answer you think fits the most.\n\n"
+
+            span_text += f"(0) None of the answers below or Unsure\n" if not final_iteration else f"(0) None of the answers below\n"
+
+            for i in range(len(mappings[idx])):
+                # Check if top_k label exists
+                if not span.has_label(f"top_{mappings[idx][i]}"):
+                    print(f"Warning | Span {span.text} does not have label 'top_{mappings[idx][i]}'. Please check that at least k candidates are available for each span.")
+                
+                label_candidate = span.get_label(f"top_{mappings[idx][i]}").value
+
+                # Check if this candidate is restricted. Only occurs when multiple agents are used and there were ties in the previous iteration
+                if span.has_label("restrict_choices"):
+                    if not label_candidate in span.get_label("restrict_choices").value:
+                        # Only choices that are white-listed in the restrict_choices label are allowed
+                        continue
+
+                label_verbalization = self.label_to_verbalization(label_candidate, candidate=True)
+                if self.LLM_verbalization_candidate_strategy != "none":
+                    span_text += f"({i+1}) {label_candidate.replace('_', ' ')} - ({label_verbalization})\n"
+                else:
+                    span_text += f"({i+1}) {label_candidate.replace('_', ' ')}\n"
+
+            prompt += f"{span_text}\n"
+
+        return prompt
+
+    def prompt_LLM(self, sentence, sentence_data, spans, label_name, LLM_label_name, client, top_k, iteration_count, random_candidate_order, allow_extra_iteration):
+        """
+        Prompts the LLM with the generated prompt and returns the response.
+        :param sentence: The sentence to process.
+        :param sentence_data: Data containing verbalizations and other information.
+        :param spans: List of spans to include in the prompt.
+        :param label_name: The label type to use for generating the prompt.
+        :param client: The LLM client to use for querying.
+        :param top_k: Number of top predictions to consider.
+        :return: The response from the LLM.
+        """
+        # If top_k i set to -1 the number of answer options is dynamic based on the following dict:
+        dyn_top_k = {-30: 20,
+                        -29: 20,
+                        -28: 20,
+                        -27: 20,
+                        -26: 15,
+                        -25: 15,
+                        -24: 10,
+                        -23: 10,
+                        -22: 5,
+                        -21: 5,
+                        -20: 5,
+                        "default": 5}
+        
+        mappings = []
+        for span in spans:
+            # Determine the appropriate top_k for this span
+            if self.dynamic_top_k:
+                this_top_k = min(dyn_top_k.get(int(round(span.get_label("top_0").score, 0)), dyn_top_k["default"]), top_k)
+            else:
+                this_top_k = top_k
+            span.set_label(typename="top_k_used", value=this_top_k)
+
+            # Set the order of the candidates in the prompt
+            this_mapping = list(range(this_top_k))
+            if random_candidate_order:
+                random.shuffle(this_mapping)
+            mappings.append(this_mapping)
+
+        # Generate the prompt
+        prompt = self.generate_prompt(sentence_data, spans, label_name, top_k, iteration_count, mappings, allow_extra_iteration)
+        # Query the LLM
+        attempts = 1
+        while True:
+            try:
+                if self.batching:
+                    response = client.query_batch(prompt)
+                    input_tokens, output_tokens = 0, 0
+                else:
+                    response, input_tokens, output_tokens = client.query(prompt)
+                    
+                # Evaluate Response
+                parsed_response = self.parse_LLM_response(response, expected_length=len(spans))
+
+            except Exception as e:
+                print(f"Error occurred while querying LLM: {e} | Number of spans affected: {len(spans)}\n")
+                input_tokens, output_tokens = 0, 0
+                parsed_response = []
+
+
+            if len(parsed_response) == len(spans):
+                break
+            elif attempts >= 10:
+                print(f"Error: LLM response could not be parsed correctly after 10 attempts. Setting all spans to 0 (Not sure / Neither).")
+                # Set parsed_response to all 0 (no prediction)
+                parsed_response = [0] * len(spans)
+                break
+            attempts += 1
+            time.sleep(0.5 * attempts)  # Increasing backoff
+
+
+        # Add the LLM predictions to the spans in the sentence
+        for i, span in enumerate(spans):
+            # Check if LLM has made a prediction for this span
+            if parsed_response[i] != 0:
+                # Add label to span for predicted response
+                # Carefully map the parsed response to the correct label based on the mapping
+                try:
+                    span.set_label(typename=LLM_label_name, value=span.get_label(f"top_{mappings[i][int(parsed_response[i]) - 1]}").value, score=span.get_label(f"top_{mappings[i][int(parsed_response[i]) - 1]}").score)
+                except Exception as e:
+                    print(f"Error occurred while setting label for span {i}.\nPrompt: {prompt}\nResponse: {response}, Parsed response: {parsed_response}, Mappings: {mappings[i]}. Error: {e}")
+
+            # Add required tokens to span
+            if not span.has_label("_input_tokens"):
+                span.set_label(typename="_input_tokens", value=0, score=0.0)
+            if not span.has_label("_output_tokens"):
+                span.set_label(typename="_output_tokens", value=0, score=0.0)
+            span.set_label(typename="_input_tokens", value=span.get_label("_input_tokens").value + int(input_tokens / len(spans)) , score=0.0)
+            span.set_label(typename="_output_tokens", value=span.get_label("_output_tokens").value + int(output_tokens / len(spans)) , score=0.0)
+
+    def perform_LLM_iteration(
+            self,
+            sentences,
+            sentences_data,
+            spans_LLM_this_batch,
+            label_name,
+            LLM_label_name,
+            client,
+            top_k,
+            spans_per_prompt: int = 5,
+            iteration_count: int = 0,
+            random_candidate_order: bool = False,
+            allow_extra_iteration: bool = False
+    ):
+        print(f"Iteration {iteration_count + 1} / {self.iterations} | Starting LLM predictions for {len(spans_LLM_this_batch)} spans...")
+
+        self.timer.resume()
+        threads_created = []
+        # Iterate over all sentences
+        for idx, sentence in enumerate(sentences):
+            # Get spans from sentence which are also in spans_LLM_this_batch
+            spans_in_sentence = [sp for sp in sentence.get_spans(label_name) if sp in spans_LLM_this_batch]
+
+            # Select up to spans_per_sentence spans per prompt
+            for i in range(0, ceil(len(spans_in_sentence) / spans_per_prompt)):
+                selected_spans = spans_in_sentence[i * spans_per_prompt:min((i + 1) * spans_per_prompt, len(spans_in_sentence))]
+
+                # Create a thread to process the spans with the LLM
+                thread = threading.Thread(target=self.prompt_LLM, args=(sentence, sentences_data[idx], selected_spans, label_name, LLM_label_name, client, top_k, iteration_count, random_candidate_order, allow_extra_iteration))
+                thread.start()
+                threads_created.append(thread)
+
+        # Wait for all threads to complete
+        print(f"Iteration {iteration_count + 1} / {self.iterations} | LLM Predictions for {len(spans_LLM_this_batch)} spans in {len(threads_created)} prompts underway...")
+        # Create a tqdm progress bar here with length equal to the number of created threads. The progress bar should update as each thread completes.
+        # We check the status pf each thread in a loop until all threads are done.
+        # The threads will be checked by using thread.is_alive() method.
+        progress_bar = tqdm(total=len(threads_created), desc=f"LLM Predictions", unit="prompts", leave=False)
+        while True:
+            threads_complete = 0
+            for thread in threads_created:
+                if not thread.is_alive():
+                    threads_complete += 1
+
+            progress_bar.update(threads_complete - progress_bar.n)
+            time.sleep(0.5)
+            if threads_complete == len(threads_created):
+                self.timer.pause()
+                time.sleep(1)
+                break
+
+
+
+    def perform_LLM_iteration_batched(
+            self,
+            sentences,
+            sentences_data,
+            spans_LLM_this_batch,
+            label_name,
+            LLM_label_name,
+            client,
+            top_k,
+            spans_per_prompt: int = 5,
+            iteration_count: int = 0,
+            random_candidate_order: bool = False,
+            allow_extra_iteration: bool = False
+    ):
+
+        prompts = []
+        spans_of_prompts = []
+        all_mappings = []
+        # Iterate over all sentences
+        for idx, sentence in enumerate(sentences):
+            # Get spans from sentence which are also in spans_LLM_this_batch
+            spans_in_sentence = [sp for sp in sentence.get_spans(label_name) if sp in spans_LLM_this_batch]
+
+            # Select up to spans_per_sentence spans per prompt
+            for i in range(0, ceil(len(spans_in_sentence) / spans_per_prompt)):
+                selected_spans = spans_in_sentence[i * spans_per_prompt:min((i + 1) * spans_per_prompt, len(spans_in_sentence))]
+
+                mappings = [list(range(top_k)) for _ in range(len(selected_spans))]
+                if random_candidate_order:
+                    for mapping in mappings:
+                        random.shuffle(mapping)
+
+                # Create a prompt for the LLM
+                prompts.append(self.generate_prompt(sentences_data[idx], selected_spans, label_name, top_k, iteration_count, mappings, allow_extra_iteration))
+                spans_of_prompts.append(selected_spans)
+                all_mappings.append(mappings)
+
+        print(f"Iteration {iteration_count + 1} / {self.iterations} | Starting LLM predictions in batched mode for {len(spans_LLM_this_batch)} spans in {len(prompts)} prompts...")
+
+        response_mappings = [i for i in range(len(prompts))]
+        attempts = 1
+        while attempts <= 5:
+            # Give prompts to LLM
+            self.timer.resume()
+            responses, input_tokens, output_tokens = client.query_batch(prompts)
+            self.timer.pause()
+
+            # Initialize avriables for possible re-try
+            all_valid = True
+            new_prompts = []
+            new_response_mappings = []
+
+            # Parse and evaluate responses
+            for i in range(len(responses)):
+                parsed_response = self.parse_LLM_response(responses[i], expected_length=len(spans_of_prompts[response_mappings[i]]))
+
+                # Check if parsed response is of the correct length. If not, set all to 0
+                # Also add prompt to retry list
+                if len(parsed_response) != len(spans_of_prompts[response_mappings[i]]):
+                    parsed_response = [0] * len(spans_of_prompts[response_mappings[i]])
+
+                    all_valid = False
+                    new_prompts.append(prompts[i])
+                    new_response_mappings.append(response_mappings[i])
+                
+                # Go through every span in prompt
+                for j, span in enumerate(spans_of_prompts[response_mappings[i]]):
+                    # Check if LLM has made a prediction for this span
+                    if parsed_response[j] != 0:
+                        # Add label to span for predicted response
+                        try:
+                            span.set_label(typename=LLM_label_name, value=span.get_label(f"top_{all_mappings[response_mappings[i]][j][int(parsed_response[j]) - 1]}").value, score=span.get_label(f"top_{all_mappings[response_mappings[i]][j][int(parsed_response[j]) - 1]}").score)
+                        except Exception as e:
+                            print(f"Error occurred while setting label for span {j}.\nPrompt: {prompts[i]}\nResponse: {responses[i]}, Parsed response: {parsed_response}, Mappings: {all_mappings[response_mappings[i]][j]}. Error: {e}")
+
+                    # Add required tokens to span
+                    if not span.has_label("_input_tokens"):
+                        span.set_label(typename="_input_tokens", value=0, score=0.0)
+                    if not span.has_label("_output_tokens"):
+                        span.set_label(typename="_output_tokens", value=0, score=0.0)
+                    span.set_label(typename="_input_tokens", value=span.get_label("_input_tokens").value + int(input_tokens[i] / len(spans_of_prompts[response_mappings[i]])) , score=0.0)
+                    span.set_label(typename="_output_tokens", value=span.get_label("_output_tokens").value + int(output_tokens[i] / len(spans_of_prompts[response_mappings[i]])) , score=0.0)
+
+
+            if all_valid:
+                break
+            elif attempts >= 5:
+                break
+            # Retry failed prompts after a short wait
+            else:
+                attempts += 1
+                print(f"Iteration {iteration_count + 1} / {self.iterations} | Retrying {len(new_prompts)} (down from {len(prompts)}) prompts due to invalid LLM responses. Attempt {attempts} / 5.")
+                if not self.local_llm:
+                    time.sleep(0.5 * attempts)  # Increasing backoff for non-local LLMs
+                prompts = new_prompts
+                response_mappings = new_response_mappings
+                
+
+
+
+    def predict(
+            self,
+            sentences,
+            mini_batch_size = 32,
+            return_probabilities_for_all_classes = False,
+            verbose = False,
+            label_name = "predicted", # Label name which stores the predictions of the ML model.
+            LLM_label_name = "LLMPrediction", # Label name which stores the predictions of the LLM.
+            final_prediction_label_name = "final_prediction", # Label name which stores the final predictions
+            return_loss=False,
+            top_k: int = None, # Number of top predictions to save by the ML model and to consider by the LLM.
+            embedding_storage_mode="none",
+            return_span_and_label_hidden_states = True,
+            spans_per_prompt: int = 5, # Maximum number of spans to include in a single prompt to the LLM.
+            load_file: str = None, # File path where saved sentences are stored. If None, the default is "stored/sentences.pkl".
+            allow_pred_skip: bool = True, # Allows the ML model to be skipped if the sentences are already predicted and saved to disk.
+            allow_LLM_skip: bool = False,
+            disable_LLM: bool = False, # Disables the LLM step if set to true. Can be used to predict sentences and save them to a disk without calling the LLM
+            rate_limit_timeout: int = 5, # Time in seconds to wait before retrying the LLM query if rate limit is reached. Set to 0 to disable rate limiting.
+            max_output_tokens: int = 200, # Maximum number of tokens to generate in the response from the LLM.
+            random_candidate_order: bool = False, # If set to True, the candidates in the prompt will be shuffled before sending to the LLM.
+            allow_extra_iteration: bool = False, # If set to True, the LLM will be allowed to make extra iteration for entities it was unsure about in the final iteration.
+            **kwargs
+        ):
+        """
+        Predict labels for sentences using the LLM strategy.
+        :param sentences: List of sentences to process.
+        :param mini_batch_size: Size of the mini-batch for processing.
+        :param return_probabilities_for_all_classes: Whether to return probabilities for all classes.
+        :param verbose: Whether to print verbose output.
+        :param label_name: The label type to use for predictions.
+        :param return_loss: Whether to return the loss.
+        :param top_k: Number of top predictions to consider.
+        :param embedding_storage_mode: Mode for storing embeddings.
+        :param return_span_and_label_hidden_states: Whether to return hidden states for spans and labels
+        :return: None, but modifies the sentences in place with predictions.
+        """
+
+        # Use self.top_k if top_k is not provided
+        if top_k is None or top_k < self.top_k:
+            top_k = self.top_k
+
+        if load_file is None:
+            load_file = f"sentence_cache/sentences.pkl"
+
+        # Check if pickle has saved the sentences object
+        skip_preds = False
+        skip_LLM = False
+        if os.path.exists(load_file) and not self.regenerate_sentences:
+            print(f"Loading sentences from {load_file}...")
+            with open(load_file, "rb") as f:
+                try:
+                    sentence_dict = pickle.load(f)
+                    loss = pickle.load(f)
+                    if not self.load_sentences(sentences, sentence_dict):
+                        raise AssertionError("Failed to load sentences from disk. Continuing with predictions...")
+                    skip_preds = True
+                    if "Data" in sentence_dict:
+                        if "LLM" in sentence_dict["Data"]:
+                            skip_LLM = True
+                    print(f"Loaded {len(sentences)} sentences from disk.")
+                except Exception as e:
+                    pass
+
+
+        # Get predictions from the Dual Encoder
+        if not skip_preds or not allow_pred_skip:
+            print("Predicting with LLMDualEncoderEntityDisambiguation...")
+            loss = super(LLMDualEncoderEntityDisambiguation, self).predict(
+                sentences,
+                mini_batch_size=mini_batch_size,
+                return_probabilities_for_all_classes=return_probabilities_for_all_classes,
+                verbose=verbose,
+                label_name=label_name,
+                return_loss=return_loss,
+                top_k=20,
+                embedding_storage_mode=embedding_storage_mode,
+                return_span_and_label_hidden_states=return_span_and_label_hidden_states
+            )
+
+        # Save sentences object to disk so we don't have to re-predict them on subsequent runs
+        # This is useful for debugging and testing purposes
+        if not skip_preds:
+            with open(load_file, "wb") as f:
+                print("Saving sentences to disk...")
+                sentence_dict = self.save_sentences(sentences, label_name, LLM_label_name)
+                sentence_dict["Data"] = ["Dual_Encoder"]
+                pickle.dump(sentence_dict, f)
+                pickle.dump(loss, f)
+                print(f"Sentences have been saved to disk as {load_file}. You can load them later to skip predictions.")
+
+
+        # Select spans for LLM processing based on LLM selection straegy and split them into verbalization and LLM processing spans
+        spans_verbalization, spans_LLM_batches = self.split_spans_based_on_threshold(
+            sentences,
+            label_name
+        )
+
+        # If we allow an extra iteration, add empty list for extra iteration to spans_LLM_batches
+        if allow_extra_iteration:
+            spans_LLM_batches.append([])
+
+        # Add verbalization of spans in spans_verbalization to sentences
+        sentences_data = {}
+        for idx, sentence in enumerate(sentences):
+            sentences_data[idx] = {"text" : sentence.text, "verbalizations" : {}}
+        self.add_verbalizations_to_sentences(sentences, sentences_data, spans_verbalization, label_name, iter_count = 0)
+
+        if (skip_LLM and allow_LLM_skip):
+            print("Skipping LLM predictions because they were already performed in a previous run.")
+            return loss if return_loss else None
+        elif disable_LLM:
+            print("Skipping LLM Predictions because they are disabled.")
+            return loss if return_loss else None
+        
+        print("Starting LLM predictions...")
+        print(f"Using model {self.LLM_model_name} by {self.LLM_model_type} with strategy '{self.LLM_strategy}'.")
+
+        # Get LLM model instance
+        clients = []
+        for i in range(self.num_agents):
+            if self.LLM_model_type[i] == "OpenAI":
+                clients.append(OpenAILLM(model_name=self.LLM_model_name[i], api_key=self.api_key["OpenAI"], max_output_tokens=max_output_tokens, reasoning=self.reasoning[i]))
+            elif self.LLM_model_type[i] == "Google":
+                clients.append(GoogleLLM(model_name=self.LLM_model_name[i], api_key=self.api_key["Google"], max_output_tokens=max_output_tokens, reasoning=self.reasoning[i]))
+            elif self.LLM_model_type[i] == "HU":
+                clients.append(GradioLLM(model_name=self.LLM_model_name[i]))
+            elif self.LLM_model_type[i] == "LOCAL":
+                clients.append(LocalLLM(llm=self.local_llm, max_output_tokens=max_output_tokens))
+            else:
+                raise NotImplementedError(f"LLM model type {self.LLM_model_type[i]} is not supported. Supported options are: OpenAI, Google, HU.")
+            
+        # ----------------------------------------------------------------------------------------------------------------------------------
+        # ------------------------------------------ BEGIN LLM ITERATIONS ------------------------------------------------------------------
+        # ----------------------------------------------------------------------------------------------------------------------------------
+
+        # Perform iterations of LLM predictions
+        for iteration_count in range(self.iterations + allow_extra_iteration):
+            # Select the spans for the current iteration
+            spans_LLM_this_batch = spans_LLM_batches[iteration_count]
+
+            # Add label 'LLM_start_iteration' to all spans in this batch with the current iteration number
+            for span in spans_LLM_this_batch:
+                if not span.has_label("LLM_start_iteration"):
+                    span.set_label(typename="LLM_start_iteration", value=iteration_count+1, score=0.0)
+
+
+            # ----------------------------------------------------------------------------------------------------------------------------------
+            # --------------------------------------- GENERATE PROMPT AND PROMPT LLM -----------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------------------------------
+
+            # Iterate over each agent. By default, there is only one agent
+            for i in range(self.num_agents):
+                print(f"Iteration {iteration_count + 1} / {self.iterations} | Starting Agent {i+1}/{self.num_agents}") if self.num_agents > 1 else None
+
+                # Perform the LLM iteration
+                if (not self.batching) and (self.LLM_model_type[i] != "LOCAL"):
+                    self.perform_LLM_iteration(sentences, sentences_data, spans_LLM_this_batch, label_name, f"{LLM_label_name}_{i}", clients[i], top_k, spans_per_prompt, iteration_count, random_candidate_order, allow_extra_iteration)
+                else:
+                    self.perform_LLM_iteration_batched(sentences, sentences_data, spans_LLM_this_batch, label_name, f"{LLM_label_name}_{i}", clients[i], top_k, spans_per_prompt, iteration_count, random_candidate_order, allow_extra_iteration)
+
+                print(f"Iteration {iteration_count + 1} / {self.iterations} | Agent {i+1}/{self.num_agents} Finished") if self.num_agents > 1 else None
+
+            # ----------------------------------------------------------------------------------------------------------------------------------
+            # -------------------------------------- MULTI-AGENT MAJORITY VOTE LOGIC -----------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------------------------------
+
+            # Select the final LLM Prediction label based on the agents predictions
+            for span in spans_LLM_this_batch:
+                # If there is only one agent, use its prediction. If the agent voted 'None of the above', the label will not be set
+                if self.num_agents == 1:
+                    if span.has_label(f"{LLM_label_name}_0"):
+                        span.set_label(typename=LLM_label_name, value=span.get_label(f"{LLM_label_name}_0").value, score=span.get_label(f"{LLM_label_name}_0").score)
+                        span.remove_labels(f"{LLM_label_name}_0")
+                    continue
+
+                # In case we have multiple agents, we perform a majority vote:
+                # 1. Gather labels of all agents and the amount of votes for each label
+                labels = defaultdict(list)
+                for i in range(self.num_agents):
+                    label_key = f"{LLM_label_name}_{i}"
+                    if span.has_label(label_key):
+                        labels[span.get_label(label_key).value].append(i)
+                    else:
+                        labels["N/A - None of the above"].append(i)
+
+                # 2. Select the label(s) with the most votes
+                max_votes = max(len(votes) for votes in labels.values())
+                most_voted_label = [(label, votes) for label, votes in labels.items() if len(votes) == max_votes] # structure: [(value, [idx's of agents who voted for it])]
+
+                # 3. Remove choice restrictions from the previous iteration
+                span.remove_labels(typename="restrict_choices") # Remove any previous restrictions
+
+                # 4. Pick the winner / Restrict LLM choices in the next iteration
+                if len(most_voted_label) == 1:
+                    # If there is a clear winner (only one label with the most votes), set the LLM_label to it (unless it is 'None of the above')
+                    if most_voted_label[0][0] != "N/A - None of the above":
+                        span.set_label(typename=LLM_label_name, value=span.get_label(f"{LLM_label_name}_{most_voted_label[0][1][0]}").value, score=span.get_label(f"{LLM_label_name}_{most_voted_label[0][1][0]}").score)
+                else:
+                    # If there are multiple labels with the same number of votes
+                    if iteration_count == (self.iterations + allow_extra_iteration) - 1:
+                        # If this is the final iteration, randomly pick amongst the most voted labels
+                        # We do not select 'None of the above' as this is guaranteed wrong
+                        while True:
+                            random_label = random.choice(most_voted_label) # structure: (value, [idx's of agents who voted for it])
+                            if random_label[0] != "N/A - None of the above":
+                                span.set_label(typename=LLM_label_name, value=span.get_label(f"{LLM_label_name}_{random_label[1][0]}").value, score=span.get_label(f"{LLM_label_name}_{random_label[1][0]}").score)
+                                break
+                    else:
+                        # If this is not the final iteration, the span will be predicted again in the next iteration as we don't set a definitive label
+                        # We make a note of the most voted labels and restrict the LLM to only choose between these labels in the next iteration
+                        # If 'None of the above' is in most_voted_labels, the LLM will not be restricted
+                        if "N/A - None of the above" not in [label[0] for label in most_voted_label]:
+                            span.set_label(typename="restrict_choices", value=[label[0] for label in most_voted_label], score=0.0)
+
+                # 5. Finally, remove temporary agent prediction labels from the span
+                for i in range(self.num_agents):
+                    # Note: It is not necessary to check if the label exists, as the remove_labels method will not raise an error if the label does not exist
+                    span.remove_labels(f"{LLM_label_name}_{i}")
+
+            # ----------------------------------------------------------------------------------------------------------------------------------
+            # ---------------------------------- ADD VERBALIZATIONS OF PREDICTED SPANS ---------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------------------------------
+
+            # Add verbalizations to sentences based on the LLM predictions
+            print(f"Iteration {iteration_count + 1} / {self.iterations} | Adding verbalizations to sentences...")
+            self.add_verbalizations_to_sentences(sentences, sentences_data, spans_LLM_this_batch, label_name=LLM_label_name, iter_count=iteration_count + 1)
+
+            # ----------------------------------------------------------------------------------------------------------------------------------
+            # ------------------------------------ ADD FAILED SPANS TO NEXT ITERATION ----------------------------------------------------------
+            # ----------------------------------------------------------------------------------------------------------------------------------
+
+            # Add spans where the LLM has predicted "None of the above or Unsure" to the next iteration again (if there is one)
+            # Also set the label 'LLM_predict_iteration' for all spans that have been predicted by the LLM in this iteration
+            spans_failed = 0
+            for span in spans_LLM_this_batch:
+                if not span.has_label(LLM_label_name):
+                    spans_failed += 1
+                    if iteration_count < (self.iterations + allow_extra_iteration) - 1:
+                        # If this is not the final iteration, retry the span in the next iteration
+                        spans_LLM_batches[iteration_count + 1].append(span)
+                    else:
+                        # If this is the final iteration, set the LLM prediction to "None of the above"
+                        # Also note, that the LLM has failed to make a prediction in any iteration
+                        span.set_label(LLM_label_name, value="None of the above", score=0.0)
+                        span.set_label(typename="LLM_predict_iteration", value=-1, score=0.0)
+                else:
+                    # If LLM has made a prediction in this iteration, add label 'LLM_predict_iteration' with current iteration for the span
+                    span.set_label(typename="LLM_predict_iteration", value=iteration_count+1, score=0.0)
+                
+            if spans_failed > 0:
+                print(f"Notice | LLM Prediction was 'None of the above' or unsuccessful for {spans_failed} mentions.{' Retrying in the next iteration.' if iteration_count < (self.iterations + allow_extra_iteration) - 1 else ''}")
+
+        
+            print(f"Iteration {iteration_count + 1} / {self.iterations} | Finished")
+
+            if rate_limit_timeout > 0:
+                for i in tqdm(range(rate_limit_timeout), leave=False, desc=f"Waiting for {rate_limit_timeout} seconds to avoid rate limiting"):
+                    time.sleep(1)
+
+
+        print("LLM Predictions completed!\n")
+        with open(load_file, "wb") as f:
+             print("Saving sentences to disk...")
+             sentence_dict = self.save_sentences(sentences, label_name, LLM_label_name)
+             sentence_dict["Data"] = ["Dual_Encoder", "LLM"]
+             pickle.dump(sentence_dict, f)
+             pickle.dump(loss, f)
+             print(f"Sentences have been saved to disk as {load_file}. You can load them later to skip predictions.")
+
+        # DEBUG
+        changes_made_by_lmm = 0
+        for iteration in range(self.iterations):
+            for span in spans_LLM_batches[iteration]:
+                if span.get_label(LLM_label_name).value != span.get_label(label_name).value:
+                    changes_made_by_lmm += 1
+        print(f"INFO | LLM made {changes_made_by_lmm} changes to the predictions of the Dual Encoder model.")
+        # DEBUG
+
+        # Add final prediction label to all spans
+        # Note: This is currently unused
+        for sentence in sentences:
+            for span in sentence.get_spans():
+                if span.has_label(LLM_label_name) and span.get_label(LLM_label_name).value != "None of the above":
+                    # Set the final prediction label to the LLM prediction
+                    span.set_label(typename=final_prediction_label_name, value=span.get_label(LLM_label_name).value, score=span.get_label(LLM_label_name).score)
+                else:
+                    # If no LLM prediction was made or the LLM predicted None of the above, use the Dual Encoder prediction instead
+                    span.set_label(typename=final_prediction_label_name, value=span.get_label(label_name).value, score=span.get_label(label_name).score)
+
+        return loss if return_loss else None
+    
+    def _print_predictions(self, batch, gold_label_type, label_name: str = "predicted", LLM_label_name: str = "LLMPrediction"):
+        lines = []
+        for datapoint in batch:
+            eval_line = f"\n{datapoint.to_original_text()}\n"
+
+            for span in datapoint.get_spans(gold_label_type):
+                pred = span.get_label(label_name).value
+                predLLM = span.get_label(LLM_label_name).value if span.has_label(LLM_label_name) else "N/A"
+                symbol = "✓" if span.get_label(gold_label_type).value == pred else "❌"
+                symbol_LLM = "✓" if span.get_label(gold_label_type).value == predLLM else "❌"
+                eval_line += (
+                    f'"{span.text}" / {span.get_label(gold_label_type).value}'
+                    f' --- {pred} --- {predLLM}'
+                    f' --- {[(span.get_label(f"top_{i}").value, span.get_label(f"top_{i}").score) for i in range(span.get_label("top_k_used").value if span.has_label("top_k_used") else self.top_k)]}'
+                    f' --- {span.get_label("LLM_start_iteration").value if span.has_label("LLM_start_iteration") else "N/A"}, {span.get_label("LLM_predict_iteration").value if span.has_label("LLM_predict_iteration") else "N/A"}'
+                    f' --- {span.get_label("_input_tokens").value if span.has_label("_input_tokens") else 0}, {span.get_label("_output_tokens").value if span.has_label("_output_tokens") else 0}'
+                    f' --- {span.get_label("span_percentage").value if span.has_label("span_percentage") else 0}'
+                    f' --- {span.get_label("top_k_used").value if span.has_label("top_k_used") else 0}\n'
+                )
+
+            lines.append(eval_line)
+
+        return lines

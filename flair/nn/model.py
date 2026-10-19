@@ -3,6 +3,7 @@ import itertools
 import logging
 import typing
 from abc import ABC, abstractmethod
+import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
@@ -230,10 +231,14 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
         exclude_labels: List[str] = [],
         gold_label_dictionary: Optional[Dictionary] = None,
         return_loss: bool = True,
+        corpus_name: str = "default",
+        min_batch: int = -1,
+        max_batch: int = -1,
         **kwargs,
     ) -> Result:
         import numpy as np
         import sklearn
+
 
         # make sure <unk> is contained in gold_label_dictionary, if given
         if gold_label_dictionary and not gold_label_dictionary.add_unk:
@@ -259,7 +264,13 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
             loader = DataLoader(data_points, batch_size=mini_batch_size)
 
             sentence_id = 0
-            for batch in Tqdm.tqdm(loader):
+            for batch_idx, batch in enumerate(Tqdm.tqdm(loader)):
+                if batch_idx < min_batch and min_batch >= 0:
+                    continue
+                elif batch_idx >= max_batch and max_batch >= 0:
+                    break
+
+
                 # remove any previously predicted labels
                 for datapoint in batch:
                     datapoint.remove_labels("predicted")
@@ -270,7 +281,9 @@ class Classifier(Model[DT], typing.Generic[DT], ReduceTransformerVocabMixin, ABC
                     embedding_storage_mode=embedding_storage_mode,
                     mini_batch_size=mini_batch_size,
                     label_name="predicted",
+                    final_prediction_label_name = "final_prediction",
                     return_loss=return_loss,
+                    load_file = f"./sentence_cache/{corpus_name}/sentences_{batch_idx}_{str(out_path).split('/')[-1].split('.')[0]}.pkl",
                     **kwargs
                 )
 

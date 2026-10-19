@@ -431,6 +431,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
         base_path: Optional[Union[str, Path]] = None,
         in_memory: bool = True,
         use_ids_and_check_existence: bool = False,
+        wikipedia_user_agent: str = None,
         **corpusargs,
     ) -> None:
         """Initialize AIDA CoNLL-YAGO Entity Linking corpus.
@@ -472,7 +473,7 @@ class NEL_ENGLISH_AIDA(ColumnCorpus):
                 # like this we can quickly check if the corresponding page exists
                 import wikipediaapi
 
-                wiki_wiki = wikipediaapi.Wikipedia(language="en")
+                wiki_wiki = wikipediaapi.Wikipedia(language="en", user_agent=wikipedia_user_agent)
                 wikiid_wikiname_dict = self._get_wikiid_wikiname_dict(data_folder)
 
             for name, path in zip(
