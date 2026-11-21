@@ -65,6 +65,65 @@ George <B-PER> Washington <I-PER> went to Washington <B-LOC> .
 Sam <N> Houston <N> stayed <V> home <N>
 ```
 
+## Using a Hugging Face DatasetDict
+
+You can build a [`Corpus`](#flair.data.Corpus) directly from the splits of a Hugging Face
+`DatasetDict`. Install `datasets` to run this example with CoNLL-2003. It keeps the original
+tokens, attaches part-of-speech tags to individual tokens, and converts BIO entity tags into
+labeled spans. The dataset creates a Flair sentence when you access a row.
+
+```python
+from datasets import load_dataset
+from flair.data import Corpus, FlairDataset, Sentence, get_spans_from_bio
+
+
+class HuggingFaceSentences(FlairDataset):
+    def __init__(self, split, to_sentence):
+        self.split = split
+        self.features = split.features
+        self.to_sentence = to_sentence
+
+    def __len__(self):
+        return len(self.split)
+
+    def __getitem__(self, index):
+        return self.to_sentence(self.split[index], self.features)
+
+    def is_in_memory(self):
+        return False
+
+
+def tagged_sentence(row, features):
+    sentence = Sentence(row["tokens"])
+    for token, tag_id in zip(sentence, row["pos_tags"]):
+        token.add_label("pos", features["pos_tags"].feature.int2str(tag_id))
+    tags = [features["ner_tags"].feature.int2str(tag_id) for tag_id in row["ner_tags"]]
+    for indices, _, entity_type in get_spans_from_bio(tags):
+        sentence[indices[0] : indices[-1] + 1].add_label("ner", entity_type)
+    return sentence
+
+
+data = load_dataset("tomaarsen/conll2003")
+corpus = Corpus(
+    train=HuggingFaceSentences(data["train"], tagged_sentence),
+    dev=HuggingFaceSentences(data["validation"], tagged_sentence),
+    test=HuggingFaceSentences(data["test"], tagged_sentence),
+)
+
+print(corpus.train[0].get_spans("ner"))
+```
+
+For text classification, pass `classified_sentence` as the conversion function for each
+split. This example attaches the class to the whole sentence for a dataset with a `text`
+field and an integer `label` backed by a Hugging Face `ClassLabel`.
+
+```python
+def classified_sentence(row, features):
+    sentence = Sentence(row["text"])
+    sentence.add_label("topic", features["label"].int2str(row["label"]))
+    return sentence
+```
+
 ## Reading a text classification dataset
 
 If you want to use your own text classification dataset, there are currently two methods to go about this:
